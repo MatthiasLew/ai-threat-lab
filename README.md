@@ -1,0 +1,2 @@
+# ai-threat-lab
+Educational simulator for AI-driven phishing and deepfake threats, with explainable risk assessment, defense comparison, and a shared Python core for CLI and GUI.
