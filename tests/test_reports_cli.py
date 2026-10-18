@@ -53,7 +53,17 @@ def test_export_refuses_overwrite_and_invalid_destinations(result, tmp_path):
         export_report(result, tmp_path / "report.pdf", "pdf")
 
 
-@pytest.mark.parametrize("scenario", ["ai_phishing", "voice_deepfake", "video_deepfake"])
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        "ai_phishing",
+        "voice_deepfake",
+        "video_deepfake",
+        "brute_force",
+        "credential_stuffing",
+        "insecure_generated_code",
+    ],
+)
 def test_cli_end_to_end(scenario, tmp_path):
     path = tmp_path / "report.json"
     run = subprocess.run(

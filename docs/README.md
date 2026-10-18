@@ -17,3 +17,6 @@ The shared engine, CLI and TXT/JSON exports are implemented. GUI and PDF remain 
 Start with the project plan to understand what will be built, then read the user guide to see how a demonstration should work.
 
 - [Implementation plan and review checklist](IMPLEMENTATION_PLAN.md)
+
+- [Offline code review](CODE_REVIEW.md)
+- [Scenario extension guide and future AI boundary](EXTENDING_SCENARIOS.md)

@@ -17,3 +17,13 @@ Explain context gathering, synthetic-content preparation, fictional delivery, pe
 ## Optional extensions
 
 Fake profiles and coordinated disinformation may be added after the three MVP scenarios. Media detection is a separate possible research task and is not part of the planned risk engine.
+
+## Authentication and code-security extensions
+
+| ID | Target | AI contribution described | Relevant defenses |
+| --- | --- | --- | --- |
+| brute_force | Fictional application account | Potential prioritization of password guesses; no actual attempts | Rate limiting, progressive lockout, strong authentication, password quality |
+| credential_stuffing | Fictional customer account | Potential organization of previously exposed credentials; no credential lists loaded | Unique passwords, strong authentication, attempt controls |
+| insecure_generated_code | Fictional application developer | Generated suggestions may contain unsafe constructs or unverified assumptions | Human review, relevant static checks, dependency review, least privilege |
+
+All six scenarios are packaged in JSON and discovered through the same service. A separate `review-code` command checks selected Python AST patterns; it does not compute scenario risk from findings. See CODE_REVIEW.md and EXTENDING_SCENARIOS.md.

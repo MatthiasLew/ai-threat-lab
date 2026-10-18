@@ -40,6 +40,36 @@
       "id": "least_privilege",
       "title": "Least privilege",
       "description": "Limit the data and account privileges available to an employee."
+    },
+    {
+      "id": "rate_limiting",
+      "title": "Login rate limiting",
+      "description": "Bound repeated authentication attempts on the server."
+    },
+    {
+      "id": "account_lockout",
+      "title": "Progressive lockout",
+      "description": "Use progressive delays and monitored lockouts without enabling easy denial of service."
+    },
+    {
+      "id": "unique_passwords",
+      "title": "Unique passwords",
+      "description": "Avoid password reuse across services; use a password manager."
+    },
+    {
+      "id": "code_review",
+      "title": "Human code review",
+      "description": "Review generated code and verify its trust boundaries before release."
+    },
+    {
+      "id": "static_analysis",
+      "title": "Static security analysis",
+      "description": "Check selected risky code patterns without executing the source."
+    },
+    {
+      "id": "dependency_review",
+      "title": "Dependency review",
+      "description": "Check dependency provenance and known issues through an approved review process."
     }
   ],
   "scenarios": [
@@ -282,6 +312,230 @@
           "likelihood_reduction": 0,
           "impact_reduction": 1,
           "rationale": "Reduce the information available for disclosure."
+        }
+      ]
+    },
+    {
+      "id": "brute_force",
+      "title": "AI-assisted password guessing",
+      "default_role": "Application account owner",
+      "likelihood": 4,
+      "impact": 4,
+      "description": "A fictional account faces repeated password guesses; AI may help prioritize guesses, but does not bypass authentication controls.",
+      "rationale": "The teaching example assumes a guessable password and weak online attempt controls. No guesses are generated or attempted.",
+      "stages": [
+        {
+          "title": "Exposure",
+          "narrative": "A fictional login account is identified in the narrative.",
+          "warning_sign": "Repeated failed sign-ins.",
+          "intervention": "Monitor authentication events and protect account identifiers."
+        },
+        {
+          "title": "Prioritization",
+          "narrative": "AI is described as potentially ranking likely guesses, not breaking encryption.",
+          "warning_sign": "Predictable or weak password choices.",
+          "intervention": "Use long unique passwords or passkeys."
+        },
+        {
+          "title": "Repeated attempts",
+          "narrative": "The story describes unsuccessful login attempts without performing any.",
+          "warning_sign": "Bursts of failures or distributed unusual attempts.",
+          "intervention": "Enforce server-side rate limits and progressive delays."
+        },
+        {
+          "title": "Potential compromise",
+          "narrative": "A guessed password could expose the fictional account.",
+          "warning_sign": "Unexpected successful sign-in after failures.",
+          "intervention": "Require strong authentication, restrict privileges and investigate."
+        }
+      ],
+      "consequences": [
+        "Confidentiality: unauthorized account access.",
+        "Operations: account lockout and response work.",
+        "Reputation: loss of trust following compromise."
+      ],
+      "rules": [
+        {
+          "control_id": "rate_limiting",
+          "group": "attempt_controls",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume server-side limits meaningfully constrain repeated attempts."
+        },
+        {
+          "control_id": "account_lockout",
+          "group": "attempt_controls",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Overlaps rate limiting; delays must avoid easy denial of service."
+        },
+        {
+          "control_id": "unique_passwords",
+          "group": "password_quality",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume a long, non-predictable unique password, not uniqueness alone."
+        },
+        {
+          "control_id": "phishing_resistant_auth",
+          "group": "authentication",
+          "likelihood_reduction": 2,
+          "impact_reduction": 0,
+          "rationale": "A password alone is insufficient when the protected authentication path requires another resistant factor or passkey."
+        },
+        {
+          "control_id": "least_privilege",
+          "group": "blast_radius",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Limit what a compromised account can access."
+        }
+      ]
+    },
+    {
+      "id": "credential_stuffing",
+      "title": "AI-assisted credential reuse",
+      "default_role": "Customer account owner",
+      "likelihood": 4,
+      "impact": 5,
+      "description": "A fictional service faces reuse of previously exposed credentials; AI may help organize data but does not make every credential valid.",
+      "rationale": "The example assumes password reuse and sensitive account data. No credential lists are loaded, generated or tested.",
+      "stages": [
+        {
+          "title": "Prior exposure",
+          "narrative": "The narrative assumes credentials were exposed at another fictional service.",
+          "warning_sign": "Notifications of password exposure.",
+          "intervention": "Reset exposed credentials and avoid reuse."
+        },
+        {
+          "title": "Reuse hypothesis",
+          "narrative": "A hypothetical attacker expects the same password to work elsewhere.",
+          "warning_sign": "Shared passwords across services.",
+          "intervention": "Use a unique password for every service."
+        },
+        {
+          "title": "Fictional login attempts",
+          "narrative": "The scenario describes reuse attempts without contacting a login endpoint.",
+          "warning_sign": "Unusual failed and successful authentication patterns.",
+          "intervention": "Rate-limit attempts and require strong authentication."
+        },
+        {
+          "title": "Potential impact",
+          "narrative": "Successful reuse could expose the fictional customer account.",
+          "warning_sign": "New-device access or unexpected changes.",
+          "intervention": "Revoke suspicious sessions and follow the response process."
+        }
+      ],
+      "consequences": [
+        "Confidentiality: customer account data exposure.",
+        "Finance: misuse of account capabilities where available.",
+        "Operations: investigation and account recovery."
+      ],
+      "rules": [
+        {
+          "control_id": "unique_passwords",
+          "group": "credential_reuse",
+          "likelihood_reduction": 2,
+          "impact_reduction": 0,
+          "rationale": "A unique password removes the assumed cross-service reuse path in this model; other risks remain."
+        },
+        {
+          "control_id": "phishing_resistant_auth",
+          "group": "authentication",
+          "likelihood_reduction": 2,
+          "impact_reduction": 0,
+          "rationale": "Assume the additional authentication requirement cannot be satisfied with the reused password."
+        },
+        {
+          "control_id": "rate_limiting",
+          "group": "attempt_controls",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Limits attempts but is not assumed to stop every valid reused credential."
+        },
+        {
+          "control_id": "account_lockout",
+          "group": "attempt_controls",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Overlaps repeated-attempt controls."
+        },
+        {
+          "control_id": "least_privilege",
+          "group": "blast_radius",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Restrict account data and actions."
+        }
+      ]
+    },
+    {
+      "id": "insecure_generated_code",
+      "title": "Security flaws in AI-generated code",
+      "default_role": "Application developer",
+      "likelihood": 3,
+      "impact": 4,
+      "description": "A fictional team accepts generated code containing risky input handling or unsafe library usage.",
+      "rationale": "The example assumes generated suggestions reach production without adequate review. The risk engine does not infer vulnerabilities from source.",
+      "stages": [
+        {
+          "title": "Code suggestion",
+          "narrative": "A fictional assistant proposes an implementation.",
+          "warning_sign": "Confident explanations without verified security assumptions.",
+          "intervention": "Treat generated suggestions as untrusted contributions requiring review."
+        },
+        {
+          "title": "Trust boundary",
+          "narrative": "A snippet handles input from an untrusted source.",
+          "warning_sign": "Dynamic execution, shell interpolation or unsafe deserialization.",
+          "intervention": "Map input sources and use restricted, safe APIs."
+        },
+        {
+          "title": "Review gap",
+          "narrative": "The hypothetical change passes without relevant checks.",
+          "warning_sign": "No tests covering hostile inputs or dependency provenance.",
+          "intervention": "Combine human review, static checks and behavior tests."
+        },
+        {
+          "title": "Potential impact",
+          "narrative": "Unsafe code could expose the fictional application.",
+          "warning_sign": "Unexpected execution, data access or certificate errors ignored.",
+          "intervention": "Repair the root cause and apply least privilege."
+        }
+      ],
+      "consequences": [
+        "Confidentiality: unintended data access.",
+        "Integrity: unintended code or command execution.",
+        "Operations: incident response and service disruption."
+      ],
+      "rules": [
+        {
+          "control_id": "code_review",
+          "group": "review_gate",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume a knowledgeable reviewer inspects the relevant trust boundaries."
+        },
+        {
+          "control_id": "static_analysis",
+          "group": "review_gate",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Overlaps review detection; the built-in AST module covers only four limited pattern families, not all vulnerabilities."
+        },
+        {
+          "control_id": "dependency_review",
+          "group": "supply_chain",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume provenance and dependency risks relevant to the change are reviewed."
+        },
+        {
+          "control_id": "least_privilege",
+          "group": "blast_radius",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Limit permissions of a deployed component."
         }
       ]
     }
