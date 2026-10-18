@@ -14,8 +14,8 @@ from .python_web_patterns import web_rule
 MAX_SOURCE_BYTES = 256 * 1024
 LIMITATIONS = (
     "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
-    "Only selected local flows with branch joins/one-pass loops; no dependency, interprocedural "
-    "or full scope analysis.",
+    "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; "
+    "no dependency, cross-file or full scope analysis.",
     "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
     "A clean result does not establish that code is secure. Source is never executed or uploaded.",
 )
@@ -37,7 +37,7 @@ class CodeReviewResult:
     filename: str
     findings: tuple[CodeFinding, ...]
     limitations: tuple[str, ...] = LIMITATIONS
-    engine: str = "python-ast-1.4"
+    engine: str = "python-ast-1.5"
 
 
 def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str:
@@ -233,7 +233,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 )
             )
     flows, flow_notices = discover_flows(tree)
-    for rule_id, node, origins in flows:
+    for rule_id, node, origins, call_lines in flows:
         shell = rule_id == "PY013"
         findings.append(
             CodeFinding(
@@ -246,7 +246,13 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 else "Selected HTTP input may reach SQLite query text",
                 "Possible static dependency from Flask request source line(s): "
                 + ", ".join(map(str, origins))
-                + ". Runtime bindings, constraints and "
+                + "."
+                + (
+                    " Local call-site line(s): " + ", ".join(map(str, call_lines)) + "."
+                    if call_lines
+                    else ""
+                )
+                + " Runtime bindings, constraints and "
                 "exploitability are unverified.",
                 "Use shell=False argument lists and validate permitted operations; review the "
                 "input-to-command path."

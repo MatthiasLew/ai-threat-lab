@@ -1,6 +1,6 @@
-# Selected Python input-flow analysis — 0.21.0
+# Selected Python input-flow analysis — 0.22.0
 
-`review-code`, local project scans and pinned GitHub scans now perform a bounded local dependency analysis with possible branch joins and one-pass loops alongside the existing API-pattern rules. PY013 connects selected Flask input to shell command arguments; PY014 connects it to query text sent to a statically recognized SQLite connection/cursor. Both are candidates requiring human validation.
+`review-code`, local project scans and pinned GitHub scans now perform a bounded local dependency analysis with possible branch joins, one-pass loops and bounded same-file helper contexts alongside the existing API-pattern rules. PY013 connects selected Flask input to shell command arguments; PY014 connects it to query text sent to a statically recognized SQLite connection/cursor. Both are candidates requiring human validation.
 
 ```bash
 ai-threat-lab review-code app.py --format json --output review.json
@@ -41,11 +41,11 @@ The auditing tool parses the example; it never imports Flask, opens SQLite, invo
 
 ## Evidence and conservative stopping points
 
-Findings include the sink location and up to eight sorted source line numbers. Variable names, query strings, request keys, commands and source snippets are omitted. JSON/text/SARIF retain this information; combined assessment evidence also includes the source lines. Supplied filenames remain visible.
+Findings include the sink location, up to eight sorted source line numbers and up to eight sorted local call-site line numbers. Multiple observations of the same sink merge their source/call-site sets; these sets are not an ordered or correlated complete call trace. Variable names, query strings, request keys, commands and source snippets are omitted. JSON/text/SARIF retain this information; combined assessment evidence also includes the source lines. Supplied filenames remain visible.
 
-Each module/function body is processed in statement order. Functions receive currently visible imported-symbol bindings, with explicit parameters shadowed, but do not receive caller arguments or captured tracked data/SQLite objects. No function is invoked. Return and raise terminate the analyzed body, and terminated branches do not contribute to successor joins. Defaults, decorators, annotations and runtime registration effects are not evaluated.
+Each module/function body is processed in statement order. Independent function review receives currently visible imported-symbol/known-helper bindings, with explicit parameters shadowed and no captured tracked data/SQLite objects. Selected calls additionally analyze AST bodies with argument descriptors as described below. No target Python function is executed. Return and raise terminate the analyzed body, and terminated branches do not contribute to successor joins. Defaults, decorators, annotations and runtime registration effects are not evaluated.
 
-With/try, match, classes and global/nonlocal effects are skipped as barriers and clear tracking. Their bodies are not flow analyzed. Selected branches and loops follow the abstraction below. Relative imports invalidate the selected imported names; star imports clear tracking. Unknown call results, unsupported expression forms and destructuring/attribute/subscript writes generate gaps. Unknown results are not propagated; this must not be interpreted as successful sanitization. Heap updates, closure/global mutation, wrappers, cross-file/cross-function paths, loop convergence and path feasibility are not modeled. String method spellings and module bindings are static approximations; monkey-patching, forward local binding and later module rebinding can invalidate them.
+With/try, match, classes and global/nonlocal effects are skipped as barriers and clear tracking. Their bodies are not flow analyzed. Selected branches and loops follow the abstraction below. Relative imports invalidate the selected imported names; star imports clear tracking. Unknown call results, unsupported expression forms and destructuring/attribute/subscript writes generate gaps. Results of unknown calls are not propagated; this must not be interpreted as successful sanitization. Results of supported local helpers follow the limited return model below. Heap updates, closure/global mutation, unknown wrappers, cross-file/cross-method paths, loop convergence and path feasibility are not modeled. String method spellings and module bindings are static approximations; monkey-patching, forward local binding and later module rebinding can invalidate them.
 
 General limitations and per-file flow gaps are preserved in standalone and local/GitHub assessment outputs. A candidate needs review of endpoint reachability, effective runtime objects, constraints/allowlists, query context and actual attacker control before assigning a vulnerability severity. A clean or skipped path is not proof of safety.
 
@@ -61,11 +61,40 @@ Every inspected loop retains a one-pass/loop-carried-dependency gap. Dependencie
 
 Sequential state joins avoid enumerating combinations of all complete execution paths. The resulting observations describe possible static dependencies, not proven runtime paths or confirmed injection. Branch and loop checks reuse the same source/sink identities and report routes.
 
+## Bounded same-file helpers (0.22.0)
+
+Module-level function definitions establish a known callable descriptor in statement order. Their captured analysis environment contains then-visible import/API bindings and previously defined helpers, plus their own identity for recursion detection. Known function aliases can be assigned, passed as parameters or returned when their descriptor remains definite. Branch joins discard ambiguous callable identities with a gap. Definitions inside another function do not become callable descriptors, though their bodies can still receive independent static review.
+
+Selected synchronous, undecorated, non-generator helpers support positional arguments, named arguments, positional-only and keyword-only parameters and literal constant defaults. Binding refuses missing/extra/duplicate arguments or parameter names, positional-only keyword use, unpacking, variadic parameters and non-literal default expressions. The analyzer does not evaluate defaults, annotations or decorators. It also does not authenticate runtime module objects, validate installed APIs or perform a complete lexical binding analysis.
+
+Each supported context gets an isolated copy of captured bindings plus argument value descriptors. Selected HTTP origins, request/API aliases, SQLite identities and known callable references can cross the call boundary. Supported return values merge across possible returns and normal fallthrough; implicit fallthrough is an unknown/untainted descriptor. Returned data descriptors retain bounded call-site evidence when later used as sink data. Unsupported return expressions remain coverage gaps, and no result is treated as a verified sanitizer. Contexts reuse the existing branch/loop abstraction and shared budgets.
+
+Direct and mutual recursion into an active function stop with a gap; no recursive fixed point is computed. Async/generator/decorated/nested functions and unknown/imported/forward helpers are not resolved as supported calls. A helper defined after the enclosing function's captured environment may remain unresolved even if a later real call would see it. Later global rebinding, monkey-patching, closures, heap mutation, object methods, exceptions and non-returning callee behavior are not propagated back into the caller. These limitations can produce both missed and infeasible candidates. A caller may continue abstract analysis even where a real callee would raise or not return.
+
+For example, this inert source produces an API-pattern and flow observation at `os.system`:
+
+```python
+from flask import request
+import os
+
+def prepare(value):
+    return "example-tool " + value
+
+def run_command(value):
+    os.system(value)
+
+def endpoint():
+    command = prepare(request.args.get("example"))
+    run_command(command)
+```
+
+The analyzer reads the helper bodies and propagates descriptors; it never calls the inspected code. The endpoint need not be registered or reachable. Source/call-site lines describe possible static dependencies requiring human validation.
+
 ## Resource limits
 
-The existing 256 KiB source limit applies before parsing. Each file's flow pass is bounded to 20,000 statement/expression evaluation steps, expression depth 64, control-flow block depth 32, 100 module/function scopes, 200 flow observations and eight source origins per merged value. Gaps retain earlier results when a flow bound is reached. These limits apply to this additional pass; the existing API-pattern pass has its own source-bound behavior. Notice types are fixed and deduplicated, without input values.
+The existing 256 KiB source limit applies before parsing. Each file's flow pass is bounded to 20,000 statement/expression evaluation steps, expression depth 64, control-flow block depth 32, 100 module/function scopes, 200 flow observations and eight source origins per merged value. The same pass stores at most 100 known functions and analyzes at most 100 local-call contexts, with depth 4 and at most 32 parameters per supported signature; independent module/function body visits also consume the shared 100-scope budget. Returned values and merged sinks retain at most eight call-site lines. Gaps retain earlier results when a flow bound is reached. These limits apply to this additional pass; the existing API-pattern pass has its own source-bound behavior. Notice types are fixed and deduplicated, without input values.
 
-Scan engine `read-only-pipeline-13` and Python engine `python-ast-1.4` identify the expanded scope. Earlier bundles remain readable; comparisons across engines are disabled. The offline demo and clean installed-wheel gate exercise separate three-observation straight-line and branch/loop fixtures. API setup remains deferred.
+Scan engine `read-only-pipeline-14` and Python engine `python-ast-1.5` identify the expanded scope. Earlier bundles remain readable; comparisons across engines are disabled. The offline demo and clean installed-wheel gate exercise separate three-observation straight-line, branch/loop and local-helper fixtures. API setup remains deferred.
 
 ```mermaid
 flowchart TD
@@ -78,4 +107,4 @@ flowchart TD
     C --> F["Candidate with source and sink lines"]
 ```
 
-Primary control-flow reference: [Python compound statements](https://docs.python.org/3/reference/compound_stmts.html). Primary API references: [Flask request data](https://flask.palletsprojects.com/en/stable/quickstart/#the-request-object), [SQLite parameter binding](https://docs.python.org/3/library/sqlite3.html), [subprocess shell considerations](https://docs.python.org/3/library/subprocess.html#security-considerations). See [all Python rules](CODE_REVIEW.md) and [delivery status](DELIVERY_STATUS.md).
+Primary call-binding reference: [Python call expressions](https://docs.python.org/3/reference/expressions.html#calls). Primary control-flow reference: [Python compound statements](https://docs.python.org/3/reference/compound_stmts.html). Primary API references: [Flask request data](https://flask.palletsprojects.com/en/stable/quickstart/#the-request-object), [SQLite parameter binding](https://docs.python.org/3/library/sqlite3.html), [subprocess shell considerations](https://docs.python.org/3/library/subprocess.html#security-considerations). See [all Python rules](CODE_REVIEW.md) and [delivery status](DELIVERY_STATUS.md).

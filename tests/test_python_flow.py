@@ -170,10 +170,10 @@ def test_control_flow_barriers_reset_tracking_with_explicit_gap(barrier):
     assert any("tracking reset" in n for n in result.limitations)
 
 
-def test_independent_function_environments_and_no_caller_argument_inference():
+def test_independent_function_environments_and_explicit_caller_argument_inference():
     source = PREFIX + "def first():\n    value=request.args['q']\n    os.system(value)\n"
     source += "def second(value):\n    os.system(value)\nsecond(request.args['q'])\n"
-    assert len(flows(source)) == 1
+    assert len(flows(source)) == 2
 
 
 def test_nested_receiver_call_is_not_evaluated_twice():
@@ -269,7 +269,7 @@ def test_engine_eleven_reading_without_cross_engine_comparison(tmp_path):
     source.write_text(synthetic_python_flow())
     ScanService(assessor).run(ScanOptions(str(source)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-13"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-14"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-11"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

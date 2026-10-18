@@ -3,17 +3,22 @@
 import ast
 from dataclasses import dataclass
 
+from .python_call_binding import bind_arguments
+
 NOTICE = (
     "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, "
-    "branch joins and one-pass loops; no interprocedural, path-feasibility, heap, sanitizer, "
-    "runtime-binding "
-    "or exploitability validation."
+    "branch joins, one-pass loops and bounded same-file calls; no cross-file, path-feasibility, "
+    "heap, sanitizer, runtime-binding or exploitability validation; "
+    "callee exception/effect behavior is not propagated."
 )
 MAX_STEPS = 20000
 MAX_DEPTH = 64
 MAX_BLOCK_DEPTH = 32
 MAX_SCOPES = 100
 MAX_FINDINGS = 200
+MAX_FUNCTIONS = 100
+MAX_CALLS = 100
+MAX_CALL_DEPTH = 4
 SOURCE_FIELDS = {"args", "form", "values", "cookies", "headers", "json", "data", "query_string"}
 SHELL_CALLS = {"os.system", "os.popen"}
 SUBPROCESS_CALLS = {
@@ -45,6 +50,8 @@ class Value:
     symbol: str = ""
     origins: frozenset[int] = frozenset()
     database: bool = False
+    function: int = 0
+    call_sites: frozenset[int] = frozenset()
 
 
 EMPTY = Value()
@@ -56,6 +63,13 @@ class Flow:
         self.scopes = 0
         self.observations = []
         self.notices = set()
+        self.functions = {}
+        self.calls = 0
+        self.in_function = 0
+        self.active = set()
+        self.trace = []
+        self.returns = []
+        self.observation_indexes = {}
 
     def note(self, text):
         self.notices.add("Flow coverage: " + text)
@@ -64,19 +78,30 @@ class Flow:
         origins = set().union(*(v.origins for v in values))
         if len(origins) > 8:
             self.note("source-origin limit reached; only the first eight line numbers retained.")
-        return Value(origins=frozenset(sorted(origins)[:8]))
+        call_sites = set().union(*(v.call_sites for v in values))
+        if len(call_sites) > 8:
+            self.note("call-site evidence limit reached; first eight lines retained.")
+        return Value(
+            origins=frozenset(sorted(origins)[:8]), call_sites=frozenset(sorted(call_sites)[:8])
+        )
 
     def join_value(self, values):
         symbols = {value.symbol for value in values}
         database = all(value.database for value in values)
-        if (len(symbols) > 1 and any(symbols)) or (
-            any(value.database for value in values) and not database
+        functions = {value.function for value in values}
+        if (
+            (len(functions) > 1 and any(functions))
+            or (len(symbols) > 1 and any(symbols))
+            or (any(value.database for value in values) and not database)
         ):
             self.note("join lost ambiguous API/object bindings; some flows unchecked.")
+        merged = self.merge(values)
         return Value(
             symbol=values[0].symbol if len(symbols) == 1 else "",
-            origins=self.merge(values).origins,
+            origins=merged.origins,
+            call_sites=merged.call_sites,
             database=database,
+            function=values[0].function if len(functions) == 1 else 0,
         )
 
     def join_env(self, states):
@@ -121,7 +146,11 @@ class Flow:
         value = self.expr(statement.test if is_while else statement.iter, env)
         initial, iteration = dict(env), dict(env)
         if not is_while:
-            self.bind(statement.target, Value(origins=value.origins), iteration)
+            self.bind(
+                statement.target,
+                Value(origins=value.origins, call_sites=value.call_sites),
+                iteration,
+            )
         states = [initial]
         if condition is not False:
             reaches_end = self.block(statement.body, iteration, depth=depth + 1, scope=False)
@@ -137,10 +166,89 @@ class Flow:
     def record(self, rule, node, value):
         if not value.origins:
             return
-        if len(self.observations) >= MAX_FINDINGS:
-            self.note("finding limit reached; additional flow observations omitted.")
-            return
-        self.observations.append((rule, node, tuple(sorted(value.origins))))
+        key = rule, node.lineno, node.col_offset
+        call_lines = {line for _, line in self.trace} | set(value.call_sites)
+        origins = set(value.origins)
+        if key in self.observation_indexes:
+            index = self.observation_indexes[key]
+            previous = self.observations[index]
+            origins.update(previous[2])
+            call_lines.update(previous[3])
+        else:
+            if len(self.observations) >= MAX_FINDINGS:
+                self.note("finding limit reached; additional flow observations omitted.")
+                return
+            index = len(self.observations)
+            self.observation_indexes[key] = index
+            self.observations.append(None)
+        if len(origins) > 8 or len(call_lines) > 8:
+            self.note("source/call-site evidence limit reached; first eight lines retained.")
+        self.observations[index] = (
+            rule,
+            node,
+            tuple(sorted(origins)[:8]),
+            tuple(sorted(call_lines)[:8]),
+        )
+
+    @staticmethod
+    def visible_bindings(env):
+        return {
+            key: value
+            for key, value in env.items()
+            if (value.symbol or value.function) and not value.origins and not value.database
+        }
+
+    def analyze_function(self, function, local, *, call_line=None):
+        identity = id(function)
+        previous_trace = self.trace
+        if call_line is None:
+            self.trace = []
+        else:
+            self.trace = [*self.trace, (identity, call_line)]
+        self.active.add(identity)
+        self.in_function += 1
+        self.returns.append([])
+        try:
+            normal = self.block(function.body, local)
+            values = self.returns[-1]
+            if normal:
+                values.append(EMPTY)
+            if not values:
+                self.note("callee termination/exception behavior not propagated to caller.")
+                return EMPTY
+            return self.join_value(values)
+        finally:
+            self.returns.pop()
+            self.in_function -= 1
+            self.active.discard(identity)
+            self.trace = previous_trace
+
+    def invoke(self, identity, call, args, kwargs):
+        function, captured = self.functions[identity]
+        if identity in self.active:
+            self.note("recursive local call skipped; no recursive fixed point is computed.")
+            return EMPTY
+        if self.calls >= MAX_CALLS or len(self.trace) >= MAX_CALL_DEPTH:
+            self.note("local call count/depth limit reached; additional calls unchecked.")
+            return EMPTY
+        bound = bind_arguments(function, call, args, kwargs, EMPTY)
+        if bound is None:
+            self.note("unsupported/invalid local signature or argument binding; call unchecked.")
+            return EMPTY
+        self.calls += 1
+        local = dict(captured)
+        local.update(bound)
+        result = self.analyze_function(function, local, call_line=call.lineno)
+        sites = result.call_sites | {call.lineno}
+        if len(sites) > 8:
+            self.note("call-site evidence limit reached; first eight lines retained.")
+        return Value(
+            symbol=result.symbol,
+            origins=result.origins,
+            database=result.database,
+            function=result.function,
+            call_sites=frozenset(sorted(sites)[:8]),
+        )
 
     def expr(self, node, env, depth=0):
         if node is None:
@@ -163,11 +271,11 @@ class Flow:
             origins = parent.origins
             if parent.symbol == "flask.request" and node.attr in SOURCE_FIELDS:
                 origins = frozenset({node.lineno})
-            return Value(symbol=symbol, origins=origins)
+            return Value(symbol=symbol, origins=origins, call_sites=parent.call_sites)
         if isinstance(node, ast.Subscript):
             value = evaluate(node.value)
             evaluate(node.slice)
-            return Value(origins=value.origins)
+            return Value(origins=value.origins, call_sites=value.call_sites)
         if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
             return self.merge([evaluate(node.left), evaluate(node.right)])
         if isinstance(node, ast.IfExp):
@@ -211,6 +319,7 @@ class Flow:
             Value(
                 symbol=f"{receiver.symbol}.{method}" if receiver.symbol else "",
                 origins=receiver.origins,
+                call_sites=receiver.call_sites,
             )
             if method
             else evaluate(node.func)
@@ -218,8 +327,10 @@ class Flow:
         args = [evaluate(item) for item in node.args]
         kwargs = {item.arg: evaluate(item.value) for item in node.keywords}
         name = function.symbol
+        if function.function:
+            return self.invoke(function.function, node, args, kwargs)
         if name in ("flask.request.get_json", "flask.request.get_data"):
-            return Value(origins=frozenset({node.lineno}))
+            return Value(origins=frozenset({node.lineno}), call_sites=function.call_sites)
         if name in SHELL_CALLS or (
             name in SUBPROCESS_CALLS
             and any(
@@ -293,11 +404,15 @@ class Flow:
                         env[item.asname or item.name] = EMPTY
                     self.note("relative/star imports are not resolved.")
             elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                local = {
-                    key: value
-                    for key, value in env.items()
-                    if value.symbol and not value.origins and not value.database
-                }
+                local = self.visible_bindings(env)
+                if not self.in_function and len(self.functions) < MAX_FUNCTIONS:
+                    identity = id(statement)
+                    env[statement.name] = Value(function=identity)
+                    local[statement.name] = env[statement.name]
+                    self.functions[identity] = statement, dict(local)
+                else:
+                    env[statement.name] = EMPTY
+                    self.note("nested/function-table-limit definitions have no callable binding.")
                 arguments = statement.args
                 for arg in [
                     *arguments.posonlyargs,
@@ -308,8 +423,7 @@ class Flow:
                 ]:
                     if arg is not None:
                         local[arg.arg] = EMPTY
-                env[statement.name] = EMPTY
-                self.block(statement.body, local)
+                self.analyze_function(statement, local)
             elif isinstance(statement, ast.If):
                 if not self.conditional(statement, env, depth):
                     return False
@@ -333,9 +447,11 @@ class Flow:
             elif isinstance(statement, ast.Expr):
                 self.expr(statement.value, env)
             elif isinstance(statement, (ast.Return, ast.Raise)):
-                self.expr(
+                value = self.expr(
                     statement.value if isinstance(statement, ast.Return) else statement.exc, env
                 )
+                if isinstance(statement, ast.Return) and self.returns:
+                    self.returns[-1].append(value)
                 return
             elif isinstance(statement, ast.Delete):
                 for target in statement.targets:

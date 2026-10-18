@@ -108,3 +108,18 @@ def synthetic_python_control_flow():
         "    for term in request.args.getlist('fixture'):\n"
         "        connection.execute('SELECT ' + term)\n"
     )
+
+
+def synthetic_python_local_calls():
+    """Inert argument and return propagation through previously defined local helpers."""
+    return (
+        "from flask import request\nimport os, sqlite3\n"
+        "def prepare(value):\n"
+        "    return 'fixture ' + value\n"
+        "def inspect_example(connection, value):\n"
+        "    os.system(value)\n"
+        "    connection.execute('SELECT ' + value)\n"
+        "def endpoint():\n"
+        "    value = prepare(request.args.get('fixture'))\n"
+        "    inspect_example(sqlite3.connect(':memory:'), value)\n"
+    )

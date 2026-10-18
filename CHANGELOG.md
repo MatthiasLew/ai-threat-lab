@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.22.0
+
+- Extend PY013/PY014 to selected previously defined module-level same-file helpers, with strict positional/keyword/default binding and argument/return propagation.
+- Carry selected HTTP origins, SQLite identities and known callable aliases across bounded contexts. Preserve call-site line evidence through returned values and merge repeated contexts by sink without source values.
+- Stop recursion and enforce table/call/depth/parameter/evidence budgets alongside existing flow limits. Unsupported/invalid signatures, defaults, unpacking, decorators, generators, async/nested/forward/imported helpers retain gaps.
+- Keep runtime globals, object effects, callee exceptions/termination, cross-file resolution and exploitability outside the abstraction. No Python target execution or imports.
+- Add a separate inert same-file helper demo, installed-wheel acceptance and 65 regression/integration/CLI cases with updated documentation.
+- Advance Python engine to python-ast-1.5 and scan engine to 14; retain earlier bundle reading and suppress cross-engine comparisons. API setup remains deferred.
+
 ## 0.21.0
 
 - Extend PY013/PY014 with possible-origin if/else/elif joins, conditional/boolean expressions and nested condition operands. Exclude terminated branches from successor states and prune direct literal boolean choices.

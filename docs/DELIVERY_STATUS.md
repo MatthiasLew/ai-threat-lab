@@ -1,10 +1,10 @@
-# Delivery status and remaining work — 0.21.0
+# Delivery status and remaining work — 0.22.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, interprocedural analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, cross-file/cross-method analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
@@ -77,6 +77,10 @@ The shared AST reviewer now carries selected Flask input origins through bounded
 ## Local control-flow follow-up (0.21.0)
 
 Selected if/else/elif, conditional expressions, boolean/comparison operands and single-pass for/while bodies now participate in local flow analysis. Input origins merge across possibly reaching paths; API/SQLite identities survive only when all reaching states agree. Return/raise paths are excluded from successor joins. Loop-carried dependencies, convergence, correlated conditions, break/continue and broader runtime feasibility remain unchecked with explicit gaps. See [PYTHON_FLOW.md](PYTHON_FLOW.md).
+
+## Same-file function-call follow-up (0.22.0)
+
+Selected previously defined module-level Python helpers now accept statically bound arguments and return source/SQLite/callable descriptors. Independent function review remains available; contextual observations merge by sink with bounded source/call-site line evidence. Signature, recursion, call-depth/count, function-table and general flow limits preserve explicit gaps. Nested/async/decorated/generator/variadic functions, forward/imported helpers, runtime globals/effects, exceptions and cross-file dispatch remain unresolved. See [PYTHON_FLOW.md](PYTHON_FLOW.md).
 
 ## Remaining order of work
 

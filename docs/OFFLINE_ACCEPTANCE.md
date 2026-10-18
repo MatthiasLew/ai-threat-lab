@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.21.0
+# Offline acceptance kit — 0.22.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -100,3 +100,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Branch/loop fixture (0.21.0)
 
 `python-control-flow.py` is a separate inert Flask source fixture with input assigned in one if branch, a shell sink after the join and query text derived from a for-loop target. Its bundle contains PY005, PY013 and PY014, recorded as `python_control_flow_observations: 3`. The report preserves a loop-carried-dependency gap. `index.html` links the report, and missing/incorrect evidence prevents completion publication. It never imports Flask, opens SQLite, iterates actual input or executes commands. Existing fixture expectations remain unchanged.
+
+## Same-file helper fixture (0.22.0)
+
+`python-local-calls.py` contains a prior-defined text-returning helper, a prior-defined shell/SQLite helper and an endpoint-shaped function passing selected request input through both. Its verified bundle contains PY005, PY013 and PY014, recorded as `python_local_call_observations: 3`. The two flow observations must include local call-site evidence before the demo completion marker is published. The HTML index links the report. Source is parsed only: no function, framework, command or database is executed. Existing fixture counts remain unchanged.

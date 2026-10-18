@@ -193,3 +193,7 @@ Implemented selected straight-line Flask request origins, string/assignment prop
 ## Local branch joins and loop abstraction — 0.21.0
 
 Implemented possible-origin joins for selected if/else/elif, conditional/boolean expressions and one-pass for/while abstraction, preserving definite API identities and excluding terminated branches. See [PYTHON_FLOW.md](PYTHON_FLOW.md). Full control-flow graphs, feasibility/condition correlation, loop fixed points, break/continue, exceptions and interprocedural propagation remain future work. API setup remains deferred.
+
+## Bounded same-file function contexts — 0.22.0
+
+Implemented prior-defined module-level helper argument/return propagation with strict binding, known callable/SQLite descriptors, bounded contexts, recursion stopping and source/call-site line evidence. See [PYTHON_FLOW.md](PYTHON_FLOW.md). This is not general interprocedural analysis: forward or imported helpers, nested closures, methods/decorators, variadics, runtime global effects and callee exception propagation remain unresolved. API setup remains deferred.
