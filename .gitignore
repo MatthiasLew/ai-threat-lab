@@ -13,3 +13,5 @@ reports/
 .idea/
 .vscode/
 .DS_Store
+.ai/
+.ruff_cache/

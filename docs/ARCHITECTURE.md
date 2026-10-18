@@ -1,4 +1,4 @@
-# Planned architecture
+# Architecture
 
 ## Layers
 
@@ -11,7 +11,7 @@
 
 Dependencies flow from interfaces toward the application and domain. The engine must not import Qt or read terminal input. Report writing is explicit; analysis itself does not write files or use the network.
 
-## Proposed layout
+## Package layout
 
 | Planned path | Purpose |
 | --- | --- |
@@ -25,15 +25,19 @@ Dependencies flow from interfaces toward the application and domain. The engine 
 | src/ai_threat_lab/data/ | Versioned scenario and control JSON |
 | tests/ | Domain, service, and export checks |
 
-These paths describe future implementation; they do not exist yet.
+The core files and packaged data exist. The `gui/` directory remains planned.
 
-## Proposed service contract
+## Service contract
 
-`list_scenarios() -> list[ScenarioSummary]`
+`ThreatAnalyzer.list_scenarios() -> tuple[Scenario, ...]`
 
-`analyze(request: AnalysisRequest) -> AnalysisResult`
+`ThreatAnalyzer.list_controls() -> tuple[Control, ...]`
 
-`export_report(result: AnalysisResult, path: Path, format: ReportFormat) -> Path`
+`ThreatAnalyzer.analyze(request: AnalysisRequest) -> AnalysisResult`
+
+`export_report(result: AnalysisResult, path: Path, format: str = "txt") -> Path`
+
+`format` accepts `txt` or `json`; the destination must not exist.
 
 AnalysisRequest contains scenario_id, target profile, existing_control_ids, and proposed_control_ids. Existing controls affect the baseline once; proposed controls affect the residual assessment only. Sets must be deduplicated.
 
@@ -41,4 +45,4 @@ AnalysisResult contains scenario identity, fictional target, campaign stages, co
 
 Each assessment contains likelihood, impact, score, level, and explanation items. Unknown scenario/control IDs and invalid ratings produce explicit validation exceptions. User interfaces translate them into readable messages.
 
-This contract is a proposal, not an implemented API. Agree field names before GUI integration.
+This contract is implemented in version 0.1.0. Results also include recommended_controls for unselected applicable defenses. Domain request/result objects are frozen dataclasses and expose tuples to both interfaces. See GUI_HANDOFF.md for a working example.

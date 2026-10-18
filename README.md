@@ -6,9 +6,29 @@ AI Threat Lab is a student project designed to explain who a threat targets, how
 
 ## Project status
 
-**Planning stage.** This repository currently contains project documentation only. The Python engine, CLI, GUI, and report exporters are planned and are not yet implemented. No installation or execution commands are available yet.
+**CLI foundation (0.1.0).** The shared Python engine, three packaged scenarios, interactive and command-based CLI, explained risk comparisons, and TXT/JSON exports are implemented. PySide6 GUI, PDF export, and empirical calibration remain future work.
 
-## Planned workflow
+## Quick start
+
+Requires Python 3.12 or later. No runtime dependencies, AI API, GPU, or network are needed after installation.
+
+```bash
+python -m venv .venv
+```
+
+Activate with `.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` on Linux/macOS, then:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m ai_threat_lab scenarios
+python -m ai_threat_lab interactive
+python -m ai_threat_lab analyze voice_deepfake --proposed callback --proposed independent_approval
+python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json --output analysis.json
+```
+
+The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
+
+## Workflow
 
 1. Select an AI phishing, voice deepfake, or video deepfake scenario.
 2. Configure a fictional target, its access level, and organizational context.
@@ -19,7 +39,7 @@ AI Threat Lab is a student project designed to explain who a threat targets, how
 
 The first version will use predefined scenarios and deterministic rules. It does not require an AI API, GPU, or online service. AI is the subject of the analysis; live content generation is not an MVP requirement.
 
-## Planned technology
+## Technology
 
 | Component | Choice |
 | --- | --- |

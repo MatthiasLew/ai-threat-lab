@@ -1,6 +1,6 @@
 # Roadmap
 
-All implementation tasks below are planned, not completed.
+Milestones 1–3 are implemented in the CLI foundation. Team review, GUI, and presentation remain open.
 
 ## Milestone 0 — Documentation
 
@@ -10,25 +10,25 @@ All implementation tasks below are planned, not completed.
 
 ## Milestone 1 — Domain and data
 
-- [ ] Set up the Python package and development dependencies.
-- [ ] Implement validated domain models and catalog loading.
-- [ ] Add three fictional scenarios and associated controls.
+- [x] Set up the Python package and development dependencies.
+- [x] Implement validated domain models and catalog loading.
+- [x] Add three fictional scenarios and associated controls.
 
 Acceptance: valid data loads; malformed data produces actionable validation errors.
 
 ## Milestone 2 — Analysis engine
 
-- [ ] Implement the risk matrix and explained scenario rules.
-- [ ] Add baseline and residual assessments.
-- [ ] Cover control applicability, duplicate controls, and rating bounds.
+- [x] Implement the risk matrix and explained scenario rules.
+- [x] Add baseline and residual assessments.
+- [x] Cover control applicability, duplicate controls, and rating bounds.
 
 Acceptance: repeatable input produces the same result; every adjustment is traceable.
 
 ## Milestone 3 — CLI and exports
 
-- [ ] Add scenario selection and profile configuration.
-- [ ] Display stages, consequences, defenses, and comparison.
-- [ ] Export TXT and JSON with model version and assumptions.
+- [x] Add scenario selection and profile configuration.
+- [x] Display stages, consequences, defenses, and comparison.
+- [x] Export TXT and JSON with model version and assumptions.
 
 Acceptance: all three scenarios can be demonstrated end to end without network access.
 

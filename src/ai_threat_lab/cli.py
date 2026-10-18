@@ -1,0 +1,95 @@
+"""Thin console adapter around the reusable analysis service."""
+
+import argparse
+import sys
+from pathlib import Path
+
+from .analyzer import ThreatAnalyzer
+from .models import AnalysisRequest, TargetProfile, ValidationError
+from .reports import export_report, render_json, render_text
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="AI Threat Lab — fictional educational simulations"
+    )
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.1.0")
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("scenarios", help="List available scenarios")
+    commands.add_parser("controls", help="List defense IDs and descriptions")
+    commands.add_parser("interactive", help="Guided analysis with console prompts")
+    analyze = commands.add_parser("analyze", help="Analyze a fictional scenario")
+    analyze.add_argument("scenario", help="Scenario ID; see scenarios command")
+    analyze.add_argument("--organization", default="Example Company")
+    analyze.add_argument("--role", help="Defaults to the selected scenario's fictional target role")
+    analyze.add_argument("--access", choices=("low", "medium", "high"), default="medium")
+    analyze.add_argument("--urgency", choices=("low", "normal", "high"), default="normal")
+    analyze.add_argument("--existing", action="append", default=[], metavar="CONTROL_ID")
+    analyze.add_argument("--proposed", action="append", default=[], metavar="CONTROL_ID")
+    analyze.add_argument("--format", choices=("txt", "json"), default="txt")
+    analyze.add_argument(
+        "--output", type=Path, help="New file path; existing files are not overwritten"
+    )
+    return parser
+
+
+def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
+    for scenario in analyzer.list_scenarios():
+        print(f"{scenario.id}: {scenario.title}")
+    scenario_id = input("Scenario ID: ").strip()
+    scenario = next((s for s in analyzer.list_scenarios() if s.id == scenario_id), None)
+    if scenario is None:
+        raise ValidationError(f"Unknown scenario: {scenario_id}")
+    organization = input("Fictional organization [Example Company]: ").strip() or "Example Company"
+    role = input(f"Role [{scenario.default_role}]: ").strip() or scenario.default_role
+    access = input("Access low/medium/high [medium]: ").strip() or "medium"
+    urgency = input("Urgency low/normal/high [normal]: ").strip() or "normal"
+    print("Available defenses:")
+    for control in analyzer.list_controls():
+        print(f"  {control.id}: {control.title}")
+    existing = tuple(input("Existing defense IDs (space-separated, or empty): ").split())
+    proposed = tuple(input("Proposed defense IDs (space-separated, or empty): ").split())
+    return AnalysisRequest(
+        scenario_id, TargetProfile(organization, role, access, urgency), existing, proposed
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        analyzer = ThreatAnalyzer()
+        if args.command == "scenarios":
+            for scenario in analyzer.list_scenarios():
+                print(f"{scenario.id}: {scenario.title}\n  {scenario.description}")
+            return 0
+        if args.command == "controls":
+            for control in analyzer.list_controls():
+                print(f"{control.id}: {control.title}\n  {control.description}")
+            return 0
+        if args.command == "interactive":
+            print(render_text(analyzer.analyze(_interactive(analyzer))), end="")
+            return 0
+        scenario = next((s for s in analyzer.list_scenarios() if s.id == args.scenario), None)
+        if scenario is None:
+            raise ValidationError(f"Unknown scenario: {args.scenario}")
+        request = AnalysisRequest(
+            args.scenario,
+            TargetProfile(
+                args.organization, args.role or scenario.default_role, args.access, args.urgency
+            ),
+            args.existing,
+            args.proposed,
+        )
+        result = analyzer.analyze(request)
+        if args.output:
+            export_report(result, args.output, args.format)
+            print(f"Report saved: {args.output}")
+        else:
+            print(render_json(result) if args.format == "json" else render_text(result), end="")
+        return 0
+    except (ValidationError, OSError, EOFError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    except KeyboardInterrupt:
+        print("Cancelled.", file=sys.stderr)
+        return 130
