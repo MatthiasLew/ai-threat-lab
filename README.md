@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.6.0
+## Project status — 0.7.0
 
-Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -31,6 +31,18 @@ python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json
 ```
 
 The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
+
+## One-command scans and comparison
+
+```bash
+ai-threat-lab scan path/to/project --output-dir scan-results/run-01
+ai-threat-lab scan-check scan-results/run-01
+# Run again after reviewing or changing the same target:
+ai-threat-lab scan path/to/project --output-dir scan-results/run-02 --baseline scan-results/run-01
+ai-threat-lab scan-compare scan-results/run-01 scan-results/run-02
+```
+
+The bundle includes source observations, an automatic root dependency inventory, module status, JSON/HTML reports and a hash manifest. Online dependency checks additionally require `--network --share-packages`. Remote targets require `--network --allow-host EXACT_HOST`. No model call occurs. Failures remain explicit; disappearance is labeled **no longer observed**, never automatically **fixed**. [Scan workflow and limits](docs/SCAN_WORKFLOW.md).
 
 ## Read-only audits and optional AI
 

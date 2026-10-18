@@ -92,3 +92,7 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Durable local rehearsal (0.6.0)
 
 `training_lab.py` provides a SQLite-backed local state machine with exact plan approval, recipient/alias uniqueness, atomic idempotent action requests and permanent local plan revocation. It reuses the bounded `VoiceExerciseSession` policy for voice rehearsals. `training_cli.py` exposes numbered input and saved-session commands; it cannot select a provider or store raw replies. Separate rehearsal reports preserve selected-outcome provenance and do not become live campaign evidence.
+
+## Scan bundles and history comparison (0.7.0)
+
+`scan_engine.py` orchestrates injected target/inventory/advisory collectors and preserves failures as explicit gaps. `scan_bundle.py` stages artifacts, claims a new private directory without overwriting, and publishes its hash manifest last. The reader verifies bounded file hashes and regenerates the derived report from assessment documents. `scan_cli.py` provides the one-command workflow and bundle check/comparison commands. Scope/options and module status gate comparisons; an absent observation never proves remediation. Hashes are integrity checks, not signatures or authentic provenance.

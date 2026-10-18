@@ -47,6 +47,9 @@ COMMANDS = (
     "training-run",
     "training-report",
     "training-cancel",
+    "scan",
+    "scan-check",
+    "scan-compare",
 )
 
 

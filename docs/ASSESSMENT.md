@@ -35,3 +35,7 @@ Use `audit` for local inventory/metadata or explicitly opted-in GitHub, HTTPS, D
 ## Dependency advisory checks and combined reporting (0.5.0)
 
 The separate `audit-deps` workflow supports exact recorded Python/npm versions and opt-in OSV queries. `audit-report` combines existing assessments, preserves source/target/gaps, and provides JSON or escaped standalone HTML. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md). The original Python traversal now also stops at 1000 directories or 10000 entries, with an explicit notice.
+
+## Scan orchestration (0.7.0)
+
+`scan` combines the available built-in target collector with root dependency inventory and optional consented OSV lookup for local projects. It emits explicit failed/not-requested/not-applicable module status and partial reports. `scan-check` and `scan-compare` validate and compare committed bundles. Details and limits: [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md).

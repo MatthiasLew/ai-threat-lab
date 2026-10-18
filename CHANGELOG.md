@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Add a one-command read-only `scan` workflow over existing collectors, automatic local-project dependency inventory and explicitly opted-in OSV lookup. No automatic AI calls.
+- Preserve module failures and unchecked areas in useful partial reports; fail-on-findings is a separate opt-in exit policy.
+- Add private no-overwrite report bundles with staged bytes, manifest-last commit, SHA-256/size indexes and bounded integrity/derived-report checks.
+- Add `scan-check`, `scan-compare` and optional baseline comparison, preserving new/still/no-longer-observed labels without claiming remediation. Changed scope/module coverage disables deltas.
+- Add malformed bundle, symlink, concurrent directory-claim, interrupted publication, redaction, scope, CLI and installed-package tests.
+
 ## 0.6.0
 
 - Add approved local text-training sessions for email/voice/video scenarios, bound to exact preview digests, participant aliases and approved recipient indices.

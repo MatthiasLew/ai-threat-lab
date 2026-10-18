@@ -212,9 +212,29 @@ def main() -> None:
             )
         )
         assert revoked["cancelled_sessions"] == 0
-        print(
-            "Clean installed wheel: audit, cost, dependency, report and training workflows passed."
+        scan_project = work / "scan project"
+        scan_project.mkdir()
+        (scan_project / "app.py").write_text("eval(data)\n", encoding="utf-8")
+        (scan_project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
+        scan = json.loads(run(executable, "scan", scan_project, "--output-dir", "scan first"))
+        assert scan["unique_findings"] == 1 and scan["ai_calls"] == 0
+        assert scan["modules"]["dependency_inventory"]["status"] == "collected"
+        assert (
+            json.loads(run(executable, "scan-check", "scan first"))["status"]
+            == "integrity_verified"
         )
+        run(
+            executable,
+            "scan",
+            scan_project,
+            "--output-dir",
+            "scan second",
+            "--baseline",
+            "scan first",
+        )
+        comparison = json.loads(run(executable, "scan-compare", "scan first", "scan second"))
+        assert comparison["comparable"] and comparison["counts"]["still_observed"] == 1
+        print("Clean installed wheel: audit, costs, training and complete scan bundles passed.")
 
 
 if __name__ == "__main__":

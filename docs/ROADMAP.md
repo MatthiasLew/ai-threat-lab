@@ -94,3 +94,12 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] JSON/HTML selected-outcome reports and follow-up practice guidance.
 - [x] Explicit separation from live telemetry and personnel judgments.
 - [ ] Real speech/phone/media and live campaign integrations remain absent.
+
+## Scan workflow — 0.7.0
+
+- [x] One-command target checks plus automatic local-project dependency inventory.
+- [x] Explicit module status, partial-failure results and optional finding-based exit code.
+- [x] Private no-overwrite bundles with manifest-last publication and integrity/consistency checks.
+- [x] Baseline comparison with scope/module gates and observation-only change labels.
+- [x] Invalid/tampered bundle, interrupted write, path/symlink and installed CLI tests.
+- [ ] Remote GitHub dependency-lock inventory in the combined workflow, authenticated history storage and active assessment modules remain future work.

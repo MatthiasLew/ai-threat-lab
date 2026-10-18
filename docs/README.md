@@ -34,3 +34,5 @@ Start with the project plan to understand what will be built, then read the user
 - [Dependency advisories and merged remediation reports](DEPENDENCIES_AND_REPORTS.md)
 
 - [Approved local training lab, sessions and outcome interpretation](TRAINING_LAB.md)
+
+- [One-command scans, report bundles and baseline comparison](SCAN_WORKFLOW.md)

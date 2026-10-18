@@ -58,3 +58,7 @@ The HTTPS client additionally permits POST only to `https://api.osv.dev/v1/query
 ## Local training sessions (0.6.0)
 
 The `training-*` commands provide persistent, approved **local text rehearsals** without any provider key or network. They add structured selections, stop/expiry/cancellation and JSON/HTML practice reports. They do not add live email/phone/media transports, actual tracking or speech understanding. See [TRAINING_LAB.md](TRAINING_LAB.md).
+
+## Combined scan workflow (0.7.0)
+
+`scan TARGET --output-dir NEW_DIRECTORY` orchestrates the same built-in read-only collectors. Existing network/host/OAuth requirements still apply. Local dependency inventory is automatic, but OSV package sharing stays explicit. No AI API is called by `scan`. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md) for bundles, partial failures and comparison.

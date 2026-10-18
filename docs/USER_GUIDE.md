@@ -101,3 +101,7 @@ New commands: `audit`, `ai-explain`, `api-costs`, `api-reconcile`. Each provides
 ## Local interactive training (0.6.0)
 
 Create and approve a campaign preview, then run `training-start PLAN.json --approval APPROVAL.json --participant-id trainee-01 --ledger training.sqlite`. Use its returned session ID with `training-run`; only numbered actions are accepted. `training-report --ledger training.sqlite --format html --output training-report.html` exports practice outcomes. `training-cancel --plan-digest DIGEST --ledger training.sqlite` revokes that local plan. Full details: [TRAINING_LAB.md](TRAINING_LAB.md).
+
+## One-command scans (0.7.0)
+
+`scan TARGET --output-dir NEW_DIRECTORY` runs applicable built-in collectors and publishes a JSON/HTML bundle with module status and limits. For a local project, dependency inventory is automatic; OSV still requires `--network --share-packages`. `scan-check DIRECTORY` verifies hashes and report consistency; `scan-compare BEFORE AFTER` compares observations. Use `scan ... --baseline BEFORE` to include a comparison in the new bundle. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md).

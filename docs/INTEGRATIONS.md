@@ -1,9 +1,10 @@
-# Integration contracts and current capability boundary (0.6.0)
+# Integration contracts and current capability boundary (0.7.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
 | Capability | Implemented | Remaining limits |
 | --- | --- | --- |
+| Single-target scan workflow | Built-in collectors, local dependency inventory, opt-in OSV, committed bundles and observation deltas | Selected read-only checks only; no full-audit guarantee, automatic attacks or AI calls |
 | Local source/project | Selected Python AST, secret patterns, floating npm declarations | No full semantic/data-flow audit or advisory database |
 | Exported `.eml` | Limited header observations | No trusted authentication verification or attachment/link analysis |
 | GitHub | Retrieve pinned default-branch commit/tree/blobs and review selected files | Scoped token for private repos, live validation, broader analysis |

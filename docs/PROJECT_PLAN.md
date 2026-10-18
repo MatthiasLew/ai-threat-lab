@@ -45,3 +45,7 @@ Pinned dependency inventory and opt-in OSV advisory/version matching are impleme
 ## Additional delivery in 0.6.0
 
 Approved local text rehearsals now run from CLI with durable sessions, structured choices, bounded voice policy, expiry/stop/revocation and JSON/HTML reports. They prepare and test practice flows without model calls. They do not observe real email/call behavior, prove identity verification or implement any live communication/media service.
+
+## Additional delivery in 0.7.0
+
+Single-command scanning now orchestrates available read-only checks, local dependency inventory and opt-in OSV. It publishes partial JSON/HTML reports with explicit module status and checked artifact manifests. Baseline comparison reports exact observation changes while suppressing deltas for changed scope or failed modules. It does not implement new attack techniques, live communications, automatic AI calls or comprehensive scanning.
