@@ -7,7 +7,8 @@ def readiness():
             "local_code",
             "partial",
             "not_required",
-            "Selected Python AST rules, straight-line Flask flows and credential patterns; "
+            "Selected Python AST rules, local Flask flows with branch joins/one-pass loops "
+            "and credential patterns; "
             "broader language/interprocedural analysis absent.",
         ),
         (

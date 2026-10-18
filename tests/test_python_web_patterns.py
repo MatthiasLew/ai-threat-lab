@@ -46,7 +46,7 @@ jwt.decode(private_token, options={"verify_signature": False})
 def test_simple_calls_aliases_and_fixed_source_free_descriptors(source, rule):
     result = review_source(source)
     assert [item.rule_id for item in result.findings] == [rule]
-    assert result.engine == "python-ast-1.3"
+    assert result.engine == "python-ast-1.4"
     assert result.findings[0].rationale and result.findings[0].recommendation
 
 
@@ -105,7 +105,7 @@ def test_reports_omit_html_token_and_source_values(format):
     assert all(rule in report for rule in ("PY010", "PY011", "PY012"))
     if format == "sarif":
         run = json.loads(report)["runs"][0]
-        assert run["properties"]["engine"] == "python-ast-1.3"
+        assert run["properties"]["engine"] == "python-ast-1.4"
         assert [
             r["locations"][0]["physicalLocation"]["region"]["startLine"] for r in run["results"]
         ] == [3, 4, 5]
@@ -165,7 +165,7 @@ def test_engine_ten_readable_without_cross_engine_deltas(tmp_path):
     path.write_text(SAMPLE)
     ScanService(assessor).run(ScanOptions(str(path)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-12"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-13"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-10"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

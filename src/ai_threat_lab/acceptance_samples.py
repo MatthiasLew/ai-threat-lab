@@ -92,3 +92,19 @@ def synthetic_python_flow():
         "    query = 'SELECT fixture FROM sample WHERE name = ' + value\n"
         "    connection.execute(query)\n"
     )
+
+
+def synthetic_python_control_flow():
+    """Inert branch and loop fixture; parsed without importing Flask or executing SQL."""
+    return (
+        "from flask import request\nimport os, sqlite3\n"
+        "def inspect_example():\n"
+        "    if condition:\n"
+        "        value = request.args.get('fixture')\n"
+        "    else:\n"
+        "        value = 'fixed'\n"
+        "    os.system(value)\n"
+        "    connection = sqlite3.connect(':memory:')\n"
+        "    for term in request.args.getlist('fixture'):\n"
+        "        connection.execute('SELECT ' + term)\n"
+    )

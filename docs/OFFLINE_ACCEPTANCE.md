@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.20.0
+# Offline acceptance kit — 0.21.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -96,3 +96,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Selected input-flow fixture (0.20.0)
 
 `python-flow.py` is a separate inert source file with imported Flask request access, one shell API and one recognized SQLite connection. It is parsed only. Its verified bundle contains PY005, PY013 and PY014: three observations, of which two are the new input-flow candidates. The summary records `python_flow_observations: 3`, and `index.html` links the report. Source lines are retained without source values. No Flask installation, database opening, command execution or network access occurs. Missing/incorrect flow evidence prevents `demo-result.json` publication. Existing before/after and eight-pattern fixture expectations remain unchanged. See [flow scope](PYTHON_FLOW.md).
+
+## Branch/loop fixture (0.21.0)
+
+`python-control-flow.py` is a separate inert Flask source fixture with input assigned in one if branch, a shell sink after the join and query text derived from a for-loop target. Its bundle contains PY005, PY013 and PY014, recorded as `python_control_flow_observations: 3`. The report preserves a loop-carried-dependency gap. `index.html` links the report, and missing/incorrect evidence prevents completion publication. It never imports Flask, opens SQLite, iterates actual input or executes commands. Existing fixture expectations remain unchanged.

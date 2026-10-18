@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.21.0
+
+- Extend PY013/PY014 with possible-origin if/else/elif joins, conditional/boolean expressions and nested condition operands. Exclude terminated branches from successor states and prune direct literal boolean choices.
+- Preserve API/SQLite identity only when all reaching states agree; expose ambiguous-binding gaps rather than guessing runtime objects. No path-feasibility, correlated-condition or implicit-flow proof.
+- Inspect selected for/while bodies once with zero/one-iteration joins and loop else; retain explicit loop-carried/convergence gaps. Skip loops containing break/continue as barriers.
+- Add control-flow nesting bounds and keep function-scope/step/depth/origin/finding limits. No execution, framework import, database or network access.
+- Add a separate inert branch/loop demo and installed-wheel checks, plus 62 control-flow regression/integration/CLI cases and documentation.
+- Advance Python engine to python-ast-1.4 and scan engine to 13; retain earlier bundle reading and suppress cross-engine comparisons. API setup remains deferred.
+
 ## 0.20.0
 
 - Add PY013/PY014: bounded straight-line dependencies from explicitly imported Flask request sources to selected shell command and recognized SQLite query APIs.

@@ -11,6 +11,7 @@ from .acceptance_samples import (
     synthetic_header_capture,
     synthetic_kubernetes_manifest,
     synthetic_message,
+    synthetic_python_control_flow,
     synthetic_python_flow,
 )
 from .audit_report import merge_reports, render_html
@@ -167,6 +168,17 @@ def offline_demo(output, *, now=None):
         or flow_rules != {"PY005", "PY013", "PY014"}
     ):
         raise ValidationError("Synthetic Python flow acceptance failed; demo is incomplete")
+    control_source = root / "python-control-flow.py"
+    control_source.write_text(synthetic_python_control_flow(), encoding="utf-8")
+    control = engine.run(ScanOptions(str(control_source)), root / "python-control-flow")
+    control_bundle = read_bundle(root / "python-control-flow")
+    control_rules = {f["check"] for f in control_bundle["documents"]["assessment.json"]["findings"]}
+    if (
+        control["failed_modules"]
+        or control["unique_findings"] != 3
+        or control_rules != {"PY005", "PY013", "PY014"}
+    ):
+        raise ValidationError("Synthetic Python control-flow acceptance failed; demo is incomplete")
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -210,6 +222,7 @@ def offline_demo(output, *, now=None):
         "output_directory": str(root.resolve()),
         "python_pattern_observations": patterns["unique_findings"],
         "python_flow_observations": flows["unique_findings"],
+        "python_control_flow_observations": control["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
@@ -234,6 +247,7 @@ def offline_demo(output, *, now=None):
         ),
         ("Python pattern observations", "python-patterns/report.html"),
         ("Python flow observations", "python-flow/report.html"),
+        ("Python branch/loop observations", "python-control-flow/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
         ("Synthetic HTTP header observations", "headers-review.html"),

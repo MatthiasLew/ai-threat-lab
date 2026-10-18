@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.20.0
+# Test strategy and integration readiness — 0.21.0
 
-The offline suite contains 1431 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.6%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1489 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.6%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -92,3 +92,7 @@ Tests cover ten explicit rule families, three container groups, all supported wo
 ## Bounded Python flows (0.20.0)
 
 92 new cases cover explicit Flask request sources, import aliases, request/SQLite object aliases, assignments/reassignments, annotations, concatenation/interpolation, selected string transformations, shell and SQLite sinks, parameterized SQL negatives, function isolation/argument shadowing and return/raise termination. Barrier/import/unknown-result gaps, source-line merging, source/step/depth/scope/finding bounds, source-free JSON/text/SARIF, local/GitHub reports, real CLI no-overwrite/exit behavior, engine-11 compatibility and incomplete-demo publication are exercised. The installed-wheel gate verifies the inert flow fixture without importing Flask or executing SQL/commands. These tests establish the documented static behavior, not real-environment exploitability.
+
+## Local control-flow abstraction (0.21.0)
+
+62 new cases exercise possible-path if/else/elif and conditional/boolean expression joins, source-origin merging, literal boolean pruning, no implicit condition taint, terminated branches, definite/ambiguous API identities, loop targets, zero/one iteration joins, loop else, literal while behavior, skipped break/continue and loop-carried gaps. They cover block-depth and function-scope budgets, sequential joins without path enumeration, source-free reports, local/GitHub/bundle/real-CLI behavior, engine-12 compatibility and incomplete-demo publication. The clean installed-wheel gate requires the separate three-observation branch/loop fixture. Feasible paths, loop convergence and real exploitability remain unvalidated.

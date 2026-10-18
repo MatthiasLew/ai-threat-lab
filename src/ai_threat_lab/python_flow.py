@@ -1,15 +1,17 @@
-"""Bounded straight-line Flask-to-shell/SQLite candidate discovery, without execution."""
+"""Bounded local Flask-to-shell/SQLite candidate discovery, without execution."""
 
 import ast
 from dataclasses import dataclass
 
 NOTICE = (
-    "Flow coverage: selected Flask sources and shell/SQLite sinks, straight-line local "
-    "assignments only; no interprocedural, branch, heap, sanitizer, runtime-binding "
+    "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, "
+    "branch joins and one-pass loops; no interprocedural, path-feasibility, heap, sanitizer, "
+    "runtime-binding "
     "or exploitability validation."
 )
 MAX_STEPS = 20000
 MAX_DEPTH = 64
+MAX_BLOCK_DEPTH = 32
 MAX_SCOPES = 100
 MAX_FINDINGS = 200
 SOURCE_FIELDS = {"args", "form", "values", "cookies", "headers", "json", "data", "query_string"}
@@ -32,6 +34,9 @@ TRANSFORMS = {
     "replace",
     "encode",
     "decode",
+    "split",
+    "rsplit",
+    "splitlines",
 }
 
 
@@ -60,6 +65,74 @@ class Flow:
         if len(origins) > 8:
             self.note("source-origin limit reached; only the first eight line numbers retained.")
         return Value(origins=frozenset(sorted(origins)[:8]))
+
+    def join_value(self, values):
+        symbols = {value.symbol for value in values}
+        database = all(value.database for value in values)
+        if (len(symbols) > 1 and any(symbols)) or (
+            any(value.database for value in values) and not database
+        ):
+            self.note("join lost ambiguous API/object bindings; some flows unchecked.")
+        return Value(
+            symbol=values[0].symbol if len(symbols) == 1 else "",
+            origins=self.merge(values).origins,
+            database=database,
+        )
+
+    def join_env(self, states):
+        return {
+            key: self.join_value([state.get(key, EMPTY) for state in states])
+            for key in set().union(*(state.keys() for state in states))
+        }
+
+    @staticmethod
+    def literal_bool(node):
+        return node.value if isinstance(node, ast.Constant) and type(node.value) is bool else None
+
+    def conditional(self, statement, env, depth):
+        self.expr(statement.test, env)
+        condition = self.literal_bool(statement.test)
+        branches = (
+            [statement.body]
+            if condition is True
+            else [statement.orelse]
+            if condition is False
+            else [statement.body, statement.orelse]
+        )
+        states = []
+        for branch in branches:
+            state = dict(env)
+            if self.block(branch, state, depth=depth + 1, scope=False):
+                states.append(state)
+        if not states:
+            return False
+        env.clear()
+        env.update(self.join_env(states))
+        return True
+
+    def loop(self, statement, env, depth):
+        self.note("one-pass loops only; loop-carried dependencies/convergence unchecked.")
+        if any(isinstance(node, (ast.Break, ast.Continue)) for node in ast.walk(statement)):
+            env.clear()
+            self.note("loop with break/continue skipped; tracking reset at barrier.")
+            return True
+        is_while = isinstance(statement, ast.While)
+        condition = self.literal_bool(statement.test) if is_while else None
+        value = self.expr(statement.test if is_while else statement.iter, env)
+        initial, iteration = dict(env), dict(env)
+        if not is_while:
+            self.bind(statement.target, Value(origins=value.origins), iteration)
+        states = [initial]
+        if condition is not False:
+            reaches_end = self.block(statement.body, iteration, depth=depth + 1, scope=False)
+            if is_while and condition is True:
+                # No break is supported: literal True cannot reach its else or successor.
+                return False
+            if reaches_end:
+                states.append(iteration)
+        env.clear()
+        env.update(self.join_env(states))
+        return self.block(statement.orelse, env, depth=depth + 1, scope=False)
 
     def record(self, rule, node, value):
         if not value.origins:
@@ -97,6 +170,30 @@ class Flow:
             return Value(origins=value.origins)
         if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
             return self.merge([evaluate(node.left), evaluate(node.right)])
+        if isinstance(node, ast.IfExp):
+            evaluate(node.test)
+            condition = self.literal_bool(node.test)
+            if condition is not None:
+                return evaluate(node.body if condition else node.orelse)
+            return self.join_value([evaluate(node.body), evaluate(node.orelse)])
+        if isinstance(node, ast.BoolOp):
+            values = []
+            for item in node.values:
+                values.append(evaluate(item))
+                literal = self.literal_bool(item)
+                if (isinstance(node.op, ast.And) and literal is False) or (
+                    isinstance(node.op, ast.Or) and literal is True
+                ):
+                    break
+            return self.merge(values)
+        if isinstance(node, ast.Compare):
+            evaluate(node.left)
+            for item in node.comparators:
+                evaluate(item)
+            return EMPTY
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            evaluate(node.operand)
+            return EMPTY
         if isinstance(node, ast.JoinedStr):
             return self.merge([evaluate(item) for item in node.values])
         if isinstance(node, ast.FormattedValue):
@@ -162,8 +259,13 @@ class Flow:
                     env[node.id] = EMPTY
             self.note("destructuring/attribute/subscript writes are not modeled.")
 
-    def block(self, body, env):
-        self.scopes += 1
+    def block(self, body, env, *, depth=0, scope=True):
+        if depth > MAX_BLOCK_DEPTH:
+            env.clear()
+            self.note("control-flow nesting limit reached; deeper blocks unchecked.")
+            return True
+        if scope:
+            self.scopes += 1
         if self.scopes > MAX_SCOPES:
             self.note("scope limit reached; additional function bodies unchecked.")
             return
@@ -208,6 +310,12 @@ class Flow:
                         local[arg.arg] = EMPTY
                 env[statement.name] = EMPTY
                 self.block(statement.body, local)
+            elif isinstance(statement, ast.If):
+                if not self.conditional(statement, env, depth):
+                    return False
+            elif isinstance(statement, (ast.For, ast.While)):
+                if not self.loop(statement, env, depth):
+                    return False
             elif isinstance(statement, ast.Assign):
                 value = self.expr(statement.value, env)
                 for target in statement.targets:
@@ -233,9 +341,11 @@ class Flow:
                 for target in statement.targets:
                     self.bind(target, EMPTY, env)
             elif not isinstance(statement, ast.Pass):
-                # Branches, loops, with/try, classes and global/nonlocal effects need a CFG.
+                # Exceptions/context managers/classes and scope effects remain barriers.
                 env.clear()
                 self.note("control flow/classes/scope effects skipped; tracking reset at barrier.")
+
+        return True
 
 
 def discover_flows(tree):

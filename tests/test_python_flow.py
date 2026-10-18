@@ -124,7 +124,6 @@ def test_sqlite_connection_and_cursor_identities(sink):
         "request=other\nos.system(request.args['q'])",
         "os=other\nos.system(request.args['q'])",
         "value=request.args['q']\ncommand=unknown_wrapper(value)\nos.system(command)",
-        "value=request.args['q']\ncommand=(value if flag else 'fixed')\nos.system(command)",
         "def run(request):\n    os.system(request.args['q'])",
         "def run(*request):\n    os.system(request.args['q'])",
         "def run(**request):\n    os.system(request.args['q'])",
@@ -158,9 +157,6 @@ def test_chained_annotated_and_augmented_assignments():
 @pytest.mark.parametrize(
     "barrier",
     [
-        "if flag:\n    pass",
-        "for item in values:\n    pass",
-        "while flag:\n    pass",
         "with resource:\n    pass",
         "try:\n    pass\nexcept Error:\n    pass",
         "class Example:\n    pass",
@@ -233,7 +229,7 @@ def test_no_import_execution_or_network(tmp_path, monkeypatch):
 def test_local_scan_reports_keep_origin_and_gap_evidence(tmp_path):
     project = tmp_path / "project"
     project.mkdir()
-    source = synthetic_python_flow() + "\nif flag:\n    pass\n"
+    source = synthetic_python_flow() + "\nwith resource:\n    pass\n"
     (project / "source.py").write_text(source)
     for result in (AssessmentService().assess(str(project)), local_inventory(str(project))):
         assert len(result.findings) == 3
@@ -245,7 +241,7 @@ def test_local_scan_reports_keep_origin_and_gap_evidence(tmp_path):
 
 
 def test_immutable_github_keeps_origin_and_gap_evidence():
-    item, data = blob(synthetic_python_flow() + "\nif flag:\n    pass\n")
+    item, data = blob(synthetic_python_flow() + "\nwith resource:\n    pass\n")
     client = QueueHTTP(*repository(item), data)
     snapshot = GithubAudit(client).collect("https://github.com/owner/repo")
     assert len(client.calls) == 4
@@ -273,7 +269,7 @@ def test_engine_eleven_reading_without_cross_engine_comparison(tmp_path):
     source.write_text(synthetic_python_flow())
     ScanService(assessor).run(ScanOptions(str(source)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-12"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-13"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-11"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

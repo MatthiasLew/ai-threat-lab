@@ -189,3 +189,7 @@ Implemented explicit Jinja autoescape, Django/MarkupSafe trust-marker and litera
 ## Bounded Python input flow — 0.20.0
 
 Implemented selected straight-line Flask request origins, string/assignment propagation and shell/recognized SQLite sinks with line-only evidence and explicit gap notices. See [PYTHON_FLOW.md](PYTHON_FLOW.md). Broader stacks, control-flow graphs, cross-function propagation, heap effects, framework binding and real applicability validation remain separate work; this stage does not complete general data-flow analysis. API setup remains deferred.
+
+## Local branch joins and loop abstraction — 0.21.0
+
+Implemented possible-origin joins for selected if/else/elif, conditional/boolean expressions and one-pass for/while abstraction, preserving definite API identities and excluding terminated branches. See [PYTHON_FLOW.md](PYTHON_FLOW.md). Full control-flow graphs, feasibility/condition correlation, loop fixed points, break/continue, exceptions and interprocedural propagation remain future work. API setup remains deferred.

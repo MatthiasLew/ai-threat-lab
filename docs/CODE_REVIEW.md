@@ -36,7 +36,7 @@ A finding contains a rule ID, line, column, severity, rationale and recommendati
 
 ## Exact scope of the added patterns
 
-The fourteen rule families use engine `python-ast-1.3` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
+The fourteen rule families use engine `python-ast-1.4` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
 
 PY007 identifies the helper whose defaults disable verification. Explicit overrides and later context mutation are not evaluated: a call with `cert_reqs=ssl.CERT_REQUIRED` still produces a review candidate, not a claim that final verification is disabled.
 
@@ -60,7 +60,7 @@ Primary API references: [Jinja Environment/autoescape](https://jinja.palletsproj
 
 ## Selected local input flow (0.20.0)
 
-PY013/PY014 add bounded straight-line propagation from explicitly imported Flask request APIs to selected shell calls and recognized SQLite connection/cursor APIs. They preserve source and sink line evidence, while remaining unvalidated candidates. They may coexist with the existing API-pattern observation at the same sink. See [PYTHON_FLOW.md](PYTHON_FLOW.md) for exact sources, transformations, barriers, limits and unchecked cases.
+PY013/PY014 add bounded straight-line propagation from explicitly imported Flask request APIs to selected shell calls and recognized SQLite connection/cursor APIs. They preserve source and sink line evidence, while remaining unvalidated candidates. Version 0.21 extends these rules to possible branch joins and one-pass for/while abstraction; this does not validate feasible runtime paths. They may coexist with the existing API-pattern observation at the same sink. See [PYTHON_FLOW.md](PYTHON_FLOW.md) for exact sources, transformations, barriers, limits and unchecked cases.
 
 ## Limits
 
