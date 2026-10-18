@@ -257,6 +257,16 @@ def main() -> None:
         demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
         assert demo["before_findings"] == 3 and demo["after_findings"] == 0
         assert demo["training_channels"] == ["email", "voice", "video"]
+        assert demo["python_flow_observations"] == 3
+        flow_review = json.loads(
+            run(executable, "review-code", "offline demo/python-flow.py", "--format", "json")
+        )
+        assert {f["rule_id"] for f in flow_review["review"]["findings"]} == {
+            "PY005",
+            "PY013",
+            "PY014",
+        }
+        run(executable, "scan-check", "offline demo/python-flow")
         assert demo["python_pattern_observations"] == 8
         patterns = json.loads(
             run(

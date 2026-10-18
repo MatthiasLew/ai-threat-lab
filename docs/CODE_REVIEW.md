@@ -29,12 +29,14 @@ Only one explicitly selected `.py` file is inspected per call. The source limit 
 | PY010 | Jinja Environment with literal autoescape=False | Enable context-appropriate HTML autoescaping |
 | PY011 | Django mark_safe / MarkupSafe Markup | Trace trust/sanitization before bypassing escaping |
 | PY012 | PyJWT-style decode with literal verify_signature=False options | Verify signatures before trusting claims |
+| PY013 | Selected Flask input propagated to shell command | Review the input-to-command path and avoid shell interpretation |
+| PY014 | Selected Flask input propagated into SQLite query text | Use parameter binding and review dynamic query structure |
 
 A finding contains a rule ID, line, column, severity, rationale and recommendation. Severity describes the potentially risky pattern, not confirmed exploitability. Reports omit source snippets and argument values. A report includes the supplied filename, so consider that when sharing it.
 
 ## Exact scope of the added patterns
 
-The twelve rule families use engine `python-ast-1.2` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
+The fourteen rule families use engine `python-ast-1.3` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
 
 PY007 identifies the helper whose defaults disable verification. Explicit overrides and later context mutation are not evaluated: a call with `cert_reqs=ssl.CERT_REQUIRED` still produces a review candidate, not a claim that final verification is disabled.
 
@@ -56,9 +58,13 @@ All three rules use the existing source-byte bound, source-free reports, simple 
 
 Primary API references: [Jinja Environment/autoescape](https://jinja.palletsprojects.com/en/stable/api/), [Django security and mark_safe](https://docs.djangoproject.com/en/6.0/topics/security/), [MarkupSafe constructors and escaping](https://markupsafe.palletsprojects.com/en/stable/escaping/), [PyJWT unverified reading](https://pyjwt.readthedocs.io/en/latest/usage.html#reading-the-claimset-without-validation).
 
+## Selected local input flow (0.20.0)
+
+PY013/PY014 add bounded straight-line propagation from explicitly imported Flask request APIs to selected shell calls and recognized SQLite connection/cursor APIs. They preserve source and sink line evidence, while remaining unvalidated candidates. They may coexist with the existing API-pattern observation at the same sink. See [PYTHON_FLOW.md](PYTHON_FLOW.md) for exact sources, transformations, barriers, limits and unchecked cases.
+
 ## Limits
 
-Simple import aliases are recognized. Aliases reassigned later, local scope/shadowing, dynamic imports, computed keyword arguments, wrapper functions, and interprocedural data flow are not resolved. This can produce both false positives and false negatives. The tool does not decide whether input is actually attacker controlled. A clean report does not establish security.
+For PY001–PY012, simple global import aliases are recognized. Aliases reassigned later, local scope/shadowing, dynamic imports, computed keyword arguments, wrapper functions, and interprocedural data flow are not resolved. PY013/PY014 instead use the separate bounded sequential binding model documented above; it is not a comprehensive Python symbol resolver. This can produce both false positives and false negatives. The tool does not decide whether input is actually attacker controlled. A clean report does not establish security.
 
 The narrative scenario `insecure_generated_code` is separate from static review: its ordinal risk score is not computed from AST findings. Selecting the `static_analysis` defense in a simulation means assuming relevant checks were performed; merely running this limited tool does not establish that assumption.
 

@@ -7,7 +7,8 @@ def readiness():
             "local_code",
             "partial",
             "not_required",
-            "Selected Python AST rules and credential patterns; broader language analysis absent.",
+            "Selected Python AST rules, straight-line Flask flows and credential patterns; "
+            "broader language/interprocedural analysis absent.",
         ),
         (
             "configuration",

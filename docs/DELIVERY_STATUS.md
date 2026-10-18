@@ -1,10 +1,10 @@
-# Delivery status and remaining work — 0.19.0
+# Delivery status and remaining work — 0.20.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Twelve bounded Python AST rule families, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Fourteen bounded Python AST rule families including straight-line Flask-to-shell/SQLite flows, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, interprocedural/control-flow analysis, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
@@ -69,6 +69,10 @@ Local and pinned GitHub dependency collection now accept bounded `go.sum` module
 ## Python web API follow-up (0.19.0)
 
 The shared AST reviewer now observes explicit Jinja autoescape opt-out, Django/MarkupSafe HTML trust markers and literal PyJWT-style signature-verification opt-out. Standalone JSON/text/SARIF, local/GitHub scans and the eight-observation demo share these checks. Library identity, data provenance, sanitization, effective runtime settings and authorization use remain unchecked. See [CODE_REVIEW.md](CODE_REVIEW.md).
+
+## Selected Python input-flow follow-up (0.20.0)
+
+The shared AST reviewer now carries selected Flask input origins through bounded local assignments and string expressions to shell and recognized SQLite query APIs. Reports retain line-only source/sink evidence and explicit barriers/limits. The separate inert demo verifies two flow observations plus one existing shell API observation. Branches, loops, exceptions, heap mutation, wrappers, cross-function propagation, runtime binding and exploitability are not resolved. See [PYTHON_FLOW.md](PYTHON_FLOW.md).
 
 ## Remaining order of work
 

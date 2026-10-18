@@ -11,6 +11,7 @@ from .acceptance_samples import (
     synthetic_header_capture,
     synthetic_kubernetes_manifest,
     synthetic_message,
+    synthetic_python_flow,
 )
 from .audit_report import merge_reports, render_html
 from .batch_scan import check_batch, run_batch
@@ -155,6 +156,17 @@ def offline_demo(output, *, now=None):
     patterns = engine.run(ScanOptions(str(pattern_source)), root / "python-patterns")
     if patterns["failed_modules"] or patterns["unique_findings"] != 8:
         raise ValidationError("Synthetic Python pattern acceptance failed; demo is incomplete")
+    flow_source = root / "python-flow.py"
+    flow_source.write_text(synthetic_python_flow(), encoding="utf-8")
+    flows = engine.run(ScanOptions(str(flow_source)), root / "python-flow")
+    flow_bundle = read_bundle(root / "python-flow")
+    flow_rules = {f["check"] for f in flow_bundle["documents"]["assessment.json"]["findings"]}
+    if (
+        flows["failed_modules"]
+        or flows["unique_findings"] != 3
+        or flow_rules != {"PY005", "PY013", "PY014"}
+    ):
+        raise ValidationError("Synthetic Python flow acceptance failed; demo is incomplete")
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -197,6 +209,7 @@ def offline_demo(output, *, now=None):
         "ai_calls": 0,
         "output_directory": str(root.resolve()),
         "python_pattern_observations": patterns["unique_findings"],
+        "python_flow_observations": flows["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
@@ -220,6 +233,7 @@ def offline_demo(output, *, now=None):
             for channel in ("email", "voice", "video")
         ),
         ("Python pattern observations", "python-patterns/report.html"),
+        ("Python flow observations", "python-flow/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
         ("Synthetic HTTP header observations", "headers-review.html"),

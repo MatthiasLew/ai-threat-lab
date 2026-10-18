@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.19.0
+# Offline acceptance kit — 0.20.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -92,3 +92,7 @@ This is a static inventory of implementation scope, not an account health check.
 ## What remains after this offline kit
 
 Live email delivery, telephony, speech/media providers, authenticated participant-event collection and broader application analysis and deeper binary validation are not implemented by the kit. Their adapters, consent/scope enforcement at the external boundary and controlled integration tests require separate work. No account or API setup is performed in this release. See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for the complete input/capability matrix and remaining order of work.
+
+## Selected input-flow fixture (0.20.0)
+
+`python-flow.py` is a separate inert source file with imported Flask request access, one shell API and one recognized SQLite connection. It is parsed only. Its verified bundle contains PY005, PY013 and PY014: three observations, of which two are the new input-flow candidates. The summary records `python_flow_observations: 3`, and `index.html` links the report. Source lines are retained without source values. No Flask installation, database opening, command execution or network access occurs. Missing/incorrect flow evidence prevents `demo-result.json` publication. Existing before/after and eight-pattern fixture expectations remain unchanged. See [flow scope](PYTHON_FLOW.md).

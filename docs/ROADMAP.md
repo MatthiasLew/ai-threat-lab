@@ -185,3 +185,7 @@ Implemented bounded `go.sum` module-content identities through local/GitHub depe
 ## Python web API candidates — 0.19.0
 
 Implemented explicit Jinja autoescape, Django/MarkupSafe trust-marker and literal PyJWT-style signature-option observations in the shared AST reviewer. See [CODE_REVIEW.md](CODE_REVIEW.md). Next depth work requires scoped symbol/data-flow analysis and framework/runtime applicability, rather than interpreting these syntactic candidates as confirmed vulnerabilities. API setup remains deferred.
+
+## Bounded Python input flow — 0.20.0
+
+Implemented selected straight-line Flask request origins, string/assignment propagation and shell/recognized SQLite sinks with line-only evidence and explicit gap notices. See [PYTHON_FLOW.md](PYTHON_FLOW.md). Broader stacks, control-flow graphs, cross-function propagation, heap effects, framework binding and real applicability validation remain separate work; this stage does not complete general data-flow analysis. API setup remains deferred.

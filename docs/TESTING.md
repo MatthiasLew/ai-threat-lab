@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.19.0
+# Test strategy and integration readiness — 0.20.0
 
-The offline suite contains 1339 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.6%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1431 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.6%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -88,3 +88,7 @@ Tests cover ten explicit rule families, three container groups, all supported wo
 ## Python web API patterns (0.19.0)
 
 55 new cases cover direct/aliased Jinja autoescape opt-out, Django/MarkupSafe trust markers, PyJWT-style decode/signature options, nonmatching and ambiguous syntax, duplicate/computed/unpacked dictionary keys, static trusted-markup caveats and source-free text/JSON/SARIF. Integration checks cover local projects, immutable GitHub blobs, real CLI exit/no-overwrite behavior, no source execution/network, engine-10 bundle compatibility and incomplete-demo publication. The installed-wheel gate requires eight inert PY005–PY012 observations without importing web frameworks. Findings remain unvalidated candidates.
+
+## Bounded Python flows (0.20.0)
+
+92 new cases cover explicit Flask request sources, import aliases, request/SQLite object aliases, assignments/reassignments, annotations, concatenation/interpolation, selected string transformations, shell and SQLite sinks, parameterized SQL negatives, function isolation/argument shadowing and return/raise termination. Barrier/import/unknown-result gaps, source-line merging, source/step/depth/scope/finding bounds, source-free JSON/text/SARIF, local/GitHub reports, real CLI no-overwrite/exit behavior, engine-11 compatibility and incomplete-demo publication are exercised. The installed-wheel gate verifies the inert flow fixture without importing Flask or executing SQL/commands. These tests establish the documented static behavior, not real-environment exploitability.

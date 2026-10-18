@@ -78,3 +78,17 @@ def synthetic_kubernetes_manifest():
 def synthetic_go_sum():
     """Fictional module and syntactically valid h1 field; never fetched/verified."""
     return "example.invalid/fixture-module v1.2.3 h1:" + "A" * 43 + "=\n"
+
+
+def synthetic_python_flow():
+    """Flask/SQLite source is parsed only; neither framework nor commands are run."""
+    return (
+        "from flask import request\nimport os, sqlite3\n"
+        "def inspect_example():\n"
+        "    value = request.args.get('fixture')\n"
+        "    command = 'fixture-command ' + value\n"
+        "    os.system(command)\n"
+        "    connection = sqlite3.connect(':memory:')\n"
+        "    query = 'SELECT fixture FROM sample WHERE name = ' + value\n"
+        "    connection.execute(query)\n"
+    )

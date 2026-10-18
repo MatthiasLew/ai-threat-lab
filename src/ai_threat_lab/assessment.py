@@ -232,9 +232,12 @@ class AssessmentService:
                                 omitted += 1
                     if traversal_limited:
                         break
+            from .python_flow import NOTICE as FLOW_NOTICE
+
             findings = []
             missing = [
-                "Only selected Python AST patterns were checked; no execution or full audit."
+                FLOW_NOTICE,
+                "Only selected Python AST patterns were checked; no execution or full audit.",
             ]
             for path in paths:
                 try:
@@ -242,11 +245,17 @@ class AssessmentService:
                 except (ValidationError, OSError) as exc:
                     missing.append(f"Skipped {path}: {type(exc).__name__}")
                     continue
+                missing.extend(
+                    f"{path}: {notice}"
+                    for notice in result.limitations
+                    if notice.startswith("Flow coverage:") and notice != FLOW_NOTICE
+                )
                 findings.extend(
                     AssessmentFinding(
                         f.rule_id,
                         "candidate",
-                        f"{path}:{f.line}:{f.column} — {f.title}",
+                        f"{path}:{f.line}:{f.column} — {f.title}"
+                        + (f". {f.rationale}" if f.rule_id in ("PY013", "PY014") else ""),
                         f.recommendation,
                     )
                     for f in result.findings

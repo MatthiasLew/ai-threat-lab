@@ -21,6 +21,7 @@ from .kubernetes_review import review_kubernetes_source
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
 from .models import ValidationError
 from .providers import ProviderError
+from .python_flow import NOTICE as FLOW_NOTICE
 
 
 def finding(check, evidence, recommendation):
@@ -239,12 +240,23 @@ class GithubAudit:
             if path.suffix == ".py":
                 try:
                     result = review_source(source, name)
+                    missing.extend(
+                        f"{name}: {notice}"
+                        for notice in result.limitations
+                        if notice.startswith("Flow coverage:") and notice != FLOW_NOTICE
+                    )
                     findings.extend(
-                        finding(f.rule_id, f"{name}:{f.line}: {f.title}", f.recommendation)
+                        finding(
+                            f.rule_id,
+                            f"{name}:{f.line}: {f.title}"
+                            + (f". {f.rationale}" if f.rule_id in ("PY013", "PY014") else ""),
+                            f.recommendation,
+                        )
                         for f in result.findings
                     )
                 except ValidationError:
                     missing.append(f"Could not parse Python file: {name}")
+        missing.append(FLOW_NOTICE)
         missing.append(KUBERNETES_NOTICE)
         missing.append(f"Inspected {count} selected files ({total} bytes).")
         return GithubSnapshot(

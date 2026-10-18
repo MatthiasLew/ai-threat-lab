@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.20.0
+
+- Add PY013/PY014: bounded straight-line dependencies from explicitly imported Flask request sources to selected shell command and recognized SQLite query APIs.
+- Track simple assignments, aliases, selected string operations and imported SQLite connection/cursor identities; preserve source/sink lines without input values.
+- Keep parameterized query values separate from query-text observations. Reset tracking at unsupported control-flow barriers; expose unknown-call, import, write and resource-limit gaps.
+- Bound flow expression steps/depth, scopes, source origins and findings. No framework imports, source execution, HTTP calls, database opening or exploit validation.
+- Reuse observations and coverage notices in standalone JSON/text/SARIF, local/GitHub assessments and reports. Add an inert flow demo plus installed-wheel gate and 92 regression/integration/CLI cases.
+- Advance Python engine to python-ast-1.3 and scan engine to 12; retain older bundle reading and suppress cross-engine comparisons. API setup remains deferred.
+
 ## 0.19.0
 
 - Extend Python review to twelve rule families: explicit Jinja autoescape=False, Django/MarkupSafe safe-HTML markers and PyJWT-style literal verify_signature=False options.

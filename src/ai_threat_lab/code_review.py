@@ -8,12 +8,14 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .models import ValidationError
+from .python_flow import discover_flows
 from .python_web_patterns import web_rule
 
 MAX_SOURCE_BYTES = 256 * 1024
 LIMITATIONS = (
     "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
-    "No data-flow, dependency, alias-rebinding or comprehensive scope analysis is performed.",
+    "Only selected straight-line local flows; no dependency, interprocedural "
+    "or full scope analysis.",
     "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
     "A clean result does not establish that code is secure. Source is never executed or uploaded.",
 )
@@ -35,7 +37,7 @@ class CodeReviewResult:
     filename: str
     findings: tuple[CodeFinding, ...]
     limitations: tuple[str, ...] = LIMITATIONS
-    engine: str = "python-ast-1.2"
+    engine: str = "python-ast-1.3"
 
 
 def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str:
@@ -230,7 +232,34 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                     recommendation,
                 )
             )
-    return CodeReviewResult(filename, tuple(sorted(findings, key=lambda f: (f.line, f.column))))
+    flows, flow_notices = discover_flows(tree)
+    for rule_id, node, origins in flows:
+        shell = rule_id == "PY013"
+        findings.append(
+            CodeFinding(
+                rule_id,
+                node.lineno,
+                node.col_offset + 1,
+                "High",
+                "Selected HTTP input reaches a shell call"
+                if shell
+                else "Selected HTTP input reaches SQLite query text",
+                "Straight-line static dependency from Flask request source line(s): "
+                + ", ".join(map(str, origins))
+                + ". Runtime bindings, constraints and "
+                "exploitability are unverified.",
+                "Use shell=False argument lists and validate permitted operations; review the "
+                "input-to-command path."
+                if shell
+                else "Use SQLite parameter binding for values; keep query structure separate from "
+                "request data and review any dynamic identifiers.",
+            )
+        )
+    return CodeReviewResult(
+        filename,
+        tuple(sorted(findings, key=lambda f: (f.line, f.column, f.rule_id))),
+        (*LIMITATIONS, *flow_notices),
+    )
 
 
 def review_file(path: Path) -> CodeReviewResult:
