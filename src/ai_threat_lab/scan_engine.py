@@ -12,6 +12,7 @@ from .audit_report import merge_reports, render_html
 from .dependencies import inventory
 from .models import ValidationError
 from .providers import ProviderError
+from .remote_audit import GithubSnapshot
 from .scan_bundle import (
     compare_bundles,
     document,
@@ -79,8 +80,10 @@ class ScanOptions:
             or not re.fullmatch(r"[A-Za-z0-9_-]{1,63}", self.dkim_selector)
         ):
             raise ValidationError("DKIM selector applies only to a mail-domain target")
-        if self.share_packages and (not self.network or kind != "local_project"):
-            raise ValidationError("OSV sharing currently requires a local project and --network")
+        if self.share_packages and (
+            not self.network or kind not in ("local_project", "github_repository")
+        ):
+            raise ValidationError("OSV sharing requires a local/GitHub project and --network")
         if self.advisory_cache is not None and not self.share_packages:
             raise ValidationError("Advisory cache requires explicit package sharing")
 
@@ -88,7 +91,7 @@ class ScanOptions:
         return {
             "target": self.target,
             "target_kind": identify_target(self.target),
-            "engine": "read-only-pipeline-1",
+            "engine": "read-only-pipeline-2",
             "network": self.network,
             "allowed_hosts": list(self.allowed_hosts),
             "max_files": self.max_files,
@@ -130,8 +133,11 @@ class ScanService:
             for key in ("target_assessment", "dependency_inventory", "dependency_advisories")
         }
         failures = []
+        snapshot = None
         try:
             result = self.assessor(options)
+            if isinstance(result, GithubSnapshot):
+                snapshot, result = result, result.assessment
             if (
                 not isinstance(result, AssessmentResult)
                 or result.target != options.target
@@ -159,10 +165,15 @@ class ScanService:
             )
         documents = [document(encoded(asdict(result)))]
         artifacts["assessment.json"] = encoded(documents[0])
-        if scope["target_kind"] == "local_project":
+        if scope["target_kind"] in ("local_project", "github_repository"):
             dependency_result = None
             try:
-                collected = self.inventory_loader(Path(options.target))
+                if scope["target_kind"] == "github_repository":
+                    if snapshot is None or "target_assessment" in failures:
+                        raise ProviderError("Pinned repository snapshot unavailable")
+                    collected = snapshot.inventory()
+                else:
+                    collected = self.inventory_loader(Path(options.target))
                 artifacts["dependency-inventory.json"] = encoded(collected.document())
                 modules["dependency_inventory"] = {
                     "status": "collected" if collected.packages else "empty_inventory",

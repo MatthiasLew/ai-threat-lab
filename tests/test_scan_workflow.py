@@ -230,8 +230,8 @@ def test_options_rejected_before_collection(tmp_path, change):
             {"network": True, "allowed_hosts": ("example.com",), "dkim_selector": "bad.selector"},
         ),
         (
-            "https://github.com/o/r",
-            {"network": True, "allowed_hosts": ("github.com",), "share_packages": True},
+            "https://example.com",
+            {"network": True, "allowed_hosts": ("example.com",), "share_packages": True},
         ),
     ],
 )

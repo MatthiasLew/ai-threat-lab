@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.7.0
+## Project status — 0.8.0
 
-Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -37,6 +37,8 @@ The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports cre
 ```bash
 ai-threat-lab scan path/to/project --output-dir scan-results/run-01
 ai-threat-lab scan-check scan-results/run-01
+# GitHub source and root lockfiles from the same commit:
+ai-threat-lab scan https://github.com/owner/repository --network --allow-host github.com --output-dir scan-results/github-01
 # Run again after reviewing or changing the same target:
 ai-threat-lab scan path/to/project --output-dir scan-results/run-02 --baseline scan-results/run-01
 ai-threat-lab scan-compare scan-results/run-01 scan-results/run-02

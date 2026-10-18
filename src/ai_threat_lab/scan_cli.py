@@ -3,10 +3,12 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+from .assessment import identify_target
 from .contracts import write_document
 from .dependencies import AdvisoryCache, OSVAudit
 from .http_client import PublicHTTPS
 from .integration_cli import audit_target
+from .remote_audit import GithubAudit
 from .scan_bundle import compare_bundles, read_bundle
 from .scan_engine import ScanOptions, ScanService
 
@@ -29,7 +31,9 @@ def add_commands(commands):
     scan.add_argument("--max-files", type=int, default=50)
     scan.add_argument("--dkim-selector")
     scan.add_argument(
-        "--share-packages", action="store_true", help="Opt into OSV for a local project"
+        "--share-packages",
+        action="store_true",
+        help="Share exact local/GitHub package versions with OSV",
     )
     scan.add_argument("--advisory-cache", type=Path)
     scan.add_argument("--max-pages", type=int, default=10)
@@ -48,6 +52,11 @@ def add_commands(commands):
 
 
 def assessor(options):
+    if identify_target(options.target) == "github_repository":
+        client = PublicHTTPS(["api.github.com"], max_bytes=8 * 1024 * 1024)
+        return GithubAudit(client, max_files=options.max_files).collect(
+            options.target, include_dependencies=True
+        )
     return audit_target(
         SimpleNamespace(
             target=options.target,

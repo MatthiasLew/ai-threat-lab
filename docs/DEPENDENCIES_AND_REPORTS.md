@@ -68,3 +68,7 @@ HTML is a standalone, escaped document with no JavaScript, remote assets, forms 
 Deterministic tests cover parsing, skipped/secret-bearing input, duplicates/versions, wire payloads, request ordering, pagination and caps, cache restart/expiry, malformed responses, per-target report deduplication, HTML escaping and actual CLI processes. The installed-wheel verifier checks inventory and merged JSON/HTML outside the checkout. No real OSV package submission or paid AI call was used to produce this test evidence.
 
 Primary reference: [OSV batch API and pagination](https://google.github.io/osv.dev/post-v1-querybatch/).
+
+## GitHub inventories in combined scans — 0.8.0
+
+Use `scan GITHUB_URL --network --allow-host github.com --output-dir NEW_DIR` for source and supported root manifests from one pinned commit. Add `--share-packages` to query OSV; no model is called. The shared 4 MiB/file-count budget, 20-manifest limit, provenance, module failures and old-bundle compatibility are described in [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md). Standalone `audit-deps` continues to accept local paths only.

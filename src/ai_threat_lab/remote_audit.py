@@ -5,11 +5,13 @@ import hashlib
 import os
 import re
 import shlex
+from dataclasses import dataclass
 from pathlib import PurePosixPath
 from urllib.parse import quote, urlencode, urlsplit
 
 from .assessment import AssessmentFinding, AssessmentResult, identify_target
 from .code_review import review_source
+from .dependencies import MAX_BYTES, inventory_sources, is_manifest
 from .http_client import get_document
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
 from .models import ValidationError
@@ -72,13 +74,34 @@ class WebsiteAudit:
         return AssessmentResult(target, "website", "partial", tuple(findings), tuple(missing))
 
 
+@dataclass(frozen=True)
+class GithubSnapshot:
+    assessment: AssessmentResult
+    commit_sha: str
+    manifests: tuple[tuple[str, bytes], ...]
+
+    def inventory(self):
+        return inventory_sources(
+            self.assessment.target,
+            self.manifests,
+            not_checked=(
+                f"Inventory from immutable GitHub commit {self.commit_sha}.",
+                "Only selected root manifests; subdirectory and unsupported manifests unchecked.",
+                *self.assessment.not_checked,
+            ),
+        )
+
+
 class GithubAudit:
     def __init__(self, client, *, max_files=50):
-        if not 1 <= max_files <= 100:
+        if type(max_files) is not int or not 1 <= max_files <= 100:
             raise ValidationError("Repository review limit must be between 1 and 100 files")
         self.client, self.max_files = client, max_files
 
     def assess(self, target):
+        return self.collect(target).assessment
+
+    def collect(self, target, *, include_dependencies=False):
         if identify_target(target) != "github_repository":
             raise ValidationError("Expected a GitHub repository root URL")
         owner, repository = urlsplit(target).path.strip("/").split("/")
@@ -114,20 +137,42 @@ class GithubAudit:
         if tree.get("truncated"):
             missing.append("GitHub truncated the repository tree; unlisted paths were not checked.")
         count, total = 0, 0
-        for item in tree["tree"]:
+        manifests, cache, seen = [], {}, set()
+        entries = tree["tree"]
+        if any(
+            not isinstance(item, dict) or not isinstance(item.get("path"), str) for item in entries
+        ):
+            raise ProviderError("Invalid repository tree entry")
+        if include_dependencies:
+            # Root manifests share the same file/byte budget and immutable tree.
+            entries = sorted(
+                entries,
+                key=lambda item: (
+                    not ("/" not in item["path"] and is_manifest(item["path"])),
+                    item["path"],
+                ),
+            )
+        for item in entries:
             name = item.get("path", "")
             path = PurePosixPath(name)
+            manifest = include_dependencies and "/" not in name and is_manifest(name)
             if (
                 item.get("type") != "blob"
                 or item.get("mode") not in ("100644", "100755")
                 or path.is_absolute()
                 or ".." in path.parts
                 or EXCLUDED.intersection(path.parts)
-                or (path.suffix not in TEXT_SUFFIXES and path.name != ".env")
+                or (not manifest and path.suffix not in TEXT_SUFFIXES and path.name != ".env")
             ):
                 continue
+            if name in seen:
+                raise ProviderError("Duplicate repository tree path")
+            seen.add(name)
+            if manifest and len(manifests) >= 20:
+                missing.append("Root manifest limit reached; additional manifests unchecked.")
+                continue
             size = item.get("size")
-            if type(size) is not int or not 0 <= size <= 256 * 1024:
+            if type(size) is not int or not 0 <= size <= (MAX_BYTES if manifest else 256 * 1024):
                 missing.append(f"Skipped oversized or unknown-sized file: {name}")
                 continue
             if count >= self.max_files or total + size > 4 * 1024 * 1024:
@@ -136,22 +181,34 @@ class GithubAudit:
             blob_sha = item.get("sha", "")
             if not re.fullmatch(r"[a-f0-9]{40}", blob_sha):
                 raise ProviderError("Invalid Git blob identity")
-            blob = get_document(self.client, base + "/git/blobs/" + blob_sha, headers)
-            try:
-                if blob.get("encoding") != "base64" or not isinstance(blob.get("content"), str):
-                    raise ValueError
-                raw = base64.b64decode("".join(blob["content"].split()), validate=True)
-                digest = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
-                if len(raw) != size or digest != blob_sha:
-                    raise ValueError
-            except (ValueError, KeyError, TypeError):
-                raise ProviderError("Invalid repository blob content or digest") from None
+            if blob_sha not in cache:
+                blob = get_document(self.client, base + "/git/blobs/" + blob_sha, headers)
+                try:
+                    if blob.get("encoding") != "base64" or not isinstance(blob.get("content"), str):
+                        raise ValueError
+                    raw = base64.b64decode("".join(blob["content"].split()), validate=True)
+                    digest = hashlib.sha1(
+                        b"blob " + str(len(raw)).encode() + b"\0" + raw
+                    ).hexdigest()
+                    if len(raw) != size or digest != blob_sha:
+                        raise ValueError
+                except (ValueError, KeyError, TypeError):
+                    raise ProviderError("Invalid repository blob content or digest") from None
+                cache[blob_sha] = raw
+            raw = cache[blob_sha]
+            if len(raw) != size:
+                raise ProviderError("Repository tree/blob size mismatch")
+            if manifest:
+                manifests.append((name, raw))
             count += 1
             total += len(raw)
             try:
                 source = raw.decode("utf-8")
             except UnicodeError:
                 missing.append(f"Skipped non-UTF-8 file: {name}")
+                continue
+            if len(raw) > 256 * 1024:
+                missing.append(f"Large manifest parsed for dependencies only: {name}")
                 continue
             findings.extend(inspect_text(name, source))
             if path.suffix == ".py":
@@ -164,8 +221,12 @@ class GithubAudit:
                 except ValidationError:
                     missing.append(f"Could not parse Python file: {name}")
         missing.append(f"Inspected {count} selected files ({total} bytes).")
-        return AssessmentResult(
-            target, "github_repository", "partial", tuple(findings), tuple(missing)
+        return GithubSnapshot(
+            AssessmentResult(
+                target, "github_repository", "partial", tuple(findings), tuple(missing)
+            ),
+            sha,
+            tuple(manifests),
         )
 
 

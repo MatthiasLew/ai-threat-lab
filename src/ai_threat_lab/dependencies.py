@@ -84,6 +84,47 @@ def inventory(path: Path) -> Inventory:
         files = [path]
     if len(files) > 20:
         raise ValidationError("At most 20 manifests per directory; use a narrower scope")
+    sources, skipped = [], []
+    for manifest in files:
+        if manifest.is_symlink() or not manifest.is_file():
+            skipped.append(f"{manifest.name}: skipped symlink or non-file.")
+            continue
+        with manifest.open("rb") as stream:
+            raw = stream.read(MAX_BYTES + 1)
+        sources.append((manifest.name, raw))
+    return inventory_sources(str(path), sources, not_checked=skipped)
+
+
+def is_manifest(name):
+    return name in SUPPORTED or name.startswith("requirements") and name.endswith(".txt")
+
+
+def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
+    """Parse bounded in-memory root manifests without materializing repository files."""
+    if not isinstance(target, str) or not target:
+        raise ValidationError("Dependency inventory requires a target")
+    if not isinstance(sources, (list, tuple)) or len(sources) > 20:
+        raise ValidationError("At most 20 manifests per inventory")
+    names = set()
+    for entry in sources:
+        if not isinstance(entry, (tuple, list)) or len(entry) != 2:
+            raise ValidationError("Invalid manifest input pair")
+        name, raw = entry
+        if (
+            not isinstance(name, str)
+            or not name
+            or len(name) > 255
+            or "/" in name
+            or "\\" in name
+            or name in (".", "..")
+            or any(ord(c) < 32 for c in name)
+            or name in names
+            or not isinstance(raw, bytes)
+        ):
+            raise ValidationError("Invalid or duplicate manifest input")
+        names.add(name)
+        if len(raw) > MAX_BYTES:
+            raise ValidationError("Dependency manifest exceeds 2 MiB")
     packages = {}
     missing = [
         "No packages were installed or executed; manifests are untrusted input.",
@@ -92,6 +133,7 @@ def inventory(path: Path) -> Inventory:
         "transitive packages remain unchecked.",
     ]
 
+    missing.extend(not_checked)
     skipped_notes = 0
 
     def note(message):
@@ -117,18 +159,10 @@ def inventory(path: Path) -> Inventory:
                 "Dependency limit exceeded; narrow the scope to at most 500 packages"
             )
 
-    for manifest in files:
-        origin = manifest.name
-        if manifest.is_symlink() or not manifest.is_file():
-            note(f"{origin}: skipped symlink or non-file.")
-            continue
-        with manifest.open("rb") as stream:
-            raw = stream.read(MAX_BYTES + 1)
-        if len(raw) > MAX_BYTES:
-            raise ValidationError("Dependency manifest exceeds 2 MiB")
+    for origin, raw in sources:
         try:
             source = raw.decode("utf-8-sig")
-            if origin.startswith("requirements") and manifest.suffix == ".txt":
+            if origin.startswith("requirements") and origin.endswith(".txt"):
                 for number, line in enumerate(source.splitlines(), 1):
                     line = line.strip()
                     if not line or line.startswith("#"):
@@ -195,12 +229,12 @@ def inventory(path: Path) -> Inventory:
             raise ValidationError(f"Invalid dependency manifest: {origin}; {exc}") from None
         except (ValueError, UnicodeError, TypeError, AttributeError, RecursionError):
             raise ValidationError(f"Invalid or unsupported dependency manifest: {origin}") from None
-    if not files:
+    if not sources:
         note("No supported manifests in the target directory; subdirectories were not searched.")
     if skipped_notes:
         missing.append(f"Additional omitted inventory notices: {skipped_notes}.")
     return Inventory(
-        str(path),
+        target,
         tuple(
             Dependency(*key, tuple(sorted(origins))) for key, origins in sorted(packages.items())
         ),

@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.7.0
+# One-command scans and history comparison — 0.8.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -18,7 +18,7 @@ For a local project, the workflow runs:
 3. OSV advisory lookup only if explicitly enabled and exact packages were collected.
 4. Combined JSON/HTML reporting and module-status publication.
 
-A Python file, exported mail or program file uses its appropriate existing collector without a project-wide dependency inventory. For a single dependency manifest, use `audit-deps` directly. The combined workflow currently does not retrieve dependency lockfiles from remote GitHub repositories; its GitHub collector retains the source-review limits described in LIVE_SETUP.md.
+A Python file, exported mail or program file uses its appropriate existing collector without a project-wide dependency inventory. For a single dependency manifest, use `audit-deps` directly. GitHub scans also inventory supported root manifests from the same pinned commit as the source review, within the shared bounds below.
 
 ## Enable online dependency lookup
 
@@ -30,7 +30,7 @@ ai-threat-lab scan path/to/project --output-dir scan-results/online-02 --network
 
 Both flags are required. Without sharing consent, inventory does not become an advisory assessment: module status is `not_requested`, the dependency result is `not_configured`, and the HTML limitations state that no OSV query occurred. An empty inventory never triggers a lookup. No package names/versions are sent to a model.
 
-Options `--max-pages 1..20`, `--max-files 1..100` and `--dkim-selector` retain their existing collector meanings. The file option affects the GitHub collector; local checks retain their own fixed bounds. DKIM selectors apply only to mail-domain targets. Cache paths inside either output or baseline bundles are rejected. Sharing is supported only for local-project scans in this release.
+Options `--max-pages 1..20`, `--max-files 1..100` and `--dkim-selector` retain their existing collector meanings. The file option affects the GitHub collector; local checks retain their own fixed bounds. DKIM selectors apply only to mail-domain targets. Cache paths inside either output or baseline bundles are rejected. Sharing is supported for local-project and GitHub-repository scans.
 
 ## Remote targets
 
@@ -43,13 +43,41 @@ ai-threat-lab scan mailbox:owner@example.com --network --allow-host gmail.google
 
 Exact host approval is mandatory before collection. Website targets require HTTPS, port 443 and no fragment. No redirects, arbitrary POSTs, crawling or execution occurs. Gmail needs the documented OAuth grants; a model key does not provide mailbox access. These commands use bundled collectors, not arbitrary providers selected by the legacy `--config` registry.
 
+## GitHub source and dependency snapshot
+
+```bash
+# Inventory only; no packages are sent to OSV:
+ai-threat-lab scan https://github.com/owner/repository --network --allow-host github.com --output-dir scan-results/github-inventory
+# Explicit package/version sharing with OSV:
+ai-threat-lab scan https://github.com/owner/repository --network --allow-host github.com --share-packages --output-dir scan-results/github-advisories
+```
+
+The default branch is resolved once to an immutable commit. Its tree supplies both source paths and root manifests. Each distinct blob is fetched once, checked against its Git object digest, then reused in memory. Raw repository files are never extracted or saved in the report bundle. The inventory records the commit in its limitations/provenance notices.
+
+```mermaid
+flowchart TD
+    A["Pinned commit and bounded blobs"] --> B["Source checks"]
+    A --> C["Root manifest parser"]
+    C --> D{"Share packages?"}
+    D -->|Yes| E["OSV version matches"]
+    B --> F["Partial report bundle"]
+    D -->|No| F
+    E --> F
+```
+
+Supported root inputs are `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock` and `poetry.lock`. No nested-manifest discovery, includes, installation or dependency resolution occurs. Other lockfile ecosystems remain unchecked. At most 20 manifests and 500 distinct exact package identities are parsed. Root manifests are prioritized by path before other selected text files, so low file limits can leave source files unreviewed.
+
+The **shared** budget is `--max-files` paths (default 50, maximum 100) and 4 MiB decoded bytes. Cached duplicate blobs still consume the path/byte budget. Manifest parsing permits up to 2 MiB per manifest; ordinary source checks remain capped at 256 KiB per file. Larger manifests are parsed for dependencies only. The existing 110-request and 8 MiB response limits remain. Truncation, oversized files and budget stops remain explicit gaps; an empty or incomplete inventory never proves that dependencies are secure.
+
+A malformed retrieved manifest fails the dependency module while preserving source findings. A failed shared GitHub collection marks both source and dependency modules failed and does not refetch a different commit. OSV failure preserves the inventory and source report. Requests are never automatically retried.
+
 ## Bundle files
 
 | Artifact | Contents |
 | --- | --- |
 | `assessment.json` | Target collector evidence, candidate findings and gaps |
-| `dependency-inventory.json` | Local-project exact versions, when inventory succeeds |
-| `dependencies.json` | Local-project OSV result or explicit unchecked/failed placeholder |
+| `dependency-inventory.json` | Local/GitHub project exact versions, when inventory succeeds |
+| `dependencies.json` | Local/GitHub project OSV result or explicit unchecked/failed placeholder |
 | `modules.json` | Partial/collected/empty/failed/not-requested/not-applicable module status |
 | `report.json` | Combined remediation queue with provenance and limitations |
 | `report.html` | Existing escaped, standalone read-only report |
@@ -86,6 +114,8 @@ The comparison uses exact target/finding-field IDs and reports:
 - `no_longer_observed`: absent in the new report.
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
+
+Version 0.8 uses scope engine `read-only-pipeline-2`. Version 0.7 bundles remain readable, but cross-engine comparison is intentionally unavailable because collection coverage changed.
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 

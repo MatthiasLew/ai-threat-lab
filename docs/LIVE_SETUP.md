@@ -59,6 +59,6 @@ The HTTPS client additionally permits POST only to `https://api.osv.dev/v1/query
 
 The `training-*` commands provide persistent, approved **local text rehearsals** without any provider key or network. They add structured selections, stop/expiry/cancellation and JSON/HTML practice reports. They do not add live email/phone/media transports, actual tracking or speech understanding. See [TRAINING_LAB.md](TRAINING_LAB.md).
 
-## Combined scan workflow (0.7.0)
+## Combined scan workflow (0.8.0)
 
-`scan TARGET --output-dir NEW_DIRECTORY` orchestrates the same built-in read-only collectors. Existing network/host/OAuth requirements still apply. Local dependency inventory is automatic, but OSV package sharing stays explicit. No AI API is called by `scan`. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md) for bundles, partial failures and comparison.
+`scan TARGET --output-dir NEW_DIRECTORY` orchestrates the same built-in read-only collectors. Existing network/host/OAuth requirements still apply. Local-project and GitHub root dependency inventory is automatic, but OSV package sharing stays explicit. GitHub uses the same immutable commit/shared retrieval for source and manifests. Its combined `scan` additionally allows root manifests up to 2 MiB each, with a shared 4 MiB/file-count budget; ordinary source remains limited to 256 KiB each. No AI API is called by `scan`. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md) for bundles, partial failures and comparison.

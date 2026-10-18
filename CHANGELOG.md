@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- Add GitHub root dependency inventory to combined scans using the same immutable commit and shared bounded retrieval as source checks.
+- Parse in-memory requirements/npm/uv/Poetry inputs without saving repository source; reuse verified blobs and prioritize root manifests within shared limits.
+- Extend explicit OSV sharing and advisory caching to GitHub scans. Preserve source/inventory evidence when parsing or advisory modules fail.
+- Advance scan scope engine to version 2; retain version-1 bundle reading while conservatively disabling cross-engine deltas.
+- Add synthetic CLI/wire, shared-budget/digest, malformed-manifest, provenance, redaction and compatibility checks. No live API validation.
+
 ## 0.7.0
 
 - Add a one-command read-only `scan` workflow over existing collectors, automatic local-project dependency inventory and explicitly opted-in OSV lookup. No automatic AI calls.

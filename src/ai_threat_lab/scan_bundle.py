@@ -77,7 +77,7 @@ def validate_manifest(value):
         or not scope["target"]
         or not isinstance(scope["target_kind"], str)
         or not scope["target_kind"]
-        or scope["engine"] != "read-only-pipeline-1"
+        or scope["engine"] not in ("read-only-pipeline-1", "read-only-pipeline-2")
         or type(scope["network"]) is not bool
         or type(scope["share_packages"]) is not bool
         or type(scope["advisory_cache"]) is not bool

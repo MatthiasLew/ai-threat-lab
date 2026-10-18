@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.7.0)
+# Integration contracts and current capability boundary (0.8.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 

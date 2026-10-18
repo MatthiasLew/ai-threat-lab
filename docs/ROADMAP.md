@@ -102,4 +102,12 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] Private no-overwrite bundles with manifest-last publication and integrity/consistency checks.
 - [x] Baseline comparison with scope/module gates and observation-only change labels.
 - [x] Invalid/tampered bundle, interrupted write, path/symlink and installed CLI tests.
-- [ ] Remote GitHub dependency-lock inventory in the combined workflow, authenticated history storage and active assessment modules remain future work.
+
+## Shared GitHub inventory — 0.8.0
+
+- [x] Root requirements/npm/uv/Poetry inventory from the same immutable commit as source checks.
+- [x] Shared bounded retrieval with distinct-blob reuse, manifest priority and explicit skipped coverage.
+- [x] Opt-in remote-inventory OSV lookup, existing advisory cache and module failure preservation.
+- [x] In-memory parsing with no repository materialization, archive extraction or execution.
+- [ ] Nested/monorepo manifests, additional ecosystems and dependency reachability.
+- [ ] Authenticated history storage and active assessment modules remain future work.
