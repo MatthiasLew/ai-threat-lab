@@ -107,11 +107,20 @@ def identify_target(target: str) -> str:
 
 def audit_message(path: Path) -> AssessmentResult:
     """Read one exported message. Authentication headers are observations, never trust proofs."""
+    from .mail_review import inspect_message_content
+
+    if path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file():
+        raise ValidationError("Mail message must be a regular file, not a symlink/junction")
     with path.open("rb") as stream:
         raw = stream.read(1024 * 1024 + 1)
     if len(raw) > 1024 * 1024:
         raise ValidationError("Mail message exceeds the 1 MiB limit")
-    message = BytesParser(policy=policy.default).parsebytes(raw)
+    try:
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+    except (RecursionError, ValueError, IndexError):
+        raise ValidationError(
+            "Cannot parse mail message within supported structural limits"
+        ) from None
     findings = []
     if message.defects:
         findings.append(
@@ -122,7 +131,7 @@ def audit_message(path: Path) -> AssessmentResult:
                 "Review the original message.",
             )
         )
-    auth = str(message.get("Authentication-Results", ""))
+    auth = "\n".join(str(value) for value in message.get_all("Authentication-Results", []))
     if re.search(r"\b(spf|dkim|dmarc)\s*=\s*(fail|softfail|permerror|temperror)\b", auth, re.I):
         findings.append(
             AssessmentFinding(
@@ -152,6 +161,8 @@ def audit_message(path: Path) -> AssessmentResult:
                 "Check the reply destination against a previously trusted contact.",
             )
         )
+    content_findings, content_notices = inspect_message_content(message)
+    findings.extend(content_findings)
     return AssessmentResult(
         str(path),
         "mail_message",
@@ -160,9 +171,13 @@ def audit_message(path: Path) -> AssessmentResult:
         (
             "Mailbox MFA, forwarding rules, permissions and account access were not checked.",
             "SPF/DKIM/DMARC DNS and cryptographic signatures were not verified.",
-            "Links, attachments and sender reputation were not visited or analyzed.",
+            "Only bounded text links and attachment metadata were analyzed offline; no links "
+            "were visited, attachments opened or sender reputation queried.",
             "Header observations alone cannot establish phishing or authenticity.",
-        ),
+            "HTML/CSS rendering, redirects, URL decoding tricks, attachment content and "
+            "malware detection are outside these selected checks.",
+        )
+        + content_notices,
     )
 
 

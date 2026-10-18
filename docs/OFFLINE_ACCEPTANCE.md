@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.12.0
+# Offline acceptance kit — 0.14.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -9,13 +9,15 @@ ai-threat-lab readiness
 ai-threat-lab offline-demo --output-dir demo-results/run-01
 ```
 
-The output directory must be new. Open `demo-results/run-01/index.html` locally. It links to the before/after scan reports, training report and three escaped text previews and separate synthetic PE/ELF and Python-pattern observation reports. The demo uses only its own generated project; it cannot accept a website, mailbox, recipient list or external target. It does not install packages, execute fixture source or automatically open a browser.
+The output directory must be new. Open `demo-results/run-01/index.html` locally. It links to the before/after scan reports, training report and three escaped text previews and separate synthetic PE/ELF and Python-pattern and exported-mail observation reports. The demo uses only its own generated project; it cannot accept a website, mailbox, recipient list or external target. It does not install packages, execute fixture source or automatically open a browser.
 
-Expected current fixture observations: 3 before, 0 after, 3 **no longer observed**. Those observations are Python `eval`, an unpinned Docker base and explicit root `USER`. The demo changes its own source and Dockerfile between scans. It does not infer that a real vulnerability was fixed or that the resulting application is secure. The dependency package is fictional; root and nested requirements now exercise the opt-in monorepo inventory and merge origins into one identity. There is no OSV request.
+Expected current fixture observations: 3 before, 0 after, 3 **no longer observed**. Those observations are Python `eval`, an unpinned Docker base and explicit root `USER`. The demo changes its own source and Dockerfile between scans. It does not infer that a real vulnerability was fixed or that the resulting application is secure. The dependency package is fictional; root and nested requirements now exercise the opt-in monorepo inventory and merge origins into one identity. The generated Cargo.lock adds one fictional crates.io identity, so `dependency_ecosystems` is `["PyPI", "crates.io"]`. There is no Cargo invocation or OSV request.
 
 The training report contains three scripted selections: reporting the email exercise, requesting independent verification in the voice rehearsal and declining the video request. These are selected outcomes, not measured employee actions. Fictional recipients use `example.invalid` or a reserved demonstration phone number.
 
 The separate Python fixture produces exactly five candidate observations (PY005–PY009), recorded as `python_pattern_observations: 5`. It is parsed only and does not change the three-before/zero-after comparison.
+
+The inert mail fixture produces exactly five aggregate candidates: HTTP, IP-literal host, displayed/destination hostname mismatch, active attachment extension and document-plus-active double extension. `mail_observations` is 5; no link is visited or attachment extracted/executed. This is synthetic acceptance, not a real phishing detection result.
 
 ## Output layout
 
@@ -32,6 +34,7 @@ The separate Python fixture produces exactly five candidate observations (PY005�
 | `synthetic-pe.bin`, `synthetic-elf.bin` | Inert format descriptors with no machine-code payload; never executed |
 | `synthetic-pe/`, `synthetic-elf/` | Bounded binary observation bundles, linked from the index |
 | `python-patterns.py`, `python-patterns/` | Inert five-pattern source and its standalone scan bundle/report |
+| `synthetic-message.eml`, `mail-observations/` | Fictional message and redacted five-observation scan report |
 | `training.sqlite` | Existing private local rehearsal ledger |
 | `training-report.json`, `training-report.html` | Scripted selected outcomes and practice guidance |
 | `readiness.json` | Static implementation inventory, including missing modules |

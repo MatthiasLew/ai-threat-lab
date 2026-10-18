@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.12.0
+# One-command scans and history comparison — 0.14.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -69,7 +69,7 @@ flowchart TD
     E --> F
 ```
 
-Supported root inputs are `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock` and `poetry.lock`. Nested discovery is separately opted into with `--recursive-dependencies`; no includes, installation or workspace dependency resolution occurs. Other lockfile ecosystems remain unchecked. At most 20 manifests and 500 distinct exact package identities are parsed. Root manifests are prioritized by path before other selected text files, so low file limits can leave source files unreviewed.
+Supported root inputs are `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock`, `poetry.lock` and crates.io entries in `Cargo.lock` v3/v4. Nested discovery is separately opted into with `--recursive-dependencies`; no includes, installation or workspace dependency resolution occurs. Other lockfile ecosystems remain unchecked. At most 20 manifests and 500 distinct exact package identities are parsed. Root manifests are prioritized by path before other selected text files, so low file limits can leave source files unreviewed.
 
 The **shared** budget is `--max-files` paths (default 50, maximum 100) and 4 MiB decoded bytes. Cached duplicate blobs still consume the path/byte budget. Manifest parsing permits up to 2 MiB per manifest; ordinary source checks remain capped at 256 KiB per file. Larger manifests are parsed for dependencies only. The existing 110-request and 8 MiB response limits remain. Truncation, oversized files and budget stops remain explicit gaps; an empty or incomplete inventory never proves that dependencies are secure.
 
@@ -119,7 +119,7 @@ The comparison uses exact target/finding-field IDs and reports:
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
 
-Version 0.12 uses scope engine `read-only-pipeline-6` with nine Python AST rule families and static PE/ELF observations and retains strict boolean `recursive_dependencies`. Versions 0.7–0.11 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
+Version 0.14 uses scope engine `read-only-pipeline-7` with Cargo inventory, bounded EML content observations, nine Python AST rule families and static PE/ELF observations and retains strict boolean `recursive_dependencies`. Versions 0.7–0.13 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 

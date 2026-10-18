@@ -7,7 +7,7 @@ from pathlib import Path
 from .local_inventory import EXCLUDED
 from .models import ValidationError
 
-SUPPORTED = {"package-lock.json", "poetry.lock", "uv.lock"}
+SUPPORTED = {"package-lock.json", "poetry.lock", "uv.lock", "Cargo.lock"}
 MAX_MANIFESTS = 20
 MAX_DIRECTORIES = 1000
 MAX_ENTRIES = 10000

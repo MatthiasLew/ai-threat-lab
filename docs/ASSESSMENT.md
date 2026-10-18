@@ -18,7 +18,7 @@ Reviews up to 100 `.py` files in deterministic directory order. Dependency/build
 
 ## Exported mail
 
-Reads a single `.eml` file up to 1 MiB. It reports Authentication-Results failures as unverified candidates and differing Reply-To/From headers as a possible warning. These are not definitive phishing detections: headers can be forged and reply routing can legitimately differ. No links or attachments are opened. Mailbox MFA, forwarding, account permissions, DNS policies and cryptographic verification remain unchecked.
+Reads a single `.eml` file up to 1 MiB. It reports Authentication-Results failures as unverified candidates and differing Reply-To/From headers as a possible warning. These are not definitive phishing detections: headers can be forged and reply routing can legitimately differ. Bounded plain/HTML links and attachment metadata now produce redacted aggregate candidates. No links are visited or attachments executed/extracted. See [MAIL_REVIEW.md](MAIL_REVIEW.md) for exact selection, limits and gaps. Mailbox MFA, forwarding, account permissions, DNS policies and cryptographic verification remain unchecked.
 
 ## Legacy router for remote and binary targets
 
@@ -34,7 +34,7 @@ Use `audit` for local inventory/metadata or explicitly opted-in GitHub, HTTPS, D
 
 ## Dependency advisory checks and combined reporting (0.5.0)
 
-The separate `audit-deps` workflow supports exact recorded Python/npm versions and opt-in OSV queries. `audit-report` combines existing assessments, preserves source/target/gaps, and provides JSON or escaped standalone HTML. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md). The original Python traversal now also stops at 1000 directories or 10000 entries, with an explicit notice.
+The separate `audit-deps` workflow supports exact recorded Python/npm/Cargo versions and opt-in OSV queries. `audit-report` combines existing assessments, preserves source/target/gaps, and provides JSON or escaped standalone HTML. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md). The original Python traversal now also stops at 1000 directories or 10000 entries, with an explicit notice.
 
 ## Scan orchestration (0.7.0)
 

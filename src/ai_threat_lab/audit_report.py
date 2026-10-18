@@ -20,6 +20,16 @@ PRIORITIES = {
     **{f"PY00{number}": "P2" for number in range(5, 10)},
     "mailbox_auto_forwarding": "P2",
     "mailbox_filter_forwarding": "P2",
+    **{
+        check: "P2"
+        for check in (
+            "message_link_credentials",
+            "message_link_active_scheme",
+            "message_link_display_mismatch",
+            "message_attachment_active_type",
+            "message_attachment_double_extension",
+        )
+    },
 }
 
 

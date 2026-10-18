@@ -4,6 +4,7 @@ import html
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from .acceptance_samples import synthetic_cargo_lock, synthetic_message
 from .binary_samples import synthetic_binary_samples
 from .campaigns import CampaignScope, CampaignService, ContentApproval
 from .contracts import (
@@ -50,6 +51,7 @@ def offline_demo(output, *, now=None):
     project.mkdir()
     (project / "app.py").write_text("eval(user_value)\n", encoding="utf-8")
     (project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
+    (project / "Cargo.lock").write_text(synthetic_cargo_lock(), encoding="utf-8")
     docker = project / "Dockerfile"
     docker.write_text("FROM python:latest\nUSER root\n", encoding="utf-8")
     nested = project / "services" / "api"
@@ -70,8 +72,22 @@ def offline_demo(output, *, now=None):
     ):
         raise ValidationError("Synthetic scan acceptance failed; demo is incomplete")
     # Reading verifies both artifact indexes and report derivation.
-    read_bundle(root / "scan-before")
+    before_bundle = read_bundle(root / "scan-before")
     read_bundle(root / "scan-after")
+    ecosystems = sorted(
+        {
+            item["ecosystem"]
+            for item in before_bundle["documents"]["dependency-inventory.json"]["packages"]
+        }
+    )
+    if ecosystems != ["PyPI", "crates.io"]:
+        raise ValidationError("Synthetic dependency acceptance failed; demo is incomplete")
+    mail_source = root / "synthetic-message.eml"
+    mail_source.write_bytes(synthetic_message())
+    mail = engine.run(ScanOptions(str(mail_source)), root / "mail-observations")
+    if mail["failed_modules"] or mail["unique_findings"] != 5:
+        raise ValidationError("Synthetic mail acceptance failed; demo is incomplete")
+    read_bundle(root / "mail-observations")
     binary_results = {}
     for name, raw in synthetic_binary_samples().items():
         target = root / name
@@ -140,6 +156,8 @@ def offline_demo(output, *, now=None):
         "ai_calls": 0,
         "output_directory": str(root.resolve()),
         "python_pattern_observations": patterns["unique_findings"],
+        "mail_observations": mail["unique_findings"],
+        "dependency_ecosystems": ecosystems,
         "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
         "after_findings": after["unique_findings"],
@@ -158,6 +176,7 @@ def offline_demo(output, *, now=None):
             for channel in ("email", "voice", "video")
         ),
         ("Python pattern observations", "python-patterns/report.html"),
+        ("Synthetic email observations", "mail-observations/report.html"),
         ("Synthetic PE observations", "synthetic-pe/report.html"),
         ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),

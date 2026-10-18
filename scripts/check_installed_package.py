@@ -301,6 +301,18 @@ def main() -> None:
             )
         )
         assert len(scan_inventory["packages"][0]["sources"]) == 2
+        assert demo["dependency_ecosystems"] == ["PyPI", "crates.io"]
+        assert {p["ecosystem"] for p in scan_inventory["packages"]} == {"PyPI", "crates.io"}
+        assert demo["mail_observations"] == 5
+        mail = json.loads(run(executable, "audit", "offline demo/synthetic-message.eml"))
+        assert {f["check"] for f in mail["findings"]} == {
+            "message_link_cleartext",
+            "message_link_ip_address",
+            "message_link_display_mismatch",
+            "message_attachment_active_type",
+            "message_attachment_double_extension",
+        }
+        run(executable, "scan-check", "offline demo/mail-observations")
         run(
             executable,
             "exercise-export",

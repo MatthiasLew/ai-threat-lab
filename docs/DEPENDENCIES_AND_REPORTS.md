@@ -1,4 +1,4 @@
-# Dependency advisories and remediation reports — 0.10.0
+# Dependency advisories and remediation reports — 0.14.0
 
 These workflows use local parsing and a vulnerability database, without an AI model. They do not install packages, execute hooks, guess passwords, exploit findings or patch dependencies automatically.
 
@@ -14,6 +14,7 @@ ai-threat-lab audit-deps path/to/requirements.txt
 | `requirements*.txt` | Exact `name==version` lines, extras, basic markers/comments | Ranges, wildcard pins, includes, URLs, editable/VCS references and hash/continuation syntax skipped |
 | npm `package-lock.json` v2/v3 | Recorded `packages` entries, transitive/scoped packages and version differences | v1, Yarn/pnpm formats and linked workspaces unsupported |
 | `uv.lock` / `poetry.lock` | Versioned registry package records | Local/editable/git sources skipped; no dependency solving |
+| `Cargo.lock` v3/v4 | Exact crates.io name/version records | Local/git/alternate registry sources skipped; no checksum/feature/graph/installed-state validation; see [CARGO.md](CARGO.md) |
 
 By default, only supported root manifests are read. Add `--recursive-dependencies` for bounded nested discovery, or select a subproject directly. Root symlinks/junctions are rejected; child links/non-regular manifests are skipped. Global limits: 20 manifests, 2 MiB each, 4 MiB aggregate bytes and 500 unique package/ecosystem/version tuples. File/package overflow fails before any OSV request; aggregate-byte/traversal stops preserve explicit unchecked notices. Parser warnings have a detailed-notice cap and omitted count; discovery notices have a separate bounded prefix. See [MONOREPOS.md](MONOREPOS.md) for exact selection semantics.
 
@@ -56,7 +57,7 @@ Duplicate findings are identified by exact target and finding fields. The report
 | Review priority | Rule | Meaning |
 | --- | --- | --- |
 | P1 | Possible exposed credential pattern | Review promptly; verify and rotate if exposure is real |
-| P2 | Dependency advisory, selected risky Python patterns, forwarding configuration | Investigate applicability and approved configuration |
+| P2 | Dependency advisory, selected risky Python patterns, forwarding configuration and selected mail content candidates | Investigate applicability and approved configuration |
 | P3 | Other observations | Review remaining configuration/metadata candidates |
 
 These values order human review. They are not CVSS scores, verified severity, deadlines or evidence that an exploit exists. Candidate status is retained. Unknown rule IDs default to P3.
@@ -74,6 +75,6 @@ Primary reference: [OSV batch API and pagination](https://google.github.io/osv.d
 Use `scan GITHUB_URL --network --allow-host github.com --output-dir NEW_DIR` for source and supported root manifests from one pinned commit. Add `--share-packages` to query OSV; no model is called. The shared 4 MiB/file-count budget, 20-manifest limit, provenance, module failures and old-bundle compatibility are described in [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md). Standalone `audit-deps` continues to accept local paths only.
 
 
-## Nested projects — 0.10.0
+## Nested projects — 0.14.0
 
 Add `--recursive-dependencies` to `audit-deps` or `scan` for bounded monorepo discovery. This preserves paths/line origins and deduplicates exact identities globally without interpreting workspace graphs or installing packages. Root-only selection remains the default. Local discovery in both modes now has a global 4 MiB raw-byte cap with explicit unchecked notices. See [MONOREPOS.md](MONOREPOS.md) for all bounds, exclusions and comparison semantics.

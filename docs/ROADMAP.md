@@ -149,3 +149,10 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Source-free SARIF export for standalone Python review, with line-level candidate locations.
 - [x] Explicit root-relative paths, URI encoding, no-overwrite and CLI/package tests.
 - [ ] Combined multi-target SARIF, upload integrations and consumer-specific acceptance remain separate work.
+
+## Expanded offline assessment milestone — 0.14.0
+
+- [x] Cargo.lock v3/v4 crates.io exact-version inventory, nested origins and shared GitHub snapshots.
+- [x] Bounded offline EML link/attachment metadata, redacted aggregate findings and explicit MIME gaps.
+- [x] Synthetic multi-ecosystem/mail demo, integrity-checkable reports, failure markers and installed CLI gates.
+- [ ] Other dependency ecosystems, data-flow/reachability, trusted mail authenticity and attachment-content analysis remain separate engineering work.

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.14.0
+
+- Add Cargo.lock v3/v4 exact crates.io inventory through local, opted-in nested and shared immutable GitHub routes; preserve global parser/byte/package limits and source origins.
+- Skip local/git/alternate registry sources with redacted notices; validate selected SemVer forms and use the existing opt-in OSV batch/cache contract for crates.io. Never call Cargo or install dependencies.
+- Expand exported EML review with bounded plain/HTML link and attachment metadata candidates, aggregate source-free evidence, no network or payload execution.
+- Report cleartext/IP/userinfo/active-scheme/display-host link patterns and executable/script/macro or document-plus-active attachment extensions as human-review candidates.
+- Bound input, selected MIME depth/parts, decoded text, text parts and links; preserve explicit decoding, parser and omitted-coverage notices. Catch structural parser failures and reject linked/non-regular EML targets.
+- Consider all Authentication-Results headers without trusting their provenance; retain explicit authenticity/reputation/cryptographic gaps.
+- Extend offline demo with Python + Rust inventories, five-observation inert EML fixture and separate report bundle; acceptance failure cannot publish the completion marker.
+- Advance scan scope to engine 7, keep older bundle reading and suppress cross-engine deltas. Add exported-mail readiness, CLI/package tests and updated capability docs. No API setup or live integrations.
+
 ## 0.13.0
 
 - Add offline SARIF 2.1.0 export for the nine Python pattern rule families through `review-code --format sarif` and the existing renderer API.

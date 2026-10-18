@@ -7,6 +7,7 @@ These are concrete **read-only** integrations, tested with fixture responses. Li
 | Input | Command | Credentials/configuration | Implemented checks |
 | --- | --- | --- | --- |
 | Local project | `ai-threat-lab audit path/to/project` | None | Selected Python AST patterns, credential patterns, floating npm versions |
+| Exported email | `ai-threat-lab audit path/to/export.eml` | None | Bounded header/link/attachment-metadata candidates; no visits, payload execution or authenticity verdict |
 | Program file | `ai-threat-lab audit path/to/program.exe` | None | Bounded PE/ELF headers/flags, size and SHA-256; no execution/disassembly/signature trust |
 | GitHub repository | `ai-threat-lab audit https://github.com/owner/repo --network --allow-host github.com` | Public: no key needed. Private: scoped `GITHUB_TOKEN` | Default branch pinned to immutable commit, selected text blobs, digest verification, Python and secret/manifest rules |
 | Website | `ai-threat-lab audit https://your-domain.example --network --allow-host your-domain.example` | Approved exact host and public HTTPS on port 443 | One response; selected CSP/HSTS/MIME/referrer header checks |

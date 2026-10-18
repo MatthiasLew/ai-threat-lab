@@ -6,12 +6,12 @@ Concrete read-only collectors are available through the explicit `audit` command
 | --- | --- | --- |
 | Single-target scan workflow | Built-in collectors, local dependency inventory, opt-in OSV, committed bundles and observation deltas | Selected read-only checks only; no full-audit guarantee, automatic attacks or AI calls |
 | Local source/project | Selected Python AST, secret patterns, floating npm declarations | No full semantic/data-flow audit or advisory database |
-| Exported `.eml` | Limited header observations | No trusted authentication verification or attachment/link analysis |
+| Exported `.eml` | Bounded header/link/attachment-metadata candidates | No trusted authentication, rendered page, attachment content or malware validation |
 | GitHub | Retrieve pinned default-branch commit/tree/blobs and review selected files | Scoped token for private repos, live validation, broader analysis |
 | Website | Explicit scoped HTTPS request and selected header checks | No crawling, auth/business-logic tests or exploitation |
 | Mail domain | Basic SPF/DMARC checks, supplied-selector DKIM TXT presence via DoH | No full policy evaluation or signature validation |
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
-| Pinned dependencies | requirements/npm/uv/Poetry inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
+| Pinned dependencies | requirements/npm/uv/Poetry/Cargo inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
 | Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
 | Program file | Bounded size/hash plus selected PE/ELF headers and permission/hardening candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |

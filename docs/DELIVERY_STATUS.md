@@ -1,14 +1,14 @@
-# Delivery status and remaining work — 0.13.0
+# Delivery status and remaining work — 0.14.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Nine bounded Python AST rule families, credential-pattern and literal config observations; root/opt-in nested exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Nine bounded Python AST rule families, credential-pattern and literal config observations; root/opt-in nested Python/npm/Cargo exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS response/header observations | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
-| Exported email | Selected header observations | Full message-authenticity validation, gateway policy and broad content analysis |
+| Exported email | Bounded headers, selected plain/HTML link properties and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |
@@ -30,7 +30,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 
 ## Monorepo follow-up (0.10.0)
 
-Nested requirements/npm/uv/Poetry manifests are now supported within explicit bounds. Exact package identities are merged with relative origins preserved, using the same commit on GitHub. Additional ecosystems, workspace graph interpretation and reachability are still open. See [MONOREPOS.md](MONOREPOS.md).
+Nested requirements/npm/uv/Poetry/Cargo manifests are now supported within explicit bounds. Exact package identities are merged with relative origins preserved, using the same commit on GitHub. Additional ecosystems, workspace graph interpretation and reachability are still open. See [MONOREPOS.md](MONOREPOS.md).
 
 ## Static binary follow-up (0.11.0)
 
@@ -43,6 +43,12 @@ Nine AST rule families now cover selected dynamic execution, subprocess/OS shell
 ## Local report interchange (0.13.0)
 
 Python review exports SARIF 2.1.0 with the same candidate findings, no snippets and configurable basename/root-relative source references. It does not upload to a service or export all combined assessment types. Scan bundle contents/engine and finding semantics remain unchanged. See [SARIF.md](SARIF.md).
+
+## Offline assessment milestone (0.14.0)
+
+Cargo.lock v3/v4 crates.io identities and bounded EML link/attachment metadata now work through the existing CLI, reports and synthetic demo. Shared GitHub Cargo retrieval is fixture-tested; mail analysis remains entirely local. Offline acceptance checks the before/after project, Python + Rust inventory, five Python patterns, five mail observations, PE/ELF descriptors, three text-training channels and report consistency. See [CARGO.md](CARGO.md), [MAIL_REVIEW.md](MAIL_REVIEW.md) and [OFFLINE_ACCEPTANCE.md](OFFLINE_ACCEPTANCE.md).
+
+Completion of this bounded milestone means these implemented routes pass their documented automated gates. It does not mean the original full product is complete. Live campaigns/media, authenticated observed events, broader languages/data flow and deeper application/binary validation still require engineering; API setup remains deferred.
 
 ## Remaining order of work
 

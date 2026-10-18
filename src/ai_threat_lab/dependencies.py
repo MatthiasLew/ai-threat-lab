@@ -33,9 +33,25 @@ MAX_PACKAGES = 500
 NAME = {
     "PyPI": r"[A-Za-z0-9][A-Za-z0-9._-]{0,213}",
     "npm": r"(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]{0,213}",
+    "crates.io": r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}",
 }
 VERSION = r"[0-9][A-Za-z0-9.!+_-]{0,127}"
 ADVISORY_ID = r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}"
+
+
+def _crate_version(value):
+    if not isinstance(value, str) or len(value) > 128:
+        return False
+    match = re.fullmatch(
+        r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+        r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"
+        r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?",
+        value,
+    )
+    return bool(match) and all(
+        not (part.isdigit() and len(part) > 1 and part.startswith("0"))
+        for part in (match[1] or "").split(".")
+    )
 
 
 @dataclass(frozen=True)
@@ -180,7 +196,34 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
         basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")
-            if basename.startswith("requirements") and basename.endswith(".txt"):
+            if basename == "Cargo.lock":
+                document = tomllib.loads(source)
+                if type(document.get("version")) is not int or document["version"] not in (3, 4):
+                    raise ValidationError("Only Cargo lockfile versions 3 and 4 are supported")
+                if not isinstance(document.get("package"), list):
+                    raise ValueError
+                for package in document["package"]:
+                    if not isinstance(package, dict):
+                        raise ValueError
+                    provider = package.get("source")
+                    if provider is not None and not isinstance(provider, str):
+                        raise ValueError
+                    if provider != "registry+https://github.com/rust-lang/crates.io-index":
+                        note(
+                            f"{origin}: skipped local/git/alternate registry source "
+                            "(value omitted)."
+                        )
+                        continue
+                    version = package.get("version")
+                    if not _crate_version(version):
+                        note(f"{origin}: skipped unsupported crate version (value omitted).")
+                        continue
+                    add("crates.io", package.get("name"), version, origin)
+                note(
+                    f"{origin}: all recorded crates.io entries included; checksum, "
+                    "dependency graph, features, target and installed state unverified."
+                )
+            elif basename.startswith("requirements") and basename.endswith(".txt"):
                 for number, line in enumerate(source.splitlines(), 1):
                     line = line.strip()
                     if not line or line.startswith("#"):
@@ -241,7 +284,7 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
             else:
                 raise ValidationError(
                     "Unsupported manifest; use requirements*.txt, package-lock.json, "
-                    "uv.lock or poetry.lock"
+                    "uv.lock, poetry.lock or Cargo.lock"
                 )
         except ValidationError as exc:
             raise ValidationError(f"Invalid dependency manifest: {origin}; {exc}") from None

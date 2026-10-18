@@ -19,7 +19,8 @@ def readiness():
             "dependencies",
             "partial",
             "integration_validation_required",
-            "Root/opt-in nested pins; OSV fixture-tested. Other ecosystems remain unchecked.",
+            "Root/opt-in nested Python/npm/Cargo pins; OSV fixture-tested. "
+            "Other ecosystems remain unchecked.",
         ),
         (
             "github",
@@ -32,6 +33,13 @@ def readiness():
             "fixture_tested",
             "integration_validation_required",
             "One-response HTTPS header observations; broader application tests absent.",
+        ),
+        (
+            "exported_mail",
+            "partial",
+            "not_required",
+            "Bounded EML header, link and attachment-metadata candidates; "
+            "no link visits, payload execution, malware or authenticity validation.",
         ),
         (
             "mailbox",
