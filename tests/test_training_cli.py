@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 
@@ -168,6 +169,7 @@ def test_actual_training_cli_processes_and_help(tmp_path):
             capture_output=True,
             text=True,
             encoding="utf-8",
+            env=dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1"),
             timeout=20,
         )
         assert result.returncode == 0, result.stderr
