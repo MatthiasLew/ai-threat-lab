@@ -109,7 +109,8 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] Shared bounded retrieval with distinct-blob reuse, manifest priority and explicit skipped coverage.
 - [x] Opt-in remote-inventory OSV lookup, existing advisory cache and module failure preservation.
 - [x] In-memory parsing with no repository materialization, archive extraction or execution.
-- [ ] Nested/monorepo manifests, additional ecosystems and dependency reachability.
+- [x] Opt-in nested/monorepo discovery with preserved origins and global limits (0.10.0).
+- [ ] Additional ecosystems and dependency reachability.
 - [ ] Authenticated history storage and active assessment modules remain future work.
 
 
@@ -123,3 +124,13 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [ ] External communications/media and authenticated observed-event intake remain separate implementation work, not just API-key setup.
 
 See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and the remaining implementation/validation order.
+
+
+## Bounded monorepo inventory — 0.10.0
+
+- [x] Explicit nested-manifest selection for local and shared-commit GitHub scans.
+- [x] Portable source paths, cross-subproject exact identity deduplication and global parser bounds.
+- [x] Local breadth-first traversal, entry/directory/depth bounds and link/junction exclusions.
+- [x] Recursive scope recording, old-bundle reading and conservative comparison gates.
+- [x] Expanded synthetic demo, CLI, malformed-path, resource and installed-package checks.
+- [ ] Workspace dependency graph resolution, additional ecosystems and runtime reachability.

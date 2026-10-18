@@ -1,11 +1,11 @@
-# Delivery status and remaining work — 0.9.0
+# Delivery status and remaining work — 0.10.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Bounded Python AST, credential-pattern and literal config observations; root exact-version inventory; reports | More language families, data flow, nested manifest support and deeper validation |
-| GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root dependency inventory | Controlled account validation, broader repository analysis and monorepo manifests |
+| Local project path | Bounded Python AST, credential-pattern and literal config observations; root/opt-in nested exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
+| GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS response/header observations | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded format/size/hash metadata | Signature verification, disassembly, sandboxed dynamic analysis and platform-specific modules |
 | Exported email | Selected header observations | Full message-authenticity validation, gateway policy and broad content analysis |
@@ -20,13 +20,17 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
 | GUI | Existing service contracts/handoff documentation | GUI implementation, deferred by console-first scope |
 
-## Completed without external APIs in this stage
+## Completed without external APIs in the offline acceptance stage (0.9.0)
 
 1. Added bounded configuration observations to local and GitHub collection.
 2. Added exact-approved local rehearsal asset exports for all three channels.
 3. Added one-command synthetic acceptance demo and linked local reports.
 4. Added an explicit implementation inventory, including engineering gaps.
 5. Added regression, CLI process, no-network, escaping, expiry, overwrite and installed-package checks.
+
+## Monorepo follow-up (0.10.0)
+
+Nested requirements/npm/uv/Poetry manifests are now supported within explicit bounds. Exact package identities are merged with relative origins preserved, using the same commit on GitHub. Additional ecosystems, workspace graph interpretation and reachability are still open. See [MONOREPOS.md](MONOREPOS.md).
 
 ## Remaining order of work
 

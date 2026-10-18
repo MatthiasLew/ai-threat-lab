@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.9.0
+# Test strategy and integration readiness — 0.10.0
 
-The offline suite contains 745 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 798 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.4%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -35,6 +35,7 @@ python -m coverage report
 | AI cost controls | Real Responses wire contract with fake transport, input/output limits, synthetic rates, atomic budgets, cache TTL/restarts/namespaces, unknown outcomes, reconciliation and no automatic retries |
 | Dependency inventories/advisories | Exact pins, normalization, unsupported/secret-bearing sources, package/manifest limits, real OSV batch wire contract, pagination/order validation, cache expiry and partial-result gaps |
 | Shared GitHub scan | Same commit for code/manifests, verified distinct-blob reuse, root format/priority bounds, shared file/byte limits, isolated parsing/advisory failures, no raw-source artifacts, explicit OSV wire and old-engine compatibility |
+| Monorepo inventory | Root-default/recursive opt-in, relative origins, same/different-version deduplication, global traversal/parser bounds, exclusions, links/junction guard, Unicode CLI paths, shared GitHub/OSV wire, scope mismatches and engines 1–4 |
 | Combined reports | Per-target deduplication, provenance, triage rules, empty/not-configured results, invalid documents and escaped offline HTML |
 | Local training lab | Exact approval/scope, alias/recipient uniqueness, structured action policy, bounded voice turns, concurrency/replay, expiry and permanent plan revocation |
 | Interactive training | Numbered choices, invalid input redaction, EOF/Ctrl+C stop, terminal-control escaping, all command help and actual persisted CLI workflows |

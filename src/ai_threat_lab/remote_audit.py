@@ -12,7 +12,8 @@ from urllib.parse import quote, urlencode, urlsplit
 from .assessment import AssessmentFinding, AssessmentResult, identify_target
 from .code_review import review_source
 from .config_review import NOTICE, configuration_file
-from .dependencies import MAX_BYTES, inventory_sources, is_manifest
+from .dependencies import MAX_BYTES, inventory_sources
+from .dependency_paths import MAX_DEPTH, MAX_ENTRIES, is_manifest, valid_source_path
 from .http_client import get_document
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
 from .models import ValidationError
@@ -80,6 +81,7 @@ class GithubSnapshot:
     assessment: AssessmentResult
     commit_sha: str
     manifests: tuple[tuple[str, bytes], ...]
+    recursive_dependencies: bool = False
 
     def inventory(self):
         return inventory_sources(
@@ -87,9 +89,12 @@ class GithubSnapshot:
             self.manifests,
             not_checked=(
                 f"Inventory from immutable GitHub commit {self.commit_sha}.",
-                "Only selected root manifests; subdirectory and unsupported manifests unchecked.",
+                "Selected recursive manifests; bounded/excluded/unsupported paths remain unchecked."
+                if self.recursive_dependencies
+                else "Only root manifests; subdirectory and unsupported manifests unchecked.",
                 *self.assessment.not_checked,
             ),
+            allow_paths=self.recursive_dependencies,
         )
 
 
@@ -102,7 +107,11 @@ class GithubAudit:
     def assess(self, target):
         return self.collect(target).assessment
 
-    def collect(self, target, *, include_dependencies=False):
+    def collect(self, target, *, include_dependencies=False, recursive_dependencies=False):
+        if type(recursive_dependencies) is not bool or (
+            recursive_dependencies and not include_dependencies
+        ):
+            raise ValidationError("Recursive GitHub manifests require dependency collection")
         if identify_target(target) != "github_repository":
             raise ValidationError("Expected a GitHub repository root URL")
         owner, repository = urlsplit(target).path.strip("/").split("/")
@@ -141,23 +150,45 @@ class GithubAudit:
         count, total = 0, 0
         manifests, cache, seen = [], {}, set()
         entries = tree["tree"]
+        if recursive_dependencies and len(entries) > MAX_ENTRIES:
+            missing.append("GitHub tree entry inspection limit reached; unlisted paths unchecked.")
+            entries = entries[:MAX_ENTRIES]
+
+        def selected_manifest(name):
+            path = PurePosixPath(name)
+            return (
+                include_dependencies
+                and is_manifest(path.name)
+                and (recursive_dependencies or "/" not in name)
+            )
+
         if any(
             not isinstance(item, dict) or not isinstance(item.get("path"), str) for item in entries
         ):
             raise ProviderError("Invalid repository tree entry")
         if include_dependencies:
-            # Root manifests share the same file/byte budget and immutable tree.
+            # Selected manifests share the same file/byte budget and immutable tree.
             entries = sorted(
                 entries,
                 key=lambda item: (
-                    not ("/" not in item["path"] and is_manifest(item["path"])),
+                    not selected_manifest(item["path"]),
+                    item["path"].count("/") if recursive_dependencies else 0,
                     item["path"],
                 ),
             )
         for item in entries:
             name = item.get("path", "")
             path = PurePosixPath(name)
-            manifest = include_dependencies and "/" not in name and is_manifest(name)
+            manifest = selected_manifest(name)
+            if (
+                manifest
+                and recursive_dependencies
+                and (
+                    not valid_source_path(name, allow_paths=True) or len(path.parts) - 1 > MAX_DEPTH
+                )
+            ):
+                missing.append("Skipped a manifest outside portable path/depth bounds.")
+                continue
             if (
                 item.get("type") != "blob"
                 or item.get("mode") not in ("100644", "100755")
@@ -176,7 +207,7 @@ class GithubAudit:
                 raise ProviderError("Duplicate repository tree path")
             seen.add(name)
             if manifest and len(manifests) >= 20:
-                missing.append("Root manifest limit reached; additional manifests unchecked.")
+                missing.append("Repository manifest limit reached; additional manifests unchecked.")
                 continue
             size = item.get("size")
             if type(size) is not int or not 0 <= size <= (MAX_BYTES if manifest else 256 * 1024):
@@ -234,6 +265,7 @@ class GithubAudit:
             ),
             sha,
             tuple(manifests),
+            recursive_dependencies,
         )
 
 

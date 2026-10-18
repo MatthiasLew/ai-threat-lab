@@ -189,6 +189,7 @@ def test_engine_change_preserves_old_bundle_reading_but_disables_delta(tmp_path)
     new = read_bundle(tmp_path / "new")
     metadata = dict(new["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-1"}
+    metadata["scope"].pop("recursive_dependencies", None)
     metadata["scope_digest"] = scope_digest(metadata["scope"])
     artifacts = {name: (tmp_path / "new" / name).read_bytes() for name in metadata["files"]}
     # publish_bundle ignores the old file index and derives a fresh one.

@@ -9,16 +9,27 @@ import time
 import tomllib
 from contextlib import closing
 from dataclasses import asdict, dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .assessment import AssessmentFinding, AssessmentResult
 from .contracts import _nonfinite, _pairs
+from .dependency_paths import (
+    MAX_TOTAL_BYTES,
+    discover_manifests,
+    linked,
+    valid_source_path,
+)
+from .dependency_paths import (
+    SUPPORTED as SUPPORTED,
+)
+from .dependency_paths import (
+    is_manifest as is_manifest,
+)
 from .models import ValidationError
 from .providers import ProviderError
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PACKAGES = 500
-SUPPORTED = {"package-lock.json", "poetry.lock", "uv.lock"}
 NAME = {
     "PyPI": r"[A-Za-z0-9][A-Za-z0-9._-]{0,213}",
     "npm": r"(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]{0,213}",
@@ -70,54 +81,57 @@ class Inventory:
         }
 
 
-def inventory(path: Path) -> Inventory:
+def inventory(path: Path, *, recursive=False) -> Inventory:
     path = Path(path)
-    if path.is_symlink() or not path.exists():
-        raise ValidationError("Dependency target must exist and must not be a symlink")
+    if type(recursive) is not bool:
+        raise ValidationError("Recursive dependency selection must be boolean")
+    if linked(path) or not path.exists():
+        raise ValidationError("Dependency target must exist and must not be a symlink/junction")
+    if recursive and not path.is_dir():
+        raise ValidationError("Recursive dependency inventory requires a project directory")
     if path.is_dir():
-        files = sorted(
-            p
-            for p in path.iterdir()
-            if p.name in SUPPORTED or p.name.startswith("requirements") and p.suffix == ".txt"
-        )
+        files, skipped = discover_manifests(path, recursive=recursive)
     else:
-        files = [path]
-    if len(files) > 20:
-        raise ValidationError("At most 20 manifests per directory; use a narrower scope")
-    sources, skipped = [], []
-    for manifest in files:
-        if manifest.is_symlink() or not manifest.is_file():
-            skipped.append(f"{manifest.name}: skipped symlink or non-file.")
+        files, skipped = [(path, path.name)], []
+    sources, total = [], 0
+    for manifest, origin in files:
+        if linked(manifest) or not manifest.is_file():
+            skipped.append(f"{origin}: skipped symlink or non-file.")
             continue
         with manifest.open("rb") as stream:
             raw = stream.read(MAX_BYTES + 1)
-        sources.append((manifest.name, raw))
-    return inventory_sources(str(path), sources, not_checked=skipped)
+        if len(raw) > MAX_BYTES:
+            raise ValidationError("Dependency manifest exceeds 2 MiB")
+        if total + len(raw) > MAX_TOTAL_BYTES:
+            skipped.append("Dependency total-byte limit reached; remaining manifests unchecked.")
+            break
+        sources.append((origin, raw))
+        total += len(raw)
+    skipped.append(
+        "Recursive dependency discovery enabled; excluded directories, depth/entry/file "
+        "limits and unsupported formats remain unchecked."
+        if recursive
+        else "Root-only dependency inventory; subdirectories were not searched."
+    )
+    return inventory_sources(str(path), sources, not_checked=skipped, allow_paths=recursive)
 
 
-def is_manifest(name):
-    return name in SUPPORTED or name.startswith("requirements") and name.endswith(".txt")
-
-
-def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
-    """Parse bounded in-memory root manifests without materializing repository files."""
+def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> Inventory:
+    """Parse bounded manifest bytes; relative origins are labels, never opened as paths."""
     if not isinstance(target, str) or not target:
         raise ValidationError("Dependency inventory requires a target")
     if not isinstance(sources, (list, tuple)) or len(sources) > 20:
         raise ValidationError("At most 20 manifests per inventory")
+    if type(allow_paths) is not bool:
+        raise ValidationError("Relative manifest path setting must be boolean")
     names = set()
+    total = 0
     for entry in sources:
         if not isinstance(entry, (tuple, list)) or len(entry) != 2:
             raise ValidationError("Invalid manifest input pair")
         name, raw = entry
         if (
-            not isinstance(name, str)
-            or not name
-            or len(name) > 255
-            or "/" in name
-            or "\\" in name
-            or name in (".", "..")
-            or any(ord(c) < 32 for c in name)
+            not valid_source_path(name, allow_paths=allow_paths)
             or name in names
             or not isinstance(raw, bytes)
         ):
@@ -125,6 +139,9 @@ def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
         names.add(name)
         if len(raw) > MAX_BYTES:
             raise ValidationError("Dependency manifest exceeds 2 MiB")
+        total += len(raw)
+        if total > MAX_TOTAL_BYTES:
+            raise ValidationError("Dependency manifests exceed the 4 MiB total-byte limit")
     packages = {}
     missing = [
         "No packages were installed or executed; manifests are untrusted input.",
@@ -160,9 +177,10 @@ def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
             )
 
     for origin, raw in sources:
+        basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")
-            if origin.startswith("requirements") and origin.endswith(".txt"):
+            if basename.startswith("requirements") and basename.endswith(".txt"):
                 for number, line in enumerate(source.splitlines(), 1):
                     line = line.strip()
                     if not line or line.startswith("#"):
@@ -179,7 +197,7 @@ def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
                             f"{origin}:{number}: skipped unpinned/unsupported requirement "
                             "(value omitted)."
                         )
-            elif origin == "package-lock.json":
+            elif basename == "package-lock.json":
                 document = json.loads(source, object_pairs_hook=_pairs, parse_constant=_nonfinite)
                 if type(document.get("lockfileVersion")) is not int or document[
                     "lockfileVersion"
@@ -201,7 +219,7 @@ def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
                     f"{origin}: dev/optional/all-platform entries included; "
                     "runtime reachability unverified."
                 )
-            elif origin in ("uv.lock", "poetry.lock"):
+            elif basename in ("uv.lock", "poetry.lock"):
                 document = tomllib.loads(source)
                 if not isinstance(document.get("package"), list):
                     raise ValueError
@@ -230,7 +248,7 @@ def inventory_sources(target, sources, *, not_checked=()) -> Inventory:
         except (ValueError, UnicodeError, TypeError, AttributeError, RecursionError):
             raise ValidationError(f"Invalid or unsupported dependency manifest: {origin}") from None
     if not sources:
-        note("No supported manifests in the target directory; subdirectories were not searched.")
+        note("No supported regular manifests were parsed in the selected dependency scope.")
     if skipped_notes:
         missing.append(f"Additional omitted inventory notices: {skipped_notes}.")
     return Inventory(

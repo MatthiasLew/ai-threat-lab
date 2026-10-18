@@ -103,3 +103,8 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 `config_review.inspect_configuration` produces generic candidate observations without interpreting YAML or running containers. `local_inventory.inspect_text` shares it with local and verified GitHub collectors. Scan scope engine 3 prevents cross-version coverage comparisons.
 
 `exercise_export.export_exercise` validates the exact approved plan before preparing inert assets and exclusively claiming a new directory. It never opens media references or calls a transport. `offline_cli.offline_demo` creates only fictional fixtures, drives the existing scan/training services, checks scan acceptance and writes a completion marker last. Its generated synthetic approval cannot authorize a user-supplied plan. `readiness.readiness` returns a static scope inventory without account, credential or API inspection.
+
+
+## Monorepo inventory (0.10.0)
+
+`dependency_paths` centralizes supported manifest names, portable relative-label validation and bounded breadth-first local discovery. `dependencies.inventory` enforces read/parser limits and passes root or explicitly allowed nested labels to the same in-memory parser. Local paths are never reconstructed from untrusted origin labels. `GithubSnapshot` carries recursive coverage so the scan engine can reject collection/scope disagreement. Scope engine 4 records the new boolean; legacy scopes remain readable without it. See MONOREPOS.md for resource and snapshot limitations.

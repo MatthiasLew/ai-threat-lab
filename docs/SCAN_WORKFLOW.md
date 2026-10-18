@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.9.0
+# One-command scans and history comparison — 0.10.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -43,6 +43,10 @@ ai-threat-lab scan mailbox:owner@example.com --network --allow-host gmail.google
 
 Exact host approval is mandatory before collection. Website targets require HTTPS, port 443 and no fragment. No redirects, arbitrary POSTs, crawling or execution occurs. Gmail needs the documented OAuth grants; a model key does not provide mailbox access. These commands use bundled collectors, not arbitrary providers selected by the legacy `--config` registry.
 
+## Optional nested dependency scope
+
+Add `--recursive-dependencies` for a local project directory or GitHub root URL. It discovers supported manifests in bounded subdirectories, preserves relative origins and deduplicates exact identities across subprojects. No network/model call is enabled by this flag. Root-only remains the default. Bounds, exclusions and partial-result behavior are documented in [MONOREPOS.md](MONOREPOS.md).
+
 ## GitHub source and dependency snapshot
 
 ```bash
@@ -65,7 +69,7 @@ flowchart TD
     E --> F
 ```
 
-Supported root inputs are `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock` and `poetry.lock`. No nested-manifest discovery, includes, installation or dependency resolution occurs. Other lockfile ecosystems remain unchecked. At most 20 manifests and 500 distinct exact package identities are parsed. Root manifests are prioritized by path before other selected text files, so low file limits can leave source files unreviewed.
+Supported root inputs are `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock` and `poetry.lock`. Nested discovery is separately opted into with `--recursive-dependencies`; no includes, installation or workspace dependency resolution occurs. Other lockfile ecosystems remain unchecked. At most 20 manifests and 500 distinct exact package identities are parsed. Root manifests are prioritized by path before other selected text files, so low file limits can leave source files unreviewed.
 
 The **shared** budget is `--max-files` paths (default 50, maximum 100) and 4 MiB decoded bytes. Cached duplicate blobs still consume the path/byte budget. Manifest parsing permits up to 2 MiB per manifest; ordinary source checks remain capped at 256 KiB per file. Larger manifests are parsed for dependencies only. The existing 110-request and 8 MiB response limits remain. Truncation, oversized files and budget stops remain explicit gaps; an empty or incomplete inventory never proves that dependencies are secure.
 
@@ -115,7 +119,7 @@ The comparison uses exact target/finding-field IDs and reports:
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
 
-Version 0.9 uses scope engine `read-only-pipeline-3` with literal configuration checks, including Dockerfiles. Versions 0.7/0.8 remain readable, but cross-engine comparison is intentionally unavailable because collection coverage changed. See [CONFIGURATION_CHECKS.md](CONFIGURATION_CHECKS.md).
+Version 0.10 uses scope engine `read-only-pipeline-4` and records strict boolean `recursive_dependencies`. Versions 0.7–0.9 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 

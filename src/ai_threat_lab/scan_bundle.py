@@ -70,15 +70,26 @@ def validate_manifest(value):
     from .contracts import timestamp
 
     timestamp(value["created_at"], "created_at")
-    fields(value["scope"], SCOPE_FIELDS)
     scope = value["scope"]
+    fields(scope, SCOPE_FIELDS, {"recursive_dependencies"})
+    current = scope["engine"] == "read-only-pipeline-4"
+    if current:
+        if type(scope.get("recursive_dependencies")) is not bool:
+            raise ValidationError("Invalid recursive dependency scan scope")
+    elif "recursive_dependencies" in scope:
+        raise ValidationError("Legacy scan scope cannot declare recursive dependencies")
     if (
         not isinstance(scope["target"], str)
         or not scope["target"]
         or not isinstance(scope["target_kind"], str)
         or not scope["target_kind"]
         or scope["engine"]
-        not in ("read-only-pipeline-1", "read-only-pipeline-2", "read-only-pipeline-3")
+        not in (
+            "read-only-pipeline-1",
+            "read-only-pipeline-2",
+            "read-only-pipeline-3",
+            "read-only-pipeline-4",
+        )
         or type(scope["network"]) is not bool
         or type(scope["share_packages"]) is not bool
         or type(scope["advisory_cache"]) is not bool

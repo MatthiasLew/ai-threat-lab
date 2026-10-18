@@ -62,3 +62,7 @@ The `training-*` commands provide persistent, approved **local text rehearsals**
 ## Combined scan workflow (0.8.0)
 
 `scan TARGET --output-dir NEW_DIRECTORY` orchestrates the same built-in read-only collectors. Existing network/host/OAuth requirements still apply. Local-project and GitHub root dependency inventory is automatic, but OSV package sharing stays explicit. GitHub uses the same immutable commit/shared retrieval for source and manifests. Its combined `scan` additionally allows root manifests up to 2 MiB each, with a shared 4 MiB/file-count budget; ordinary source remains limited to 256 KiB each. No AI API is called by `scan`. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md) for bundles, partial failures and comparison.
+
+## Optional monorepo scope (0.10.0)
+
+`audit-deps` and local/GitHub `scan` now accept `--recursive-dependencies` for bounded nested-manifest selection. Root-only stays the default; GitHub still uses one immutable commit/shared retrieval. No AI call, package sharing or external account configuration is enabled by this flag. See [MONOREPOS.md](MONOREPOS.md) for global limits, relative origins and explicit gaps.

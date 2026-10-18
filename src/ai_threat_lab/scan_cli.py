@@ -29,6 +29,11 @@ def add_commands(commands):
     scan.add_argument("--network", action="store_true")
     scan.add_argument("--allow-host", action="append", default=[])
     scan.add_argument("--max-files", type=int, default=50)
+    scan.add_argument(
+        "--recursive-dependencies",
+        action="store_true",
+        help="Discover supported nested manifests within fixed bounds",
+    )
     scan.add_argument("--dkim-selector")
     scan.add_argument(
         "--share-packages",
@@ -55,7 +60,9 @@ def assessor(options):
     if identify_target(options.target) == "github_repository":
         client = PublicHTTPS(["api.github.com"], max_bytes=8 * 1024 * 1024)
         return GithubAudit(client, max_files=options.max_files).collect(
-            options.target, include_dependencies=True
+            options.target,
+            include_dependencies=True,
+            recursive_dependencies=options.recursive_dependencies,
         )
     return audit_target(
         SimpleNamespace(
@@ -86,6 +93,7 @@ def run_command(args):
             args.share_packages,
             args.max_pages,
             args.advisory_cache,
+            args.recursive_dependencies,
         )
         payload = ScanService(assessor, advisory_lookup=advisory_lookup).run(
             options, args.output_dir, baseline=args.baseline

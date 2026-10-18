@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.9.0)
+# Integration contracts and current capability boundary (0.10.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -63,3 +63,5 @@ Verify provider authentication, scope enforcement, idempotency, cancellation, ex
 ProviderRegistry now supplies explicit named registrations, guarded output validation and redacted failures. `--config` selects pre-registered names; `doctor` reports missing registrations. Strict request, preview and approval artifacts drive the complete offline CLI workflow. These additions do not bundle any external SDK. See PROVIDER_DEVELOPMENT.md and TESTING.md.
 
 The [offline acceptance kit](OFFLINE_ACCEPTANCE.md) adds inert export and synthetic acceptance commands without live adapters. The [delivery matrix](DELIVERY_STATUS.md) records missing implementation separately from API/account validation.
+
+Opt-in [monorepo inventory](MONOREPOS.md) adds bounded nested manifests to local/GitHub scans without adding a provider or enabling package sharing.

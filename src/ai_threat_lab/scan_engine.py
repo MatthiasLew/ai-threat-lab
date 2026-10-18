@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 from .assessment import AssessmentResult, identify_target
 from .audit_report import merge_reports, render_html
 from .dependencies import inventory
+from .dependency_paths import linked
 from .models import ValidationError
 from .providers import ProviderError
 from .remote_audit import GithubSnapshot
@@ -33,11 +34,15 @@ class ScanOptions:
     share_packages: bool = False
     max_pages: int = 10
     advisory_cache: Path | None = None
+    recursive_dependencies: bool = False
 
     def __post_init__(self):
         kind = identify_target(self.target)
-        if type(self.network) is not bool or type(self.share_packages) is not bool:
-            raise ValidationError("Network/sharing settings must be booleans")
+        if any(
+            type(v) is not bool
+            for v in (self.network, self.share_packages, self.recursive_dependencies)
+        ):
+            raise ValidationError("Network, sharing and recursive settings must be booleans")
         if (
             type(self.max_files) is not int
             or not 1 <= self.max_files <= 100
@@ -54,8 +59,8 @@ class ScanOptions:
             self, "allowed_hosts", tuple(sorted(set(h.lower() for h in self.allowed_hosts)))
         )
         if kind in ("local_project", "python_source", "program_file", "mail_message"):
-            if Path(self.target).is_symlink():
-                raise ValidationError("Scan root must not be a symlink")
+            if linked(Path(self.target)):
+                raise ValidationError("Scan root must not be a symlink/junction")
             object.__setattr__(self, "target", str(Path(self.target).resolve()))
         else:
             expected = {
@@ -84,6 +89,8 @@ class ScanOptions:
             not self.network or kind not in ("local_project", "github_repository")
         ):
             raise ValidationError("OSV sharing requires a local/GitHub project and --network")
+        if self.recursive_dependencies and kind not in ("local_project", "github_repository"):
+            raise ValidationError("Recursive dependency discovery requires a local/GitHub project")
         if self.advisory_cache is not None and not self.share_packages:
             raise ValidationError("Advisory cache requires explicit package sharing")
 
@@ -91,7 +98,7 @@ class ScanOptions:
         return {
             "target": self.target,
             "target_kind": identify_target(self.target),
-            "engine": "read-only-pipeline-3",
+            "engine": "read-only-pipeline-4",
             "network": self.network,
             "allowed_hosts": list(self.allowed_hosts),
             "max_files": self.max_files,
@@ -99,6 +106,7 @@ class ScanOptions:
             "share_packages": self.share_packages,
             "max_pages": self.max_pages,
             "advisory_cache": self.advisory_cache is not None,
+            "recursive_dependencies": self.recursive_dependencies,
         }
 
 
@@ -171,14 +179,20 @@ class ScanService:
                 if scope["target_kind"] == "github_repository":
                     if snapshot is None or "target_assessment" in failures:
                         raise ProviderError("Pinned repository snapshot unavailable")
+                    if snapshot.recursive_dependencies != options.recursive_dependencies:
+                        raise ProviderError("Repository dependency coverage does not match scope")
                     collected = snapshot.inventory()
                 else:
-                    collected = self.inventory_loader(Path(options.target))
+                    collected = self.inventory_loader(
+                        Path(options.target),
+                        **({"recursive": True} if options.recursive_dependencies else {}),
+                    )
                 artifacts["dependency-inventory.json"] = encoded(collected.document())
                 modules["dependency_inventory"] = {
                     "status": "collected" if collected.packages else "empty_inventory",
-                    "notice": "Only root-directory supported manifests and "
-                    "exact versions were inventoried.",
+                    "notice": "Selected recursive supported manifests; exact versions only."
+                    if options.recursive_dependencies
+                    else "Root-directory supported manifests and exact versions only.",
                 }
             except Exception:
                 collected = None

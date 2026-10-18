@@ -60,6 +60,11 @@ def add_commands(commands):
         "audit-deps", help="Inventory pinned dependencies; optionally query OSV"
     )
     dependencies.add_argument("path", type=Path)
+    dependencies.add_argument(
+        "--recursive-dependencies",
+        action="store_true",
+        help="Discover supported nested manifests within fixed bounds",
+    )
     dependencies.add_argument("--network", action="store_true")
     dependencies.add_argument(
         "--share-packages", action="store_true", help="Permit sharing names/versions with OSV"
@@ -115,7 +120,7 @@ def run_command(args):
     if args.command == "audit":
         payload = asdict(audit_target(args))
     elif args.command == "audit-deps":
-        collected = inventory(args.path)
+        collected = inventory(args.path, recursive=args.recursive_dependencies)
         if args.network:
             if not args.share_packages:
                 raise ValidationError("OSV lookup requires --share-packages as well as --network")

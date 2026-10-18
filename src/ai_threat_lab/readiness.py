@@ -19,7 +19,7 @@ def readiness():
             "dependencies",
             "partial",
             "integration_validation_required",
-            "Root exact-version inventory; OSV adapter fixture-tested. Other ecosystems absent.",
+            "Root/opt-in nested pins; OSV fixture-tested. Other ecosystems remain unchecked.",
         ),
         (
             "github",

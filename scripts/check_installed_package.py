@@ -241,6 +241,24 @@ def main() -> None:
         assert demo["training_channels"] == ["email", "voice", "video"]
         assert (work / "offline demo" / "email-pack" / "preview.eml").is_file()
         assert (work / "offline demo" / "index.html").is_file()
+        nested_inventory = json.loads(
+            run(
+                executable,
+                "audit-deps",
+                "offline demo/synthetic-project",
+                "--recursive-dependencies",
+            )
+        )
+        assert nested_inventory["packages"][0]["sources"] == [
+            "requirements.txt:1",
+            "services/api/requirements.txt:1",
+        ]
+        scan_inventory = json.loads(
+            (work / "offline demo" / "scan-after" / "dependency-inventory.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert len(scan_inventory["packages"][0]["sources"]) == 2
         run(
             executable,
             "exercise-export",

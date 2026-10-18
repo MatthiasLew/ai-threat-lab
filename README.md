@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.9.0
+## Project status — 0.10.0
 
-Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest and literal Dockerfile/workflow review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest and literal Dockerfile/workflow review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -54,6 +54,8 @@ ai-threat-lab scan-compare scan-results/run-01 scan-results/run-02
 ```
 
 The bundle includes source observations, an automatic root dependency inventory, module status, JSON/HTML reports and a hash manifest. Online dependency checks additionally require `--network --share-packages`. Remote targets require `--network --allow-host EXACT_HOST`. No model call occurs. Failures remain explicit; disappearance is labeled **no longer observed**, never automatically **fixed**. [Scan workflow and limits](docs/SCAN_WORKFLOW.md).
+
+For monorepos, add `--recursive-dependencies` to `scan` or `audit-deps` to inventory supported manifests in bounded subdirectories, preserving subproject origins. Root-only remains the default. [Monorepo rules and limits](docs/MONOREPOS.md).
 
 ## Read-only audits and optional AI
 

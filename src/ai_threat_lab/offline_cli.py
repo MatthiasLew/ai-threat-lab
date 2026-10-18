@@ -51,7 +51,10 @@ def offline_demo(output, *, now=None):
     (project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
     docker = project / "Dockerfile"
     docker.write_text("FROM python:latest\nUSER root\n", encoding="utf-8")
-    options = ScanOptions(str(project))
+    nested = project / "services" / "api"
+    nested.mkdir(parents=True)
+    (nested / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
+    options = ScanOptions(str(project), recursive_dependencies=True)
     engine = ScanService(assessor, clock=lambda: current)
     before = engine.run(options, root / "scan-before")
     (project / "app.py").write_text("value = 'synthetic fixture'\n", encoding="utf-8")

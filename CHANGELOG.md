@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0
+
+- Add opted-in `--recursive-dependencies` to local `audit-deps` and local/GitHub `scan`; retain root-only defaults.
+- Discover nested manifests with global manifest/package/byte/directory/entry/depth bounds, deterministic breadth-first local traversal and explicit partial-coverage notices. Skip links/junctions and excluded directories.
+- Preserve portable relative origins across all supported formats; deduplicate exact package identities across subprojects before optional advisory queries.
+- Share nested GitHub inventory with the existing pinned commit and bounded blob retrieval; reject snapshot/scope disagreements.
+- Add strict recursive scope to engine 4, retain old bundle reading and suppress cross-coverage comparisons.
+- Extend synthetic demo, CLI/wire/resource/error tests and clean installed-wheel verification. No live API validation or model calls added.
+
 ## 0.9.0
 
 - Add literal Dockerfile and GitHub Actions configuration observations, shared by local and immutable GitHub collection. All remain candidate findings with explicit parser/runtime gaps.
