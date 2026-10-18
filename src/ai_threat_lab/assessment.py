@@ -19,6 +19,12 @@ class AssessmentFinding:
     evidence: str
     recommendation: str
 
+    def __post_init__(self) -> None:
+        for label in ("check", "evidence", "recommendation"):
+            require_text(getattr(self, label), label)
+        if self.status not in ("candidate", "unverified", "confirmed"):
+            raise ValidationError("Invalid assessment finding status")
+
 
 @dataclass(frozen=True)
 class AssessmentResult:
@@ -27,6 +33,22 @@ class AssessmentResult:
     status: str
     findings: tuple[AssessmentFinding, ...]
     not_checked: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        require_text(self.target, "target")
+        require_text(self.target_kind, "target_kind")
+        if self.status not in ("partial", "completed", "not_configured"):
+            raise ValidationError("Invalid assessment result status")
+        if not isinstance(self.findings, (list, tuple)) or not all(
+            isinstance(f, AssessmentFinding) for f in self.findings
+        ):
+            raise ValidationError("findings must contain AssessmentFinding values")
+        if not isinstance(self.not_checked, (list, tuple)):
+            raise ValidationError("not_checked must be an array")
+        for item in self.not_checked:
+            require_text(item, "not_checked item")
+        object.__setattr__(self, "findings", tuple(self.findings))
+        object.__setattr__(self, "not_checked", tuple(self.not_checked))
 
 
 class TargetAdapter(Protocol):
@@ -44,9 +66,14 @@ def identify_target(target: str) -> str:
         return "mailbox_account"
     if target.startswith("mail-domain:"):
         domain = target.removeprefix("mail-domain:")
+        labels = domain.split(".")
         if (
-            not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?", domain)
-            or "." not in domain
+            len(domain) > 253
+            or len(labels) < 2
+            or any(
+                not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", label)
+                for label in labels
+            )
         ):
             raise ValidationError("Use mail-domain:example.com")
         return "mail_domain"

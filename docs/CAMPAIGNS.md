@@ -66,3 +66,7 @@ Optional model-generated preview content, consented synthetic media, mail/teleph
 `VoiceExerciseSession` accepts only a typed `VoiceSignal` and returns the next `VoiceTurn`. Refusal, stop requests, offered real data, and verification requests end the exercise. Sharing the synthetic identifier records only a `synthetic_info_shared` event. Three unclassified turns end without inventing an outcome. A verification request is not falsely counted as completed verification.
 
 A future speech/telephony adapter supplies intent classification and plays approved responses. It must enforce stop handling, suppress/redact real-data capture and obey scope expiry during the call, even if a speech/model component fails. This library does not currently recognize speech, classify free-form conversation or record calls.
+
+## Saved-artifact CLI workflow (0.3.0)
+
+`campaign-example` → `campaign-prepare` → reviewer inspects the preview → `campaign-approve` → `campaign-simulate`. The root README shows exact commands. The request, plan and approval have strict versioned JSON contracts; tampering invalidates the digest. `campaign-simulate` accepts an optional SQLite ledger and always uses the offline demo transport. It does not select live providers from configuration.

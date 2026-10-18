@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.2.0)
+# Integration contracts and current capability boundary (0.3.0)
 
 The product goal is an assessment assistant: accept a target, route it to appropriate modules, collect evidence, explain findings, and recommend action. Narrative risk simulations remain educational support. The current release provides local checks and tested adapter contracts; it is not a complete remote pentesting or communications platform.
 
@@ -54,3 +54,7 @@ There is no global bulk-send command or configured live provider. The CLI expose
 ## Integration acceptance before live use
 
 Verify provider authentication, scope enforcement, idempotency, cancellation, expiry, event authenticity, rate controls and secret-free error handling in a controlled environment. Keep source-sharing decisions and usage budgets explicit for an optional AI provider. Test evidence is not automatically a confirmed vulnerability or a personnel judgment.
+
+## Registration and saved-file workflows
+
+ProviderRegistry now supplies explicit named registrations, guarded output validation and redacted failures. `--config` selects pre-registered names; `doctor` reports missing registrations. Strict request, preview and approval artifacts drive the complete offline CLI workflow. These additions do not bundle any external SDK. See PROVIDER_DEVELOPMENT.md and TESTING.md.

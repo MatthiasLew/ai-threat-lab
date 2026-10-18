@@ -186,6 +186,22 @@ class CampaignPlan:
     approved_facts: tuple[str, ...]
     content: TrainingContent
 
+    def __post_init__(self) -> None:
+        require_text(self.scenario_id, "scenario_id")
+        if self.channel not in ("email", "voice", "video"):
+            raise ValidationError("Invalid campaign channel")
+        if not isinstance(self.scope, CampaignScope) or not isinstance(
+            self.content, TrainingContent
+        ):
+            raise ValidationError("Campaign plan needs validated scope and content")
+        for label in ("recipients", "approved_facts"):
+            values = getattr(self, label)
+            if not isinstance(values, (tuple, list)):
+                raise ValidationError(f"{label} must be an array")
+            for value in values:
+                require_text(value, label)
+            object.__setattr__(self, label, tuple(values))
+
     @property
     def digest(self) -> str:
         payload = asdict(self)
@@ -272,6 +288,12 @@ class CampaignService:
         now: datetime | None = None,
     ) -> CampaignPlan:
         current = now or datetime.now(timezone.utc)
+        if not isinstance(scope, CampaignScope):
+            raise ValidationError("scope must be a CampaignScope")
+        if not isinstance(recipients, (tuple, list)):
+            raise ValidationError("recipients must be a list or tuple")
+        for recipient in recipients:
+            require_text(recipient, "recipient")
         scenario = next((item for item in SCENARIOS if item.id == scenario_id), None)
         if scenario is None:
             raise ValidationError(f"Unknown campaign scenario: {scenario_id}")

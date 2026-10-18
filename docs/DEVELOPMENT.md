@@ -35,3 +35,7 @@ Project changes currently go to main after local checks, per the maintainer work
 Code-review tests cover risky patterns, simple import aliases, nonmatching examples, source non-execution, file encodings, input-size limits, output redaction, CLI exit codes and export preservation.
 
 Campaign/assessment checks cover scope-before-provider validation, exact-content approvals, expiry, channel mismatches, cancellation, ambiguous send failures, persistent duplicate prevention, absent video assets, offline network isolation, local project bounds, and untrusted message headers. CI runs the installed-wheel campaign demo and target-routing smoke checks as well.
+
+## Complete release verification
+
+Install the dev extra, then run `python scripts/verify.py`. Coverage is enforced at 90% with branch measurement. `scripts/check_installed_package.py` verifies the already-built wheel without editable installation/PYTHONPATH, using a fresh environment and path containing spaces. See TESTING.md for coverage scope and the CLI subprocess matrix.

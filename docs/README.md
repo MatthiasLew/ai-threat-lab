@@ -24,3 +24,6 @@ Start with the project plan to understand what will be built, then read the user
 - [Target-based assessment](ASSESSMENT.md)
 - [Prepared campaigns and event reporting](CAMPAIGNS.md)
 - [Integration contracts and exact capability status](INTEGRATIONS.md)
+
+- [Provider development and configuration](PROVIDER_DEVELOPMENT.md)
+- [Test strategy and release gates](TESTING.md)

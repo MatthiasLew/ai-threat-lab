@@ -4,7 +4,7 @@ Offline security assessment foundation and training-scenario toolkit for AI-assi
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.2.0
+## Project status — 0.3.0
 
 Implemented: limited Python file/project review, exported-mail header observations, target routing, six educational risk scenarios, three prepared training-campaign scenarios, provider contracts, offline demos, event aggregation, and TXT/JSON outputs.
 
@@ -29,6 +29,19 @@ python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json
 ```
 
 The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
+
+## Complete offline campaign workflow
+
+```bash
+python -m ai_threat_lab --config examples/providers.json doctor
+python -m ai_threat_lab campaign-example voice_training --output request.json
+python -m ai_threat_lab campaign-prepare request.json --output plan.json
+# Review plan.json before recording approval:
+python -m ai_threat_lab campaign-approve plan.json --reviewer "Reviewer" --output approval.json
+python -m ai_threat_lab campaign-simulate plan.json --approval approval.json --ledger attempts.sqlite --output result.json
+```
+
+This simulates only; it cannot send messages or place calls. Reusing the same plan and ledger is rejected. See [provider development](docs/PROVIDER_DEVELOPMENT.md) for API adapter contracts and [testing](docs/TESTING.md) for the full validation strategy.
 
 ## Assessment and training demos
 

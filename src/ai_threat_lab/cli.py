@@ -7,19 +7,22 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .analyzer import ThreatAnalyzer
-from .assessment import AssessmentService
 from .campaign_cli import demo_campaign, report_events
 from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
+from .contracts import approval_to_document, config_from_document, read_document, write_document
 from .models import AnalysisRequest, TargetProfile, ValidationError
+from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report, render_json, render_text
+from .workflows import approve_campaign, example_request, prepare_campaign, simulate_campaign
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="AI Threat Lab — fictional educational simulations"
+        description="AI Threat Lab — offline assessment and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.2.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.3.0")
+    parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
@@ -52,6 +55,27 @@ def build_parser() -> argparse.ArgumentParser:
     events.add_argument("path", type=Path)
     assess = commands.add_parser("assess", help="Route a target to available assessment modules")
     assess.add_argument("target")
+    commands.add_parser("providers", help="List registered adapters and configuration")
+    commands.add_parser(
+        "doctor", help="Check selected adapter registrations without network access"
+    )
+    example = commands.add_parser("campaign-example", help="Create a fictional exercise request")
+    example.add_argument("scenario")
+    prepare = commands.add_parser(
+        "campaign-prepare", help="Prepare an exact preview from a request"
+    )
+    prepare.add_argument("request", type=Path)
+    approve = commands.add_parser("campaign-approve", help="Record reviewer approval of a preview")
+    approve.add_argument("plan", type=Path)
+    approve.add_argument("--reviewer", required=True)
+    simulate = commands.add_parser("campaign-simulate", help="Simulate an approved saved plan")
+    simulate.add_argument("plan", type=Path)
+    simulate.add_argument("--approval", type=Path, required=True)
+    simulate.add_argument(
+        "--ledger", type=Path, help="Optional persistent simulated-attempt ledger"
+    )
+    for command in (example, prepare, approve, simulate, demo, events, assess):
+        command.add_argument("--output", type=Path, help="New JSON file path; never overwrite")
     return parser
 
 
@@ -76,9 +100,45 @@ def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
     )
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        registry = registry or ProviderRegistry()
+        config = (
+            config_from_document(read_document(args.config)) if args.config else ProviderConfig()
+        )
+        if getattr(args, "output", None) is not None and args.output.exists():
+            raise FileExistsError("Output path already exists; choose a new file")
+        if args.command in ("providers", "doctor"):
+            payload = (
+                registry.describe(config)
+                if args.command == "providers"
+                else registry.diagnose(config)
+            )
+            print(write_document(payload), end="")
+            return 3 if args.command == "doctor" and payload["missing"] else 0
+        if args.command.startswith("campaign-") and args.command not in (
+            "campaign-demo",
+            "campaign-report",
+        ):
+            if args.command == "campaign-example":
+                payload = example_request(args.scenario)
+            elif args.command == "campaign-prepare":
+                payload = prepare_campaign(read_document(args.request), registry, config)
+            elif args.command == "campaign-approve":
+                payload = approval_to_document(
+                    approve_campaign(read_document(args.plan), args.reviewer)
+                )
+            else:
+                payload = simulate_campaign(
+                    read_document(args.plan), read_document(args.approval), args.ledger
+                )
+            text = write_document(payload, args.output)
+            print(
+                f"Report saved: {args.output}" if args.output else text,
+                end="\n" if args.output else "",
+            )
+            return 0
         if args.command == "campaigns":
             print(json.dumps([asdict(s) for s in campaign_scenarios()], indent=2))
             return 0
@@ -88,8 +148,12 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "campaign-report":
                 payload = report_events(args.path)
             else:
-                payload = asdict(AssessmentService().assess(args.target))
-            print(json.dumps(payload, ensure_ascii=False, indent=2))
+                payload = asdict(registry.assessment_service(config).assess(args.target))
+            text = write_document(payload, args.output)
+            print(
+                f"Report saved: {args.output}" if args.output else text,
+                end="\n" if args.output else "",
+            )
             return 0
         if args.command == "review-code":
             result = review_file(args.path)
@@ -131,6 +195,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(render_json(result) if args.format == "json" else render_text(result), end="")
         return 0
+    except ProviderError as exc:
+        print(f"Integration error: {exc}", file=sys.stderr)
+        return 3
     except (ValidationError, OSError, EOFError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

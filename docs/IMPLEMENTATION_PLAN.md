@@ -40,3 +40,7 @@ Brute-force, credential-stuffing and insecure-generated-code narratives are impl
 The project now separates real target assessment from teaching scenarios. The implemented local checks and campaign orchestration are described in ASSESSMENT.md/CAMPAIGNS.md; INTEGRATIONS.md lists exactly which remote/provider capabilities remain absent. Next work is a concrete provider adapter plus its integration tests, rather than more narrative-only scenarios.
 
 Existing project PRs #1 and #2 were merged. Subsequent project work is committed to main per the user's workflow. Problems found in ai-dev are reported as issues going forward.
+
+## Integration-ready offline core (0.3.0)
+
+The named adapter registry, strict versioned artifacts and full offline CLI lifecycle are implemented. The expanded behavioral/subprocess suite and installed-wheel verification are release gates. The next implementation step remains selecting and writing concrete external adapters, followed by their controlled integration tests; no live provider has been silently configured.

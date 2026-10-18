@@ -1,8 +1,12 @@
 """Idempotency claims for optional training transports; never stores message contents."""
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
+from threading import Lock
 from typing import Protocol
+
+from .models import ValidationError
 
 
 class DeliveryLedger(Protocol):
@@ -14,12 +18,14 @@ class DeliveryLedger(Protocol):
 class MemoryLedger:
     def __init__(self) -> None:
         self._keys: set[str] = set()
+        self._lock = Lock()
 
     def claim(self, key: str) -> bool:
-        if key in self._keys:
-            return False
-        self._keys.add(key)
-        return True
+        with self._lock:
+            if key in self._keys:
+                return False
+            self._keys.add(key)
+            return True
 
 
 class SQLiteLedger:
@@ -27,12 +33,22 @@ class SQLiteLedger:
 
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
-        with sqlite3.connect(self.path) as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS delivery_claims (key TEXT PRIMARY KEY)")
+        try:
+            with closing(sqlite3.connect(self.path)) as connection, connection:
+                connection.execute(
+                    "CREATE TABLE IF NOT EXISTS delivery_claims (key TEXT PRIMARY KEY)"
+                )
+        except sqlite3.Error:
+            raise ValidationError("Delivery ledger cannot be opened or initialized") from None
 
     def claim(self, key: str) -> bool:
-        with sqlite3.connect(self.path) as connection:
-            cursor = connection.execute(
-                "INSERT OR IGNORE INTO delivery_claims(key) VALUES (?)", (key,)
-            )
-            return cursor.rowcount == 1
+        try:
+            with closing(sqlite3.connect(self.path)) as connection, connection:
+                cursor = connection.execute(
+                    "INSERT OR IGNORE INTO delivery_claims(key) VALUES (?)", (key,)
+                )
+                return cursor.rowcount == 1
+        except sqlite3.Error:
+            raise ValidationError(
+                "Delivery ledger cannot reserve an attempt; dispatch stopped"
+            ) from None

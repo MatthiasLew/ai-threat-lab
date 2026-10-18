@@ -79,3 +79,11 @@ python -m ai_threat_lab campaign-report examples/training-events.json
 ```
 
 `assess` returns JSON with status, evidence and unchecked areas. A website/repository URL is recognized but requires a registered adapter; no remote scan occurs by default. `campaign-demo` uses fictional content and simulated receipts only. Video remains a preview until an approved generated asset exists. Detailed guides: ASSESSMENT.md, CAMPAIGNS.md and INTEGRATIONS.md.
+
+## Versioned workflow files and provider selection (0.3.0)
+
+Use the complete campaign workflow in the root README to create a fictional request, prepare an exact preview, record reviewer approval and simulate dispatch. Each step can write a new JSON file with `--output`; existing files are preserved. `campaign-example` creates an expiry one hour from the current time. The video scenario remains preview-only until an approved media reference and digest exist.
+
+`--config` is a global option and precedes the command. `providers` lists registrations; `doctor` checks selection without network requests. Exit codes are 0 for completed commands, 1 only for requested code-review findings, 2 for invalid input/file/ledger operations, 3 for missing/failed adapters, and 130 for cancellation. A successful command with an assessment status of partial/not_configured is not a security all-clear.
+
+The CLI currently exposes simulated campaign execution only, irrespective of the configuration. Actual adapters are registered by trusted application code; JSON cannot import them. See PROVIDER_DEVELOPMENT.md.
