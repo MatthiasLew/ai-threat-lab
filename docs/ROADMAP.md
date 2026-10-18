@@ -143,3 +143,9 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Metadata preservation and no partial mitigation claims for malformed structures.
 - [x] Inert binary demo descriptors, report bundles, truncation/fuzz/resource/CLI tests and installed verification.
 - [ ] Cryptographic signature trust, broader formats, disassembly, malware detection and dynamic analysis.
+
+## Local report interchange — 0.13.0
+
+- [x] Source-free SARIF export for standalone Python review, with line-level candidate locations.
+- [x] Explicit root-relative paths, URI encoding, no-overwrite and CLI/package tests.
+- [ ] Combined multi-target SARIF, upload integrations and consumer-specific acceptance remain separate work.

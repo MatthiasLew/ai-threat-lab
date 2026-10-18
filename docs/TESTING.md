@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.12.0
+# Test strategy and integration readiness — 0.13.0
 
-The offline suite contains 936 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 954 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -60,3 +60,7 @@ Linux and Windows with Python 3.12, 3.13 and 3.14 run lint, coverage/tests, buil
 ## When real credentials are added
 
 Use the concrete read-only/AI adapters described in LIVE_SETUP.md and API_COSTS.md, then run provider-specific integration tests against a controlled environment. Missing live communications/media adapters still require implementation. Verify authentication failures, quotas, timeouts, cancellation, event authenticity, source-sharing behavior, scope, media integrity and provider-side idempotency. Keep these tests separate from deterministic offline CI and require explicit credentials/environment selection.
+
+## SARIF export (0.13.0)
+
+Regression and real-process CLI tests cover all nine rule IDs, repeated observations, empty runs, rule indexes, line locations, Unicode/URI encoding, source-free output, basename privacy, relative roots, out-of-root paths, symlink escapes (where supported), validation errors, no overwrite and finding-based exits. The installed-wheel gate also exercises SARIF from a clean environment. Eight representative documents (empty, clean, Unicode and all-rule inputs with basename/root-relative paths) were separately validated against the official OASIS SARIF 2.1.0 schema with URI format checks. The validator is not a runtime dependency or a live-service integration test.

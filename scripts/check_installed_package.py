@@ -99,6 +99,24 @@ def main() -> None:
         source.write_text("eval(data)\n")
         result = json.loads(run(executable, "review-code", source, "--format", "json"))
         assert result["review"]["findings"][0]["rule_id"] == "PY001"
+        sarif = json.loads(
+            run(
+                executable,
+                "review-code",
+                source,
+                "--format",
+                "sarif",
+                "--source-root",
+                work,
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert sarif["version"] == "2.1.0"
+        sarif_run = sarif["runs"][0]
+        assert sarif_run["artifacts"][0]["location"]["uri"] == "source.py"
+        assert sarif_run["results"][0]["ruleId"] == "PY001"
+        assert sarif_run["properties"]["candidateOnly"] is True
         assert (
             json.loads(run(executable, "assess", "https://example.invalid"))["status"]
             == "not_configured"

@@ -246,7 +246,15 @@ def review_file(path: Path) -> CodeReviewResult:
     return review_source(source, str(path))
 
 
-def render_code_review(result: CodeReviewResult, format: str = "txt") -> str:
+def render_code_review(
+    result: CodeReviewResult, format: str = "txt", *, source_root: Path | None = None
+) -> str:
+    if source_root is not None and format != "sarif":
+        raise ValidationError("Source root is only supported for SARIF export")
+    if format == "sarif":
+        from .sarif import render_sarif
+
+        return render_sarif(result, source_root=source_root)
     if format == "json":
         return (
             json.dumps(
@@ -255,7 +263,7 @@ def render_code_review(result: CodeReviewResult, format: str = "txt") -> str:
             + "\n"
         )
     if format != "txt":
-        raise ValidationError("Report format must be txt or json")
+        raise ValidationError("Report format must be txt, json or sarif")
     lines = [
         "AI THREAT LAB — OFFLINE PYTHON REVIEW",
         f"Engine: {result.engine}",

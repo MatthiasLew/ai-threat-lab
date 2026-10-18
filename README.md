@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.12.0
+## Project status — 0.13.0
 
-Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python (nine AST rule families)/secret/manifest and literal Dockerfile/workflow review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python (nine AST rule families, text/JSON/SARIF export)/secret/manifest and literal Dockerfile/workflow review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -139,7 +139,7 @@ A separate local Python reviewer finds selected risky constructs:
 python -m ai_threat_lab review-code path/to/example.py --format json
 ```
 
-It never executes or uploads the source. Findings require human review. See [code review](docs/CODE_REVIEW.md) and [catalog extension guide](docs/EXTENDING_SCENARIOS.md).
+It never executes or uploads the source. Findings require human review. See [SARIF export](docs/SARIF.md), [code review](docs/CODE_REVIEW.md) and [catalog extension guide](docs/EXTENDING_SCENARIOS.md).
 
 ## Educational risk workflow
 

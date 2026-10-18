@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0
+
+- Add offline SARIF 2.1.0 export for the nine Python pattern rule families through `review-code --format sarif` and the existing renderer API.
+- Keep candidate-only warnings, source-free evidence, line-only regions and explicit original UTF-8 byte-column metadata; avoid inaccurate Unicode highlighting.
+- Use URI-encoded basenames by default; optional `--source-root` preserves relative paths and rejects resolved sources outside the root. Do not export absolute roots, source snippets or invocation/environment metadata.
+- Preserve no-overwrite reports and existing exit behavior; test rule indexes, empty runs, repeated observations, URI encoding, root escapes, real CLI processes and clean installed wheels.
+- Validate representative outputs against the official OASIS schema. No automatic upload, scan-engine change, API setup or live calls.
+
 ## 0.12.0
 
 - Expand bounded Python AST review from four to nine rule families: OS shell APIs, non-atomic temporary names, the unverified TLS helper, explicit unsafe YAML loaders and MD5/SHA-1 candidates.

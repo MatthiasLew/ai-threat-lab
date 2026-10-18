@@ -8,7 +8,10 @@ The `review-code` module performs local, deterministic AST checks. It does not c
 python -m ai_threat_lab review-code path/to/example.py
 python -m ai_threat_lab review-code path/to/example.py --format json --output review.json
 python -m ai_threat_lab review-code path/to/example.py --fail-on-findings
+python -m ai_threat_lab review-code src/example.py --format sarif --source-root . --output review.sarif
 ```
+
+[SARIF export](SARIF.md) provides source-free, line-level candidate observations for local consumers. It never uploads results.
 
 Only one explicitly selected `.py` file is inspected per call. The source limit is 256 KiB; the declared Python encoding is respected. Reports refuse to replace an existing file. No recursive filesystem search is performed.
 

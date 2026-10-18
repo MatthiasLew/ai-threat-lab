@@ -32,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.12.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.13.0")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
@@ -52,7 +52,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review = commands.add_parser("review-code", help="Review a local Python file without execution")
     review.add_argument("path", type=Path)
-    review.add_argument("--format", choices=("txt", "json"), default="txt")
+    review.add_argument("--format", choices=("txt", "json", "sarif"), default="txt")
+    review.add_argument(
+        "--source-root",
+        type=Path,
+        help="SARIF only: export a path relative to this directory instead of a basename",
+    )
     review.add_argument("--output", type=Path, help="New report path; no overwriting")
     review.add_argument(
         "--fail-on-findings",
@@ -179,8 +184,10 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             )
             return 0
         if args.command == "review-code":
+            if args.source_root is not None and args.format != "sarif":
+                raise ValidationError("Source root is only supported for SARIF export")
             result = review_file(args.path)
-            content = render_code_review(result, args.format)
+            content = render_code_review(result, args.format, source_root=args.source_root)
             if args.output:
                 with args.output.open("x", encoding="utf-8") as output:
                     output.write(content)

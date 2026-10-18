@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.12.0
+# Delivery status and remaining work — 0.13.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -16,7 +16,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios, defenses and risk explanation | No live login-attempt implementation |
 | AI explanation/cost control | Concrete budgeted adapter, evidence minimization, dry-run, deduplication/cache and reservations | Chosen model/prices/account setup and controlled live validation |
-| Reports/history | JSON/escaped HTML, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
+| Reports/history | JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
 | GUI | Existing service contracts/handoff documentation | GUI implementation, deferred by console-first scope |
 
@@ -39,6 +39,10 @@ Local PE/ELF header and flag observations now complement metadata, with bounded 
 ## Python pattern follow-up (0.12.0)
 
 Nine AST rule families now cover selected dynamic execution, subprocess/OS shell, pickle, TLS, temporary-name, YAML and weak-digest APIs. Local and pinned GitHub routes share these checks; the demo includes five new inert examples. These remain syntax-level candidates, without input provenance or data-flow validation. See [CODE_REVIEW.md](CODE_REVIEW.md).
+
+## Local report interchange (0.13.0)
+
+Python review exports SARIF 2.1.0 with the same candidate findings, no snippets and configurable basename/root-relative source references. It does not upload to a service or export all combined assessment types. Scan bundle contents/engine and finding semantics remain unchanged. See [SARIF.md](SARIF.md).
 
 ## Remaining order of work
 
