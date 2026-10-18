@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "controls": [
+    {
+      "id": "callback",
+      "title": "Verified callback",
+      "description": "Confirm unusual requests using a previously known contact number."
+    },
+    {
+      "id": "independent_approval",
+      "title": "Independent approval",
+      "description": "Require a second authorized person to approve sensitive actions."
+    },
+    {
+      "id": "transaction_limit",
+      "title": "Transaction limits",
+      "description": "Enforce payment limits that reduce the maximum fictional loss."
+    },
+    {
+      "id": "phishing_resistant_auth",
+      "title": "Phishing-resistant authentication",
+      "description": "Use authentication designed to resist credential phishing."
+    },
+    {
+      "id": "message_filter",
+      "title": "Message filtering",
+      "description": "Filter suspicious messages before users act on them."
+    },
+    {
+      "id": "training",
+      "title": "Awareness training",
+      "description": "Teach warning signs and reporting procedures."
+    },
+    {
+      "id": "source_verification",
+      "title": "Source verification",
+      "description": "Check original trusted sources through an independent channel."
+    },
+    {
+      "id": "least_privilege",
+      "title": "Least privilege",
+      "description": "Limit the data and account privileges available to an employee."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ai_phishing",
+      "title": "AI-assisted phishing",
+      "default_role": "Office employee",
+      "likelihood": 4,
+      "impact": 4,
+      "description": "A fictional employee receives a convincing message impersonating internal support.",
+      "rationale": "The example assumes a plausible message and access to departmental information.",
+      "stages": [
+        {
+          "title": "Context",
+          "narrative": "The narrative assumes generic public company information is available.",
+          "warning_sign": "Unexpected familiarity is not proof of identity.",
+          "intervention": "Limit publicly shared organizational detail."
+        },
+        {
+          "title": "Message preparation",
+          "narrative": "The scenario describes polished synthetic text attributed to support.",
+          "warning_sign": "Professional wording can still conceal a false identity.",
+          "intervention": "Check the request through official support channels."
+        },
+        {
+          "title": "Fictional delivery",
+          "narrative": "A simulated message requests an account-related action.",
+          "warning_sign": "Unsolicited sign-in requests or unfamiliar domains.",
+          "intervention": "Use a known bookmark rather than the supplied link."
+        },
+        {
+          "title": "Decision",
+          "narrative": "The fictional employee considers responding under pressure.",
+          "warning_sign": "Urgency and discouraging verification.",
+          "intervention": "Pause, verify and report."
+        },
+        {
+          "title": "Potential impact",
+          "narrative": "If the request is trusted, account misuse may follow.",
+          "warning_sign": "Unexpected authentication or account activity.",
+          "intervention": "Use approved incident reporting and revoke compromised access."
+        }
+      ],
+      "consequences": [
+        "Confidentiality: exposure of departmental data.",
+        "Operations: account misuse and recovery downtime.",
+        "Reputation: loss of customer trust."
+      ],
+      "rules": [
+        {
+          "control_id": "message_filter",
+          "group": "delivery",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume a functioning filter blocks some suspicious delivery paths."
+        },
+        {
+          "control_id": "training",
+          "group": "human_decision",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume trained staff pause and verify unusual requests."
+        },
+        {
+          "control_id": "phishing_resistant_auth",
+          "group": "authentication",
+          "likelihood_reduction": 2,
+          "impact_reduction": 0,
+          "rationale": "Applies to the credential-compromise objective of this scenario."
+        },
+        {
+          "control_id": "least_privilege",
+          "group": "blast_radius",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Restricted account scope limits accessible data."
+        }
+      ]
+    },
+    {
+      "id": "voice_deepfake",
+      "title": "Executive voice deepfake",
+      "default_role": "Accounting employee",
+      "likelihood": 4,
+      "impact": 5,
+      "description": "A fictional accounting employee receives a payment request attributed to an executive.",
+      "rationale": "The example assumes trusted-sounding authority and substantial payment authority.",
+      "stages": [
+        {
+          "title": "Context",
+          "narrative": "The narrative assumes the executive is familiar to the employee.",
+          "warning_sign": "Familiarity can be imitated.",
+          "intervention": "Keep payment procedures independent of perceived identity."
+        },
+        {
+          "title": "Voice claim",
+          "narrative": "The scenario describes a synthetic voice claiming executive authority.",
+          "warning_sign": "Voice alone does not prove identity.",
+          "intervention": "Verify through a previously established contact channel."
+        },
+        {
+          "title": "Fictional request",
+          "narrative": "The simulated caller asks for an exceptional payment.",
+          "warning_sign": "A new beneficiary or changed payment details.",
+          "intervention": "Confirm beneficiary details using approved records."
+        },
+        {
+          "title": "Pressure",
+          "narrative": "The narrative introduces urgency and a request for secrecy.",
+          "warning_sign": "Bypassing normal approval steps.",
+          "intervention": "Follow independent approval even for senior staff."
+        },
+        {
+          "title": "Potential impact",
+          "narrative": "If authorized incorrectly, a fictional transfer may cause loss.",
+          "warning_sign": "Unusual payment pattern.",
+          "intervention": "Apply transaction limits and notify the financial response team."
+        }
+      ],
+      "consequences": [
+        "Finance: an unauthorized fictional payment.",
+        "Operations: payment investigation and recovery work.",
+        "Reputation: loss of confidence in financial controls."
+      ],
+      "rules": [
+        {
+          "control_id": "callback",
+          "group": "identity_verification",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Use a trusted existing number; calling a number supplied in the request does not qualify."
+        },
+        {
+          "control_id": "source_verification",
+          "group": "identity_verification",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Overlaps callback; the group maximum avoids double counting."
+        },
+        {
+          "control_id": "independent_approval",
+          "group": "authorization",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume the second approver independently verifies the transaction."
+        },
+        {
+          "control_id": "transaction_limit",
+          "group": "loss_limit",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Assume an enforced cap materially reduces the payment exposure."
+        },
+        {
+          "control_id": "training",
+          "group": "human_decision",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Staff are assumed to recognize pressure and follow verification."
+        }
+      ]
+    },
+    {
+      "id": "video_deepfake",
+      "title": "Video deepfake impersonation",
+      "default_role": "Communications employee",
+      "likelihood": 3,
+      "impact": 4,
+      "description": "A fabricated executive video appears to instruct a fictional employee to disclose information.",
+      "rationale": "The example assumes convincing authority cues and access to sensitive information.",
+      "stages": [
+        {
+          "title": "Context",
+          "narrative": "The narrative assumes the target recognizes an executive.",
+          "warning_sign": "Recognizing a face does not authenticate a request.",
+          "intervention": "Define trusted channels for sensitive instructions."
+        },
+        {
+          "title": "Video claim",
+          "narrative": "A fictional video presents an instruction attributed to the executive.",
+          "warning_sign": "Visual realism is not proof of authenticity.",
+          "intervention": "Check the original trusted source."
+        },
+        {
+          "title": "Fictional delivery",
+          "narrative": "The scenario presents the video through an unexpected channel.",
+          "warning_sign": "An unverified upload or unusual account.",
+          "intervention": "Use an established organizational channel for verification."
+        },
+        {
+          "title": "Decision",
+          "narrative": "The target is asked to release sensitive information.",
+          "warning_sign": "A request that bypasses disclosure policy.",
+          "intervention": "Require independent authorization."
+        },
+        {
+          "title": "Potential impact",
+          "narrative": "Improper disclosure could affect the fictional organization.",
+          "warning_sign": "Unexpected public or third-party use of information.",
+          "intervention": "Report the incident and limit further disclosure."
+        }
+      ],
+      "consequences": [
+        "Confidentiality: unauthorized disclosure.",
+        "Reputation: fabricated authority damages public trust.",
+        "Operations: clarification and incident response effort."
+      ],
+      "rules": [
+        {
+          "control_id": "source_verification",
+          "group": "identity_verification",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Assume verification against an independent trusted source."
+        },
+        {
+          "control_id": "callback",
+          "group": "identity_verification",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Overlaps source verification and is not counted twice."
+        },
+        {
+          "control_id": "independent_approval",
+          "group": "authorization",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "An independent reviewer checks the disclosure request."
+        },
+        {
+          "control_id": "training",
+          "group": "human_decision",
+          "likelihood_reduction": 1,
+          "impact_reduction": 0,
+          "rationale": "Staff understand that convincing video does not establish identity."
+        },
+        {
+          "control_id": "least_privilege",
+          "group": "blast_radius",
+          "likelihood_reduction": 0,
+          "impact_reduction": 1,
+          "rationale": "Reduce the information available for disclosure."
+        }
+      ]
+    }
+  ]
+}

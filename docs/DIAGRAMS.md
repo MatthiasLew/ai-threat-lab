@@ -1,6 +1,6 @@
 # Design diagrams
 
-These diagrams describe the planned application. Implementation has not started.
+These diagrams describe the shared architecture. The engine, CLI, catalog, and TXT/JSON exporters are implemented; GUI is planned.
 
 ## Application components
 
@@ -65,4 +65,4 @@ classDiagram
     }
 ```
 
-Names are proposed API concepts and may change before the first implementation milestone.
+These names match the implemented API concepts.

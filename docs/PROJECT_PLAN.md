@@ -27,3 +27,7 @@ Shared Python engine, scenario catalog, CLI, automated checks, sample fictional 
 ## Decisions still open
 
 Submission date, GUI contributor identity, application language, PDF priority, and final calibration of scenario rules. No implementation dates are committed yet.
+
+## Current foundation
+
+The CLI MVP workflow and reusable core are implemented in 0.1.0. See USER_GUIDE.md for actual commands and IMPLEMENTATION_PLAN.md for review and next steps. The GUI, PDF exporter, and final rule calibration are still open.

@@ -1,6 +1,6 @@
 # Documentation index
 
-All application features described here are planned unless explicitly marked complete.
+The shared engine, CLI and TXT/JSON exports are implemented. GUI and PDF remain planned.
 
 | Document | Purpose |
 | --- | --- |
@@ -15,3 +15,5 @@ All application features described here are planned unless explicitly marked com
 | [Development](DEVELOPMENT.md) | Contribution approach and planned verification |
 
 Start with the project plan to understand what will be built, then read the user guide to see how a demonstration should work.
+
+- [Implementation plan and review checklist](IMPLEMENTATION_PLAN.md)

@@ -1,4 +1,4 @@
-# Planned scenario catalog
+# Scenario catalog
 
 | ID | Target | Objective described by the simulation | Consequences | Relevant defenses |
 | --- | --- | --- | --- | --- |
@@ -6,9 +6,9 @@
 | voice_deepfake | Fictional accounting employee | Request an unauthorized payment using a supposed executive voice | Financial loss and business disruption | Callback to a known number, independent approval, transaction limits |
 | video_deepfake | Fictional employee or communications team | Use a fabricated video to influence a decision | Disclosure or reputational harm | Independent source verification, another trusted channel, approval workflow |
 
-## Required data for each scenario
+## Packaged data for each scenario
 
-Stable ID, title, description, fictional target defaults, stages, warning signs, consequences, baseline rating rationale, applicable control IDs, assumptions, and schema version.
+Stable ID, title, description, fictional target defaults, stages, warning signs, consequences, baseline rating rationale, applicable control IDs, assumptions, and schema version. See `src/ai_threat_lab/data/catalog.json` for the implemented values.
 
 ## Campaign stages
 
