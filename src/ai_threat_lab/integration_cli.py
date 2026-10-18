@@ -7,14 +7,16 @@ from urllib.parse import urlsplit
 
 from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses
 from .assessment import identify_target
+from .audit_report import merge_reports, render_html
 from .contracts import read_document, write_document
+from .dependencies import AdvisoryCache, OSVAudit, inventory
 from .http_client import PublicHTTPS
 from .local_inventory import local_inventory
 from .models import ValidationError
 from .providers import ProviderError
 from .remote_audit import GithubAudit, GmailAudit, MailDomainAudit, WebsiteAudit
 
-COMMANDS = {"audit", "ai-explain", "api-costs", "api-reconcile"}
+COMMANDS = {"audit", "audit-deps", "audit-report", "ai-explain", "api-costs", "api-reconcile"}
 
 
 def add_commands(commands):
@@ -54,7 +56,24 @@ def add_commands(commands):
         "--actual-usd", required=True, help="Observed charge; use 0 only for confirmed no-charge"
     )
     reconcile.add_argument("--ledger", type=Path, required=True)
-    for command in (audit, explain, costs, reconcile):
+    dependencies = commands.add_parser(
+        "audit-deps", help="Inventory pinned dependencies; optionally query OSV"
+    )
+    dependencies.add_argument("path", type=Path)
+    dependencies.add_argument("--network", action="store_true")
+    dependencies.add_argument(
+        "--share-packages", action="store_true", help="Permit sharing names/versions with OSV"
+    )
+    dependencies.add_argument(
+        "--advisory-cache", type=Path, help="Optional local advisory cache, TTL one hour"
+    )
+    dependencies.add_argument("--max-pages", type=int, default=10)
+    report = commands.add_parser(
+        "audit-report", help="Merge assessment reports into a remediation queue"
+    )
+    report.add_argument("reports", nargs="+", type=Path)
+    report.add_argument("--format", choices=("json", "html"), default="json")
+    for command in (audit, explain, costs, reconcile, dependencies, report):
         command.add_argument("--output", type=Path, help="New JSON file; never overwrite")
 
 
@@ -95,6 +114,29 @@ def audit_target(args):
 def run_command(args):
     if args.command == "audit":
         payload = asdict(audit_target(args))
+    elif args.command == "audit-deps":
+        collected = inventory(args.path)
+        if args.network:
+            if not args.share_packages:
+                raise ValidationError("OSV lookup requires --share-packages as well as --network")
+            client = PublicHTTPS(["api.osv.dev"], max_requests=20, max_bytes=2 * 1024 * 1024)
+            cache = AdvisoryCache(args.advisory_cache) if args.advisory_cache else None
+            payload = OSVAudit(client, cache=cache, max_pages=args.max_pages).assess(collected)
+        else:
+            if args.share_packages or args.advisory_cache:
+                raise ValidationError("Sharing/cache options require explicit --network")
+            payload = collected.document()
+    elif args.command == "audit-report":
+        payload = merge_reports([read_document(p) for p in args.reports])
+        if args.format == "html":
+            content = render_html(payload)
+            if args.output:
+                with args.output.open("x", encoding="utf-8") as stream:
+                    stream.write(content)
+                print(f"Report saved: {args.output}")
+            else:
+                print(content)
+            return 0
     elif args.command == "ai-explain":
         if not args.dry_run and not args.send_evidence:
             raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")

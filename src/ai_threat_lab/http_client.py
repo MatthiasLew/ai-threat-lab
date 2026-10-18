@@ -84,10 +84,9 @@ class PublicHTTPS:
             or method not in ("GET", "POST")
         ):
             raise ValidationError("HTTPS request is outside exact approved host scope")
-        if method == "POST" and parsed.hostname != "api.openai.com":
-            raise ValidationError("POST is restricted to the model response endpoint")
-        if method == "POST" and parsed.path != "/v1/responses":
-            raise ValidationError("Unsupported model endpoint")
+        endpoints = {("api.openai.com", "/v1/responses"), ("api.osv.dev", "/v1/querybatch")}
+        if method == "POST" and ((parsed.hostname, parsed.path) not in endpoints or parsed.query):
+            raise ValidationError("POST is restricted to supported model/advisory query endpoints")
         if self.requests >= self.max_requests:
             raise ProviderError("HTTP request budget exhausted")
         address = public_address(parsed.hostname)
@@ -98,7 +97,7 @@ class PublicHTTPS:
                 method,
                 parsed.path + ("?" + parsed.query if parsed.query else ""),
                 body=body,
-                headers={"User-Agent": "AI-Threat-Lab/0.4", **(headers or {})},
+                headers={"User-Agent": "AI-Threat-Lab/0.5", **(headers or {})},
             )
             response = connection.getresponse()
             data = response.read(self.max_bytes + 1)

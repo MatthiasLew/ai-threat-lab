@@ -83,9 +83,11 @@ class GithubAudit:
             raise ValidationError("Expected a GitHub repository root URL")
         owner, repository = urlsplit(target).path.strip("/").split("/")
         repository = repository.removesuffix(".git")
-        if not re.fullmatch(r"[A-Za-z0-9_.-]+", owner) or not re.fullmatch(
-            r"[A-Za-z0-9_.-]+", repository
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}", owner) or not re.fullmatch(
+            r"[A-Za-z0-9_.-]{1,100}", repository
         ):
+            raise ValidationError("Invalid GitHub repository name")
+        if repository in (".", ".."):
             raise ValidationError("Invalid GitHub repository name")
         base = f"https://api.github.com/repos/{owner}/{repository}"
         headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}

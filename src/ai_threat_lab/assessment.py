@@ -186,25 +186,37 @@ class AssessmentService:
         if kind in ("python_source", "local_project"):
             paths = [Path(target)]
             omitted = 0
+            traversal_limited = False
             if kind == "local_project":
                 # Walk deterministically, do not follow directory symlinks or dependency folders.
                 import os
 
                 paths = []
                 excluded = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
+                visited = examined = 0
                 for directory, dirs, filenames in os.walk(target, followlinks=False):
+                    visited += 1
+                    if visited > 1000:
+                        traversal_limited = True
+                        break
                     dirs[:] = sorted(
                         d
                         for d in dirs
                         if d not in excluded and not (Path(directory) / d).is_symlink()
                     )
                     for filename in sorted(filenames):
+                        examined += 1
+                        if examined > 10000:
+                            traversal_limited = True
+                            break
                         candidate = Path(directory) / filename
                         if candidate.suffix == ".py" and not candidate.is_symlink():
                             if len(paths) < 100:
                                 paths.append(candidate)
                             else:
                                 omitted += 1
+                    if traversal_limited:
+                        break
             findings = []
             missing = [
                 "Only selected Python AST patterns were checked; no execution or full audit."
@@ -224,6 +236,8 @@ class AssessmentService:
                     )
                     for f in result.findings
                 )
+            if traversal_limited:
+                missing.append("Python traversal stopped at the 1000-directory/10000-entry limit.")
             if not paths:
                 missing.append("No Python source files were found.")
             if omitted:

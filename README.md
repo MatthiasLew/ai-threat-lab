@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.4.0
+## Project status — 0.5.0
 
-Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, program metadata, exported-mail observations, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -45,6 +45,19 @@ ai-threat-lab api-costs --ledger costs.sqlite
 ```
 
 API costs are reduced by local checks first, deduplicated minimal evidence, explicit output limits and optional exact-match caching. Atomic SQLite reservations enforce a local daily budget and request count; uncertain calls retain reservations and are never automatically retried. Example prices are synthetic. See [API_COSTS.md](docs/API_COSTS.md) before transmitting evidence.
+
+## Dependency advisories and combined reports
+
+```bash
+# Offline pinned-version inventory; no installation or API call:
+ai-threat-lab audit-deps path/to/project --output inventory.json
+# Explicitly share package names/versions with OSV, without using an AI model:
+ai-threat-lab audit-deps path/to/project --network --share-packages --advisory-cache advisories.sqlite --output dependencies.json
+ai-threat-lab audit-report assessment.json dependencies.json --output combined.json
+ai-threat-lab audit-report assessment.json dependencies.json --format html --output report.html
+```
+
+Supported inputs are `requirements*.txt` with exact pins, npm `package-lock.json` versions 2/3, `uv.lock` and `poetry.lock`. Only the specified directory's supported manifests are read; no recursive dependency installation or resolution occurs. OSV findings are advisory/version matches, not proof of exploitability. HTML works offline and contains no scripts or external assets. [Dependency and report guide](docs/DEPENDENCIES_AND_REPORTS.md).
 
 ## Complete offline campaign workflow
 

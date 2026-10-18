@@ -93,3 +93,7 @@ The CLI currently exposes simulated campaign execution only, irrespective of the
 Use `audit` for the new collectors and `assess` for legacy offline routing. See [LIVE_SETUP.md](LIVE_SETUP.md) for exact commands, scope and credentials, and [API_COSTS.md](API_COSTS.md) for dry-run, budgets, caching and usage reconciliation. Remote adapters are tested with fixtures; live accounts remain unvalidated.
 
 New commands: `audit`, `ai-explain`, `api-costs`, `api-reconcile`. Each provides `--help` and optional `--output`. Missing network consent or invalid input returns 2; integration/storage errors return 3. No automatic retries occur.
+
+## Dependency and report commands (0.5.0)
+
+`audit-deps PATH` inventories supported exact versions offline. `audit-deps PATH --network --share-packages` queries OSV. `audit-report REPORT.json ... --format html --output report.html` exports a combined offline remediation report. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md).

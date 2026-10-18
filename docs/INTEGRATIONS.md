@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.4.0)
+# Integration contracts and current capability boundary (0.5.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -10,6 +10,8 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Website | Explicit scoped HTTPS request and selected header checks | No crawling, auth/business-logic tests or exploitation |
 | Mail domain | Basic SPF/DMARC checks, supplied-selector DKIM TXT presence via DoH | No full policy evaluation or signature validation |
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
+| Pinned dependencies | requirements/npm/uv/Poetry inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
+| Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
 | Program file | Size, limited format markers and SHA-256 | No disassembly, execution or vulnerability/malware conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
 | Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |

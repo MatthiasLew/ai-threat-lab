@@ -37,3 +37,7 @@ Current collectors perform partial read-only checks. Active exploitation, creden
 ## Open product choices
 
 Interface language, submission deadline, GUI ownership, report/PDF priority, first provider, and permitted live test environments remain to be agreed. Offline work does not require an API or credential setup.
+
+## Additional delivery in 0.5.0
+
+Pinned dependency inventory and opt-in OSV advisory/version matching are implemented without model calls. Combined JSON/HTML reports preserve findings, source provenance and gaps, with an explicit human-triage order. Live API/media/campaign limits above remain; dependency matches do not establish exploitability. See DEPENDENCIES_AND_REPORTS.md.

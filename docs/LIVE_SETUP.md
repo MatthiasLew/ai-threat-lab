@@ -1,4 +1,4 @@
-# Integration setup and readiness — 0.4.0
+# Integration setup and readiness — 0.5.0
 
 These are concrete **read-only** integrations, tested with fixture responses. Live authentication, account availability and provider behavior still need controlled validation. An API key cannot guarantee a full vulnerability audit.
 
@@ -37,7 +37,7 @@ The adapter never downloads message bodies and omits forwarding destinations fro
 
 GitHub: at most 50 selected files by default (`--max-files 1..100`), 256 KiB/file, 4 MiB decoded text and 110 HTTP requests. A single JSON response is capped at 8 MiB. Truncated trees, oversized/non-UTF-8/unparseable files and limits are explicit in `not_checked`. Symlinks, submodules and dependency/build directories are skipped. No arbitrary branch selection in this release.
 
-Local inventory: up to 100 selected text files, 256 KiB/file and 1000 traversed directories for the additional secret/manifest pass. The legacy Python pass has its own 100-file result cap. Program metadata reads at most 16 MiB. This is not a malware scanner or full secret scanner. Dependency versions are inspected for selected floating npm declarations; no vulnerability-advisory database is queried.
+Local inventory: up to 100 selected text files, 256 KiB/file and 1000 traversed directories for the additional secret/manifest pass. The Python pass has a 100-file result cap plus traversal caps of 1000 directories and 10000 entries. Program metadata reads at most 16 MiB. This is not a malware scanner or full secret scanner. Dependency versions are inspected for selected floating npm declarations; the separate `audit-deps --network --share-packages` workflow can query OSV for exact pinned versions. See DEPENDENCIES_AND_REPORTS.md.
 
 Mail domain: two DNS queries, or three with a selector. No SPF include traversal, organizational-domain DMARC inheritance, cryptographic DKIM validation or selector discovery. Missing records and weak-policy observations are candidates, not proof of spoofing or exploitability.
 
@@ -48,3 +48,9 @@ These modules do **not** implement active exploitation, password guessing, live 
 Before production use, validate your actual provider account, network policy, OAuth scopes, rate limits, costs, output quality, account mismatch, expired credentials, errors and limits against resources you control.
 
 References: [GitHub trees](https://docs.github.com/en/rest/git/trees), [Git blobs](https://docs.github.com/en/rest/git/blobs), [Gmail profile](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users/getProfile), [Gmail settings](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.settings), [Cloudflare DoH](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/).
+
+## Dependency and merged-report workflows (0.5.0)
+
+`audit-deps` produces an offline inventory by default. Adding both `--network --share-packages` enables fixed-endpoint OSV advisory queries, optionally with a TTL cache. `audit-report` merges assessment reports to JSON or standalone HTML. Neither command uses an AI model. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md) for formats, scope, limits and interpretation.
+
+The HTTPS client additionally permits POST only to `https://api.osv.dev/v1/querybatch`. This is a read-only database query carrying names/versions, never an installation, package publication or arbitrary target request.

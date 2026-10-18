@@ -76,3 +76,12 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] CLI, wire-contract, malformed-response, concurrency and packaging tests.
 - [ ] Real provider/account integration evidence; no paid calls performed during development.
 - [ ] Active assessments, comprehensive binary/dependency analysis, live communications and media remain separate product work.
+
+## Dependency checks and reports — 0.5.0
+
+- [x] Exact-version inventory from requirements/npm/uv/Poetry lockfiles.
+- [x] Explicit OSV package-sharing consent, bounded batches/pages and optional advisory cache.
+- [x] Combined JSON/HTML remediation reports, target-scoped deduplication and provenance.
+- [x] Preserve incomplete queries, skipped inputs and assessment limitations.
+- [x] Bounded legacy Python traversal and tighter repository identity validation.
+- [ ] More manifest ecosystems, advisory detail/severity/fix retrieval and reachability analysis.

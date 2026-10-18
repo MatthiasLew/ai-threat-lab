@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- Add static exact-version inventory for requirements, npm lockfiles v2/v3, uv and Poetry locks; normalize and deduplicate identities without installation or code execution.
+- Add explicitly consented OSV batch queries, bounded pagination, advisory identity checks, partial-result notices and optional one-hour local cache. No AI/model call is needed.
+- Add combined JSON/standalone HTML reports with exact finding deduplication, provenance, preserved gaps and explained human-triage priorities. Escape untrusted fields and block active/external content.
+- Bound the legacy Python traversal by directories/entries; tighten GitHub repository path validation and keep POST restricted to two fixed query endpoints.
+- Expand CLI/contract, cache, malformed-input, paging and installed-package verification.
+
 ## 0.4.0
 
 - Add explicit read-only `audit` collectors for immutable GitHub source, passive HTTPS headers, basic mail DNS policy, authenticated Gmail forwarding/filter settings, and local secret/manifest/program inventory.

@@ -31,3 +31,7 @@ GitHub URLs, website URLs, mail domains, mailbox accounts and executable files a
 ## Concrete collectors in 0.4.0
 
 Use `audit` for local inventory/metadata or explicitly opted-in GitHub, HTTPS, DNS and Gmail read-only collectors. `assess` keeps its original no-network behavior. [LIVE_SETUP.md](LIVE_SETUP.md) provides exact commands, limits and account requirements. None of these collectors claims a comprehensive audit; network errors and omitted checks are not an all-clear.
+
+## Dependency advisory checks and combined reporting (0.5.0)
+
+The separate `audit-deps` workflow supports exact recorded Python/npm versions and opt-in OSV queries. `audit-report` combines existing assessments, preserves source/target/gaps, and provides JSON or escaped standalone HTML. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md). The original Python traversal now also stops at 1000 directories or 10000 entries, with an explicit notice.

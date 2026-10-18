@@ -131,7 +131,15 @@ def main() -> None:
         assert estimate["network_called"] is False
         assert json.loads(run(executable, "api-costs", "--ledger", "costs.sqlite"))["days"] == []
         run(executable, "audit", "https://example.invalid", expected=2)
-        print("Clean installed wheel: offline workflows, audit and AI cost dry-run passed.")
+        requirements = work / "requirements.txt"
+        requirements.write_text("fixture-package==1.2.3\n", encoding="utf-8")
+        inventory = json.loads(run(executable, "audit-deps", requirements))
+        assert inventory["packages"][0]["version"] == "1.2.3"
+        merged = json.loads(run(executable, "audit-report", "audit.json", "audit.json"))
+        assert merged["summary"]["unique_findings"] == 1
+        run(executable, "audit-report", "audit.json", "--format", "html", "--output", "report.html")
+        assert "<!doctype html>" in (work / "report.html").read_text(encoding="utf-8")
+        print("Clean installed wheel: workflows, dependency inventory and merged reports passed.")
 
 
 if __name__ == "__main__":
