@@ -2,6 +2,8 @@
 
 ## 0.11.0
 
+- Keep large binary fixture test IDs compact, enforce a portable ID length during collection, and bound CI job duration.
+
 - Add bounded static PE32/PE32+ and ELF32/ELF64 header observations to local program-file audits and scans; never execute or upload target bytes.
 - Record selected PE hardening bits, section write/execute flags and bounded certificate-table presence without signature/trust claims.
 - Add both ELF byte orders, selected program/load/stack flags and RELRO markers with explicit PIE/runtime/full-RELRO limitations.

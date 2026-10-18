@@ -231,7 +231,9 @@ def test_short_unknown_and_recognized_markers_preserve_digest_without_leaking_by
 
 
 @pytest.mark.parametrize(
-    "raw", ["not bytes", None, bytearray(b"MZ"), b"x" * (MAX_BINARY_BYTES + 1)]
+    "raw",
+    ["not bytes", None, bytearray(b"MZ"), b"x" * (MAX_BINARY_BYTES + 1)],
+    ids=("text", "none", "bytearray", "oversized"),
 )
 def test_binary_input_limits(raw):
     with pytest.raises(ValidationError):

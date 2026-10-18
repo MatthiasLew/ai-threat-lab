@@ -49,6 +49,10 @@ python -m coverage report
 
 No real targets, recipients, mailbox accounts or paid APIs are contacted. Fixtures use synthetic data and reserved demonstration domains/numbers.
 
+## Portable test identities
+
+Large binary fixture inputs have explicit short parameter IDs. Collection rejects any test ID longer than 4096 characters to avoid oversized `PYTEST_CURRENT_TEST` environment values and unusable reports. The binary-size fixture previously generated a 16 MiB ID; input bytes remain unchanged, but are never used as its case name. CI jobs have a 10-minute bound.
+
 ## CI
 
 Linux and Windows with Python 3.12, 3.13 and 3.14 run lint, coverage/tests, build and the isolated-wheel verifier. A passing offline suite verifies the concrete adapters against synthetic wire responses, not proof that a remote service/account works.
