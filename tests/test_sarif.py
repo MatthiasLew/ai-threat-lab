@@ -52,7 +52,9 @@ def test_empty_review_is_a_valid_empty_run_without_security_guarantee():
     assert any("does not establish" in value for value in run["properties"]["limitations"])
 
 
-@pytest.mark.parametrize("filename", ["space name.py", "żółć.py", "a#b?.py", "a%20b.py", "a:b.py"])
+@pytest.mark.parametrize(
+    "filename", ["space name.py", "żółć.py", "a#b?.py", "a%20b.py", "name:part.py"]
+)
 def test_basename_paths_are_uri_encoded_and_no_absolute_location_is_exposed(tmp_path, filename):
     # Colon and question-mark examples are logical editor filenames, not files on Windows.
     source = str(tmp_path / "private-client" / filename)
