@@ -7,6 +7,8 @@ from pathlib import Path
 from .assessment import AssessmentFinding, AssessmentResult, AssessmentService, identify_target
 from .binary_audit import audit_binary
 from .config_review import NOTICE, configuration_file, inspect_configuration
+from .kubernetes_review import NOTICE as KUBERNETES_NOTICE
+from .kubernetes_review import review_kubernetes_source
 from .models import ValidationError
 
 EXCLUDED = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
@@ -101,14 +103,22 @@ def local_inventory(target: str) -> AssessmentResult:
             if len(data) > 256 * 1024:
                 missing.append(f"Skipped oversized file: {item.name}")
                 continue
+            source = data.decode("utf-8")
             findings.extend(
                 inspect_text(
                     str(item.relative_to(path) if path.is_dir() else item.name),
-                    data.decode("utf-8"),
+                    source,
                 )
             )
+            if item.suffix.lower() == ".json":
+                name = str(item.relative_to(path) if path.is_dir() else item.name)
+                review = review_kubernetes_source(source, name)
+                if review is not None:
+                    findings.extend(review.findings)
+                    missing.extend(n for n in review.not_checked if n != KUBERNETES_NOTICE)
         except (OSError, UnicodeError):
             missing.append(f"Could not read text file: {item.name}")
     missing.append(NOTICE)
+    missing.append(KUBERNETES_NOTICE)
     missing.append("Secret patterns are incomplete; no dependency advisory database was queried.")
     return AssessmentResult(target, kind, "partial", tuple(findings), tuple(missing))

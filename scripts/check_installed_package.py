@@ -315,6 +315,40 @@ def main() -> None:
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
         assert demo["header_observations"] == 6
+        assert demo["kubernetes_observations"] == 10
+        kube = json.loads(
+            run(
+                executable,
+                "review-kubernetes",
+                "offline demo/kubernetes-fixture/workload.json",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert {f["check"] for f in kube["findings"]} == {
+            "k8s_host_namespace",
+            "k8s_privileged_container",
+            "k8s_privilege_escalation",
+            "k8s_root_user",
+            "k8s_non_root_disabled",
+            "k8s_unconfined_seccomp",
+            "k8s_added_capabilities",
+            "k8s_host_path",
+            "k8s_host_port",
+            "k8s_writable_root_filesystem",
+        }
+        assert "fictional-offline-pod" not in json.dumps(kube)
+        assert "/fictional/host" not in json.dumps(kube)
+        run(executable, "scan-check", "offline demo/kubernetes-observations")
+        run(
+            executable,
+            "review-kubernetes",
+            "offline demo/kubernetes-fixture/workload.json",
+            "--format",
+            "html",
+            "--output",
+            "kubernetes report.html",
+        )
         headers = json.loads(
             run(
                 executable,

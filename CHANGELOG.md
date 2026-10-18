@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.17.0
+
+- Add bounded offline Kubernetes JSON review for Pod, selected apps/v1 and batch/v1 workload templates, v1 ReplicationController and nested v1 List resources.
+- Observe ten explicit field families: host namespaces, privileged/escalation/root identity, non-root opt-out, writable root filesystem, selected added capabilities, unconfined seccomp, hostPath volumes and host ports. Do not infer defaults or effective runtime state.
+- Add `review-kubernetes` with JSON/escaped HTML, no overwrite and finding-based exit behavior. Reuse the same checker in bounded local/GitHub project collection and existing scan/batch reports.
+- Emit fixed-field JSON pointer evidence without names, namespaces, images, host paths or input values. Preserve malformed-selected-field, unsupported-resource, explicit non-Linux and resource-limit coverage notices.
+- Enforce source bytes and lexical JSON depth before decoding; bound resources, List depth, containers, volumes, ports, findings and notices. No YAML/Helm rendering, kubectl, cluster/network access or admission/conformance validation.
+- Extend synthetic demo and clean installed-wheel gates with ten Kubernetes observations. Advance scan scope to engine 9; retain prior bundle reading and suppress cross-engine deltas.
+- Add positive/negative/workload/type/resource/privacy/no-execution/CLI/local/GitHub/batch/error/compatibility tests. API setup remains deferred.
+
 ## 0.16.0
 
 - Add `review-headers` for bounded caller-supplied HTTPS response-header captures, JSON/HTML output, finding-based exits and no-overwrite files; never fetch the declared URL.

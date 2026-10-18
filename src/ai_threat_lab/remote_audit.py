@@ -16,6 +16,8 @@ from .dependencies import MAX_BYTES, inventory_sources
 from .dependency_paths import MAX_DEPTH, MAX_ENTRIES, is_manifest, valid_source_path
 from .header_review import inspect_response_headers
 from .http_client import get_document
+from .kubernetes_review import NOTICE as KUBERNETES_NOTICE
+from .kubernetes_review import review_kubernetes_source
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
 from .models import ValidationError
 from .providers import ProviderError
@@ -229,6 +231,11 @@ class GithubAudit:
                 missing.append(f"Large manifest parsed for dependencies only: {name}")
                 continue
             findings.extend(inspect_text(name, source))
+            if path.suffix.lower() == ".json":
+                review = review_kubernetes_source(source, name)
+                if review is not None:
+                    findings.extend(review.findings)
+                    missing.extend(n for n in review.not_checked if n != KUBERNETES_NOTICE)
             if path.suffix == ".py":
                 try:
                     result = review_source(source, name)
@@ -238,6 +245,7 @@ class GithubAudit:
                     )
                 except ValidationError:
                     missing.append(f"Could not parse Python file: {name}")
+        missing.append(KUBERNETES_NOTICE)
         missing.append(f"Inspected {count} selected files ({total} bytes).")
         return GithubSnapshot(
             AssessmentResult(

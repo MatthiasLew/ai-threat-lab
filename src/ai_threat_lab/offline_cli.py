@@ -5,7 +5,12 @@ from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .acceptance_samples import synthetic_cargo_lock, synthetic_header_capture, synthetic_message
+from .acceptance_samples import (
+    synthetic_cargo_lock,
+    synthetic_header_capture,
+    synthetic_kubernetes_manifest,
+    synthetic_message,
+)
 from .audit_report import merge_reports, render_html
 from .batch_scan import check_batch, run_batch
 from .binary_samples import synthetic_binary_samples
@@ -113,6 +118,13 @@ def offline_demo(output, *, now=None):
         render_html(merge_reports([header_document])),
         encoding="utf-8",
     )
+    kube_project = root / "kubernetes-fixture"
+    kube_project.mkdir()
+    (kube_project / "workload.json").write_bytes(json_bytes(synthetic_kubernetes_manifest()))
+    kubernetes = engine.run(ScanOptions(str(kube_project)), root / "kubernetes-observations")
+    read_bundle(root / "kubernetes-observations")
+    if kubernetes["failed_modules"] or kubernetes["unique_findings"] != 10:
+        raise ValidationError("Synthetic Kubernetes acceptance failed; demo is incomplete")
     binary_results = {}
     for name, raw in synthetic_binary_samples().items():
         target = root / name
@@ -184,6 +196,7 @@ def offline_demo(output, *, now=None):
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
+        "kubernetes_observations": kubernetes["unique_findings"],
         "dependency_ecosystems": ecosystems,
         "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
@@ -206,6 +219,7 @@ def offline_demo(output, *, now=None):
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
         ("Synthetic HTTP header observations", "headers-review.html"),
+        ("Synthetic Kubernetes observations", "kubernetes-observations/report.html"),
         ("Synthetic PE observations", "synthetic-pe/report.html"),
         ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),

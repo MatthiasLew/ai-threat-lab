@@ -170,3 +170,10 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Duplicate-preserving transport, individual cookie metadata and selected CSP script patterns shared with WebsiteAudit.
 - [x] No-network, privacy, malformed/resource, CLI, prior-bundle and installed-package tests; six-observation offline demo.
 - [ ] Effective browser policy, session/cookie-purpose evaluation, redirects/crawling and authenticated application checks remain outside this collector.
+
+## Structured Kubernetes JSON observations — 0.17.0
+
+- [x] Ten explicit candidate families across supported Pod/workload templates and nested Lists.
+- [x] Standalone JSON/HTML CLI, shared local/GitHub project analysis and existing scan/batch reports.
+- [x] Parser/selection bounds, source-free JSON pointers, type/OS/resource gaps and synthetic installed-package acceptance.
+- [ ] YAML/Helm, admission/default/inheritance evaluation, cluster/RBAC/network/runtime/image analysis, Windows Pod controls and standards conformance remain separate work.

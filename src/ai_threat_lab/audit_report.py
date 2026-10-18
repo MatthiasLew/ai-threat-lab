@@ -26,6 +26,20 @@ PRIORITIES = {
     **{
         check: "P2"
         for check in (
+            "k8s_host_namespace",
+            "k8s_privileged_container",
+            "k8s_privilege_escalation",
+            "k8s_root_user",
+            "k8s_non_root_disabled",
+            "k8s_unconfined_seccomp",
+            "k8s_added_capabilities",
+            "k8s_host_path",
+            "k8s_host_port",
+        )
+    },
+    **{
+        check: "P2"
+        for check in (
             "message_link_credentials",
             "message_link_active_scheme",
             "message_link_display_mismatch",

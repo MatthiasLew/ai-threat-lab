@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.16.0
+# Offline acceptance kit — 0.17.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -23,6 +23,8 @@ The demo also produces `local-batch/`: a new scan of the after-project plus the 
 
 The generated `response-headers.json` capture contains two separate synthetic cookies and a permissive CSP. `header_observations` is 6. The local JSON/HTML review contains static observations without cookie/policy values; the declared `.invalid` URL is never fetched. This separate report is not a scan bundle and has no integrity signature.
 
+The separate `kubernetes-fixture/workload.json` is an inert JSON document with ten explicit candidate settings. `kubernetes_observations` is 10. Its project scan has an integrity-checkable report bundle; no image, host path, workload or cluster is opened or started. This does not change the original three-before/zero-after comparison or two-target batch.
+
 ## Output layout
 
 | Path | Purpose |
@@ -42,6 +44,7 @@ The generated `response-headers.json` capture contains two separate synthetic co
 | `local-batch/` | Verified two-target offline batch, combined report and final batch index |
 | `response-headers.json` | Synthetic HTTPS capture, including inert example values; never fetched |
 | `headers-review.json`, `headers-review.html` | Redacted six-observation offline header review |
+| `kubernetes-fixture/workload.json`, `kubernetes-observations/` | Inert Pod JSON and ten-observation project scan bundle |
 | `training.sqlite` | Existing private local rehearsal ledger |
 | `training-report.json`, `training-report.html` | Scripted selected outcomes and practice guidance |
 | `readiness.json` | Static implementation inventory, including missing modules |

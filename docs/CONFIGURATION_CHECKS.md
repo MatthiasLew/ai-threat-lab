@@ -23,3 +23,7 @@ ai-threat-lab scan https://github.com/owner/repository --network --allow-host gi
 ```
 
 Existing source/file/traversal limits apply. Dockerfile observations do not add container scanning, package resolution or automatic fixes. Scan scope engine advances to `read-only-pipeline-3`; older engines remain readable, but comparison across engines is conservatively disabled.
+
+## Structured Kubernetes JSON (0.17.0)
+
+A separate JSON parser now observes selected explicit Pod/workload fields, including all three container groups. Local/GitHub project collectors preserve its findings and coverage notices alongside the literal checks above. It does not reuse line heuristics or parse Kubernetes YAML. `review-kubernetes manifest.json` selects it directly. See [KUBERNETES.md](KUBERNETES.md) for kinds, pointers, limits and unsupported runtime/cluster behavior.

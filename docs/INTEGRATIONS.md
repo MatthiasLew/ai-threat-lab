@@ -72,3 +72,7 @@ Local program-file paths now use the bounded [PE/ELF header collector](BINARY_AU
 ## Saved response headers (0.16.0)
 
 `review-headers` is an explicit offline workflow, not automatic target routing or a provider adapter. Its assessment documents use `http_response_headers` for report interchange and can be merged by `audit-report`. `scan-batch` does not reinterpret arbitrary JSON files as response captures. See [HTTP_HEADERS.md](HTTP_HEADERS.md).
+
+## Kubernetes JSON (0.17.0)
+
+`review-kubernetes` is an explicit local workflow with assessment kind `kubernetes_manifest`, accepted by the existing report merger. Local/GitHub project collection also recognizes supported JSON resources. Arbitrary single JSON paths in the legacy `audit`/`scan` router remain program-file inputs: use the explicit command or select the containing project. No Kubernetes provider account, cluster access or YAML/Helm execution is configured. See [KUBERNETES.md](KUBERNETES.md).

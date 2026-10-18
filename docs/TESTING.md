@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.16.0
+# Test strategy and integration readiness — 0.17.0
 
-The offline suite contains 1150 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1228 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -76,3 +76,7 @@ Tests cover multiple target routes and source-free combined findings, no-network
 ## Response-header review (0.16.0)
 
 Tests cover legacy mapping compatibility and duplicate-preserving transport/WebsiteAudit fields, separate cookies with Expires commas, selected cookie flags/prefixes/SameSite, malformed/duplicate attributes, CSP fallback/directive ordering/nonce/hash/split/multiple policies, report-only exclusion, non-200 omissions, strict schema/control/encoding/status/resource limits, no-network captures, declared-URL/header/cookie/nonce redaction, JSON/HTML merging, CLI exit/no-overwrite behavior, failed demo completion, prior-engine reading and installed-wheel acceptance. HTTPS responses are fixtures; no real website, cookie or provider account was used.
+
+## Kubernetes JSON review (0.17.0)
+
+Tests cover ten explicit rule families, three container groups, all supported workload paths and nested Lists; absent/restrictive settings; Pod/container context distinction; invalid types and unsupported versions/kinds/OS; fixed pointer/value redaction; JSON byte/depth/escaping/duplicate/non-finite boundaries; global selection/finding/notice caps; UTF-8/BOM/files/links; no network or subprocess execution; local/GitHub/scan/batch parity; HTML/JSON and real CLI exit/no-overwrite behavior; failed demo completion; prior-engine reading and installed-wheel acceptance. No cluster, kubectl, Helm, real deployment or provider account was used.

@@ -43,3 +43,33 @@ def synthetic_message():
         filename="fictional-report.pdf.exe",
     )
     return message.as_bytes()
+
+
+def synthetic_kubernetes_manifest():
+    return {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {"name": "fictional-offline-pod"},
+        "spec": {
+            "hostNetwork": True,
+            "securityContext": {
+                "runAsUser": 0,
+                "runAsNonRoot": False,
+                "seccompProfile": {"type": "Unconfined"},
+            },
+            "volumes": [{"name": "fictional-volume", "hostPath": {"path": "/fictional/host"}}],
+            "containers": [
+                {
+                    "name": "fictional-container",
+                    "image": "example.invalid/inert:fixture",
+                    "securityContext": {
+                        "privileged": True,
+                        "allowPrivilegeEscalation": True,
+                        "readOnlyRootFilesystem": False,
+                        "capabilities": {"add": ["SYS_ADMIN"]},
+                    },
+                    "ports": [{"containerPort": 8080, "hostPort": 8080}],
+                }
+            ],
+        },
+    }

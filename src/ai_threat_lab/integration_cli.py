@@ -12,6 +12,7 @@ from .contracts import read_document, write_document
 from .dependencies import AdvisoryCache, OSVAudit, inventory
 from .header_review import audit_header_capture
 from .http_client import PublicHTTPS
+from .kubernetes_review import review_kubernetes_file
 from .local_inventory import local_inventory
 from .models import ValidationError
 from .providers import ProviderError
@@ -22,6 +23,7 @@ COMMANDS = {
     "audit-deps",
     "audit-report",
     "review-headers",
+    "review-kubernetes",
     "ai-explain",
     "api-costs",
     "api-reconcile",
@@ -32,9 +34,13 @@ def add_commands(commands):
     headers = commands.add_parser(
         "review-headers", help="Review a saved HTTPS header capture offline"
     )
-    headers.add_argument("path", type=Path)
-    headers.add_argument("--format", choices=("json", "html"), default="json")
-    headers.add_argument("--fail-on-findings", action="store_true")
+    kubernetes = commands.add_parser(
+        "review-kubernetes", help="Review selected Kubernetes JSON fields without a cluster"
+    )
+    for review in (headers, kubernetes):
+        review.add_argument("path", type=Path)
+        review.add_argument("--format", choices=("json", "html"), default="json")
+        review.add_argument("--fail-on-findings", action="store_true")
     audit = commands.add_parser(
         "audit", help="Bounded local inventory or opted-in read-only remote audit"
     )
@@ -93,7 +99,7 @@ def add_commands(commands):
     )
     report.add_argument("reports", nargs="+", type=Path)
     report.add_argument("--format", choices=("json", "html"), default="json")
-    for command in (audit, explain, costs, reconcile, dependencies, report, headers):
+    for command in (audit, explain, costs, reconcile, dependencies, report, headers, kubernetes):
         command.add_argument("--output", type=Path, help="New JSON file; never overwrite")
 
 
@@ -133,8 +139,12 @@ def audit_target(args):
 
 def run_command(args):
     code = 0
-    if args.command == "review-headers":
-        result = audit_header_capture(args.path)
+    if args.command in ("review-headers", "review-kubernetes"):
+        result = (
+            audit_header_capture(args.path)
+            if args.command == "review-headers"
+            else review_kubernetes_file(args.path)
+        )
         payload = asdict(result)
         payload["findings"] = list(payload["findings"])
         code = 1 if args.fail_on_findings and result.findings else 0

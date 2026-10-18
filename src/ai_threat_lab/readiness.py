@@ -13,7 +13,8 @@ def readiness():
             "configuration",
             "partial",
             "not_required",
-            "Literal Dockerfile and GitHub Actions checks; effective runtime state unchecked.",
+            "Literal Dockerfile/workflow and selected Kubernetes JSON fields; "
+            "no cluster, admission or runtime assessment.",
         ),
         (
             "dependencies",
