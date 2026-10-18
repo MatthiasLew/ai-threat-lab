@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.0
+
+- Add `scan-batch` for 1–10 explicit distinct local targets, sequentially using built-in offline collectors; reject remote targets, links, overlapping sources and output inside scanned projects before claiming the destination.
+- Publish each existing scan bundle independently, then combined JSON/HTML and `batch.json` last. Preserve per-target module failures and other useful results; no automatic retry/resume or network/model call.
+- Add `batch-check`: bounded schema/path/index checks, child manifest hashes, child integrity/scope validation, combined report regeneration and summary consistency. Checks do not reread source files.
+- Preserve no-overwrite and cancellation semantics; bound child artifact totals and combined-report sizes. Completion means publication, never security or authenticity.
+- Extend synthetic offline demo and clean installed-wheel acceptance with two-target batches; add CLI exit-policy, malformed/tampered/missing output, privacy, resource, symlink and partial-failure tests. APIs remain deferred.
+
 ## 0.14.0
 
 - Add Cargo.lock v3/v4 exact crates.io inventory through local, opted-in nested and shared immutable GitHub routes; preserve global parser/byte/package limits and source origins.

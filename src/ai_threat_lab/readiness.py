@@ -82,7 +82,7 @@ def readiness():
             "reports",
             "partial",
             "not_required",
-            "Local JSON/HTML, scan integrity and conservative history comparison; "
+            "Local JSON/HTML, Python SARIF, verified offline batches and scan history comparison; "
             "authenticated central history and GUI absent.",
         ),
         (

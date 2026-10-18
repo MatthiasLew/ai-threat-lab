@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.14.0
+# Delivery status and remaining work — 0.15.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -16,7 +16,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios, defenses and risk explanation | No live login-attempt implementation |
 | AI explanation/cost control | Concrete budgeted adapter, evidence minimization, dry-run, deduplication/cache and reservations | Chosen model/prices/account setup and controlled live validation |
-| Reports/history | JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
+| Reports/history | Offline multi-target batches, JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
 | GUI | Existing service contracts/handoff documentation | GUI implementation, deferred by console-first scope |
 
@@ -49,6 +49,10 @@ Python review exports SARIF 2.1.0 with the same candidate findings, no snippets 
 Cargo.lock v3/v4 crates.io identities and bounded EML link/attachment metadata now work through the existing CLI, reports and synthetic demo. Shared GitHub Cargo retrieval is fixture-tested; mail analysis remains entirely local. Offline acceptance checks the before/after project, Python + Rust inventory, five Python patterns, five mail observations, PE/ELF descriptors, three text-training channels and report consistency. See [CARGO.md](CARGO.md), [MAIL_REVIEW.md](MAIL_REVIEW.md) and [OFFLINE_ACCEPTANCE.md](OFFLINE_ACCEPTANCE.md).
 
 Completion of this bounded milestone means these implemented routes pass their documented automated gates. It does not mean the original full product is complete. Live campaigns/media, authenticated observed events, broader languages/data flow and deeper application/binary validation still require engineering; API setup remains deferred.
+
+## Local operational workflow (0.15.0)
+
+`scan-batch` runs up to ten explicit non-overlapping local targets sequentially and publishes verified child bundles plus a combined remediation report. `batch-check` validates the index, child evidence and derived reports without reopening sources. A failed target module remains visible while other results are preserved; a publication failure leaves no batch completion marker. The offline demo and installed-package gate exercise the complete path. See [BATCH_SCANS.md](BATCH_SCANS.md).
 
 ## Remaining order of work
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from .assessment import identify_target
+from .batch_scan import check_batch, run_batch
 from .contracts import write_document
 from .dependencies import AdvisoryCache, OSVAudit
 from .http_client import PublicHTTPS
@@ -12,10 +13,20 @@ from .remote_audit import GithubAudit
 from .scan_bundle import compare_bundles, read_bundle
 from .scan_engine import ScanOptions, ScanService
 
-COMMANDS = {"scan", "scan-check", "scan-compare"}
+COMMANDS = {"scan", "scan-check", "scan-compare", "scan-batch", "batch-check"}
 
 
 def add_commands(commands):
+    batch = commands.add_parser("scan-batch", help="Scan 1..10 distinct local targets offline")
+    batch.add_argument("targets", nargs="+")
+    batch.add_argument("--output-dir", type=Path, required=True)
+    batch.add_argument("--recursive-dependencies", action="store_true")
+    batch.add_argument("--fail-on-findings", action="store_true")
+    batch_check = commands.add_parser(
+        "batch-check", help="Verify an offline batch and child bundles"
+    )
+    batch_check.add_argument("batch", type=Path)
+    batch_check.add_argument("--output", type=Path)
     scan = commands.add_parser(
         "scan", help="Run applicable read-only collectors and publish a report bundle"
     )
@@ -83,6 +94,19 @@ def advisory_lookup(collected, options):
 
 def run_command(args):
     code = 0
+    if args.command == "scan-batch":
+        payload = run_batch(
+            args.targets, args.output_dir, recursive_dependencies=args.recursive_dependencies
+        )
+        print(write_document(payload), end="")
+        return (
+            3
+            if payload["failed_runs"]
+            else (1 if args.fail_on_findings and payload["unique_findings"] else 0)
+        )
+    if args.command == "batch-check":
+        print(write_document(check_batch(args.batch), args.output), end="")
+        return 0
     if args.command == "scan":
         options = ScanOptions(
             args.target,

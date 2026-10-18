@@ -48,6 +48,8 @@ COMMANDS = (
     "training-report",
     "training-cancel",
     "scan",
+    "scan-batch",
+    "batch-check",
     "scan-check",
     "scan-compare",
     "readiness",

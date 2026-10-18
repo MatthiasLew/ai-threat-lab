@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .acceptance_samples import synthetic_cargo_lock, synthetic_message
+from .batch_scan import check_batch, run_batch
 from .binary_samples import synthetic_binary_samples
 from .campaigns import CampaignScope, CampaignService, ContentApproval
 from .contracts import (
@@ -88,6 +89,15 @@ def offline_demo(output, *, now=None):
     if mail["failed_modules"] or mail["unique_findings"] != 5:
         raise ValidationError("Synthetic mail acceptance failed; demo is incomplete")
     read_bundle(root / "mail-observations")
+    batch = run_batch(
+        [str(project), str(mail_source)],
+        root / "local-batch",
+        recursive_dependencies=True,
+        service=engine,
+    )
+    check_batch(root / "local-batch")
+    if batch["failed_runs"] or batch["target_count"] != 2 or batch["unique_findings"] != 5:
+        raise ValidationError("Synthetic batch acceptance failed; demo is incomplete")
     binary_results = {}
     for name, raw in synthetic_binary_samples().items():
         target = root / name
@@ -157,6 +167,7 @@ def offline_demo(output, *, now=None):
         "output_directory": str(root.resolve()),
         "python_pattern_observations": patterns["unique_findings"],
         "mail_observations": mail["unique_findings"],
+        "batch_targets": batch["target_count"],
         "dependency_ecosystems": ecosystems,
         "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
@@ -177,6 +188,7 @@ def offline_demo(output, *, now=None):
         ),
         ("Python pattern observations", "python-patterns/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
+        ("Combined local batch", "local-batch/report.html"),
         ("Synthetic PE observations", "synthetic-pe/report.html"),
         ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),

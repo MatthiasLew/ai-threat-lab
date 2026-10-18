@@ -313,6 +313,23 @@ def main() -> None:
             "message_attachment_double_extension",
         }
         run(executable, "scan-check", "offline demo/mail-observations")
+        assert demo["batch_targets"] == 2
+        checked_batch = json.loads(run(executable, "batch-check", "offline demo/local-batch"))
+        assert checked_batch["status"] == "integrity_verified"
+        batch = json.loads(
+            run(
+                executable,
+                "scan-batch",
+                source,
+                "offline demo/synthetic-message.eml",
+                "--output-dir",
+                "local batch",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert batch["target_count"] == 2 and batch["unique_findings"] == 6
+        run(executable, "batch-check", "local batch")
         run(
             executable,
             "exercise-export",

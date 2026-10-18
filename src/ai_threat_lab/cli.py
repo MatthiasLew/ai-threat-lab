@@ -32,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.14.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.15.0")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")

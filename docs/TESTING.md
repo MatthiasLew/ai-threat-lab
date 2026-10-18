@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.14.0
+# Test strategy and integration readiness — 0.15.0
 
-The offline suite contains 1037 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.4%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1077 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -68,3 +68,7 @@ Regression and real-process CLI tests cover all nine rule IDs, repeated observat
 ## Cargo and EML offline milestone (0.14.0)
 
 Cargo tests cover supported lock versions, exact SemVer, malformed/duplicate TOML, source filtering/redaction, identity deduplication, nested origins, package limits, shared GitHub retrieval, synthetic OSV wire payloads and real CLI/local scan routes. Mail tests cover plain/HTML/Unicode/entity/IPv4/IPv6 link properties, metadata-only attachments, duplicate authentication headers, MIME decoding/charset/structure errors, resource bounds, deterministic arbitrary input, no-network behavior, redaction, reports, exit policy and no overwrite. The installed-wheel gate runs both additions through generated offline fixtures. No real mailbox, recipient, crate submission or provider account was used.
+
+## Local multi-target batches (0.15.0)
+
+Tests cover multiple target routes and source-free combined findings, no-network defaults, invalid/remote/duplicate/overlapping scopes, exact-ten/over-limit selection, output placement, per-target recursive selection, isolated module failures, exit-code precedence, cancellation, no overwrite, tampered/missing/unindexed artifacts, report regeneration after hash recomputation, scope tampering, byte budgets, symlink rejection, deleted-source verification, real processes and clean installed-wheel acceptance. CLI help covers both new commands.

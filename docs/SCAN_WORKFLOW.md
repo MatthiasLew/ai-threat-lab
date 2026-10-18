@@ -138,3 +138,7 @@ Module failure takes precedence over finding-based exit 1. Reports are published
 ## Verification
 
 Offline tests cover one-command/installed workflows, real CLI processes, scope and sharing gates, no overwrite, integrity/schema/resource limits, tampering, symlinks, concurrent directory claims, interrupted writes, preservation of unrelated files, failure redaction and comparison labels. Existing provider tests use synthetic HTTP boundaries. No new live target, OSV submission, mailbox account or paid model call was used as this release's test evidence.
+
+## Several local targets (0.15.0)
+
+Use `scan-batch PATH_A PATH_B --output-dir NEW_DIR` for up to ten explicit local targets and a combined report. `batch-check NEW_DIR` verifies the parent index and existing child bundles. Remote inputs are rejected; no network/share option is provided. See [BATCH_SCANS.md](BATCH_SCANS.md). Standalone scan engine 7 and existing bundle formats are unchanged.

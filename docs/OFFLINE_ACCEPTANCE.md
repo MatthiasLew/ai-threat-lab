@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.14.0
+# Offline acceptance kit — 0.15.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -19,6 +19,8 @@ The separate Python fixture produces exactly five candidate observations (PY005�
 
 The inert mail fixture produces exactly five aggregate candidates: HTTP, IP-literal host, displayed/destination hostname mismatch, active attachment extension and document-plus-active double extension. `mail_observations` is 5; no link is visited or attachment extracted/executed. This is synthetic acceptance, not a real phishing detection result.
 
+The demo also produces `local-batch/`: a new scan of the after-project plus the fictional mail, with two targets and five candidate observations in one report. `batch_targets` is 2. `batch-check` validates the child bundles and derived report before the demo completion marker is written.
+
 ## Output layout
 
 | Path | Purpose |
@@ -35,6 +37,7 @@ The inert mail fixture produces exactly five aggregate candidates: HTTP, IP-lite
 | `synthetic-pe/`, `synthetic-elf/` | Bounded binary observation bundles, linked from the index |
 | `python-patterns.py`, `python-patterns/` | Inert five-pattern source and its standalone scan bundle/report |
 | `synthetic-message.eml`, `mail-observations/` | Fictional message and redacted five-observation scan report |
+| `local-batch/` | Verified two-target offline batch, combined report and final batch index |
 | `training.sqlite` | Existing private local rehearsal ledger |
 | `training-report.json`, `training-report.html` | Scripted selected outcomes and practice guidance |
 | `readiness.json` | Static implementation inventory, including missing modules |

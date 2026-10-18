@@ -156,3 +156,10 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Bounded offline EML link/attachment metadata, redacted aggregate findings and explicit MIME gaps.
 - [x] Synthetic multi-ecosystem/mail demo, integrity-checkable reports, failure markers and installed CLI gates.
 - [ ] Other dependency ecosystems, data-flow/reachability, trusted mail authenticity and attachment-content analysis remain separate engineering work.
+
+## Multi-target offline workflow — 0.15.0
+
+- [x] Explicit local target lists, sequential collection, combined reports and isolated module failure evidence.
+- [x] Strict no-overwrite scope checks, bounded report/index publication and child/report consistency verification.
+- [x] Resource, tampering, cancellation, deleted-source, CLI and installed-package acceptance.
+- [ ] Remote batch targets, scheduling, resume/retry, shared history services and authenticated signatures are outside this bounded workflow.
