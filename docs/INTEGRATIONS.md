@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.10.0)
+# Integration contracts and current capability boundary (0.11.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -13,7 +13,7 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
 | Pinned dependencies | requirements/npm/uv/Poetry inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
 | Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
-| Program file | Size, limited format markers and SHA-256 | No disassembly, execution or vulnerability/malware conclusions |
+| Program file | Bounded size/hash plus selected PE/ELF headers and permission/hardening candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
 | Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
@@ -65,3 +65,5 @@ ProviderRegistry now supplies explicit named registrations, guarded output valid
 The [offline acceptance kit](OFFLINE_ACCEPTANCE.md) adds inert export and synthetic acceptance commands without live adapters. The [delivery matrix](DELIVERY_STATUS.md) records missing implementation separately from API/account validation.
 
 Opt-in [monorepo inventory](MONOREPOS.md) adds bounded nested manifests to local/GitHub scans without adding a provider or enabling package sharing.
+
+Local program-file paths now use the bounded [PE/ELF header collector](BINARY_AUDIT.md), not only magic-byte metadata. It does not execute files or provide signature/malware/runtime validation.

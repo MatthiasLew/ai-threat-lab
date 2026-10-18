@@ -4,6 +4,7 @@ import html
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from .binary_samples import synthetic_binary_samples
 from .campaigns import CampaignScope, CampaignService, ContentApproval
 from .contracts import (
     approval_from_document,
@@ -71,6 +72,21 @@ def offline_demo(output, *, now=None):
     # Reading verifies both artifact indexes and report derivation.
     read_bundle(root / "scan-before")
     read_bundle(root / "scan-after")
+    binary_results = {}
+    for name, raw in synthetic_binary_samples().items():
+        target = root / name
+        target.write_bytes(raw)
+        key = name.removesuffix(".bin")
+        result = engine.run(ScanOptions(str(target)), root / key)
+        if result["failed_modules"]:
+            raise ValidationError("Synthetic binary acceptance failed; demo is incomplete")
+        verified = read_bundle(root / key)
+        if any(
+            f["check"] == "binary_structure_unavailable"
+            for f in verified["documents"]["assessment.json"]["findings"]
+        ):
+            raise ValidationError("Synthetic binary structure failed; demo is incomplete")
+        binary_results[key] = result["unique_findings"]
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -112,6 +128,7 @@ def offline_demo(output, *, now=None):
         "network_called": False,
         "ai_calls": 0,
         "output_directory": str(root.resolve()),
+        "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
         "after_findings": after["unique_findings"],
         "comparison": after["comparison"],
@@ -128,6 +145,8 @@ def offline_demo(output, *, now=None):
             (channel + " rehearsal", channel + "-pack/preview.html")
             for channel in ("email", "voice", "video")
         ),
+        ("Synthetic PE observations", "synthetic-pe/report.html"),
+        ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),
     )
     page = (

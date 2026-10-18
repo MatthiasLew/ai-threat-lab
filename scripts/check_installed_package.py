@@ -239,6 +239,11 @@ def main() -> None:
         demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
         assert demo["before_findings"] == 3 and demo["after_findings"] == 0
         assert demo["training_channels"] == ["email", "voice", "video"]
+        assert set(demo["binary_fixture_observations"]) == {"synthetic-pe", "synthetic-elf"}
+        binary = json.loads(run(executable, "audit", "offline demo/synthetic-pe.bin"))
+        assert "pe_header" in {f["check"] for f in binary["findings"]}
+        assert all(f["status"] != "confirmed" for f in binary["findings"])
+        run(executable, "scan-check", "offline demo/synthetic-elf")
         assert (work / "offline demo" / "email-pack" / "preview.eml").is_file()
         assert (work / "offline demo" / "index.html").is_file()
         nested_inventory = json.loads(

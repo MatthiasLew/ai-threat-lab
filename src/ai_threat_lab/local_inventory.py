@@ -1,11 +1,11 @@
 """Bounded static source/configuration inventory. Never executes target code."""
 
-import hashlib
 import json
 import re
 from pathlib import Path
 
 from .assessment import AssessmentFinding, AssessmentResult, AssessmentService, identify_target
+from .binary_audit import audit_binary
 from .config_review import NOTICE, configuration_file, inspect_configuration
 from .models import ValidationError
 
@@ -65,24 +65,7 @@ def local_inventory(target: str) -> AssessmentResult:
     if path.is_symlink():
         raise ValidationError("Root symlinks are not accepted for inventory")
     if kind == "program_file":
-        with path.open("rb") as stream:
-            raw = stream.read(16 * 1024 * 1024 + 1)
-        if len(raw) > 16 * 1024 * 1024:
-            raise ValidationError("Program metadata inventory is limited to 16 MiB")
-        form = "PE" if raw.startswith(b"MZ") else "ELF" if raw.startswith(b"\x7fELF") else "unknown"
-        finding = AssessmentFinding(
-            "binary_metadata",
-            "unverified",
-            f"Format={form}; bytes={len(raw)}; sha256={hashlib.sha256(raw).hexdigest()}",
-            "Use platform signature verification and a specialized binary analyzer.",
-        )
-        return AssessmentResult(
-            target,
-            kind,
-            "partial",
-            (finding,),
-            ("No disassembly, malware detection, signature verification or execution.",),
-        )
+        return audit_binary(target)
     if kind not in ("local_project", "python_source"):
         return AssessmentService().assess(target)
     baseline = AssessmentService().assess(target)

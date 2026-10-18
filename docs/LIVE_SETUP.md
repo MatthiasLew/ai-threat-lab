@@ -7,7 +7,7 @@ These are concrete **read-only** integrations, tested with fixture responses. Li
 | Input | Command | Credentials/configuration | Implemented checks |
 | --- | --- | --- | --- |
 | Local project | `ai-threat-lab audit path/to/project` | None | Selected Python AST patterns, credential patterns, floating npm versions |
-| Program file | `ai-threat-lab audit path/to/program.exe` | None | Limited format marker, size, SHA-256; no execution/disassembly |
+| Program file | `ai-threat-lab audit path/to/program.exe` | None | Bounded PE/ELF headers/flags, size and SHA-256; no execution/disassembly/signature trust |
 | GitHub repository | `ai-threat-lab audit https://github.com/owner/repo --network --allow-host github.com` | Public: no key needed. Private: scoped `GITHUB_TOKEN` | Default branch pinned to immutable commit, selected text blobs, digest verification, Python and secret/manifest rules |
 | Website | `ai-threat-lab audit https://your-domain.example --network --allow-host your-domain.example` | Approved exact host and public HTTPS on port 443 | One response; selected CSP/HSTS/MIME/referrer header checks |
 | Mail domain | `ai-threat-lab audit mail-domain:your-domain.example --network --allow-host your-domain.example --dkim-selector actual-selector` | No key; Cloudflare DoH resolver gets queried domain/selector | SPF/DMARC presence and basic policy checks; supplied DKIM TXT presence |
@@ -37,7 +37,7 @@ The adapter never downloads message bodies and omits forwarding destinations fro
 
 GitHub: at most 50 selected files by default (`--max-files 1..100`), 256 KiB/file, 4 MiB decoded text and 110 HTTP requests. A single JSON response is capped at 8 MiB. Truncated trees, oversized/non-UTF-8/unparseable files and limits are explicit in `not_checked`. Symlinks, submodules and dependency/build directories are skipped. No arbitrary branch selection in this release.
 
-Local inventory: up to 100 selected text files, 256 KiB/file and 1000 traversed directories for the additional secret/manifest pass. The Python pass has a 100-file result cap plus traversal caps of 1000 directories and 10000 entries. Program metadata reads at most 16 MiB. This is not a malware scanner or full secret scanner. Dependency versions are inspected for selected floating npm declarations; the separate `audit-deps --network --share-packages` workflow can query OSV for exact pinned versions. See DEPENDENCIES_AND_REPORTS.md.
+Local inventory: up to 100 selected text files, 256 KiB/file and 1000 traversed directories for the additional secret/manifest pass. The Python pass has a 100-file result cap plus traversal caps of 1000 directories and 10000 entries. Program-file header inspection reads at most 16 MiB with selected record-count/range bounds. This is not a malware scanner or full secret scanner. Dependency versions are inspected for selected floating npm declarations; the separate `audit-deps --network --share-packages` workflow can query OSV for exact pinned versions. See DEPENDENCIES_AND_REPORTS.md.
 
 Mail domain: two DNS queries, or three with a selector. No SPF include traversal, organizational-domain DMARC inheritance, cryptographic DKIM validation or selector discovery. Missing records and weak-policy observations are candidates, not proof of spoofing or exploitability.
 
@@ -66,3 +66,7 @@ The `training-*` commands provide persistent, approved **local text rehearsals**
 ## Optional monorepo scope (0.10.0)
 
 `audit-deps` and local/GitHub `scan` now accept `--recursive-dependencies` for bounded nested-manifest selection. Root-only stays the default; GitHub still uses one immutable commit/shared retrieval. No AI call, package sharing or external account configuration is enabled by this flag. See [MONOREPOS.md](MONOREPOS.md) for global limits, relative origins and explicit gaps.
+
+## Offline PE/ELF program paths (0.11.0)
+
+`audit PATH_TO_PROGRAM` and `scan PATH_TO_PROGRAM --output-dir NEW_DIR` now perform selected bounded PE/ELF structure/flag checks. No account, API, subprocess or execution is used. Malformed/unsupported structures preserve hash/size and explicit gaps. See [BINARY_AUDIT.md](BINARY_AUDIT.md).

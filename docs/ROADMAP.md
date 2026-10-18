@@ -134,3 +134,12 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Recursive scope recording, old-bundle reading and conservative comparison gates.
 - [x] Expanded synthetic demo, CLI, malformed-path, resource and installed-package checks.
 - [ ] Workspace dependency graph resolution, additional ecosystems and runtime reachability.
+
+
+## Static program-file observations — 0.11.0
+
+- [x] Bounded PE32/PE32+ and ELF32/ELF64 structures, both ELF byte orders.
+- [x] Candidate header/permission observations with explicit runtime/trust gaps.
+- [x] Metadata preservation and no partial mitigation claims for malformed structures.
+- [x] Inert binary demo descriptors, report bundles, truncation/fuzz/resource/CLI tests and installed verification.
+- [ ] Cryptographic signature trust, broader formats, disassembly, malware detection and dynamic analysis.

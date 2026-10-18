@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.10.0
+# Offline acceptance kit — 0.11.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -9,7 +9,7 @@ ai-threat-lab readiness
 ai-threat-lab offline-demo --output-dir demo-results/run-01
 ```
 
-The output directory must be new. Open `demo-results/run-01/index.html` locally. It links to the before/after scan reports, training report and three escaped text previews. The demo uses only its own generated project; it cannot accept a website, mailbox, recipient list or external target. It does not install packages, execute fixture source or automatically open a browser.
+The output directory must be new. Open `demo-results/run-01/index.html` locally. It links to the before/after scan reports, training report and three escaped text previews and separate synthetic PE/ELF observation reports. The demo uses only its own generated project; it cannot accept a website, mailbox, recipient list or external target. It does not install packages, execute fixture source or automatically open a browser.
 
 Expected current fixture observations: 3 before, 0 after, 3 **no longer observed**. Those observations are Python `eval`, an unpinned Docker base and explicit root `USER`. The demo changes its own source and Dockerfile between scans. It does not infer that a real vulnerability was fixed or that the resulting application is secure. The dependency package is fictional; root and nested requirements now exercise the opt-in monorepo inventory and merge origins into one identity. There is no OSV request.
 
@@ -27,6 +27,8 @@ The training report contains three scripted selections: reporting the email exer
 | `email-pack/` | Text preview, `.eml` preview, instructions, metadata and consistency index |
 | `voice-pack/` | Text preview and structured voice script; no speech/call |
 | `video-pack/` | Text preview and storyboard; no generated image/audio/video |
+| `synthetic-pe.bin`, `synthetic-elf.bin` | Inert format descriptors with no machine-code payload; never executed |
+| `synthetic-pe/`, `synthetic-elf/` | Bounded binary observation bundles, linked from the index |
 | `training.sqlite` | Existing private local rehearsal ledger |
 | `training-report.json`, `training-report.html` | Scripted selected outcomes and practice guidance |
 | `readiness.json` | Static implementation inventory, including missing modules |
@@ -64,7 +66,7 @@ This is a static inventory of implementation scope, not an account health check.
 | --- | --- |
 | `partial` | Selected local checks/reports exist; documented gaps remain |
 | `fixture_tested` | Concrete adapter tested against synthetic wire responses, not live accounts |
-| `metadata_only` | Binary size/hash/format observations, no binary security analysis |
+| `static_headers_partial` | Bounded PE/ELF header/flag observations, no signature/disassembly/runtime analysis |
 | `local_rehearsal` / `text_assets_only` | Text exercises and assets, no communications/media |
 | `teaching_scenarios` | Educational password-attack scenarios; no login attempts |
 | `implemented` | The bounded offline demonstration exists |
@@ -73,4 +75,4 @@ This is a static inventory of implementation scope, not an account health check.
 
 ## What remains after this offline kit
 
-Live email delivery, telephony, speech/media providers, authenticated participant-event collection and broader application/binary analysis are not implemented by the kit. Their adapters, consent/scope enforcement at the external boundary and controlled integration tests require separate work. No account or API setup is performed in this release. See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for the complete input/capability matrix and remaining order of work.
+Live email delivery, telephony, speech/media providers, authenticated participant-event collection and broader application analysis and deeper binary validation are not implemented by the kit. Their adapters, consent/scope enforcement at the external boundary and controlled integration tests require separate work. No account or API setup is performed in this release. See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for the complete input/capability matrix and remaining order of work.

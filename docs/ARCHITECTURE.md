@@ -108,3 +108,8 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Monorepo inventory (0.10.0)
 
 `dependency_paths` centralizes supported manifest names, portable relative-label validation and bounded breadth-first local discovery. `dependencies.inventory` enforces read/parser limits and passes root or explicitly allowed nested labels to the same in-memory parser. Local paths are never reconstructed from untrusted origin labels. `GithubSnapshot` carries recursive coverage so the scan engine can reject collection/scope disagreement. Scope engine 4 records the new boolean; legacy scopes remain readable without it. See MONOREPOS.md for resource and snapshot limitations.
+
+
+## Static binary collector (0.11.0)
+
+`binary_audit.audit_binary` reads a bounded regular file and owns descriptor cleanup. `inspect_binary` preserves metadata, then emits selected header/candidate findings only after the relevant PE/ELF structural checks finish. `BinaryFormatError` contains fixed diagnostics without target bytes. The existing local `audit`/`scan` route calls this collector; it does not load or execute binaries. `binary_samples` supplies tiny non-runnable descriptor fixtures to the offline acceptance demo. Scope engine 5 conservatively prevents comparison against earlier collection behavior. See BINARY_AUDIT.md for the exact subset and gaps.

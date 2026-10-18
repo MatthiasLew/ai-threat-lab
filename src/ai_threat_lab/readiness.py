@@ -41,9 +41,9 @@ def readiness():
         ),
         (
             "binary",
-            "metadata_only",
+            "static_headers_partial",
             "implementation_required",
-            "Format/hash/size only; signature, disassembly and dynamic analysis absent.",
+            "Bounded PE/ELF headers; signature, disassembly and runtime analysis remain absent.",
         ),
         (
             "training",

@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.10.0
+# One-command scans and history comparison — 0.11.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -18,7 +18,7 @@ For a local project, the workflow runs:
 3. OSV advisory lookup only if explicitly enabled and exact packages were collected.
 4. Combined JSON/HTML reporting and module-status publication.
 
-A Python file, exported mail or program file uses its appropriate existing collector without a project-wide dependency inventory. For a single dependency manifest, use `audit-deps` directly. GitHub scans also inventory supported root manifests from the same pinned commit as the source review, within the shared bounds below.
+A Python file, exported mail or program file uses its appropriate collector (including bounded static PE/ELF observations for program paths) without a project-wide dependency inventory. For a single dependency manifest, use `audit-deps` directly. GitHub scans also inventory supported root manifests from the same pinned commit as the source review, within the shared bounds below.
 
 ## Enable online dependency lookup
 
@@ -119,7 +119,7 @@ The comparison uses exact target/finding-field IDs and reports:
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
 
-Version 0.10 uses scope engine `read-only-pipeline-4` and records strict boolean `recursive_dependencies`. Versions 0.7–0.9 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
+Version 0.11 uses scope engine `read-only-pipeline-5` with static PE/ELF observations and retains strict boolean `recursive_dependencies`. Versions 0.7–0.10 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 

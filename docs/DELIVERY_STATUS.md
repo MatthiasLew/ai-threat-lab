@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.10.0
+# Delivery status and remaining work — 0.11.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -7,7 +7,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Local project path | Bounded Python AST, credential-pattern and literal config observations; root/opt-in nested exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS response/header observations | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
-| Program file | Bounded format/size/hash metadata | Signature verification, disassembly, sandboxed dynamic analysis and platform-specific modules |
+| Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
 | Exported email | Selected header observations | Full message-authenticity validation, gateway policy and broad content analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
@@ -31,6 +31,10 @@ This matrix maps the requested console workflow to its actual implementation. AP
 ## Monorepo follow-up (0.10.0)
 
 Nested requirements/npm/uv/Poetry manifests are now supported within explicit bounds. Exact package identities are merged with relative origins preserved, using the same commit on GitHub. Additional ecosystems, workspace graph interpretation and reachability are still open. See [MONOREPOS.md](MONOREPOS.md).
+
+## Static binary follow-up (0.11.0)
+
+Local PE/ELF header and flag observations now complement metadata, with bounded parsing, unsupported-input notices and no execution. Certificate-table presence is not signature trust; mitigation flags are not runtime validation. See [BINARY_AUDIT.md](BINARY_AUDIT.md).
 
 ## Remaining order of work
 

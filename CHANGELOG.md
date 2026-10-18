@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0
+
+- Add bounded static PE32/PE32+ and ELF32/ELF64 header observations to local program-file audits and scans; never execute or upload target bytes.
+- Record selected PE hardening bits, section write/execute flags and bounded certificate-table presence without signature/trust claims.
+- Add both ELF byte orders, selected program/load/stack flags and RELRO markers with explicit PIE/runtime/full-RELRO limitations.
+- Preserve metadata and mark structural checks unavailable on malformed/unsupported input; suppress partially parsed mitigation candidates.
+- Reject links/non-regular inputs and close descriptors on errors; cap bytes and record counts.
+- Extend synthetic offline demo with inert binary descriptors and reports, scope engine 5, old-bundle reading, malformed/fuzz/CLI/resource tests and installed-package verification.
+
 ## 0.10.0
 
 - Add opted-in `--recursive-dependencies` to local `audit-deps` and local/GitHub `scan`; retain root-only defaults.
