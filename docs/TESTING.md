@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.11.0
+# Test strategy and integration readiness — 0.12.0
 
-The offline suite contains 885 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 936 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -23,7 +23,7 @@ python -m coverage report
 | --- | --- |
 | Risk engine | All matrix values, category boundaries, profile adjustments, relevant/irrelevant controls, overlap, deduplication and reduction caps |
 | Catalog | Malformed JSON, invalid versions/types, missing fields, empty data, duplicate IDs and invalid rule reductions |
-| Code review | Risk patterns, import aliases, safer code, no source execution, encoding and size bounds, source-free reports |
+| Code review | Nine AST rule families, explicit YAML loaders, hash exemptions, TLS-helper limitations, local/GitHub/CLI parity, risk patterns, import aliases, safer code, no source execution, encoding and size bounds, source-free reports |
 | Assessment | Target routing, missing adapters, malformed URLs/domains, partial results, project bounds and untrusted mail headers |
 | Campaigns | Scope validation before provider calls, exact preview approval, expiry, changed content/recipients/facts, media requirement, stop/cancellation handling |
 | Delivery | No automatic retry after ambiguous failures, duplicate rejection across service restarts, corrupt databases and concurrent claims |

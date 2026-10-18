@@ -87,6 +87,17 @@ def offline_demo(output, *, now=None):
         ):
             raise ValidationError("Synthetic binary structure failed; demo is incomplete")
         binary_results[key] = result["unique_findings"]
+    # Inert source fixture: parsed only, never imported or executed (PyYAML is not required).
+    pattern_source = root / "python-patterns.py"
+    pattern_source.write_text(
+        "import os, tempfile, ssl, yaml, hashlib\n"
+        "os.system(command)\ntempfile.mktemp()\nssl._create_unverified_context()\n"
+        "yaml.load(payload, Loader=yaml.UnsafeLoader)\nhashlib.md5(payload)\n",
+        encoding="utf-8",
+    )
+    patterns = engine.run(ScanOptions(str(pattern_source)), root / "python-patterns")
+    if patterns["failed_modules"] or patterns["unique_findings"] != 5:
+        raise ValidationError("Synthetic Python pattern acceptance failed; demo is incomplete")
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -128,6 +139,7 @@ def offline_demo(output, *, now=None):
         "network_called": False,
         "ai_calls": 0,
         "output_directory": str(root.resolve()),
+        "python_pattern_observations": patterns["unique_findings"],
         "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
         "after_findings": after["unique_findings"],
@@ -145,6 +157,7 @@ def offline_demo(output, *, now=None):
             (channel + " rehearsal", channel + "-pack/preview.html")
             for channel in ("email", "voice", "video")
         ),
+        ("Python pattern observations", "python-patterns/report.html"),
         ("Synthetic PE observations", "synthetic-pe/report.html"),
         ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),

@@ -48,7 +48,7 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 
 - [x] Brute-force and credential-stuffing teaching scenarios.
 - [x] Insecure AI-generated code scenario.
-- [x] Local Python AST checks, findings and remediation guidance.
+- [x] Nine local Python AST rule families, findings and remediation guidance.
 - [x] Extension documentation without API coupling.
 - [ ] More languages, data-flow analysis and additional rule families, only if needed.
 - [x] Optional OpenAI explanation adapter, budget reservations, cache and source-sharing opt-in.

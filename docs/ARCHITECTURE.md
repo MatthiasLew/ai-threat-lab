@@ -113,3 +113,7 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Static binary collector (0.11.0)
 
 `binary_audit.audit_binary` reads a bounded regular file and owns descriptor cleanup. `inspect_binary` preserves metadata, then emits selected header/candidate findings only after the relevant PE/ELF structural checks finish. `BinaryFormatError` contains fixed diagnostics without target bytes. The existing local `audit`/`scan` route calls this collector; it does not load or execute binaries. `binary_samples` supplies tiny non-runnable descriptor fixtures to the offline acceptance demo. Scope engine 5 conservatively prevents comparison against earlier collection behavior. See BINARY_AUDIT.md for the exact subset and gaps.
+
+## Python pattern engine (0.12.0)
+
+`code_review` parses bounded source with `ast` and emits nine source-free candidate rule families. Standalone review, local inventory and immutable GitHub collection reuse it. Import aliases and selected literal arguments are recognized; no dependencies are imported, source is executed or data flow is resolved. Scan engine 6 separates its observation scope from earlier bundles. See [CODE_REVIEW.md](CODE_REVIEW.md) for exact loader/hash/TLS semantics.

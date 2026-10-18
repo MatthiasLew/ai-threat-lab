@@ -17,6 +17,7 @@ PRIORITIES = {
     "PY002": "P2",
     "PY003": "P2",
     "PY004": "P2",
+    **{f"PY00{number}": "P2" for number in range(5, 10)},
     "mailbox_auto_forwarding": "P2",
     "mailbox_filter_forwarding": "P2",
 }

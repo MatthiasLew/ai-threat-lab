@@ -18,8 +18,25 @@ Only one explicitly selected `.py` file is inspected per call. The source limit 
 | PY002 | subprocess call with literal shell=True | Use an argument list with shell=False and validate allowed arguments |
 | PY003 | pickle.load/loads | Avoid untrusted pickle input; prefer data-only formats |
 | PY004 | requests call with literal verify=False | Enable certificate verification and configure trust roots |
+| PY005 | os.system / os.popen | Review shell input; prefer argument lists with subprocess |
+| PY006 | tempfile.mktemp | Create the file atomically with mkstemp / NamedTemporaryFile |
+| PY007 | ssl._create_unverified_context | Review trust configuration and final context settings |
+| PY008 | Explicit unsafe YAML APIs/loaders | Prefer safe_load / SafeLoader for untrusted data |
+| PY009 | MD5/SHA-1 constructors | Review security use and select a suitable modern construction |
 
-A finding contains a rule ID, line, column, priority, rationale and recommendation. Priority describes the potentially risky pattern, not confirmed exploitability. Reports omit source snippets and argument values. A report includes the supplied filename, so consider that when sharing it.
+A finding contains a rule ID, line, column, severity, rationale and recommendation. Severity describes the potentially risky pattern, not confirmed exploitability. Reports omit source snippets and argument values. A report includes the supplied filename, so consider that when sharing it.
+
+## Exact scope of the added patterns
+
+The nine rule families use engine `python-ast-1.1` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
+
+PY007 identifies the helper whose defaults disable verification. Explicit overrides and later context mutation are not evaluated: a call with `cert_reqs=ssl.CERT_REQUIRED` still produces a review candidate, not a claim that final verification is disabled.
+
+PY008 accepts `yaml.unsafe_load` / `unsafe_load_all` and `yaml.load` / `load_all` with an explicit `Loader`, `UnsafeLoader`, `CLoader` or `CUnsafeLoader`, including simple import aliases and the positional loader argument. Missing, computed, custom, SafeLoader, CSafeLoader and FullLoader values are outside this rule. Their absence from reports is not an assessment of safety.
+
+PY009 recognizes `hashlib.md5`, `sha1` and `new` with literal `md5`, `sha1` or `sha-1` names (case insensitive). Literal `usedforsecurity=False` suppresses the candidate. Unknown variables are not resolved. A digest used for non-security checksums may be appropriate; a report does not establish its purpose or prescribe a password-hashing scheme.
+
+The offline demo adds five inert examples, one per new rule, and links their separate report. Pattern findings retain source-free evidence and require human review. See the primary [Python tempfile](https://docs.python.org/3/library/tempfile.html), [hashlib](https://docs.python.org/3/library/hashlib.html), [SSL](https://docs.python.org/3/library/ssl.html), [OS](https://docs.python.org/3/library/os.html) and [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) documentation for API behavior.
 
 ## Limits
 

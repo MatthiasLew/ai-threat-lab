@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.0
+
+- Expand bounded Python AST review from four to nine rule families: OS shell APIs, non-atomic temporary names, the unverified TLS helper, explicit unsafe YAML loaders and MD5/SHA-1 candidates.
+- Share the rules across standalone review, local assessments and immutable GitHub collection; retain source/argument redaction and no execution.
+- Document literal-loader/hash exemptions, TLS override limitations and unresolved data-flow/scope semantics.
+- Add a separate inert five-pattern offline demo/report, CLI and installed-wheel acceptance checks.
+- Advance scan scope to engine 6; preserve reading older bundles and suppress cross-engine deltas. No API setup or live calls added.
+
 ## 0.11.0
 
 - Keep large binary fixture test IDs compact, enforce a portable ID length during collection, and bound CI job duration.

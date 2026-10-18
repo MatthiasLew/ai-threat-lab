@@ -72,7 +72,11 @@ def validate_manifest(value):
     timestamp(value["created_at"], "created_at")
     scope = value["scope"]
     fields(scope, SCOPE_FIELDS, {"recursive_dependencies"})
-    current = scope["engine"] in ("read-only-pipeline-4", "read-only-pipeline-5")
+    current = scope["engine"] in (
+        "read-only-pipeline-4",
+        "read-only-pipeline-5",
+        "read-only-pipeline-6",
+    )
     if current:
         if type(scope.get("recursive_dependencies")) is not bool:
             raise ValidationError("Invalid recursive dependency scan scope")
@@ -90,6 +94,7 @@ def validate_manifest(value):
             "read-only-pipeline-3",
             "read-only-pipeline-4",
             "read-only-pipeline-5",
+            "read-only-pipeline-6",
         )
         or type(scope["network"]) is not bool
         or type(scope["share_packages"]) is not bool

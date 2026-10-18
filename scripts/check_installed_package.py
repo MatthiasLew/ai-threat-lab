@@ -239,6 +239,25 @@ def main() -> None:
         demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
         assert demo["before_findings"] == 3 and demo["after_findings"] == 0
         assert demo["training_channels"] == ["email", "voice", "video"]
+        assert demo["python_pattern_observations"] == 5
+        patterns = json.loads(
+            run(
+                executable,
+                "review-code",
+                "offline demo/python-patterns.py",
+                "--format",
+                "json",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert {f["rule_id"] for f in patterns["review"]["findings"]} == {
+            "PY005",
+            "PY006",
+            "PY007",
+            "PY008",
+            "PY009",
+        }
         assert set(demo["binary_fixture_observations"]) == {"synthetic-pe", "synthetic-elf"}
         binary = json.loads(run(executable, "audit", "offline demo/synthetic-pe.bin"))
         assert "pe_header" in {f["check"] for f in binary["findings"]}
