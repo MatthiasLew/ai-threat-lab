@@ -46,3 +46,7 @@ AnalysisResult contains scenario identity, fictional target, campaign stages, co
 Each assessment contains likelihood, impact, score, level, and explanation items. Unknown scenario/control IDs and invalid ratings produce explicit validation exceptions. User interfaces translate them into readable messages.
 
 This contract is implemented in version 0.1.0. Results also include recommended_controls for unselected applicable defenses. Domain request/result objects are frozen dataclasses and expose tuples to both interfaces. See GUI_HANDOFF.md for a working example.
+
+## Offline code-review service
+
+`code_review.py` exposes `review_source(text, filename)` and `review_file(path)` returning immutable `CodeReviewResult` objects. It is independent of `ThreatAnalyzer` and ordinal risk scoring. The CLI `review-code` adapter renders TXT/JSON and explicitly saves new reports. Future GUI widgets can call the same functions. No provider integration exists.

@@ -156,3 +156,24 @@ def test_catalog_validation(tmp_path, mutation):
 def test_unreadable_catalog(tmp_path):
     with pytest.raises(ValidationError):
         load_catalog(tmp_path / "missing.json")
+
+
+@pytest.mark.parametrize(
+    "scenario_id,control_id",
+    [
+        ("brute_force", "rate_limiting"),
+        ("credential_stuffing", "unique_passwords"),
+        ("insecure_generated_code", "code_review"),
+    ],
+)
+def test_extended_offline_scenarios(analyzer, scenario_id, control_id):
+    result = analyzer.analyze(request(scenario_id, proposed=(control_id,)))
+    assert result.residual.score < result.baseline.score
+    assert result.stages and result.consequences
+    assert any(control_id in e for e in result.residual.explanations)
+
+
+def test_brute_force_attempt_controls_overlap(analyzer):
+    single = analyzer.analyze(request("brute_force", proposed=("rate_limiting",)))
+    both = analyzer.analyze(request("brute_force", proposed=("rate_limiting", "account_lockout")))
+    assert single.residual.score == both.residual.score

@@ -34,7 +34,7 @@ Default target: Example Company, the scenario's default role, medium access, nor
 
 | Option | Values / behavior |
 | --- | --- |
-| positional scenario | ai_phishing, voice_deepfake, video_deepfake |
+| positional scenario | ai_phishing, voice_deepfake, video_deepfake, brute_force, credential_stuffing, insecure_generated_code |
 | --organization | Fictional organization name |
 | --role | Fictional employee role; descriptive, not an inferred risk input |
 | --access | low, medium, high; adjusts impact by -1, 0, +1 before controls |
@@ -64,3 +64,7 @@ A score of 20 is not a 20% probability. Score changes are not percentage reducti
 ## Future GUI
 
 PySide6 screens will use the same service. See [GUI handoff](GUI_HANDOFF.md) for the executable integration example.
+
+## Code security module
+
+`python -m ai_threat_lab review-code example.py` performs local static pattern checks. Use `--format json` or `--output new-report.txt` for export, and optionally `--fail-on-findings` for exit code 1 when candidates exist. See [code review](CODE_REVIEW.md) for exact coverage and limitations. The source is not executed or sent to an API.

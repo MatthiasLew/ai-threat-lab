@@ -12,7 +12,7 @@ Milestones 1–3 are implemented in the CLI foundation. Team review, GUI, and pr
 
 - [x] Set up the Python package and development dependencies.
 - [x] Implement validated domain models and catalog loading.
-- [x] Add three fictional scenarios and associated controls.
+- [x] Add initial three fictional scenarios and associated controls.
 
 Acceptance: valid data loads; malformed data produces actionable validation errors.
 
@@ -43,3 +43,12 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [ ] Prepare sample reports and a repeatable demonstration.
 - [ ] Document remaining limitations.
 - [ ] Consider PDF and extra scenarios if time permits.
+
+## Additional offline modules
+
+- [x] Brute-force and credential-stuffing teaching scenarios.
+- [x] Insecure AI-generated code scenario.
+- [x] Local Python AST checks, findings and remediation guidance.
+- [x] Extension documentation without API coupling.
+- [ ] More languages, data-flow analysis and additional rule families, only if needed.
+- [ ] Optional AI integration after access, budget and source-sharing decisions.

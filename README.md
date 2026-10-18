@@ -6,7 +6,7 @@ AI Threat Lab is a student project designed to explain who a threat targets, how
 
 ## Project status
 
-**CLI foundation (0.1.0).** The shared Python engine, three packaged scenarios, interactive and command-based CLI, explained risk comparisons, and TXT/JSON exports are implemented. PySide6 GUI, PDF export, and empirical calibration remain future work.
+**CLI foundation (0.1.0).** The shared Python engine, six packaged scenarios, interactive and command-based CLI, explained risk comparisons, and TXT/JSON exports are implemented. PySide6 GUI, PDF export, and empirical calibration remain future work.
 
 ## Quick start
 
@@ -28,9 +28,21 @@ python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json
 
 The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
 
+## Additional offline modules
+
+The catalog also includes **brute force**, **credential stuffing**, and **security flaws in AI-generated code**. These describe fictional risks and defenses; no passwords are generated or attempted.
+
+A separate local Python reviewer finds selected risky constructs:
+
+```bash
+python -m ai_threat_lab review-code path/to/example.py --format json
+```
+
+It never executes or uploads the source. Findings require human review. See [code review](docs/CODE_REVIEW.md) and [catalog extension guide](docs/EXTENDING_SCENARIOS.md).
+
 ## Workflow
 
-1. Select an AI phishing, voice deepfake, or video deepfake scenario.
+1. Select a social-engineering, authentication-threat, or code-security scenario.
 2. Configure a fictional target, its access level, and organizational context.
 3. Review campaign stages, warning signs, and potential consequences.
 4. Inspect an explained likelihood and impact assessment.

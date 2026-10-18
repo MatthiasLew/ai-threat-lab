@@ -26,8 +26,10 @@ Stage new source files before requesting change-focused context so Git exposes i
 
 ## Verification scope
 
-Tests exercise all 25 matrix inputs, label boundaries, invalid ratings, catalog validation, profile adjustments, duplicate and overlapping defenses, scenario-specific controls, reduction caps, deterministic results, report metadata and UTF-8, refusal to overwrite reports, CLI errors, guided input, and all three CLI scenarios. GUI parity checks will be added when GUI exists.
+Tests exercise all 25 matrix inputs, label boundaries, invalid ratings, catalog validation, profile adjustments, duplicate and overlapping defenses, scenario-specific controls, reduction caps, deterministic results, report metadata and UTF-8, refusal to overwrite reports, CLI errors, guided input, and all six CLI scenarios. GUI parity checks will be added when GUI exists.
 
 ## Contribution workflow
 
 Use focused branches and reviewable PRs. Update documentation together with the public service contract. Domain/application modules must not import Qt, read console input, or send network requests. Fix the issue demonstrated by a failing check before broadening the test scope.
+
+Code-review tests cover risky patterns, simple import aliases, nonmatching examples, source non-execution, file encodings, input-size limits, output redaction, CLI exit codes and export preservation.

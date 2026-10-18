@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from .analyzer import ThreatAnalyzer
+from .code_review import render_code_review, review_file
 from .models import AnalysisRequest, TargetProfile, ValidationError
 from .reports import export_report, render_json, render_text
 
@@ -29,6 +30,15 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--format", choices=("txt", "json"), default="txt")
     analyze.add_argument(
         "--output", type=Path, help="New file path; existing files are not overwritten"
+    )
+    review = commands.add_parser("review-code", help="Review a local Python file without execution")
+    review.add_argument("path", type=Path)
+    review.add_argument("--format", choices=("txt", "json"), default="txt")
+    review.add_argument("--output", type=Path, help="New report path; no overwriting")
+    review.add_argument(
+        "--fail-on-findings",
+        action="store_true",
+        help="Return exit code 1 when candidate findings exist",
     )
     return parser
 
@@ -57,6 +67,16 @@ def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        if args.command == "review-code":
+            result = review_file(args.path)
+            content = render_code_review(result, args.format)
+            if args.output:
+                with args.output.open("x", encoding="utf-8") as output:
+                    output.write(content)
+                print(f"Report saved: {args.output}")
+            else:
+                print(content, end="")
+            return 1 if args.fail_on_findings and result.findings else 0
         analyzer = ThreatAnalyzer()
         if args.command == "scenarios":
             for scenario in analyzer.list_scenarios():

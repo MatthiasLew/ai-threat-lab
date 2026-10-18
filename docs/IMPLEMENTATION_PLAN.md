@@ -5,7 +5,7 @@
 | Step | Deliverable | Status |
 | --- | --- | --- |
 | 1 | Typed immutable request/result contract and validation | Implemented |
-| 2 | Three scenario narratives and versioned control rules | Implemented; rules provisional |
+| 2 | Six scenario narratives and versioned control rules | Implemented; rules provisional |
 | 3 | Deterministic baseline/residual risk engine | Implemented |
 | 4 | CLI commands, guided input and TXT/JSON reports | Implemented |
 | 5 | Tests, CI, packaging and ai-dev check configuration | Implemented |
@@ -30,3 +30,7 @@
 - Reports: are TXT/JSON enough for MVP, or is PDF required for submission?
 
 These decisions do not block review of the current foundation. Do not claim empirical defense effectiveness; calibration is separate future work.
+
+## Offline extension delivery
+
+Brute-force, credential-stuffing and insecure-generated-code narratives are implemented in the catalog. The Python AST reviewer is implemented independently of scenario scoring. The next work remains product review, then GUI integration; future API access does not block either. Candidate future rules and the adapter boundary are documented in EXTENDING_SCENARIOS.md.
