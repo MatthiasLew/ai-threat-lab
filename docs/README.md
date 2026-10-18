@@ -32,3 +32,5 @@ Start with the project plan to understand what will be built, then read the user
 - [AI cost controls, configuration and reconciliation](API_COSTS.md)
 
 - [Dependency advisories and merged remediation reports](DEPENDENCIES_AND_REPORTS.md)
+
+- [Approved local training lab, sessions and outcome interpretation](TRAINING_LAB.md)

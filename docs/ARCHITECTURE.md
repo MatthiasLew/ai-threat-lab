@@ -88,3 +88,7 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Dependencies and remediation queue (0.5.0)
 
 `dependencies.py` statically inventories exact package versions, optionally queries the fixed OSV batch endpoint and caches only completed per-package results. `audit_report.py` merges validated result documents, preserves evidence provenance and escapes every untrusted HTML field. The report's P1/P2/P3 values are human-review priorities, not empirical severity or vulnerability validation. These workflows do not depend on the AI provider.
+
+## Durable local rehearsal (0.6.0)
+
+`training_lab.py` provides a SQLite-backed local state machine with exact plan approval, recipient/alias uniqueness, atomic idempotent action requests and permanent local plan revocation. It reuses the bounded `VoiceExerciseSession` policy for voice rehearsals. `training_cli.py` exposes numbered input and saved-session commands; it cannot select a provider or store raw replies. Separate rehearsal reports preserve selected-outcome provenance and do not become live campaign evidence.

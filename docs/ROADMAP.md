@@ -85,3 +85,12 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] Preserve incomplete queries, skipped inputs and assessment limitations.
 - [x] Bounded legacy Python traversal and tighter repository identity validation.
 - [ ] More manifest ecosystems, advisory detail/severity/fix retrieval and reachability analysis.
+
+## Local training lab — 0.6.0
+
+- [x] Approved, durable text-rehearsal sessions for all three training channels.
+- [x] Structured actions, restart/replay protection and transactional concurrent updates.
+- [x] Stop, scope expiry, bounded voice dialogue and permanent local plan cancellation.
+- [x] JSON/HTML selected-outcome reports and follow-up practice guidance.
+- [x] Explicit separation from live telemetry and personnel judgments.
+- [ ] Real speech/phone/media and live campaign integrations remain absent.

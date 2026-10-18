@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- Add approved local text-training sessions for email/voice/video scenarios, bound to exact preview digests, participant aliases and approved recipient indices.
+- Add SQLite state, unique plan/participant/recipient sessions, atomic idempotent actions, expiry and persistent whole-plan cancellation.
+- Add numbered interactive rehearsal, stop/EOF/Ctrl+C handling and deterministic voice dialogue with a three-unknown-turn bound. No raw replies, speech, calls, media or link visits.
+- Add JSON/escaped standalone HTML session reports with selected outcomes, follow-up practice and explicit limits; do not label selections as observed susceptibility or identity verification.
+- Extend CLI subprocess, approval, concurrency, expiry, privacy, cancellation and installed-wheel checks.
+
 ## 0.5.0
 
 - Add static exact-version inventory for requirements, npm lockfiles v2/v3, uv and Poetry locks; normalize and deduplicate identities without installation or code execution.

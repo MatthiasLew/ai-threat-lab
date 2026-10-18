@@ -139,7 +139,82 @@ def main() -> None:
         assert merged["summary"]["unique_findings"] == 1
         run(executable, "audit-report", "audit.json", "--format", "html", "--output", "report.html")
         assert "<!doctype html>" in (work / "report.html").read_text(encoding="utf-8")
-        print("Clean installed wheel: workflows, dependency inventory and merged reports passed.")
+        run(executable, "campaign-example", "voice_training", "--output", "training-request.json")
+        run(
+            executable,
+            "campaign-prepare",
+            "training-request.json",
+            "--output",
+            "training-plan.json",
+        )
+        run(
+            executable,
+            "campaign-approve",
+            "training-plan.json",
+            "--reviewer",
+            "Fixture reviewer",
+            "--output",
+            "training-approval.json",
+        )
+        session = json.loads(
+            run(
+                executable,
+                "training-start",
+                "training-plan.json",
+                "--approval",
+                "training-approval.json",
+                "--participant-id",
+                "fixture-01",
+                "--ledger",
+                "training.sqlite",
+            )
+        )
+        identifier = session["session_id"]
+        selected = json.loads(
+            run(
+                executable,
+                "training-step",
+                identifier,
+                "--action",
+                "request_verification",
+                "--action-id",
+                "fixture-step-01",
+                "--ledger",
+                "training.sqlite",
+            )
+        )
+        assert selected["session"]["outcome"] == "verification_selected"
+        assert (
+            json.loads(
+                run(executable, "training-status", identifier, "--ledger", "training.sqlite")
+            )["turns"]
+            == 1
+        )
+        run(
+            executable,
+            "training-report",
+            "--ledger",
+            "training.sqlite",
+            "--format",
+            "html",
+            "--output",
+            "training-report.html",
+        )
+        assert "Local text rehearsal" in (work / "training-report.html").read_text(encoding="utf-8")
+        revoked = json.loads(
+            run(
+                executable,
+                "training-cancel",
+                "--plan-digest",
+                session["plan_digest"],
+                "--ledger",
+                "training.sqlite",
+            )
+        )
+        assert revoked["cancelled_sessions"] == 0
+        print(
+            "Clean installed wheel: audit, cost, dependency, report and training workflows passed."
+        )
 
 
 if __name__ == "__main__":

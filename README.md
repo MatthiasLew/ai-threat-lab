@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.5.0
+## Project status — 0.6.0
 
-Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -71,6 +71,21 @@ python -m ai_threat_lab campaign-simulate plan.json --approval approval.json --l
 ```
 
 This simulates only; it cannot send messages or place calls. Reusing the same plan and ledger is rejected. See [provider development](docs/PROVIDER_DEVELOPMENT.md) for API adapter contracts and [testing](docs/TESTING.md) for the full validation strategy.
+
+## Local interactive training
+
+Use the approved plan/approval files from the workflow above:
+
+```bash
+ai-threat-lab training-start plan.json --approval approval.json --participant-id trainee-01 --ledger training.sqlite --output session.json
+# Copy session_id from session.json; enter only numbered menu selections:
+ai-threat-lab training-run SESSION_ID --ledger training.sqlite
+ai-threat-lab training-report --ledger training.sqlite --format html --output training-report.html
+# Permanently revoke this local plan; copy plan_digest from session.json:
+ai-threat-lab training-cancel --plan-digest PLAN_DIGEST --ledger training.sqlite
+```
+
+This is a **local text rehearsal** for email, voice or video scenarios. It never sends, calls, opens links, loads media or records raw responses. The SQLite session survives restarts and enforces preview approval, scope expiry, action replay protection and cancellation. Reports describe operator-selected actions, not measured employee behavior or proven identity verification. See [training lab guide](docs/TRAINING_LAB.md).
 
 ## Assessment and training demos
 

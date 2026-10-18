@@ -54,3 +54,7 @@ References: [GitHub trees](https://docs.github.com/en/rest/git/trees), [Git blob
 `audit-deps` produces an offline inventory by default. Adding both `--network --share-packages` enables fixed-endpoint OSV advisory queries, optionally with a TTL cache. `audit-report` merges assessment reports to JSON or standalone HTML. Neither command uses an AI model. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md) for formats, scope, limits and interpretation.
 
 The HTTPS client additionally permits POST only to `https://api.osv.dev/v1/querybatch`. This is a read-only database query carrying names/versions, never an installation, package publication or arbitrary target request.
+
+## Local training sessions (0.6.0)
+
+The `training-*` commands provide persistent, approved **local text rehearsals** without any provider key or network. They add structured selections, stop/expiry/cancellation and JSON/HTML practice reports. They do not add live email/phone/media transports, actual tracking or speech understanding. See [TRAINING_LAB.md](TRAINING_LAB.md).

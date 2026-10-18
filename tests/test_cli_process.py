@@ -41,6 +41,12 @@ COMMANDS = (
     "campaign-prepare",
     "campaign-approve",
     "campaign-simulate",
+    "training-start",
+    "training-step",
+    "training-status",
+    "training-run",
+    "training-report",
+    "training-cancel",
 )
 
 

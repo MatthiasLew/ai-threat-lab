@@ -41,3 +41,7 @@ Interface language, submission deadline, GUI ownership, report/PDF priority, fir
 ## Additional delivery in 0.5.0
 
 Pinned dependency inventory and opt-in OSV advisory/version matching are implemented without model calls. Combined JSON/HTML reports preserve findings, source provenance and gaps, with an explicit human-triage order. Live API/media/campaign limits above remain; dependency matches do not establish exploitability. See DEPENDENCIES_AND_REPORTS.md.
+
+## Additional delivery in 0.6.0
+
+Approved local text rehearsals now run from CLI with durable sessions, structured choices, bounded voice policy, expiry/stop/revocation and JSON/HTML reports. They prepare and test practice flows without model calls. They do not observe real email/call behavior, prove identity verification or implement any live communication/media service.

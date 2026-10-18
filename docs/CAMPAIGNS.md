@@ -70,3 +70,7 @@ A future speech/telephony adapter supplies intent classification and plays appro
 ## Saved-artifact CLI workflow (0.3.0)
 
 `campaign-example` → `campaign-prepare` → reviewer inspects the preview → `campaign-approve` → `campaign-simulate`. The root README shows exact commands. The request, plan and approval have strict versioned JSON contracts; tampering invalidates the digest. `campaign-simulate` accepts an optional SQLite ledger and always uses the offline demo transport. It does not select live providers from configuration.
+
+## Approved local sessions (0.6.0)
+
+`training-start`, `training-step`, `training-status`, `training-run`, `training-report` and `training-cancel` now execute durable local text rehearsals from the exact approved preview. These do not dispatch campaigns or gather live telemetry. A local verification selection is explicitly not an `identity_verified` observation. See [TRAINING_LAB.md](TRAINING_LAB.md) for lifecycle, limitations and examples.

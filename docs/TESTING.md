@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.5.0
+# Test strategy and integration readiness — 0.6.0
 
-The offline suite contains 503 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.1%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 574 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.3%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -35,6 +35,9 @@ python -m coverage report
 | AI cost controls | Real Responses wire contract with fake transport, input/output limits, synthetic rates, atomic budgets, cache TTL/restarts/namespaces, unknown outcomes, reconciliation and no automatic retries |
 | Dependency inventories/advisories | Exact pins, normalization, unsupported/secret-bearing sources, package/manifest limits, real OSV batch wire contract, pagination/order validation, cache expiry and partial-result gaps |
 | Combined reports | Per-target deduplication, provenance, triage rules, empty/not-configured results, invalid documents and escaped offline HTML |
+| Local training lab | Exact approval/scope, alias/recipient uniqueness, structured action policy, bounded voice turns, concurrency/replay, expiry and permanent plan revocation |
+| Interactive training | Numbered choices, invalid input redaction, EOF/Ctrl+C stop, terminal-control escaping, all command help and actual persisted CLI workflows |
+| Training reports | Selected-action provenance, no false verification/employee judgments, preview omission from aggregates, escaped offline HTML and follow-up practice |
 | Packaging | Wheel installed without dependencies/index access into a clean venv outside the checkout, installed console entrypoint and bundled catalog |
 
 No real targets, recipients, mailbox accounts or paid APIs are contacted. Fixtures use synthetic data and reserved demonstration domains/numbers.
