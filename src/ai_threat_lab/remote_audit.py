@@ -11,6 +11,7 @@ from urllib.parse import quote, urlencode, urlsplit
 
 from .assessment import AssessmentFinding, AssessmentResult, identify_target
 from .code_review import review_source
+from .config_review import NOTICE, configuration_file
 from .dependencies import MAX_BYTES, inventory_sources, is_manifest
 from .http_client import get_document
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
@@ -133,6 +134,7 @@ class GithubAudit:
             f"Reviewed immutable commit {sha}; at most {self.max_files} selected text files.",
             "Python AST and secret/manifest patterns only; no full semantic or dependency audit.",
             "No installation, execution, submodule retrieval or archive extraction.",
+            NOTICE,
         ]
         if tree.get("truncated"):
             missing.append("GitHub truncated the repository tree; unlisted paths were not checked.")
@@ -162,7 +164,12 @@ class GithubAudit:
                 or path.is_absolute()
                 or ".." in path.parts
                 or EXCLUDED.intersection(path.parts)
-                or (not manifest and path.suffix not in TEXT_SUFFIXES and path.name != ".env")
+                or (
+                    not manifest
+                    and path.suffix not in TEXT_SUFFIXES
+                    and path.name != ".env"
+                    and not configuration_file(name)
+                )
             ):
                 continue
             if name in seen:

@@ -111,3 +111,15 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] In-memory parsing with no repository materialization, archive extraction or execution.
 - [ ] Nested/monorepo manifests, additional ecosystems and dependency reachability.
 - [ ] Authenticated history storage and active assessment modules remain future work.
+
+
+## Offline acceptance and configuration — 0.9.0
+
+- [x] Literal Dockerfile and GitHub Actions observations in local/GitHub scans.
+- [x] Approved inert exercise exports for email, voice scripts and video storyboards.
+- [x] Repeatable synthetic before/after scan plus all training channels in one CLI command.
+- [x] Static readiness inventory that distinguishes credentials, validation and missing modules.
+- [x] No-network, approval/expiry, escaping, no-overwrite, CLI process and installed-wheel coverage.
+- [ ] External communications/media and authenticated observed-event intake remain separate implementation work, not just API-key setup.
+
+See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and the remaining implementation/validation order.

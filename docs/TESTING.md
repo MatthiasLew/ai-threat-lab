@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.8.0
+# Test strategy and integration readiness — 0.9.0
 
-The offline suite contains 698 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 745 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -41,6 +41,8 @@ python -m coverage report
 | Training reports | Selected-action provenance, no false verification/employee judgments, preview omission from aggregates, escaped offline HTML and follow-up practice |
 | Scan orchestration | One-command routing, automatic dependency inventory, explicit sharing, module-failure isolation/redaction, partial report preservation, scope/options gates and exit codes |
 | Scan bundles/history | Manifest/schema/hash/size validation, derived-report consistency, symlinks, no overwrite, racing directory claims, interrupted writes, unrelated-file preservation and observation-only deltas |
+| Configuration rules | Literal positive/negative patterns, comments, pinned refs, build-stage aliases, local/GitHub inclusion and generic evidence |
+| Offline acceptance/exports | Network/process execution denied, exact preview approval, expiry, inert email headers, media-reference omission, HTML escaping, no overwrite, completion marker, static readiness and installed demo |
 | Packaging | Wheel installed without dependencies/index access into a clean venv outside the checkout, installed console entrypoint and bundled catalog |
 
 No real targets, recipients, mailbox accounts or paid APIs are contacted. Fixtures use synthetic data and reserved demonstration domains/numbers.

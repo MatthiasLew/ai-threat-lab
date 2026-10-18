@@ -234,6 +234,23 @@ def main() -> None:
         )
         comparison = json.loads(run(executable, "scan-compare", "scan first", "scan second"))
         assert comparison["comparable"] and comparison["counts"]["still_observed"] == 1
+        readiness = json.loads(run(executable, "readiness"))
+        assert not readiness["api_key_alone_sufficient"]
+        demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
+        assert demo["before_findings"] == 3 and demo["after_findings"] == 0
+        assert demo["training_channels"] == ["email", "voice", "video"]
+        assert (work / "offline demo" / "email-pack" / "preview.eml").is_file()
+        assert (work / "offline demo" / "index.html").is_file()
+        run(
+            executable,
+            "exercise-export",
+            "offline demo/email-plan.json",
+            "--approval",
+            "offline demo/email-approval.json",
+            "--output-dir",
+            "extra pack",
+        )
+        assert (work / "extra pack" / "manifest.json").is_file()
         print("Clean installed wheel: audit, costs, training and complete scan bundles passed.")
 
 

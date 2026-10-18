@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from .assessment import AssessmentFinding, AssessmentResult, AssessmentService, identify_target
+from .config_review import NOTICE, configuration_file, inspect_configuration
 from .models import ValidationError
 
 EXCLUDED = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
@@ -54,6 +55,7 @@ def inspect_text(name: str, source: str) -> tuple[AssessmentFinding, ...]:
                     "Validate the package manifest before dependency analysis.",
                 )
             )
+    findings.extend(inspect_configuration(name, source))
     return tuple(findings)
 
 
@@ -99,7 +101,9 @@ def local_inventory(target: str) -> AssessmentResult:
             visited += 1
             for name in sorted(files):
                 item = Path(directory) / name
-                if not item.is_symlink() and (item.suffix in TEXT_SUFFIXES or name == ".env"):
+                if not item.is_symlink() and (
+                    item.suffix in TEXT_SUFFIXES or name == ".env" or configuration_file(name)
+                ):
                     candidates.append(item)
                 if len(candidates) >= 100 or visited >= 1000:
                     stopped = True
@@ -122,5 +126,6 @@ def local_inventory(target: str) -> AssessmentResult:
             )
         except (OSError, UnicodeError):
             missing.append(f"Could not read text file: {item.name}")
+    missing.append(NOTICE)
     missing.append("Secret patterns are incomplete; no dependency advisory database was queried.")
     return AssessmentResult(target, kind, "partial", tuple(findings), tuple(missing))

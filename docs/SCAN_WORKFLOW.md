@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.8.0
+# One-command scans and history comparison — 0.9.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -115,7 +115,7 @@ The comparison uses exact target/finding-field IDs and reports:
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
 
-Version 0.8 uses scope engine `read-only-pipeline-2`. Version 0.7 bundles remain readable, but cross-engine comparison is intentionally unavailable because collection coverage changed.
+Version 0.9 uses scope engine `read-only-pipeline-3` with literal configuration checks, including Dockerfiles. Versions 0.7/0.8 remain readable, but cross-engine comparison is intentionally unavailable because collection coverage changed. See [CONFIGURATION_CHECKS.md](CONFIGURATION_CHECKS.md).
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 

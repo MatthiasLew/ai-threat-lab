@@ -91,7 +91,7 @@ class ScanOptions:
         return {
             "target": self.target,
             "target_kind": identify_target(self.target),
-            "engine": "read-only-pipeline-2",
+            "engine": "read-only-pipeline-3",
             "network": self.network,
             "allowed_hosts": list(self.allowed_hosts),
             "max_files": self.max_files,

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0
+
+- Add literal Dockerfile and GitHub Actions configuration observations, shared by local and immutable GitHub collection. All remain candidate findings with explicit parser/runtime gaps.
+- Add exact-approved inert exercise exports: reserved-address `.eml`, escaped HTML, voice script and video storyboard. No sending, calling, source execution or media generation.
+- Add `offline-demo`: generated project before/after scans, integrity checks, three scripted training sessions and linked reports; publish completion only after acceptance checks.
+- Add `readiness` static capability inventory, explicit missing-engineering statuses and a complete delivery matrix; no credential inspection or service probes.
+- Advance scan scope engine to 3; keep older bundle reading and suppress cross-engine deltas.
+- Extend no-network, redaction/escaping, approval/expiry, no-overwrite, CLI and clean installed-wheel verification.
+
 ## 0.8.0
 
 - Add GitHub root dependency inventory to combined scans using the same immutable commit and shared bounded retrieval as source checks.

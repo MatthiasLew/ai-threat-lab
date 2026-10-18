@@ -14,6 +14,9 @@ from .code_review import render_code_review, review_file
 from .contracts import approval_to_document, config_from_document, read_document, write_document
 from .integration_cli import COMMANDS, add_commands, run_command
 from .models import AnalysisRequest, TargetProfile, ValidationError
+from .offline_cli import COMMANDS as OFFLINE_COMMANDS
+from .offline_cli import add_commands as add_offline_commands
+from .offline_cli import run_command as run_offline_command
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report, render_json, render_text
 from .scan_cli import COMMANDS as SCAN_COMMANDS
@@ -29,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.8.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.9.0")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
@@ -87,6 +90,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_commands(commands)
     add_training_commands(commands)
     add_scan_commands(commands)
+    add_offline_commands(commands)
     return parser
 
 
@@ -120,6 +124,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
         )
         if getattr(args, "output", None) is not None and args.output.exists():
             raise FileExistsError("Output path already exists; choose a new file")
+        if args.command in OFFLINE_COMMANDS:
+            return run_offline_command(args)
         if args.command in SCAN_COMMANDS:
             return run_scan_command(args)
         if args.command in TRAINING_COMMANDS:

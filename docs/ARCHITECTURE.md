@@ -96,3 +96,10 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Scan bundles and history comparison (0.7.0)
 
 `scan_engine.py` orchestrates injected target/inventory/advisory collectors and preserves failures as explicit gaps. `scan_bundle.py` stages artifacts, claims a new private directory without overwriting, and publishes its hash manifest last. The reader verifies bounded file hashes and regenerates the derived report from assessment documents. `scan_cli.py` provides the one-command workflow and bundle check/comparison commands. Scope/options and module status gate comparisons; an absent observation never proves remediation. Hashes are integrity checks, not signatures or authentic provenance.
+
+
+## Offline acceptance and literal configuration (0.9.0)
+
+`config_review.inspect_configuration` produces generic candidate observations without interpreting YAML or running containers. `local_inventory.inspect_text` shares it with local and verified GitHub collectors. Scan scope engine 3 prevents cross-version coverage comparisons.
+
+`exercise_export.export_exercise` validates the exact approved plan before preparing inert assets and exclusively claiming a new directory. It never opens media references or calls a transport. `offline_cli.offline_demo` creates only fictional fixtures, drives the existing scan/training services, checks scan acceptance and writes a completion marker last. Its generated synthetic approval cannot authorize a user-supplied plan. `readiness.readiness` returns a static scope inventory without account, credential or API inspection.

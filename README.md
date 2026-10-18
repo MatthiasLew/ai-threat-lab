@@ -2,15 +2,24 @@
 
 Read-only security assessments, optional AI explanations with budget controls, and offline training exercises.
 
-The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
+The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.8.0
+## Project status — 0.9.0
 
-Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root dependency inventory, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest and literal Dockerfile/workflow review, pinned dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, program metadata, exported-mail observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
 Start with [live setup and capability limits](docs/LIVE_SETUP.md), [AI cost controls](docs/API_COSTS.md), and the [capability matrix](docs/INTEGRATIONS.md).
+
+## Offline acceptance kit
+
+```bash
+ai-threat-lab readiness
+ai-threat-lab offline-demo --output-dir demo-results/run-01
+```
+
+Open the generated `index.html` for synthetic before/after scans and all three local training channels. Approved exercise packs can also be exported as inert email previews, voice scripts and video storyboards. No API, message sending, call or media generation occurs. [Offline walkthrough](docs/OFFLINE_ACCEPTANCE.md), [configuration rules](docs/CONFIGURATION_CHECKS.md) and [complete delivery/gap matrix](docs/DELIVERY_STATUS.md).
 
 ## Quick start
 

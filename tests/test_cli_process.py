@@ -50,6 +50,9 @@ COMMANDS = (
     "scan",
     "scan-check",
     "scan-compare",
+    "readiness",
+    "exercise-export",
+    "offline-demo",
 )
 
 
