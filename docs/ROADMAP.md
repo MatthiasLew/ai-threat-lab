@@ -181,3 +181,7 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 ## Go checksum-record inventory — 0.18.0
 
 Implemented bounded `go.sum` module-content identities through local/GitHub dependency routes, synthetic OSV payload validation and installed offline demo acceptance. See [GO.md](GO.md). Next dependency work should resolve the selected build graph and replacements before making applicability claims; other languages and application data flow remain separate work. API setup remains deferred.
+
+## Python web API candidates — 0.19.0
+
+Implemented explicit Jinja autoescape, Django/MarkupSafe trust-marker and literal PyJWT-style signature-option observations in the shared AST reviewer. See [CODE_REVIEW.md](CODE_REVIEW.md). Next depth work requires scoped symbol/data-flow analysis and framework/runtime applicability, rather than interpreting these syntactic candidates as confirmed vulnerabilities. API setup remains deferred.

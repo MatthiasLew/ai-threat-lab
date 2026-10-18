@@ -26,12 +26,15 @@ Only one explicitly selected `.py` file is inspected per call. The source limit 
 | PY007 | ssl._create_unverified_context | Review trust configuration and final context settings |
 | PY008 | Explicit unsafe YAML APIs/loaders | Prefer safe_load / SafeLoader for untrusted data |
 | PY009 | MD5/SHA-1 constructors | Review security use and select a suitable modern construction |
+| PY010 | Jinja Environment with literal autoescape=False | Enable context-appropriate HTML autoescaping |
+| PY011 | Django mark_safe / MarkupSafe Markup | Trace trust/sanitization before bypassing escaping |
+| PY012 | PyJWT-style decode with literal verify_signature=False options | Verify signatures before trusting claims |
 
 A finding contains a rule ID, line, column, severity, rationale and recommendation. Severity describes the potentially risky pattern, not confirmed exploitability. Reports omit source snippets and argument values. A report includes the supplied filename, so consider that when sharing it.
 
 ## Exact scope of the added patterns
 
-The nine rule families use engine `python-ast-1.1` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
+The twelve rule families use engine `python-ast-1.2` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
 
 PY007 identifies the helper whose defaults disable verification. Explicit overrides and later context mutation are not evaluated: a call with `cert_reqs=ssl.CERT_REQUIRED` still produces a review candidate, not a claim that final verification is disabled.
 
@@ -39,7 +42,19 @@ PY008 accepts `yaml.unsafe_load` / `unsafe_load_all` and `yaml.load` / `load_all
 
 PY009 recognizes `hashlib.md5`, `sha1` and `new` with literal `md5`, `sha1` or `sha-1` names (case insensitive). Literal `usedforsecurity=False` suppresses the candidate. Unknown variables are not resolved. A digest used for non-security checksums may be appropriate; a report does not establish its purpose or prescribe a password-hashing scheme.
 
-The offline demo adds five inert examples, one per new rule, and links their separate report. Pattern findings retain source-free evidence and require human review. See the primary [Python tempfile](https://docs.python.org/3/library/tempfile.html), [hashlib](https://docs.python.org/3/library/hashlib.html), [SSL](https://docs.python.org/3/library/ssl.html), [OS](https://docs.python.org/3/library/os.html) and [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) documentation for API behavior.
+The offline demo contains eight inert examples (PY005–PY012), and links their separate report. Pattern findings retain source-free evidence and require human review. See the primary [Python tempfile](https://docs.python.org/3/library/tempfile.html), [hashlib](https://docs.python.org/3/library/hashlib.html), [SSL](https://docs.python.org/3/library/ssl.html), [OS](https://docs.python.org/3/library/os.html) and [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) documentation for API behavior.
+
+## Web API observations (0.19.0)
+
+PY010 recognizes `jinja2.Environment(autoescape=False)` and simple import aliases. Only the literal boolean `False` keyword is selected: absent settings, positional arguments, zero/None, variables, callbacks, environment mutation, subclasses and framework-created environments are not resolved. A non-HTML environment may intentionally disable escaping. This rule does not render templates or assess their output contexts.
+
+PY011 recognizes `django.utils.safestring.mark_safe` and `markupsafe.Markup`, including simple import aliases. It reports the explicit trust marker even for a static string: trusted markup can be appropriate. It does not identify attacker-controlled input, validate a sanitizer, infer decorator effects or inspect template `safe` filters. Escaping helpers such as `markupsafe.escape` and `Markup.escape` are outside this rule. Review provenance and HTML context before treating an observation as XSS.
+
+PY012 recognizes `jwt.decode` / `jwt.decode_complete` with a keyword `options` whose value is a literal dictionary of unique literal string keys and whose `verify_signature` value is exactly boolean `False`. Dictionaries with unpacking, duplicate or computed keys are left unchecked because effective values may differ. Variables, constructor/instance settings, positional options, legacy `verify=False`, dynamic kwargs and later claim use are not interpreted. The `jwt` call spelling does not authenticate the installed library as PyJWT. Unverified decoding may be intentional for inspection; it must not imply claims are trusted for authorization.
+
+All three rules use the existing source-byte bound, source-free reports, simple global alias mapping and candidate-only findings. No Django/Jinja/MarkupSafe/PyJWT installation is required. Alias rebinding, shadowing and wrappers remain unresolved. A matched API spelling can refer to a different runtime object. Neither a match nor its absence proves exploitability or safety.
+
+Primary API references: [Jinja Environment/autoescape](https://jinja.palletsprojects.com/en/stable/api/), [Django security and mark_safe](https://docs.djangoproject.com/en/6.0/topics/security/), [MarkupSafe constructors and escaping](https://markupsafe.palletsprojects.com/en/stable/escaping/), [PyJWT unverified reading](https://pyjwt.readthedocs.io/en/latest/usage.html#reading-the-claimset-without-validation).
 
 ## Limits
 

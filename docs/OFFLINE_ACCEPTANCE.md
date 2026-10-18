@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.18.0
+# Offline acceptance kit — 0.19.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -15,7 +15,7 @@ Expected current fixture observations: 3 before, 0 after, 3 **no longer observed
 
 The training report contains three scripted selections: reporting the email exercise, requesting independent verification in the voice rehearsal and declining the video request. These are selected outcomes, not measured employee actions. Fictional recipients use `example.invalid` or a reserved demonstration phone number.
 
-The separate Python fixture produces exactly five candidate observations (PY005–PY009), recorded as `python_pattern_observations: 5`. It is parsed only and does not change the three-before/zero-after comparison.
+The separate Python fixture produces exactly eight candidate observations (PY005–PY012), recorded as `python_pattern_observations: 8`. It is parsed only and does not change the three-before/zero-after comparison.
 
 The inert mail fixture produces exactly five aggregate candidates: HTTP, IP-literal host, displayed/destination hostname mismatch, active attachment extension and document-plus-active double extension. `mail_observations` is 5; no link is visited or attachment extracted/executed. This is synthetic acceptance, not a real phishing detection result.
 

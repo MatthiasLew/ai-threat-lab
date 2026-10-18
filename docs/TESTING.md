@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.18.0
+# Test strategy and integration readiness — 0.19.0
 
-The offline suite contains 1284 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1339 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.6%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -84,3 +84,7 @@ Tests cover ten explicit rule families, three container groups, all supported wo
 ## Go checksum records (0.18.0)
 
 56 new cases cover exact/prerelease/pseudo/incompatible version spellings, case-sensitive module identities, unsupported paths, malformed/canonical hash fields, metadata-only records, redaction, byte/line/package/notice bounds, deduplication and nested origins. Fixture-backed GitHub collection and OSV payloads, real CLI/local scans and engine-9 compatibility are covered. The clean installed-wheel gate requires Go, Python and Cargo identities in the generated offline demo. No Go toolchain or live advisory submission is required.
+
+## Python web API patterns (0.19.0)
+
+55 new cases cover direct/aliased Jinja autoescape opt-out, Django/MarkupSafe trust markers, PyJWT-style decode/signature options, nonmatching and ambiguous syntax, duplicate/computed/unpacked dictionary keys, static trusted-markup caveats and source-free text/JSON/SARIF. Integration checks cover local projects, immutable GitHub blobs, real CLI exit/no-overwrite behavior, no source execution/network, engine-10 bundle compatibility and incomplete-demo publication. The installed-wheel gate requires eight inert PY005–PY012 observations without importing web frameworks. Findings remain unvalidated candidates.

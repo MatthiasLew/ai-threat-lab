@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .models import ValidationError
+from .python_web_patterns import web_rule
 
 MAX_SOURCE_BYTES = 256 * 1024
 LIMITATIONS = (
@@ -34,7 +35,7 @@ class CodeReviewResult:
     filename: str
     findings: tuple[CodeFinding, ...]
     limitations: tuple[str, ...] = LIMITATIONS
-    engine: str = "python-ast-1.1"
+    engine: str = "python-ast-1.2"
 
 
 def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str:
@@ -214,6 +215,8 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 "operation is explicitly non-security, document that intent; use an appropriate "
                 "password KDF for passwords rather than a fast digest.",
             )
+        if rule is None:
+            rule = web_rule(node, name)
         if rule:
             rule_id, severity, title, rationale, recommendation = rule
             findings.append(

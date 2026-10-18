@@ -1,10 +1,10 @@
-# Delivery status and remaining work — 0.18.0
+# Delivery status and remaining work — 0.19.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Nine bounded Python AST rule families, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Twelve bounded Python AST rule families, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
@@ -65,6 +65,10 @@ Selected Pod/workload JSON controls now work in a standalone CLI and local/immut
 ## Go checksum-record follow-up (0.18.0)
 
 Local and pinned GitHub dependency collection now accept bounded `go.sum` module-content records. Metadata-only entries are omitted; names, versions and origins are retained without invoking Go or verifying hashes. Historical/unused versions may be included. The offline demo and installed-wheel gate cover all three generated ecosystems; build selection, replacements, workspace and reachability remain unchecked. See [GO.md](GO.md).
+
+## Python web API follow-up (0.19.0)
+
+The shared AST reviewer now observes explicit Jinja autoescape opt-out, Django/MarkupSafe HTML trust markers and literal PyJWT-style signature-verification opt-out. Standalone JSON/text/SARIF, local/GitHub scans and the eight-observation demo share these checks. Library identity, data provenance, sanitization, effective runtime settings and authorization use remain unchecked. See [CODE_REVIEW.md](CODE_REVIEW.md).
 
 ## Remaining order of work
 

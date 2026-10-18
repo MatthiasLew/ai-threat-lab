@@ -4,9 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.18.0
+## Project status — 0.19.0
 
-Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python (nine AST rule families, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, bounded exported-mail header/link/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python (twelve AST rule families, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, bounded exported-mail header/link/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
@@ -15,6 +15,8 @@ Local multi-target workflow: [batch scans](docs/BATCH_SCANS.md).
 Saved HTTP responses: [offline header review](docs/HTTP_HEADERS.md).
 
 Kubernetes deployment files: [offline JSON review](docs/KUBERNETES.md).
+
+Python web code: [HTML escaping and JWT signature-option review](docs/CODE_REVIEW.md).
 
 Go projects: [offline checksum-record inventory](docs/GO.md).
 

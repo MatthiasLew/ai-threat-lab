@@ -145,13 +145,15 @@ def offline_demo(output, *, now=None):
     # Inert source fixture: parsed only, never imported or executed (PyYAML is not required).
     pattern_source = root / "python-patterns.py"
     pattern_source.write_text(
-        "import os, tempfile, ssl, yaml, hashlib\n"
+        "import os, tempfile, ssl, yaml, hashlib, jinja2, markupsafe, jwt\n"
         "os.system(command)\ntempfile.mktemp()\nssl._create_unverified_context()\n"
-        "yaml.load(payload, Loader=yaml.UnsafeLoader)\nhashlib.md5(payload)\n",
+        "yaml.load(payload, Loader=yaml.UnsafeLoader)\nhashlib.md5(payload)\n"
+        "jinja2.Environment(autoescape=False)\nmarkupsafe.Markup(content)\n"
+        'jwt.decode(token, options={"verify_signature": False})\n',
         encoding="utf-8",
     )
     patterns = engine.run(ScanOptions(str(pattern_source)), root / "python-patterns")
-    if patterns["failed_modules"] or patterns["unique_findings"] != 5:
+    if patterns["failed_modules"] or patterns["unique_findings"] != 8:
         raise ValidationError("Synthetic Python pattern acceptance failed; demo is incomplete")
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []

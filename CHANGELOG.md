@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.0
+
+- Extend Python review to twelve rule families: explicit Jinja autoescape=False, Django/MarkupSafe safe-HTML markers and PyJWT-style literal verify_signature=False options.
+- Keep source-free candidate evidence and simple alias handling; do not infer HTML context, sanitizer correctness, installed library identity or authorization use. Leave ambiguous JWT dictionaries unchecked.
+- Reuse the rules in standalone text/JSON/SARIF, local and immutable GitHub scans. No framework imports, template rendering, token handling, runtime execution or network calls.
+- Extend offline demo and installed-wheel acceptance to eight PY005–PY012 observations. Add 55 tests and detailed rule/scope documentation.
+- Advance Python engine to python-ast-1.2 and scan engine to 11; retain older bundle reading and disable cross-engine deltas. API setup remains deferred.
+
 ## 0.18.0
 
 - Add bounded Go `go.sum` module-content inventory to existing local, recursive and pinned GitHub routes. Keep case-sensitive paths, exact v-prefixed versions and merged origins; omit metadata-only and unsupported records with redacted notices.
