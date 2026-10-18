@@ -66,3 +66,19 @@ classDiagram
 ```
 
 These names match the implemented API concepts.
+
+## Assessment and training provider boundaries
+
+```mermaid
+flowchart TD
+    Input["Target or training request"] --> Kind{"Operation"}
+    Kind -->|Assessment| Router["AssessmentService"]
+    Router --> Local["Local Python and mail checks"]
+    Router --> Remote["Optional target adapter"]
+    Remote --> Missing["Not configured when absent"]
+    Kind -->|Training| Prepare["Prepare exact preview"]
+    Prepare --> Approval["Scope and content approval"]
+    Approval --> Ledger["Cancellation and attempt ledger"]
+    Ledger --> Transport["Demo or supplied transport"]
+    Transport --> Events["Exercise event aggregation"]
+```

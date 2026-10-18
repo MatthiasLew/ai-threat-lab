@@ -20,3 +20,7 @@ Start with the project plan to understand what will be built, then read the user
 
 - [Offline code review](CODE_REVIEW.md)
 - [Scenario extension guide and future AI boundary](EXTENDING_SCENARIOS.md)
+
+- [Target-based assessment](ASSESSMENT.md)
+- [Prepared campaigns and event reporting](CAMPAIGNS.md)
+- [Integration contracts and exact capability status](INTEGRATIONS.md)

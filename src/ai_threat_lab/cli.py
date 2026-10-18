@@ -1,10 +1,15 @@
 """Thin console adapter around the reusable analysis service."""
 
 import argparse
+import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .analyzer import ThreatAnalyzer
+from .assessment import AssessmentService
+from .campaign_cli import demo_campaign, report_events
+from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
 from .models import AnalysisRequest, TargetProfile, ValidationError
 from .reports import export_report, render_json, render_text
@@ -14,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="AI Threat Lab — fictional educational simulations"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.1.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.2.0")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
@@ -40,6 +45,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Return exit code 1 when candidate findings exist",
     )
+    commands.add_parser("campaigns", help="List prepared training scenarios")
+    demo = commands.add_parser("campaign-demo", help="Offline campaign preview/simulated dispatch")
+    demo.add_argument("scenario")
+    events = commands.add_parser("campaign-report", help="Aggregate exported exercise events")
+    events.add_argument("path", type=Path)
+    assess = commands.add_parser("assess", help="Route a target to available assessment modules")
+    assess.add_argument("target")
     return parser
 
 
@@ -67,6 +79,18 @@ def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        if args.command == "campaigns":
+            print(json.dumps([asdict(s) for s in campaign_scenarios()], indent=2))
+            return 0
+        if args.command in ("campaign-demo", "campaign-report", "assess"):
+            if args.command == "campaign-demo":
+                payload = demo_campaign(args.scenario)
+            elif args.command == "campaign-report":
+                payload = report_events(args.path)
+            else:
+                payload = asdict(AssessmentService().assess(args.target))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0
         if args.command == "review-code":
             result = review_file(args.path)
             content = render_code_review(result, args.format)

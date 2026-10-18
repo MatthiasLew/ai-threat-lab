@@ -50,3 +50,11 @@ This contract is implemented in version 0.1.0. Results also include recommended_
 ## Offline code-review service
 
 `code_review.py` exposes `review_source(text, filename)` and `review_file(path)` returning immutable `CodeReviewResult` objects. It is independent of `ThreatAnalyzer` and ordinal risk scoring. The CLI `review-code` adapter renders TXT/JSON and explicitly saves new reports. Future GUI widgets can call the same functions. No provider integration exists.
+
+## Target assessment and campaign orchestration (0.2.0)
+
+`AssessmentService` routes supported input forms, invokes an explicitly registered `TargetAdapter`, or uses the local Python/mail module. It returns `AssessmentResult` with evidence and `not_checked`; unsupported integrations return `not_configured`.
+
+`CampaignService` prepares a `CampaignPlan` through `TrainingContentProvider`. Explicit `ContentApproval` must match the digest of scope, exact content, media hash, facts and recipients before `TrainingTransport` dispatch. `MemoryLedger` is the demo default; `SQLiteLedger` persists hashed attempt claims across service restarts. Event aggregation is independent from ordinal risk scoring and accepts no raw answers.
+
+The CLI exposes campaigns, campaign-demo, campaign-report and assess. It has no live-send/call command. Actual provider implementations, authenticated approvals and collection endpoints are separate integration work. See INTEGRATIONS.md for provider responsibilities and limitations.

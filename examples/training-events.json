@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "events": [
+    {"participant_id": "demo-001", "type": "delivered"},
+    {"participant_id": "demo-001", "type": "identity_verified"},
+    {"participant_id": "demo-001", "type": "reported"},
+    {"participant_id": "demo-002", "type": "synthetic_info_shared"},
+    {"participant_id": "demo-003", "type": "link_clicked", "automated": true}
+  ]
+}

@@ -34,3 +34,9 @@ These decisions do not block review of the current foundation. Do not claim empi
 ## Offline extension delivery
 
 Brute-force, credential-stuffing and insecure-generated-code narratives are implemented in the catalog. The Python AST reviewer is implemented independently of scenario scoring. The next work remains product review, then GUI integration; future API access does not block either. Candidate future rules and the adapter boundary are documented in EXTENDING_SCENARIOS.md.
+
+## Revised product direction and integration foundation
+
+The project now separates real target assessment from teaching scenarios. The implemented local checks and campaign orchestration are described in ASSESSMENT.md/CAMPAIGNS.md; INTEGRATIONS.md lists exactly which remote/provider capabilities remain absent. Next work is a concrete provider adapter plus its integration tests, rather than more narrative-only scenarios.
+
+Existing project PRs #1 and #2 were merged. Subsequent project work is committed to main per the user's workflow. Problems found in ai-dev are reported as issues going forward.

@@ -1,12 +1,14 @@
 # AI Threat Lab
 
-Educational simulator and risk analyzer for AI-driven social engineering and deepfake threats.
+Offline security assessment foundation and training-scenario toolkit for AI-assisted threats.
 
-AI Threat Lab is a student project designed to explain who a threat targets, how a fictional campaign unfolds, what damage it could cause, and how protective measures change the assessment.
+The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status
+## Project status — 0.2.0
 
-**CLI foundation (0.1.0).** The shared Python engine, six packaged scenarios, interactive and command-based CLI, explained risk comparisons, and TXT/JSON exports are implemented. PySide6 GUI, PDF export, and empirical calibration remain future work.
+Implemented: limited Python file/project review, exported-mail header observations, target routing, six educational risk scenarios, three prepared training-campaign scenarios, provider contracts, offline demos, event aggregation, and TXT/JSON outputs.
+
+Not configured: actual GitHub retrieval, website testing, mailbox/DNS auditing, live email or phone dispatch, synthetic-media generation, or an AI provider. These need concrete adapters and relevant access, not just an API key. The CLI makes no network requests.
 
 ## Quick start
 
@@ -28,7 +30,22 @@ python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json
 
 The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
 
-## Additional offline modules
+## Assessment and training demos
+
+```bash
+python -m ai_threat_lab assess path/to/project
+python -m ai_threat_lab assess path/to/export.eml
+python -m ai_threat_lab assess https://example.invalid
+python -m ai_threat_lab campaigns
+python -m ai_threat_lab campaign-demo voice_training
+python -m ai_threat_lab campaign-report examples/training-events.json
+```
+
+Local checks report candidates and unchecked areas. Remote targets without adapters return `not_configured`, never a security guarantee. Training demos use fictional identities and synthetic information; no messages or calls are sent.
+
+See [assessment](docs/ASSESSMENT.md), [campaign scenarios](docs/CAMPAIGNS.md), and [integration contracts](docs/INTEGRATIONS.md).
+
+## Educational risk modules
 
 The catalog also includes **brute force**, **credential stuffing**, and **security flaws in AI-generated code**. These describe fictional risks and defenses; no passwords are generated or attempted.
 
@@ -40,7 +57,7 @@ python -m ai_threat_lab review-code path/to/example.py --format json
 
 It never executes or uploads the source. Findings require human review. See [code review](docs/CODE_REVIEW.md) and [catalog extension guide](docs/EXTENDING_SCENARIOS.md).
 
-## Workflow
+## Educational risk workflow
 
 1. Select a social-engineering, authentication-threat, or code-security scenario.
 2. Configure a fictional target, its access level, and organizational context.
@@ -49,7 +66,7 @@ It never executes or uploads the source. Findings require human review. See [cod
 5. Select applicable defenses and compare baseline and residual risk.
 6. Export the analysis as TXT or JSON.
 
-The first version will use predefined scenarios and deterministic rules. It does not require an AI API, GPU, or online service. AI is the subject of the analysis; live content generation is not an MVP requirement.
+The educational risk module uses predefined scenarios and deterministic rules. It does not require an AI API, GPU, or online service. AI is the subject of the analysis; live content generation is not an MVP requirement.
 
 ## Technology
 
@@ -67,7 +84,7 @@ The first version will use predefined scenarios and deterministic rules. It does
 
 The CLI and GUI will call the same application service. Domain logic will contain no `input()`, `print()`, or Qt dependencies. The GUI will be an additional interface, so the console application will not need to be rewritten.
 
-Mateusz will focus on the engine, scenario data, CLI, exports, and tests. The GUI contributor will implement desktop screens and connect them to the shared service.
+Mateusz reviews the application behavior; development focuses on reusable services, CLI, exports, and tests. The GUI contributor will implement desktop screens and connect them to the shared service.
 
 ## Risk assessment
 
@@ -99,4 +116,4 @@ Scores are illustrative ordinal assessments, not measured probabilities, financi
 
 ## Educational boundaries
 
-Simulation consists of local fictional narratives and rule-based assessments. It does not send phishing messages, collect credentials, impersonate real people, clone voices, generate deceptive videos, or attack external systems. Potential losses will be described qualitatively unless the user supplies explicitly fictional amounts.
+Training demos and risk simulation consist of local fictional narratives and rule-based assessments. Actual local source/mail checks have explicitly limited coverage. It does not send phishing messages, collect credentials, impersonate real people, clone voices, generate deceptive videos, or attack external systems. Potential losses will be described qualitatively unless the user supplies explicitly fictional amounts.

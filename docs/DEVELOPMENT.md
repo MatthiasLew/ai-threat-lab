@@ -30,6 +30,8 @@ Tests exercise all 25 matrix inputs, label boundaries, invalid ratings, catalog 
 
 ## Contribution workflow
 
-Use focused branches and reviewable PRs. Update documentation together with the public service contract. Domain/application modules must not import Qt, read console input, or send network requests. Fix the issue demonstrated by a failing check before broadening the test scope.
+Project changes currently go to main after local checks, per the maintainer workflow. Update documentation together with the public service contract. Domain/application modules must not import Qt, read console input, or send network requests. Fix the issue demonstrated by a failing check before broadening the test scope.
 
 Code-review tests cover risky patterns, simple import aliases, nonmatching examples, source non-execution, file encodings, input-size limits, output redaction, CLI exit codes and export preservation.
+
+Campaign/assessment checks cover scope-before-provider validation, exact-content approvals, expiry, channel mismatches, cancellation, ambiguous send failures, persistent duplicate prevention, absent video assets, offline network isolation, local project bounds, and untrusted message headers. CI runs the installed-wheel campaign demo and target-routing smoke checks as well.

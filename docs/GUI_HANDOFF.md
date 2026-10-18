@@ -30,11 +30,13 @@ from pathlib import Path
 from ai_threat_lab import AnalysisRequest, TargetProfile, ThreatAnalyzer, export_report
 
 analyzer = ThreatAnalyzer()
-result = analyzer.analyze(AnalysisRequest(
-    scenario_id="voice_deepfake",
-    target=TargetProfile("Example Company", "Accounting employee"),
-    proposed_control_ids=("callback", "independent_approval"),
-))
+result = analyzer.analyze(
+    AnalysisRequest(
+        scenario_id="voice_deepfake",
+        target=TargetProfile("Example Company", "Accounting employee"),
+        proposed_control_ids=("callback", "independent_approval"),
+    )
+)
 assert result.baseline.score == 20
 assert result.residual.score == 10
 # Widgets can read result.residual.level and result.residual.explanations directly.
@@ -43,3 +45,7 @@ export_report(result, Path("analysis.json"), "json")
 ```
 
 `ValidationError` covers invalid requests; `OSError` covers file failures. `list_scenarios()` returns full immutable scenarios and `list_controls()` returns control IDs, titles, and descriptions. `recommended_controls` contains applicable defenses not already selected.
+
+## Target and campaign views (0.2.0)
+
+The GUI should separately expose target assessment (`AssessmentService`), educational risk scenarios (`ThreatAnalyzer`) and training campaigns (`CampaignService`). Assessment findings must show status and not_checked; never display a partial result as secure. Campaign screens need scope, content preview, exact-plan approval, dispatch status and event summaries. Only DemoTransport is bundled. Show missing providers as not configured rather than enabling live send/call buttons.

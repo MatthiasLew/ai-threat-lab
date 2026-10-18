@@ -68,3 +68,14 @@ PySide6 screens will use the same service. See [GUI handoff](GUI_HANDOFF.md) for
 ## Code security module
 
 `python -m ai_threat_lab review-code example.py` performs local static pattern checks. Use `--format json` or `--output new-report.txt` for export, and optionally `--fail-on-findings` for exit code 1 when candidates exist. See [code review](CODE_REVIEW.md) for exact coverage and limitations. The source is not executed or sent to an API.
+
+## Target-based assessment and campaign previews
+
+```bash
+python -m ai_threat_lab assess path/to/project
+python -m ai_threat_lab assess path/to/message.eml
+python -m ai_threat_lab campaign-demo voice_training
+python -m ai_threat_lab campaign-report examples/training-events.json
+```
+
+`assess` returns JSON with status, evidence and unchecked areas. A website/repository URL is recognized but requires a registered adapter; no remote scan occurs by default. `campaign-demo` uses fictional content and simulated receipts only. Video remains a preview until an approved generated asset exists. Detailed guides: ASSESSMENT.md, CAMPAIGNS.md and INTEGRATIONS.md.

@@ -18,5 +18,7 @@ jobs:
       - run: python -m ruff check .
       - run: python -m pytest -q
       - run: python -m build
-      - run: python -m pip install --force-reinstall --no-deps dist/ai_threat_lab-0.1.0-py3-none-any.whl
+      - run: python -m pip install --force-reinstall --no-deps dist/ai_threat_lab-0.2.0-py3-none-any.whl
       - run: ai-threat-lab analyze voice_deepfake --proposed callback --proposed independent_approval --format json
+      - run: ai-threat-lab campaign-demo voice_training
+      - run: ai-threat-lab assess https://example.invalid
