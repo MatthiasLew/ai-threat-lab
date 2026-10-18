@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.18.0
+
+- Add bounded Go `go.sum` module-content inventory to existing local, recursive and pinned GitHub routes. Keep case-sensitive paths, exact v-prefixed versions and merged origins; omit metadata-only and unsupported records with redacted notices.
+- Check supported h1 field syntax/canonical encoding without verifying checksums or resolving build selection, replacements, workspaces, pseudo-version provenance or reachability. Historical/unused versions may be included.
+- Apply shared manifest/byte/package budgets plus a 20,000-line bound. No Go command, fetch or package installation.
+- Extend offline demo and clean installed-wheel checks with a fictional Go identity; add 56 regression/integration/CLI cases and documentation. OSV requests are fixture-tested only.
+- Advance scan scope to engine 10, retaining old bundle reading and suppressing cross-engine deltas. API setup remains deferred.
+
 ## 0.17.0
 
 - Add bounded offline Kubernetes JSON review for Pod, selected apps/v1 and batch/v1 workload templates, v1 ReplicationController and nested v1 List resources.

@@ -291,7 +291,9 @@ def main() -> None:
                 "--recursive-dependencies",
             )
         )
-        assert nested_inventory["packages"][0]["sources"] == [
+        assert next(p for p in nested_inventory["packages"] if p["ecosystem"] == "PyPI")[
+            "sources"
+        ] == [
             "requirements.txt:1",
             "services/api/requirements.txt:1",
         ]
@@ -300,9 +302,12 @@ def main() -> None:
                 encoding="utf-8"
             )
         )
-        assert len(scan_inventory["packages"][0]["sources"]) == 2
-        assert demo["dependency_ecosystems"] == ["PyPI", "crates.io"]
-        assert {p["ecosystem"] for p in scan_inventory["packages"]} == {"PyPI", "crates.io"}
+        assert (
+            len(next(p for p in scan_inventory["packages"] if p["ecosystem"] == "PyPI")["sources"])
+            == 2
+        )
+        assert demo["dependency_ecosystems"] == ["Go", "PyPI", "crates.io"]
+        assert {p["ecosystem"] for p in scan_inventory["packages"]} == {"Go", "PyPI", "crates.io"}
         assert demo["mail_observations"] == 5
         mail = json.loads(run(executable, "audit", "offline demo/synthetic-message.eml"))
         assert {f["check"] for f in mail["findings"]} == {

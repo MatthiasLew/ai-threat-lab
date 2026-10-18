@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.17.0
+# Test strategy and integration readiness — 0.18.0
 
-The offline suite contains 1228 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1284 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -80,3 +80,7 @@ Tests cover legacy mapping compatibility and duplicate-preserving transport/Webs
 ## Kubernetes JSON review (0.17.0)
 
 Tests cover ten explicit rule families, three container groups, all supported workload paths and nested Lists; absent/restrictive settings; Pod/container context distinction; invalid types and unsupported versions/kinds/OS; fixed pointer/value redaction; JSON byte/depth/escaping/duplicate/non-finite boundaries; global selection/finding/notice caps; UTF-8/BOM/files/links; no network or subprocess execution; local/GitHub/scan/batch parity; HTML/JSON and real CLI exit/no-overwrite behavior; failed demo completion; prior-engine reading and installed-wheel acceptance. No cluster, kubectl, Helm, real deployment or provider account was used.
+
+## Go checksum records (0.18.0)
+
+56 new cases cover exact/prerelease/pseudo/incompatible version spellings, case-sensitive module identities, unsupported paths, malformed/canonical hash fields, metadata-only records, redaction, byte/line/package/notice bounds, deduplication and nested origins. Fixture-backed GitHub collection and OSV payloads, real CLI/local scans and engine-9 compatibility are covered. The clean installed-wheel gate requires Go, Python and Cargo identities in the generated offline demo. No Go toolchain or live advisory submission is required.

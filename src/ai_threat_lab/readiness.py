@@ -20,7 +20,8 @@ def readiness():
             "dependencies",
             "partial",
             "integration_validation_required",
-            "Root/opt-in nested Python/npm/Cargo pins; OSV fixture-tested. "
+            "Root/opt-in nested Python/npm/Cargo pins and Go checksum-record identities; "
+            "OSV fixture-tested. "
             "Other ecosystems remain unchecked.",
         ),
         (

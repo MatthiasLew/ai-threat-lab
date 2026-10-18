@@ -1,10 +1,10 @@
-# Delivery status and remaining work — 0.17.0
+# Delivery status and remaining work — 0.18.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Nine bounded Python AST rule families, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Nine bounded Python AST rule families, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
@@ -61,6 +61,10 @@ Offline saved-header review now shares bounded checks with the one-response HTTP
 ## Kubernetes JSON follow-up (0.17.0)
 
 Selected Pod/workload JSON controls now work in a standalone CLI and local/immutable GitHub project scans, preserving fixed JSON pointer evidence and explicit scope limits. The offline demo and installed-package gate cover ten candidate families without contacting a cluster or executing the manifest. YAML/Helm, admission/defaults/inheritance, RBAC, cluster state, Windows Pod controls and policy conformance remain outside this checker. See [KUBERNETES.md](KUBERNETES.md).
+
+## Go checksum-record follow-up (0.18.0)
+
+Local and pinned GitHub dependency collection now accept bounded `go.sum` module-content records. Metadata-only entries are omitted; names, versions and origins are retained without invoking Go or verifying hashes. Historical/unused versions may be included. The offline demo and installed-wheel gate cover all three generated ecosystems; build selection, replacements, workspace and reachability remain unchecked. See [GO.md](GO.md).
 
 ## Remaining order of work
 

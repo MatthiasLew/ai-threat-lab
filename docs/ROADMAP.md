@@ -177,3 +177,7 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Standalone JSON/HTML CLI, shared local/GitHub project analysis and existing scan/batch reports.
 - [x] Parser/selection bounds, source-free JSON pointers, type/OS/resource gaps and synthetic installed-package acceptance.
 - [ ] YAML/Helm, admission/default/inheritance evaluation, cluster/RBAC/network/runtime/image analysis, Windows Pod controls and standards conformance remain separate work.
+
+## Go checksum-record inventory — 0.18.0
+
+Implemented bounded `go.sum` module-content identities through local/GitHub dependency routes, synthetic OSV payload validation and installed offline demo acceptance. See [GO.md](GO.md). Next dependency work should resolve the selected build graph and replacements before making applicability claims; other languages and application data flow remain separate work. API setup remains deferred.

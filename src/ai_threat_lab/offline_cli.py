@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .acceptance_samples import (
     synthetic_cargo_lock,
+    synthetic_go_sum,
     synthetic_header_capture,
     synthetic_kubernetes_manifest,
     synthetic_message,
@@ -61,6 +62,7 @@ def offline_demo(output, *, now=None):
     (project / "app.py").write_text("eval(user_value)\n", encoding="utf-8")
     (project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
     (project / "Cargo.lock").write_text(synthetic_cargo_lock(), encoding="utf-8")
+    (project / "go.sum").write_text(synthetic_go_sum(), encoding="utf-8")
     docker = project / "Dockerfile"
     docker.write_text("FROM python:latest\nUSER root\n", encoding="utf-8")
     nested = project / "services" / "api"
@@ -89,7 +91,7 @@ def offline_demo(output, *, now=None):
             for item in before_bundle["documents"]["dependency-inventory.json"]["packages"]
         }
     )
-    if ecosystems != ["PyPI", "crates.io"]:
+    if ecosystems != ["Go", "PyPI", "crates.io"]:
         raise ValidationError("Synthetic dependency acceptance failed; demo is incomplete")
     mail_source = root / "synthetic-message.eml"
     mail_source.write_bytes(synthetic_message())

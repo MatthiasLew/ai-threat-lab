@@ -16,6 +16,8 @@ ai-threat-lab audit-deps path/to/requirements.txt
 | `uv.lock` / `poetry.lock` | Versioned registry package records | Local/editable/git sources skipped; no dependency solving |
 | `Cargo.lock` v3/v4 | Exact crates.io name/version records | Local/git/alternate registry sources skipped; no checksum/feature/graph/installed-state validation; see [CARGO.md](CARGO.md) |
 
+| `go.sum` | Supported module-content checksum records with exact Go versions | Metadata-only records omitted; no hash/build-list/workspace verification; historical/unused versions may be included; see [GO.md](GO.md) |
+
 By default, only supported root manifests are read. Add `--recursive-dependencies` for bounded nested discovery, or select a subproject directly. Root symlinks/junctions are rejected; child links/non-regular manifests are skipped. Global limits: 20 manifests, 2 MiB each, 4 MiB aggregate bytes and 500 unique package/ecosystem/version tuples. File/package overflow fails before any OSV request; aggregate-byte/traversal stops preserve explicit unchecked notices. Parser warnings have a detailed-notice cap and omitted count; discovery notices have a separate bounded prefix. See [MONOREPOS.md](MONOREPOS.md) for exact selection semantics.
 
 Names are normalized for PyPI. Identical names/versions are deduplicated and source locations preserved; different versions remain separate queries. All recorded development/optional/platform groups are included. Environment markers and runtime installation are not evaluated. Custom registry provenance is not verified; a public database may describe a different package sharing the name/version.

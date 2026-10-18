@@ -25,12 +25,14 @@ from .dependency_paths import (
 from .dependency_paths import (
     is_manifest as is_manifest,
 )
+from .go_inventory import module_path, module_version, parse_go_sum
 from .models import ValidationError
 from .providers import ProviderError
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PACKAGES = 500
 NAME = {
+    "Go": r"[A-Za-z0-9._~/-]{1,512}",
     "PyPI": r"[A-Za-z0-9][A-Za-z0-9._-]{0,213}",
     "npm": r"(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]{0,213}",
     "crates.io": r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}",
@@ -67,7 +69,11 @@ class Dependency:
             or not isinstance(self.name, str)
             or not re.fullmatch(NAME[self.ecosystem], self.name)
             or not isinstance(self.version, str)
-            or not re.fullmatch(VERSION, self.version)
+            or (
+                not (module_path(self.name) and module_version(self.version))
+                if self.ecosystem == "Go"
+                else not re.fullmatch(VERSION, self.version)
+            )
         ):
             raise ValidationError("Dependency requires a supported name and exact version")
 
@@ -196,7 +202,9 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
         basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")
-            if basename == "Cargo.lock":
+            if basename == "go.sum":
+                parse_go_sum(source, origin, add, note)
+            elif basename == "Cargo.lock":
                 document = tomllib.loads(source)
                 if type(document.get("version")) is not int or document["version"] not in (3, 4):
                     raise ValidationError("Only Cargo lockfile versions 3 and 4 are supported")
@@ -284,7 +292,7 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
             else:
                 raise ValidationError(
                     "Unsupported manifest; use requirements*.txt, package-lock.json, "
-                    "uv.lock, poetry.lock or Cargo.lock"
+                    "uv.lock, poetry.lock, Cargo.lock or go.sum"
                 )
         except ValidationError as exc:
             raise ValidationError(f"Invalid dependency manifest: {origin}; {exc}") from None

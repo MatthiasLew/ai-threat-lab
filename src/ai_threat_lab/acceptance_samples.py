@@ -73,3 +73,8 @@ def synthetic_kubernetes_manifest():
             ],
         },
     }
+
+
+def synthetic_go_sum():
+    """Fictional module and syntactically valid h1 field; never fetched/verified."""
+    return "example.invalid/fixture-module v1.2.3 h1:" + "A" * 43 + "=\n"
