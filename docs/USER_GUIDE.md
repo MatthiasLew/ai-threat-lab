@@ -12,7 +12,7 @@ python -m pip install -e .
 python -m ai_threat_lab --help
 ```
 
-The runtime has no third-party dependencies and makes no network requests. The installation step may download build tools. All scenarios describe fictional targets.
+The runtime has no third-party dependencies. Default commands stay offline; `audit --network` and explicitly approved `ai-explain --send-evidence` can contact their documented services. The installation step may download build tools. All scenarios describe fictional targets.
 
 ## Guided mode
 
@@ -87,3 +87,9 @@ Use the complete campaign workflow in the root README to create a fictional requ
 `--config` is a global option and precedes the command. `providers` lists registrations; `doctor` checks selection without network requests. Exit codes are 0 for completed commands, 1 only for requested code-review findings, 2 for invalid input/file/ledger operations, 3 for missing/failed adapters, and 130 for cancellation. A successful command with an assessment status of partial/not_configured is not a security all-clear.
 
 The CLI currently exposes simulated campaign execution only, irrespective of the configuration. Actual adapters are registered by trusted application code; JSON cannot import them. See PROVIDER_DEVELOPMENT.md.
+
+## Read-only integrations and AI costs (0.4.0)
+
+Use `audit` for the new collectors and `assess` for legacy offline routing. See [LIVE_SETUP.md](LIVE_SETUP.md) for exact commands, scope and credentials, and [API_COSTS.md](API_COSTS.md) for dry-run, budgets, caching and usage reconciliation. Remote adapters are tested with fixtures; live accounts remain unvalidated.
+
+New commands: `audit`, `ai-explain`, `api-costs`, `api-reconcile`. Each provides `--help` and optional `--output`. Missing network consent or invalid input returns 2; integration/storage errors return 3. No automatic retries occur.

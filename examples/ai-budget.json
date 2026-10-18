@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model": "REPLACE_WITH_YOUR_AVAILABLE_MODEL",
+  "input_usd_per_million": "2.00",
+  "output_usd_per_million": "8.00",
+  "daily_budget_usd": "1.00",
+  "max_input_bytes": 12000,
+  "max_output_tokens": 600,
+  "max_calls_per_day": 20,
+  "cache_ttl_seconds": 0,
+  "namespace": "my-approved-project"
+}

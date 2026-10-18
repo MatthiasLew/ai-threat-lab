@@ -44,3 +44,7 @@ Existing project PRs #1 and #2 were merged. Subsequent project work is committed
 ## Integration-ready offline core (0.3.0)
 
 The named adapter registry, strict versioned artifacts and full offline CLI lifecycle are implemented. The expanded behavioral/subprocess suite and installed-wheel verification are release gates. The next implementation step remains selecting and writing concrete external adapters, followed by their controlled integration tests; no live provider has been silently configured.
+
+## Concrete read-only integrations and cost controls (0.4.0)
+
+GitHub, passive HTTPS, basic DNS and selected Gmail settings collectors are implemented, together with program metadata, local secret/manifest observations and a concrete OpenAI Responses explanation adapter. Budget reservations, request caps, optional caching, concurrent deduplication and reconciliation are implemented and fixture-tested. See LIVE_SETUP.md and API_COSTS.md; these supersede older next-adapter notes above. Real-account validation and unimplemented live training services must not be described as complete.

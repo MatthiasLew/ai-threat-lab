@@ -103,7 +103,35 @@ def main() -> None:
             json.loads(run(executable, "assess", "https://example.invalid"))["status"]
             == "not_configured"
         )
-        print("Clean installed wheel: CLI workflows, ledger, catalog and reviewer passed.")
+        run(executable, "audit", source, "--output", "audit.json")
+        configuration = work / "ai-config.json"
+        configuration.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "model": "fixture-model",
+                    "input_usd_per_million": "2",
+                    "output_usd_per_million": "8",
+                }
+            ),
+            encoding="utf-8",
+        )
+        estimate = json.loads(
+            run(
+                executable,
+                "ai-explain",
+                "audit.json",
+                "--ai-config",
+                configuration,
+                "--ledger",
+                "costs.sqlite",
+                "--dry-run",
+            )
+        )
+        assert estimate["network_called"] is False
+        assert json.loads(run(executable, "api-costs", "--ledger", "costs.sqlite"))["days"] == []
+        run(executable, "audit", "https://example.invalid", expected=2)
+        print("Clean installed wheel: offline workflows, audit and AI cost dry-run passed.")
 
 
 if __name__ == "__main__":

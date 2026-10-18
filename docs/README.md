@@ -27,3 +27,6 @@ Start with the project plan to understand what will be built, then read the user
 
 - [Provider development and configuration](PROVIDER_DEVELOPMENT.md)
 - [Test strategy and release gates](TESTING.md)
+
+- [Read-only integration setup and exact readiness](LIVE_SETUP.md)
+- [AI cost controls, configuration and reconciliation](API_COSTS.md)

@@ -51,7 +51,8 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] Local Python AST checks, findings and remediation guidance.
 - [x] Extension documentation without API coupling.
 - [ ] More languages, data-flow analysis and additional rule families, only if needed.
-- [ ] Optional AI integration after access, budget and source-sharing decisions.
+- [x] Optional OpenAI explanation adapter, budget reservations, cache and source-sharing opt-in.
+- [ ] Controlled live validation against the selected model/account.
 
 ## Assessment/campaign integration foundation — implemented
 
@@ -61,5 +62,17 @@ Acceptance: all three scenarios can be demonstrated end to end without network a
 - [x] Content/transport interfaces, exact preview approvals and recipient scope.
 - [x] Cancellation checks, attempted-delivery claims and persistent ledger option.
 - [x] Event aggregation with automated-event exclusion.
-- [ ] Actual GitHub, HTTP/TLS, DNS and mailbox adapters.
+- [x] Concrete read-only GitHub, passive HTTPS, basic DNS and selected Gmail settings adapters.
+- [ ] Live-account/provider validation and broader assessment rules.
 - [ ] Live email/voice/media provider adapters and integration validation.
+
+## Cost-aware read-only integrations — 0.4.0
+
+- [x] Fixed service endpoints, exact host approval, pinned public DNS, verified TLS, bounded reads and no redirects/retries.
+- [x] Immutable GitHub blob verification and explicit skipped-file limits.
+- [x] Local secret-pattern redaction and basic dependency-version observations.
+- [x] AI payload minimization, deduplication, context/output caps and dry-run.
+- [x] Persistent daily/request budgets, concurrency claims, optional TTL cache and usage reconciliation.
+- [x] CLI, wire-contract, malformed-response, concurrency and packaging tests.
+- [ ] Real provider/account integration evidence; no paid calls performed during development.
+- [ ] Active assessments, comprehensive binary/dependency analysis, live communications and media remain separate product work.

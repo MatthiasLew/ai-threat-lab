@@ -15,16 +15,24 @@ A console application accepts a target (repository URL, website, local project/p
 - Offline simulated dispatch and event aggregation.
 - Tests, build packaging, CI and integration documentation.
 
+## Read-only integrations delivered in 0.4.0
+
+- Concrete pinned-commit GitHub source collector, passive HTTPS header audit and basic DNS mail-policy observations.
+- Authenticated Gmail owner/settings collector, with external OAuth consent/refresh and required scopes.
+- Additional local secret/manifest inventory and program metadata.
+- Concrete OpenAI Responses explanations with evidence opt-in, optional TTL caching, persistent budgets and no automatic retries.
+- Deterministic HTTP fixtures and real CLI subprocess tests; no paid/live account validation.
+
 ## Next implementation order
 
-1. Agree the first remote target module and implement its bounded, scope-aware adapter.
-2. Implement GitHub retrieval and reuse local review on selected source files, or implement a passive HTTP/TLS adapter first if web assessment is prioritized.
-3. Integrate a chosen mailbox/DNS provider for evidence-backed mail checks.
-4. Add optional AI for structured interpretation/preview generation after access, budget and data-sharing choices.
-5. Add selected mail/telephony/media transports in a controlled environment with authenticated approvals, idempotency, stop handling and trusted event ingestion.
-6. Connect GUI to the same services and prepare the class demonstration.
+1. Validate the existing read-only integrations against controlled resources and actual provider grants.
+2. Select a real AI model, verify prices/access and test explanation quality and billing controls.
+3. Expand source/dependency rules and validate candidates with appropriate specialist tools.
+4. Define a separate, approved training deployment before selecting mail/telephony/media services; it requires more than a model key.
+5. Add trusted event collection, delivery/provider controls and retention policies if live training enters scope.
+6. Connect GUI to the same services.
 
-Only steps implemented in the current-delivery list are available. Live remote assessment, active testing, actual communications and media generation are not provided by the current CLI. Existing narrative scores are teaching models, not real scan conclusions.
+Current collectors perform partial read-only checks. Active exploitation, credential attacks, live communications, generated audio/video and a production telemetry backend are absent. Existing narrative scores remain teaching models, not real scan conclusions. See LIVE_SETUP.md for precise limits.
 
 ## Open product choices
 

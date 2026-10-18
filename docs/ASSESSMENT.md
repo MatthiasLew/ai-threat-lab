@@ -20,10 +20,14 @@ Reviews up to 100 `.py` files in deterministic directory order. Dependency/build
 
 Reads a single `.eml` file up to 1 MiB. It reports Authentication-Results failures as unverified candidates and differing Reply-To/From headers as a possible warning. These are not definitive phishing detections: headers can be forged and reply routing can legitimately differ. No links or attachments are opened. Mailbox MFA, forwarding, account permissions, DNS policies and cryptographic verification remain unchecked.
 
-## Remote and binary targets
+## Legacy router for remote and binary targets
 
 GitHub URLs, website URLs, mail domains, mailbox accounts and executable files are recognized. Without registered TargetAdapter implementations, their checks return `not_configured`. They do not trigger attacks, port scans, login attempts, mail access or network calls. A future provider requires explicit scope and the relevant technical integration; an AI key alone does not implement those checks.
 
 ## Result contract
 
 `AssessmentResult` includes target, target_kind, status, findings and not_checked. Each finding names the check, its status, concise evidence and recommended action. Distinguish candidates from confirmed vulnerabilities and never interpret a partial/not-configured result as an all-clear.
+
+## Concrete collectors in 0.4.0
+
+Use `audit` for local inventory/metadata or explicitly opted-in GitHub, HTTPS, DNS and Gmail read-only collectors. `assess` keeps its original no-network behavior. [LIVE_SETUP.md](LIVE_SETUP.md) provides exact commands, limits and account requirements. None of these collectors claims a comprehensive audit; network errors and omitted checks are not an all-clear.

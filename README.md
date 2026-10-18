@@ -1,14 +1,16 @@
 # AI Threat Lab
 
-Offline security assessment foundation and training-scenario toolkit for AI-assisted threats.
+Read-only security assessments, optional AI explanations with budget controls, and offline training exercises.
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Training campaigns separately measure verification/reporting behavior using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.3.0
+## Project status — 0.4.0
 
-Implemented: limited Python file/project review, exported-mail header observations, target routing, six educational risk scenarios, three prepared training-campaign scenarios, provider contracts, offline demos, event aggregation, and TXT/JSON outputs.
+Implemented: bounded read-only GitHub retrieval/review, passive HTTPS header checks, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, local Python/secret/manifest review, program metadata, exported-mail observations, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
-Not configured: actual GitHub retrieval, website testing, mailbox/DNS auditing, live email or phone dispatch, synthetic-media generation, or an AI provider. These need concrete adapters and relevant access, not just an API key. The CLI makes no network requests.
+Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
+
+Start with [live setup and capability limits](docs/LIVE_SETUP.md), [AI cost controls](docs/API_COSTS.md), and the [capability matrix](docs/INTEGRATIONS.md).
 
 ## Quick start
 
@@ -29,6 +31,20 @@ python -m ai_threat_lab analyze voice_deepfake --proposed callback --format json
 ```
 
 The installed `ai-threat-lab` entrypoint accepts the same arguments. Exports create a new file and refuse to overwrite existing reports. See the [user guide](docs/USER_GUIDE.md) for all options and expected results.
+
+## Read-only audits and optional AI
+
+```bash
+ai-threat-lab audit path/to/project --output assessment.json
+ai-threat-lab audit https://github.com/owner/repository --network --allow-host github.com
+ai-threat-lab audit https://your-domain.example --network --allow-host your-domain.example
+ai-threat-lab audit mail-domain:your-domain.example --network --allow-host your-domain.example --dkim-selector actual-selector
+# Estimate only: no key or API call. Replace the example model/prices before live use.
+ai-threat-lab ai-explain assessment.json --ai-config examples/ai-budget.json --ledger costs.sqlite --dry-run
+ai-threat-lab api-costs --ledger costs.sqlite
+```
+
+API costs are reduced by local checks first, deduplicated minimal evidence, explicit output limits and optional exact-match caching. Atomic SQLite reservations enforce a local daily budget and request count; uncertain calls retain reservations and are never automatically retried. Example prices are synthetic. See [API_COSTS.md](docs/API_COSTS.md) before transmitting evidence.
 
 ## Complete offline campaign workflow
 

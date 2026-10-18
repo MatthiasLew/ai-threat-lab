@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import sqlite3
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -11,6 +12,7 @@ from .campaign_cli import demo_campaign, report_events
 from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
 from .contracts import approval_to_document, config_from_document, read_document, write_document
+from .integration_cli import COMMANDS, add_commands, run_command
 from .models import AnalysisRequest, TargetProfile, ValidationError
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report, render_json, render_text
@@ -19,9 +21,9 @@ from .workflows import approve_campaign, example_request, prepare_campaign, simu
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="AI Threat Lab — offline assessment and training workflows"
+        description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.3.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.4.0")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
@@ -76,6 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     for command in (example, prepare, approve, simulate, demo, events, assess):
         command.add_argument("--output", type=Path, help="New JSON file path; never overwrite")
+    add_commands(commands)
     return parser
 
 
@@ -109,6 +112,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
         )
         if getattr(args, "output", None) is not None and args.output.exists():
             raise FileExistsError("Output path already exists; choose a new file")
+        if args.command in COMMANDS:
+            return run_command(args)
         if args.command in ("providers", "doctor"):
             payload = (
                 registry.describe(config)
@@ -195,6 +200,9 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
         else:
             print(render_json(result) if args.format == "json" else render_text(result), end="")
         return 0
+    except sqlite3.Error:
+        print("Storage error; inspect any pending API outcome before retrying.", file=sys.stderr)
+        return 3
     except ProviderError as exc:
         print(f"Integration error: {exc}", file=sys.stderr)
         return 3

@@ -1,24 +1,22 @@
-# Integration contracts and current capability boundary (0.3.0)
+# Integration contracts and current capability boundary (0.4.0)
 
-The product goal is an assessment assistant: accept a target, route it to appropriate modules, collect evidence, explain findings, and recommend action. Narrative risk simulations remain educational support. The current release provides local checks and tested adapter contracts; it is not a complete remote pentesting or communications platform.
+Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
-## Current capabilities
-
-| Capability | State | What is still required |
+| Capability | Implemented | Remaining limits |
 | --- | --- | --- |
-| Python file/project review | Implemented, limited AST checks | More rules/languages and data-flow analysis if needed |
-| Exported `.eml` review | Implemented, limited header observations | Trusted server logs, signature validation and attachment/link analysis |
-| GitHub repository URL | Target routing implemented; result is not_configured | Repository retrieval/branch selection adapter and scoped credentials for private repositories |
-| Website URL | Target routing implemented; result is not_configured | Scoped HTTP/TLS assessment adapter; separately authorized active tests |
-| Mail domain | Target routing implemented; result is not_configured | DNS audit adapter for SPF, DKIM and DMARC |
-| Mailbox account | Target routing implemented; result is not_configured | Provider OAuth/permissions and configuration audit adapter |
-| Executable/binary | Target routing implemented; result is not_configured | File-format-specific inspection module |
-| Training content | Offline templates implemented | Optional text/media provider implementing TrainingContentProvider |
-| Email/voice training dispatch | DemoTransport implemented; no live CLI dispatch | Actual transport adapter, credentials, sender/caller setup and cancellation handling |
-| Video training | Preview script implemented | Consented media generation, content-addressed approved asset and delivery adapter |
-| Campaign outcomes | Local event aggregation implemented | Trusted event collection/webhooks and provider-specific deduplication |
+| Local source/project | Selected Python AST, secret patterns, floating npm declarations | No full semantic/data-flow audit or advisory database |
+| Exported `.eml` | Limited header observations | No trusted authentication verification or attachment/link analysis |
+| GitHub | Retrieve pinned default-branch commit/tree/blobs and review selected files | Scoped token for private repos, live validation, broader analysis |
+| Website | Explicit scoped HTTPS request and selected header checks | No crawling, auth/business-logic tests or exploitation |
+| Mail domain | Basic SPF/DMARC checks, supplied-selector DKIM TXT presence via DoH | No full policy evaluation or signature validation |
+| Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
+| Program file | Size, limited format markers and SHA-256 | No disassembly, execution or vulnerability/malware conclusions |
+| AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
+| Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
+| Email/voice/video dispatch | Demo transports and exact preview approval | No actual sending, phone calls, media generation or live tracking backend |
+| Campaign outcomes | Aggregation of imported events | No trusted webhook collection or tracking endpoint |
 
-A model API key alone does not supply mail delivery, telephony, mailbox access, DNS auditing or web vulnerability checks. There are no environment-variable credentials, network SDKs or automatic provider fallbacks in this release.
+Read [LIVE_SETUP.md](LIVE_SETUP.md) for commands, credential types, scopes and hard collection limits; read [API_COSTS.md](API_COSTS.md) for budget, cache, privacy and reconciliation behavior. Fixture-based tests establish local behavior, not real service readiness. A model key does not implement missing communications or assessment capabilities.
 
 ## Assessment adapter
 
@@ -27,13 +25,14 @@ Implement `TargetAdapter.assess(target: str) -> AssessmentResult`. Register it e
 ```python
 from ai_threat_lab.assessment import AssessmentService
 
-# github_adapter is an application-supplied implementation, not bundled software.
+# GithubAudit is bundled for the explicit network audit workflow;
+# an application may also inject its own provider implementation.
 # service = AssessmentService({"github_repository": github_adapter})
 ```
 
 Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
 
-A remote adapter must validate scope and destinations itself, enforce response/time/size bounds, and treat fetched code and page content as untrusted data. The default router makes no HTTP, DNS, mailbox or GitHub requests. Active checks must be a separate explicit operation with a defined target scope, not a side effect of target classification.
+A remote adapter must validate scope and destinations itself, enforce response/time/size bounds, and treat fetched code and page content as untrusted data. The legacy default router makes no HTTP, DNS, mailbox or GitHub requests; the new `audit` workflow explicitly opts into bounded read-only collectors. Active checks must be a separate explicit operation with a defined target scope, not a side effect of target classification.
 
 ## Content provider
 
@@ -49,7 +48,7 @@ A receipt status is `accepted`, `unknown` or `simulated`; acceptance is not proo
 
 The default ledger is process-local. Supply `SQLiteLedger(path)` for atomic persistence across restarts. It stores hashed attempt identifiers rather than addresses/content. An attempt is claimed before provider invocation, including an ambiguous timeout: investigate before retrying. Use the same plan/recipient-derived idempotency key at the provider; local SQLite alone cannot guarantee exactly-once external delivery. Protect the ledger and approval records with deployment access controls.
 
-There is no global bulk-send command or configured live provider. The CLI exposes only offline demos; an application must register actual adapters and supply authorization/approval records explicitly.
+There is no global bulk-send command or configured live provider. The campaign CLI exposes only offline demos; an application must register actual adapters and supply authorization/approval records explicitly.
 
 ## Integration acceptance before live use
 

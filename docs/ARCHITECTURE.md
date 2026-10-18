@@ -64,3 +64,23 @@ The CLI exposes campaigns, campaign-demo, campaign-report and assess. It has no 
 `providers.py` provides an explicit ProviderRegistry and guarded content/target/transport adapters. `contracts.py` parses strict, bounded versioned JSON and handles request/plan/approval roundtrips. `workflows.py` orchestrates the offline saved-file lifecycle for CLI and GUI consumers. External exceptions become redacted integration failures; duplicate delivery claims are atomic in both memory and SQLite.
 
 A host application registers trusted adapter instances and can inject its registry into `cli.main`. Config files select names only and accept no credentials/import paths. Release verification combines in-process behavioral tests, real CLI processes, branch coverage, and a clean installed-wheel test outside the repository.
+
+## Explicit network and AI boundaries (0.4.0)
+
+`integration_cli.py` handles opt-in commands. `remote_audit.py` provides read-only adapters over `http_client.py`; `local_inventory.py` extends local observations. `ai_costs.py` explains compact findings through a fixed OpenAI endpoint and a persistent SQLite budget. Neither AI output nor downloaded code becomes an executable command.
+
+```mermaid
+flowchart TD
+    CLI["CLI audit"] --> Scope["Exact target scope"]
+    Scope --> Local["Local rules"]
+    Scope --> Remote["Read-only collectors"]
+    Local --> Report["Partial evidence report"]
+    Remote --> Report
+    Report --> Consent["Evidence sharing opt-in"]
+    Consent --> Budget["Budget and cache"]
+    Budget --> Cache["Reuse valid cached result"]
+    Budget --> Model["Bounded model response"]
+    Model --> Usage["Record usage or retain reservation"]
+```
+
+See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privacy boundaries. The model receives evidence as untrusted data and has no tool or transport access.

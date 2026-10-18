@@ -18,3 +18,9 @@ reports/
 
 .coverage.*
 coverage.xml
+
+.env.*
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
