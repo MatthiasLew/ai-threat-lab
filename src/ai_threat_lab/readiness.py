@@ -32,7 +32,14 @@ def readiness():
             "website",
             "fixture_tested",
             "integration_validation_required",
-            "One-response HTTPS header observations; broader application tests absent.",
+            "One-response HSTS/CSP/cookie/header observations; browser/application tests absent.",
+        ),
+        (
+            "http_headers",
+            "partial",
+            "not_required",
+            "Offline duplicate-preserving response-header capture review with redacted evidence; "
+            "origin, freshness and browser enforcement unverified.",
         ),
         (
             "exported_mail",

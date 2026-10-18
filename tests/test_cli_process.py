@@ -31,6 +31,7 @@ COMMANDS = (
     "interactive",
     "analyze",
     "review-code",
+    "review-headers",
     "campaigns",
     "campaign-demo",
     "campaign-report",

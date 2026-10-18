@@ -3,6 +3,22 @@
 from email.message import EmailMessage
 
 
+def synthetic_header_capture():
+    return {
+        "schema_version": 1,
+        "url": "https://website.example.invalid/training",
+        "status": 200,
+        "headers": [
+            ["Strict-Transport-Security", "max-age=31536000"],
+            ["Content-Security-Policy", "script-src * 'unsafe-inline' 'unsafe-eval'"],
+            ["X-Content-Type-Options", "nosniff"],
+            ["Referrer-Policy", "no-referrer"],
+            ["Set-Cookie", "training=INERT-DEMO-VALUE; SameSite=None"],
+            ["Set-Cookie", "preferences=INERT; Secure; HttpOnly; SameSite=Lax"],
+        ],
+    }
+
+
 def synthetic_cargo_lock():
     return (
         'version = 4\n[[package]]\nname = "fixture-crate-offline-example"\n'

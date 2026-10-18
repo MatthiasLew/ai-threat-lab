@@ -10,16 +10,31 @@ from .assessment import identify_target
 from .audit_report import merge_reports, render_html
 from .contracts import read_document, write_document
 from .dependencies import AdvisoryCache, OSVAudit, inventory
+from .header_review import audit_header_capture
 from .http_client import PublicHTTPS
 from .local_inventory import local_inventory
 from .models import ValidationError
 from .providers import ProviderError
 from .remote_audit import GithubAudit, GmailAudit, MailDomainAudit, WebsiteAudit
 
-COMMANDS = {"audit", "audit-deps", "audit-report", "ai-explain", "api-costs", "api-reconcile"}
+COMMANDS = {
+    "audit",
+    "audit-deps",
+    "audit-report",
+    "review-headers",
+    "ai-explain",
+    "api-costs",
+    "api-reconcile",
+}
 
 
 def add_commands(commands):
+    headers = commands.add_parser(
+        "review-headers", help="Review a saved HTTPS header capture offline"
+    )
+    headers.add_argument("path", type=Path)
+    headers.add_argument("--format", choices=("json", "html"), default="json")
+    headers.add_argument("--fail-on-findings", action="store_true")
     audit = commands.add_parser(
         "audit", help="Bounded local inventory or opted-in read-only remote audit"
     )
@@ -78,7 +93,7 @@ def add_commands(commands):
     )
     report.add_argument("reports", nargs="+", type=Path)
     report.add_argument("--format", choices=("json", "html"), default="json")
-    for command in (audit, explain, costs, reconcile, dependencies, report):
+    for command in (audit, explain, costs, reconcile, dependencies, report, headers):
         command.add_argument("--output", type=Path, help="New JSON file; never overwrite")
 
 
@@ -117,7 +132,22 @@ def audit_target(args):
 
 
 def run_command(args):
-    if args.command == "audit":
+    code = 0
+    if args.command == "review-headers":
+        result = audit_header_capture(args.path)
+        payload = asdict(result)
+        payload["findings"] = list(payload["findings"])
+        code = 1 if args.fail_on_findings and result.findings else 0
+        if args.format == "html":
+            content = render_html(merge_reports([payload]))
+            if args.output:
+                with args.output.open("x", encoding="utf-8") as stream:
+                    stream.write(content)
+                print(f"Report saved: {args.output}")
+            else:
+                print(content)
+            return code
+    elif args.command == "audit":
         payload = asdict(audit_target(args))
     elif args.command == "audit-deps":
         collected = inventory(args.path, recursive=args.recursive_dependencies)
@@ -171,4 +201,4 @@ def run_command(args):
         payload = ledger.report()
     text = write_document(payload, args.output)
     print(f"Report saved: {args.output}" if args.output else text, end="\n" if args.output else "")
-    return 0
+    return code

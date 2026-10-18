@@ -10,7 +10,7 @@ These are concrete **read-only** integrations, tested with fixture responses. Li
 | Exported email | `ai-threat-lab audit path/to/export.eml` | None | Bounded header/link/attachment-metadata candidates; no visits, payload execution or authenticity verdict |
 | Program file | `ai-threat-lab audit path/to/program.exe` | None | Bounded PE/ELF headers/flags, size and SHA-256; no execution/disassembly/signature trust |
 | GitHub repository | `ai-threat-lab audit https://github.com/owner/repo --network --allow-host github.com` | Public: no key needed. Private: scoped `GITHUB_TOKEN` | Default branch pinned to immutable commit, selected text blobs, digest verification, Python and secret/manifest rules |
-| Website | `ai-threat-lab audit https://your-domain.example --network --allow-host your-domain.example` | Approved exact host and public HTTPS on port 443 | One response; selected CSP/HSTS/MIME/referrer header checks |
+| Website | `ai-threat-lab audit https://your-domain.example --network --allow-host your-domain.example` | Approved exact host and public HTTPS on port 443 | One response; selected CSP/HSTS/MIME/referrer and cookie checks, preserving duplicate fields |
 | Mail domain | `ai-threat-lab audit mail-domain:your-domain.example --network --allow-host your-domain.example --dkim-selector actual-selector` | No key; Cloudflare DoH resolver gets queried domain/selector | SPF/DMARC presence and basic policy checks; supplied DKIM TXT presence |
 | Gmail mailbox | `ai-threat-lab audit mailbox:owner@example.com --network --allow-host gmail.googleapis.com` | `GMAIL_ACCESS_TOKEN`, enabled Gmail API and suitable OAuth/admin permissions | Authenticated profile must match target; automatic forwarding and forwarding filters |
 | AI explanation | See [API_COSTS.md](API_COSTS.md) | `OPENAI_API_KEY`, available model, explicit prices/budget and evidence-sharing opt-in | Explain the existing findings and their limitations |
@@ -71,3 +71,7 @@ The `training-*` commands provide persistent, approved **local text rehearsals**
 ## Offline PE/ELF program paths (0.11.0)
 
 `audit PATH_TO_PROGRAM` and `scan PATH_TO_PROGRAM --output-dir NEW_DIR` now perform selected bounded PE/ELF structure/flag checks. No account, API, subprocess or execution is used. Malformed/unsupported structures preserve hash/size and explicit gaps. See [BINARY_AUDIT.md](BINARY_AUDIT.md).
+
+## Offline saved response alternative (0.16.0)
+
+`ai-threat-lab review-headers capture.json --output header-review.json` parses a strict saved capture without DNS, HTTP, cookies being sent, credentials or a provider key. It shares bounded checks with WebsiteAudit but does not authenticate the supplied origin or freshness. Format, flags and privacy limits: [HTTP_HEADERS.md](HTTP_HEADERS.md).

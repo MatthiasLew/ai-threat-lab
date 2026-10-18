@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.15.0
+# Offline acceptance kit — 0.16.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -21,6 +21,8 @@ The inert mail fixture produces exactly five aggregate candidates: HTTP, IP-lite
 
 The demo also produces `local-batch/`: a new scan of the after-project plus the fictional mail, with two targets and five candidate observations in one report. `batch_targets` is 2. `batch-check` validates the child bundles and derived report before the demo completion marker is written.
 
+The generated `response-headers.json` capture contains two separate synthetic cookies and a permissive CSP. `header_observations` is 6. The local JSON/HTML review contains static observations without cookie/policy values; the declared `.invalid` URL is never fetched. This separate report is not a scan bundle and has no integrity signature.
+
 ## Output layout
 
 | Path | Purpose |
@@ -38,6 +40,8 @@ The demo also produces `local-batch/`: a new scan of the after-project plus the 
 | `python-patterns.py`, `python-patterns/` | Inert five-pattern source and its standalone scan bundle/report |
 | `synthetic-message.eml`, `mail-observations/` | Fictional message and redacted five-observation scan report |
 | `local-batch/` | Verified two-target offline batch, combined report and final batch index |
+| `response-headers.json` | Synthetic HTTPS capture, including inert example values; never fetched |
+| `headers-review.json`, `headers-review.html` | Redacted six-observation offline header review |
 | `training.sqlite` | Existing private local rehearsal ledger |
 | `training-report.json`, `training-report.html` | Scripted selected outcomes and practice guidance |
 | `readiness.json` | Static implementation inventory, including missing modules |

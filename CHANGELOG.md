@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.16.0
+
+- Add `review-headers` for bounded caller-supplied HTTPS response-header captures, JSON/HTML output, finding-based exits and no-overwrite files; never fetch the declared URL.
+- Share selected HSTS/nosniff/header presence, cookie metadata and CSP script-pattern checks with the existing passive WebsiteAudit collector.
+- Preserve duplicate wire headers in HttpResponse while retaining the legacy mapping; inspect every individual Set-Cookie without comma folding and report missing duplicate coverage for mapping-only adapters.
+- Aggregate cookie observations with names/values omitted; cover selected flags, SameSite and Secure/Host prefixes, while treating malformed/ambiguous entries as unassessed candidates.
+- Observe selected script CSP patterns with explicit nonce/hash, strict-dynamic, split-directive, duplicate and multiple-policy limitations. Do not claim effective browser enforcement.
+- Enforce strict capture/schema/status/header controls and count/byte bounds; omit declared capture URL, unknown header values, tokens, cookies and policy values from new reports.
+- Extend synthetic offline demo and clean installed-wheel acceptance with six header observations. Add no-network/privacy/duplicate/limit/error/CLI tests.
+- Advance scan engine to 8; retain old bundle reading and suppress cross-engine deltas. No API/account setup or live target validation.
+
 ## 0.15.0
 
 - Add `scan-batch` for 1–10 explicit distinct local targets, sequentially using built-in offline collectors; reject remote targets, links, overlapping sources and output inside scanned projects before claiming the destination.

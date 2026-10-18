@@ -8,6 +8,7 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Local source/project | Selected Python AST, secret patterns, floating npm declarations | No full semantic/data-flow audit or advisory database |
 | Exported `.eml` | Bounded header/link/attachment-metadata candidates | No trusted authentication, rendered page, attachment content or malware validation |
 | GitHub | Retrieve pinned default-branch commit/tree/blobs and review selected files | Scoped token for private repos, live validation, broader analysis |
+| Saved HTTPS headers | `review-headers` over strict JSON field pairs | No URL fetch, trusted capture origin, effective browser or session validation |
 | Website | Explicit scoped HTTPS request and selected header checks | No crawling, auth/business-logic tests or exploitation |
 | Mail domain | Basic SPF/DMARC checks, supplied-selector DKIM TXT presence via DoH | No full policy evaluation or signature validation |
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
@@ -67,3 +68,7 @@ The [offline acceptance kit](OFFLINE_ACCEPTANCE.md) adds inert export and synthe
 Opt-in [monorepo inventory](MONOREPOS.md) adds bounded nested manifests to local/GitHub scans without adding a provider or enabling package sharing.
 
 Local program-file paths now use the bounded [PE/ELF header collector](BINARY_AUDIT.md), not only magic-byte metadata. It does not execute files or provide signature/malware/runtime validation.
+
+## Saved response headers (0.16.0)
+
+`review-headers` is an explicit offline workflow, not automatic target routing or a provider adapter. Its assessment documents use `http_response_headers` for report interchange and can be merged by `audit-report`. `scan-batch` does not reinterpret arbitrary JSON files as response captures. See [HTTP_HEADERS.md](HTTP_HEADERS.md).

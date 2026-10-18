@@ -1,10 +1,12 @@
 """Offline acceptance demonstration and explicit capability inventory."""
 
 import html
+from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .acceptance_samples import synthetic_cargo_lock, synthetic_message
+from .acceptance_samples import synthetic_cargo_lock, synthetic_header_capture, synthetic_message
+from .audit_report import merge_reports, render_html
 from .batch_scan import check_batch, run_batch
 from .binary_samples import synthetic_binary_samples
 from .campaigns import CampaignScope, CampaignService, ContentApproval
@@ -17,6 +19,7 @@ from .contracts import (
     write_document,
 )
 from .exercise_export import claim_directory, export_exercise, json_bytes
+from .header_review import audit_header_capture
 from .models import ValidationError
 from .readiness import readiness
 from .scan_bundle import read_bundle
@@ -98,6 +101,18 @@ def offline_demo(output, *, now=None):
     check_batch(root / "local-batch")
     if batch["failed_runs"] or batch["target_count"] != 2 or batch["unique_findings"] != 5:
         raise ValidationError("Synthetic batch acceptance failed; demo is incomplete")
+    header_source = root / "response-headers.json"
+    header_source.write_bytes(json_bytes(synthetic_header_capture()))
+    header_assessment = audit_header_capture(header_source)
+    header_document = asdict(header_assessment)
+    header_document["findings"] = list(header_document["findings"])
+    if len(header_assessment.findings) != 6:
+        raise ValidationError("Synthetic header acceptance failed; demo is incomplete")
+    (root / "headers-review.json").write_bytes(json_bytes(header_document))
+    (root / "headers-review.html").write_text(
+        render_html(merge_reports([header_document])),
+        encoding="utf-8",
+    )
     binary_results = {}
     for name, raw in synthetic_binary_samples().items():
         target = root / name
@@ -168,6 +183,7 @@ def offline_demo(output, *, now=None):
         "python_pattern_observations": patterns["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
+        "header_observations": len(header_assessment.findings),
         "dependency_ecosystems": ecosystems,
         "binary_fixture_observations": binary_results,
         "before_findings": before["unique_findings"],
@@ -189,6 +205,7 @@ def offline_demo(output, *, now=None):
         ("Python pattern observations", "python-patterns/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
+        ("Synthetic HTTP header observations", "headers-review.html"),
         ("Synthetic PE observations", "synthetic-pe/report.html"),
         ("Synthetic ELF observations", "synthetic-elf/report.html"),
         ("Capability inventory", "readiness.json"),

@@ -18,6 +18,7 @@ class HttpResponse:
     status: int
     headers: dict[str, str]
     body: bytes
+    header_items: tuple[tuple[str, str], ...] = ()
 
     def document(self) -> dict:
         try:
@@ -103,9 +104,8 @@ class PublicHTTPS:
             data = response.read(self.max_bytes + 1)
             if len(data) > self.max_bytes:
                 raise ProviderError("Provider response exceeded the size limit")
-            return HttpResponse(
-                response.status, {k.lower(): v for k, v in response.getheaders()}, data
-            )
+            items = tuple((key.lower(), value) for key, value in response.getheaders())
+            return HttpResponse(response.status, dict(items), data, items)
         except (OSError, http.client.HTTPException):
             raise ProviderError("HTTPS request failed; no automatic retry was performed") from None
         finally:

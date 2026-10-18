@@ -314,6 +314,28 @@ def main() -> None:
         }
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
+        assert demo["header_observations"] == 6
+        headers = json.loads(
+            run(
+                executable,
+                "review-headers",
+                "offline demo/response-headers.json",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert len(headers["findings"]) == 6
+        assert "INERT-DEMO-VALUE" not in json.dumps(headers)
+        run(
+            executable,
+            "review-headers",
+            "offline demo/response-headers.json",
+            "--format",
+            "html",
+            "--output",
+            "header report.html",
+        )
+        assert "INERT-DEMO-VALUE" not in (work / "header report.html").read_text(encoding="utf-8")
         checked_batch = json.loads(run(executable, "batch-check", "offline demo/local-batch"))
         assert checked_batch["status"] == "integrity_verified"
         batch = json.loads(

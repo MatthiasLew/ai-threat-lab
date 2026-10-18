@@ -14,6 +14,7 @@ from .code_review import review_source
 from .config_review import NOTICE, configuration_file
 from .dependencies import MAX_BYTES, inventory_sources
 from .dependency_paths import MAX_DEPTH, MAX_ENTRIES, is_manifest, valid_source_path
+from .header_review import inspect_response_headers
 from .http_client import get_document
 from .local_inventory import EXCLUDED, TEXT_SUFFIXES, inspect_text
 from .models import ValidationError
@@ -32,48 +33,27 @@ class WebsiteAudit:
         if identify_target(target) != "website" or urlsplit(target).scheme != "https":
             raise ValidationError("Passive website auditing requires an HTTPS website URL")
         response = self.client.request(target)
-        missing = [
-            "Only one HTTPS response was checked; redirects are not followed.",
-            "No exploitation, authentication, crawling, injection or business-logic testing.",
-            "Header presence alone does not establish secure configuration.",
-        ]
-        findings = []
-        if response.status != 200:
-            missing.append(f"HTTP {response.status}; response security checks were not performed.")
-        else:
-            for header, action in (
-                ("strict-transport-security", "Review and enable an appropriate HSTS policy."),
-                (
-                    "content-security-policy",
-                    "Define and test a restrictive content security policy.",
+        try:
+            findings, missing = inspect_response_headers(
+                response.status, response.header_items or tuple(response.headers.items())
+            )
+        except ValidationError:
+            raise ProviderError("Response headers exceed supported structure or limits") from None
+        return AssessmentResult(
+            target,
+            "website",
+            "partial",
+            findings,
+            (
+                "Only one HTTPS response was checked; redirects are not followed.",
+                *missing,
+                *(
+                    ("Adapter supplied only a header mapping; duplicate fields may be missing.",)
+                    if not response.header_items
+                    else ()
                 ),
-                ("x-content-type-options", "Set X-Content-Type-Options: nosniff."),
-                ("referrer-policy", "Define a privacy-appropriate referrer policy."),
-            ):
-                if not response.headers.get(header, "").strip():
-                    findings.append(
-                        finding("missing_" + header, f"{header} absent in this response", action)
-                    )
-            if response.headers.get("x-content-type-options", "nosniff").lower() != "nosniff":
-                findings.append(
-                    finding(
-                        "invalid_nosniff",
-                        "Unexpected MIME-sniffing header value",
-                        "Set X-Content-Type-Options to nosniff.",
-                    )
-                )
-            hsts = response.headers.get("strict-transport-security", "")
-            if hsts and not re.search(
-                r"(?:^|;)\s*max-age\s*=\s*[1-9][0-9]*(?:\s*;|\s*$)", hsts, re.I
-            ):
-                findings.append(
-                    finding(
-                        "weak_hsts",
-                        "HSTS has no positive max-age",
-                        "Review the effective HSTS policy.",
-                    )
-                )
-        return AssessmentResult(target, "website", "partial", tuple(findings), tuple(missing))
+            ),
+        )
 
 
 @dataclass(frozen=True)

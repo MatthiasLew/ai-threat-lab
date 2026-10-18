@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.15.0
+# Test strategy and integration readiness — 0.16.0
 
-The offline suite contains 1077 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1150 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.5%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -72,3 +72,7 @@ Cargo tests cover supported lock versions, exact SemVer, malformed/duplicate TOM
 ## Local multi-target batches (0.15.0)
 
 Tests cover multiple target routes and source-free combined findings, no-network defaults, invalid/remote/duplicate/overlapping scopes, exact-ten/over-limit selection, output placement, per-target recursive selection, isolated module failures, exit-code precedence, cancellation, no overwrite, tampered/missing/unindexed artifacts, report regeneration after hash recomputation, scope tampering, byte budgets, symlink rejection, deleted-source verification, real processes and clean installed-wheel acceptance. CLI help covers both new commands.
+
+## Response-header review (0.16.0)
+
+Tests cover legacy mapping compatibility and duplicate-preserving transport/WebsiteAudit fields, separate cookies with Expires commas, selected cookie flags/prefixes/SameSite, malformed/duplicate attributes, CSP fallback/directive ordering/nonce/hash/split/multiple policies, report-only exclusion, non-200 omissions, strict schema/control/encoding/status/resource limits, no-network captures, declared-URL/header/cookie/nonce redaction, JSON/HTML merging, CLI exit/no-overwrite behavior, failed demo completion, prior-engine reading and installed-wheel acceptance. HTTPS responses are fixtures; no real website, cookie or provider account was used.

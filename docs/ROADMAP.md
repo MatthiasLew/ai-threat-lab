@@ -163,3 +163,10 @@ See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for each requested input type and t
 - [x] Strict no-overwrite scope checks, bounded report/index publication and child/report consistency verification.
 - [x] Resource, tampering, cancellation, deleted-source, CLI and installed-package acceptance.
 - [ ] Remote batch targets, scheduling, resume/retry, shared history services and authenticated signatures are outside this bounded workflow.
+
+## Offline/shared HTTP header observations — 0.16.0
+
+- [x] Strict saved HTTPS header captures, source-free candidate evidence and JSON/HTML CLI output.
+- [x] Duplicate-preserving transport, individual cookie metadata and selected CSP script patterns shared with WebsiteAudit.
+- [x] No-network, privacy, malformed/resource, CLI, prior-bundle and installed-package tests; six-observation offline demo.
+- [ ] Effective browser policy, session/cookie-purpose evaluation, redirects/crawling and authenticated application checks remain outside this collector.

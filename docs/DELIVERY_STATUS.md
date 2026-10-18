@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.15.0
+# Delivery status and remaining work — 0.16.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -6,7 +6,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | --- | --- | --- |
 | Local project path | Nine bounded Python AST rule families, credential-pattern and literal config observations; root/opt-in nested Python/npm/Cargo exact-version inventory; reports | More language families, data flow, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
-| Website URL | Opted-in single HTTPS response/header observations | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
+| Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
 | Exported email | Bounded headers, selected plain/HTML link properties and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
@@ -53,6 +53,10 @@ Completion of this bounded milestone means these implemented routes pass their d
 ## Local operational workflow (0.15.0)
 
 `scan-batch` runs up to ten explicit non-overlapping local targets sequentially and publishes verified child bundles plus a combined remediation report. `batch-check` validates the index, child evidence and derived reports without reopening sources. A failed target module remains visible while other results are preserved; a publication failure leaves no batch completion marker. The offline demo and installed-package gate exercise the complete path. See [BATCH_SCANS.md](BATCH_SCANS.md).
+
+## HTTP header follow-up (0.16.0)
+
+Offline saved-header review now shares bounded checks with the one-response HTTPS collector. Duplicate Set-Cookie fields are retained by the built-in transport, and reports omit cookie/policy values. The demo and installed CLI gate exercise a six-observation synthetic capture. Browser enforcement, cookie purpose/session state, capture authenticity and broader application analysis remain unchecked. See [HTTP_HEADERS.md](HTTP_HEADERS.md).
 
 ## Remaining order of work
 
