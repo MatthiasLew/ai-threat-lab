@@ -37,7 +37,7 @@ class CodeReviewResult:
     filename: str
     findings: tuple[CodeFinding, ...]
     limitations: tuple[str, ...] = LIMITATIONS
-    engine: str = "python-ast-1.5"
+    engine: str = "python-ast-1.6"
 
 
 def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str:
@@ -268,10 +268,12 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
     )
 
 
-def review_file(path: Path) -> CodeReviewResult:
+def read_python_source(path: Path) -> str:
     path = Path(path)
     if path.suffix.lower() != ".py":
         raise ValidationError("Code review currently accepts a single .py file")
+    if not path.is_file():
+        raise ValidationError("Python source must be a regular file")
     with path.open("rb") as source_file:
         raw = source_file.read(MAX_SOURCE_BYTES + 1)
     if len(raw) > MAX_SOURCE_BYTES:
@@ -281,7 +283,11 @@ def review_file(path: Path) -> CodeReviewResult:
         source = raw.decode(encoding)
     except (SyntaxError, UnicodeError, LookupError) as exc:
         raise ValidationError("Cannot decode Python source encoding") from exc
-    return review_source(source, str(path))
+    return source
+
+
+def review_file(path: Path) -> CodeReviewResult:
+    return review_source(read_python_source(path), str(path))
 
 
 def render_code_review(

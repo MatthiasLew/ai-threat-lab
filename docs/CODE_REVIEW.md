@@ -36,7 +36,7 @@ A finding contains a rule ID, line, column, severity, rationale and recommendati
 
 ## Exact scope of the added patterns
 
-The fourteen rule families use engine `python-ast-1.5` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
+The fourteen rule families use engine `python-ast-1.6` in standalone, local-project and pinned GitHub source review. Calls are parsed, never imported or executed. A dependency such as PyYAML need not be installed on the auditing machine.
 
 PY007 identifies the helper whose defaults disable verification. Explicit overrides and later context mutation are not evaluated: a call with `cert_reqs=ssl.CERT_REQUIRED` still produces a review candidate, not a claim that final verification is disabled.
 
@@ -83,3 +83,7 @@ for finding in result.findings:
 ```
 
 The result is an immutable `CodeReviewResult`. The GUI can render findings separately from scenario risk scores. `review_file` is the local file boundary; `review_source` is suitable for a future editor widget. Neither function invokes a provider.
+
+## Project-directory supplement (0.23.0)
+
+Local/GitHub directory collection additionally links selected flat root Python modules in memory, using already collected source text. It supplements existing per-file findings with cross-file candidates and file-qualified source/call/helper/sink locations. Single-file `review-code` and its SARIF export remain single-file; they do not search imports. Project results use the existing assessment JSON/HTML workflow. See [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md) for exact selection, import resolution and shared limits.

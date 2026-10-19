@@ -123,3 +123,23 @@ def synthetic_python_local_calls():
         "    value = prepare(request.args.get('fixture'))\n"
         "    inspect_example(sqlite3.connect(':memory:'), value)\n"
     )
+
+
+def synthetic_python_project():
+    """Two inert root modules; all imports and helper calls are statically interpreted."""
+    return {
+        "app.py": (
+            "from flask import request\nimport sqlite3\n"
+            "from helpers import prepare, inspect_example\n"
+            "def endpoint():\n"
+            "    value = prepare(request.args.get('fixture'))\n"
+            "    inspect_example(sqlite3.connect(':memory:'), value)\n"
+        ),
+        "helpers.py": (
+            "import os\n"
+            "def prepare(value):\n    return 'fixture ' + value\n"
+            "def inspect_example(connection, value):\n"
+            "    os.system(value)\n"
+            "    connection.execute('SELECT ' + value)\n"
+        ),
+    }

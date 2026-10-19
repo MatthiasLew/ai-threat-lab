@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.0
+
+- Add a supplementary static pass linking selected flat root Python modules through absolute local imports, aliases, argument/return propagation and SQLite identities.
+- Preserve file-qualified source/sink/call/helper evidence and report only supplementary cross-file flow observations. Reuse already-collected local/GitHub source text; perform no target import, installation, execution or additional fetch.
+- Bound input count, selected file attempts/bytes and helper-definition evidence alongside shared flow budgets. Preserve cycle, unavailable/non-function export, unsupported layout, parse/encoding and noncompleting-module gaps; do not fall back to library bindings for known unavailable local modules.
+- Share local source decoding between per-file and project passes; reject non-file Python sources before opening. Single-file review/SARIF remains single-file.
+- Add a two-module inert demo and installed-wheel gate, 61 regression/integration/CLI cases, and scope/usage documentation. API setup remains deferred.
+- Advance Python engine to python-ast-1.6 and scan engine to 15; identify the project pass as python-root-modules-1.0. Retain old bundle reading and suppress cross-engine comparisons.
+
 ## 0.22.0
 
 - Extend PY013/PY014 to selected previously defined module-level same-file helpers, with strict positional/keyword/default binding and argument/return propagation.

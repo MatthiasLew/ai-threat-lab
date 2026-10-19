@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Protocol
 from urllib.parse import urlparse
 
-from .code_review import review_file
+from .code_review import read_python_source, review_source
 from .models import ValidationError, require_text
 
 
@@ -239,10 +239,23 @@ class AssessmentService:
                 FLOW_NOTICE,
                 "Only selected Python AST patterns were checked; no execution or full audit.",
             ]
+            project_sources, unavailable_sources = [], []
             for path in paths:
+                decoded = False
+                origin = (
+                    path.relative_to(Path(target)).as_posix()
+                    if kind == "local_project"
+                    else path.name
+                )
                 try:
-                    result = review_file(path)
+                    source = read_python_source(path)
+                    decoded = True
+                    if kind == "local_project":
+                        project_sources.append((origin, source))
+                    result = review_source(source, str(path))
                 except (ValidationError, OSError) as exc:
+                    if kind == "local_project" and not decoded:
+                        unavailable_sources.append(origin)
                     missing.append(f"Skipped {path}: {type(exc).__name__}")
                     continue
                 missing.extend(
@@ -260,6 +273,12 @@ class AssessmentService:
                     )
                     for f in result.findings
                 )
+            if kind == "local_project":
+                from .python_project_flow import project_flows
+
+                extra, notices = project_flows(project_sources, unavailable=unavailable_sources)
+                findings.extend(extra)
+                missing.extend(notices)
             if traversal_limited:
                 missing.append("Python traversal stopped at the 1000-directory/10000-entry limit.")
             if not paths:

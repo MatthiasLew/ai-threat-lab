@@ -59,7 +59,7 @@ def test_explicit_patterns_and_import_aliases(source, rule):
     result = review_source(source)
     assert [f.rule_id for f in result.findings] == [rule]
     assert result.findings[0].line == 2 and result.findings[0].column == 1
-    assert result.engine == "python-ast-1.5"
+    assert result.engine == "python-ast-1.6"
     assert result.findings[0].rationale and result.findings[0].recommendation
 
 

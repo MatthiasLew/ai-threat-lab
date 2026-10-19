@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.22.0
+# Test strategy and integration readiness — 0.23.0
 
-The offline suite contains 1554 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.7%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The offline suite contains 1615 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.7%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
 
 ## Run the gates
 
@@ -87,7 +87,7 @@ Tests cover ten explicit rule families, three container groups, all supported wo
 
 ## Python web API patterns (0.19.0)
 
-55 new cases cover direct/aliased Jinja autoescape opt-out, Django/MarkupSafe trust markers, PyJWT-style decode/signature options, nonmatching and ambiguous syntax, duplicate/computed/unpacked dictionary keys, static trusted-markup caveats and source-free text/JSON/SARIF. Integration checks cover local projects, immutable GitHub blobs, real CLI exit/no-overwrite behavior, no source execution/network, engine-10 bundle compatibility and incomplete-demo publication. The installed-wheel gate requires eight inert PY005–PY012 observations without importing web frameworks. Findings remain unvalidated candidates.
+61 new cases cover direct/aliased Jinja autoescape opt-out, Django/MarkupSafe trust markers, PyJWT-style decode/signature options, nonmatching and ambiguous syntax, duplicate/computed/unpacked dictionary keys, static trusted-markup caveats and source-free text/JSON/SARIF. Integration checks cover local projects, immutable GitHub blobs, real CLI exit/no-overwrite behavior, no source execution/network, engine-10 bundle compatibility and incomplete-demo publication. The installed-wheel gate requires eight inert PY005–PY012 observations without importing web frameworks. Findings remain unvalidated candidates.
 
 ## Bounded Python flows (0.20.0)
 
@@ -100,3 +100,7 @@ Tests cover ten explicit rule families, three container groups, all supported wo
 ## Bounded same-file calls (0.22.0)
 
 65 new cases cover positional/keyword/positional-only/keyword-only binding, literal defaults, invalid/missing/duplicate/excess arguments, unsupported signatures and unpacking, argument and return propagation, SQLite/request/callable descriptors, aliases, independent caller state, merged source/call-site evidence, recursion and parameter/table/call/evidence bounds. Source-free text/JSON/SARIF, no execution/network, local/GitHub/bundle/real-CLI behavior, engine-13 compatibility and incomplete-demo publication are included. The clean installed-wheel gate verifies a separate three-observation local-helper fixture. These checks validate the documented static abstraction, not real execution paths or exploitability.
+
+## Root Python project linking (0.23.0)
+
+61 new cases cover direct/from/module import aliases, lazy/multi-module links, returned text and SQLite identity, parameterized SQL negatives, ambiguous/rebound/non-function/unsupported exports, API-name shadows, unavailable selected modules, cycles and noncompleting module passes. They verify deterministic file-qualified evidence, same-file suppression, unsupported layouts, type/duplicate/encoding/parse/file/byte/attempt/evidence bounds, shared source decoding, no execution/network, existing CLI/report/bundle/immutable GitHub behavior, engine-14 compatibility and incomplete-demo publication. The clean installed-wheel gate requires the separate three-observation two-module fixture. No actual target import or additional network retrieval is used.

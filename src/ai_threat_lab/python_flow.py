@@ -51,6 +51,7 @@ class Value:
     origins: frozenset[int] = frozenset()
     database: bool = False
     function: int = 0
+    module: str = ""
     call_sites: frozenset[int] = frozenset()
 
 
@@ -89,8 +90,10 @@ class Flow:
         symbols = {value.symbol for value in values}
         database = all(value.database for value in values)
         functions = {value.function for value in values}
+        modules = {value.module for value in values}
         if (
-            (len(functions) > 1 and any(functions))
+            (len(modules) > 1 and any(modules))
+            or (len(functions) > 1 and any(functions))
             or (len(symbols) > 1 and any(symbols))
             or (any(value.database for value in values) and not database)
         ):
@@ -102,6 +105,7 @@ class Flow:
             call_sites=merged.call_sites,
             database=database,
             function=values[0].function if len(functions) == 1 else 0,
+            module=values[0].module if len(modules) == 1 else "",
         )
 
     def join_env(self, states):
@@ -195,7 +199,9 @@ class Flow:
         return {
             key: value
             for key, value in env.items()
-            if (value.symbol or value.function) and not value.origins and not value.database
+            if (value.symbol or value.function or value.module)
+            and not value.origins
+            and not value.database
         }
 
     def analyze_function(self, function, local, *, call_line=None):
@@ -247,8 +253,20 @@ class Flow:
             origins=result.origins,
             database=result.database,
             function=result.function,
+            module=result.module,
             call_sites=frozenset(sorted(sites)[:8]),
         )
+
+    def attribute(self, parent, node):
+        symbol = f"{parent.symbol}.{node.attr}" if parent.symbol else ""
+        origins = parent.origins
+        if parent.symbol == "flask.request" and node.attr in SOURCE_FIELDS:
+            origins = frozenset({node.lineno})
+        return Value(symbol=symbol, origins=origins, call_sites=parent.call_sites)
+
+    def import_bindings(self, statement, env):
+        """Extension boundary for a collector-backed static project module index."""
+        return False
 
     def expr(self, node, env, depth=0):
         if node is None:
@@ -266,12 +284,7 @@ class Flow:
         if isinstance(node, ast.Constant):
             return EMPTY
         if isinstance(node, ast.Attribute):
-            parent = evaluate(node.value)
-            symbol = f"{parent.symbol}.{node.attr}" if parent.symbol else ""
-            origins = parent.origins
-            if parent.symbol == "flask.request" and node.attr in SOURCE_FIELDS:
-                origins = frozenset({node.lineno})
-            return Value(symbol=symbol, origins=origins, call_sites=parent.call_sites)
+            return self.attribute(evaluate(node.value), node)
         if isinstance(node, ast.Subscript):
             value = evaluate(node.value)
             evaluate(node.slice)
@@ -315,15 +328,7 @@ class Flow:
             return EMPTY
         receiver = evaluate(node.func.value) if isinstance(node.func, ast.Attribute) else EMPTY
         method = node.func.attr if isinstance(node.func, ast.Attribute) else ""
-        function = (
-            Value(
-                symbol=f"{receiver.symbol}.{method}" if receiver.symbol else "",
-                origins=receiver.origins,
-                call_sites=receiver.call_sites,
-            )
-            if method
-            else evaluate(node.func)
-        )
+        function = self.attribute(receiver, node.func) if method else evaluate(node.func)
         args = [evaluate(item) for item in node.args]
         kwargs = {item.arg: evaluate(item.value) for item in node.keywords}
         name = function.symbol
@@ -348,7 +353,10 @@ class Flow:
             if method == "cursor":
                 return Value(database=True)
             if method in ("execute", "executemany", "executescript"):
-                self.record("PY014", node, args[0] if args else kwargs.get("sql", EMPTY))
+                query = args[0] if args else kwargs.get("sql", EMPTY)
+                self.record(
+                    "PY014", node, self.merge([query, Value(call_sites=receiver.call_sites)])
+                )
                 return Value(database=True)
         # Only these explicit string/container operations retain input dependencies.
         if (method in TRANSFORMS or method in ("get", "getlist")) and receiver.origins:
@@ -385,6 +393,8 @@ class Flow:
             if self.steps > MAX_STEPS:
                 self.note("expression step/depth limit reached; remaining expressions unchecked.")
                 return
+            if self.import_bindings(statement, env):
+                continue
             if isinstance(statement, ast.Import):
                 for item in statement.names:
                     env[item.asname or item.name.split(".")[0]] = Value(

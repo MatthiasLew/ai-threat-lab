@@ -9,7 +9,7 @@ def readiness():
             "not_required",
             "Selected Python AST rules, local Flask flows with branch joins/one-pass loops "
             "and credential patterns; "
-            "bounded same-file calls; broader language/cross-file analysis absent.",
+            "bounded same-file calls and flat-root project links; packages/src layouts unhandled.",
         ),
         (
             "configuration",

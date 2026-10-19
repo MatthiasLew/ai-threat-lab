@@ -257,6 +257,17 @@ def main() -> None:
         demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
         assert demo["before_findings"] == 3 and demo["after_findings"] == 0
         assert demo["training_channels"] == ["email", "voice", "video"]
+        assert demo["python_project_flow_observations"] == 3
+        project_assessment = json.loads(
+            run(executable, "audit", "offline demo/python-project-fixture")
+        )
+        assert {f["check"] for f in project_assessment["findings"]} == {"PY005", "PY013", "PY014"}
+        assert all(
+            "cross-file candidate" in f["evidence"]
+            for f in project_assessment["findings"]
+            if f["check"] != "PY005"
+        )
+        run(executable, "scan-check", "offline demo/python-project-flow")
         assert demo["python_local_call_observations"] == 3
         calls_review = json.loads(
             run(executable, "review-code", "offline demo/python-local-calls.py", "--format", "json")

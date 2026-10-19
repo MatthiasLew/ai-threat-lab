@@ -230,7 +230,7 @@ def test_engine_nine_remains_readable_but_not_comparable(tmp_path):
     (tmp_path / "go.sum").write_text(record())
     ScanService(assessor).run(ScanOptions(str(tmp_path)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-14"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-15"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-9"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

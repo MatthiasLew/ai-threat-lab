@@ -197,3 +197,7 @@ Implemented possible-origin joins for selected if/else/elif, conditional/boolean
 ## Bounded same-file function contexts — 0.22.0
 
 Implemented prior-defined module-level helper argument/return propagation with strict binding, known callable/SQLite descriptors, bounded contexts, recursion stopping and source/call-site line evidence. See [PYTHON_FLOW.md](PYTHON_FLOW.md). This is not general interprocedural analysis: forward or imported helpers, nested closures, methods/decorators, variadics, runtime global effects and callee exception propagation remain unresolved. API setup remains deferred.
+
+## Selected root Python modules — 0.23.0
+
+Implemented a bounded supplementary pass over collected flat root modules, resolving selected absolute sibling imports and function descriptors without execution. See [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md). General package/src/relative/dynamic resolution, runtime import selection and initializer/global effects remain unresolved; this is not whole-program correctness or vulnerability validation. API setup remains deferred.

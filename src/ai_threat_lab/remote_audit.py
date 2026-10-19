@@ -132,6 +132,7 @@ class GithubAudit:
             missing.append("GitHub truncated the repository tree; unlisted paths were not checked.")
         count, total = 0, 0
         manifests, cache, seen = [], {}, set()
+        project_sources, unavailable_sources = [], []
         entries = tree["tree"]
         if recursive_dependencies and len(entries) > MAX_ENTRIES:
             missing.append("GitHub tree entry inspection limit reached; unlisted paths unchecked.")
@@ -226,6 +227,8 @@ class GithubAudit:
             try:
                 source = raw.decode("utf-8")
             except UnicodeError:
+                if path.suffix == ".py":
+                    unavailable_sources.append(name)
                 missing.append(f"Skipped non-UTF-8 file: {name}")
                 continue
             if len(raw) > 256 * 1024:
@@ -238,6 +241,7 @@ class GithubAudit:
                     findings.extend(review.findings)
                     missing.extend(n for n in review.not_checked if n != KUBERNETES_NOTICE)
             if path.suffix == ".py":
+                project_sources.append((name, source))
                 try:
                     result = review_source(source, name)
                     missing.extend(
@@ -256,6 +260,11 @@ class GithubAudit:
                     )
                 except ValidationError:
                     missing.append(f"Could not parse Python file: {name}")
+        from .python_project_flow import project_flows
+
+        extra, notices = project_flows(project_sources, unavailable=unavailable_sources)
+        findings.extend(extra)
+        missing.extend(notices)
         missing.append(FLOW_NOTICE)
         missing.append(KUBERNETES_NOTICE)
         missing.append(f"Inspected {count} selected files ({total} bytes).")

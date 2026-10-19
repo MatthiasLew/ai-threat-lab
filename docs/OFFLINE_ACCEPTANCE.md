@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.22.0
+# Offline acceptance kit — 0.23.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -104,3 +104,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Same-file helper fixture (0.22.0)
 
 `python-local-calls.py` contains a prior-defined text-returning helper, a prior-defined shell/SQLite helper and an endpoint-shaped function passing selected request input through both. Its verified bundle contains PY005, PY013 and PY014, recorded as `python_local_call_observations: 3`. The two flow observations must include local call-site evidence before the demo completion marker is published. The HTML index links the report. Source is parsed only: no function, framework, command or database is executed. Existing fixture counts remain unchanged.
+
+## Root project fixture (0.23.0)
+
+`python-project-fixture` contains inert `app.py` and `helpers.py`: the caller passes selected HTTP input through a text-returning helper into a shell/SQLite helper in the second file. Its verified bundle contains PY005, PY013 and PY014, recorded as `python_project_flow_observations: 3`. Both flow observations must contain cross-file evidence before the completion marker is published. The index links the report. Target imports, functions, commands and databases are never executed. Existing fixture counts remain unchanged. See [project linking scope](PYTHON_PROJECT_FLOW.md).
