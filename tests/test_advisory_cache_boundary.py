@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+from contextlib import closing
 
 import pytest
 
@@ -19,7 +20,7 @@ def cache(tmp_path):
 
 
 def corrupt(cache, expiry, response):
-    with sqlite3.connect(cache.path) as db:
+    with closing(sqlite3.connect(cache.path)) as db, db:
         db.execute('INSERT OR REPLACE INTO advisories VALUES(?,?,?)',
                    (cache.key(PACKAGE), expiry, response))
 
@@ -177,7 +178,7 @@ def test_write_ttl_starts_after_writer_lock(cache, monkeypatch):
 
     monkeypatch.setattr(cache, 'connect', delayed_connection)
     cache.put(PACKAGE, [])
-    with sqlite3.connect(cache.path) as db:
+    with closing(sqlite3.connect(cache.path)) as db, db:
         assert db.execute('SELECT expires FROM advisories').fetchone()[0] == 102 + cache.ttl
 
 

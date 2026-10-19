@@ -5,7 +5,7 @@ import json
 import socket
 import sqlite3
 import tempfile
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -91,7 +91,7 @@ def main():
         negative_controls += 1
         cache = AdvisoryCache(cache_path)
         package = Dependency('PyPI', 'fixture-a', '1.0', ())
-        with sqlite3.connect(cache_path) as db:
+        with closing(sqlite3.connect(cache_path)) as db, db:
             db.execute('UPDATE advisories SET expires=? WHERE key=?',
                        (float('inf'), cache.key(package)))
         status, out, err = command(args, client)

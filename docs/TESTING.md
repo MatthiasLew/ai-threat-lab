@@ -162,3 +162,5 @@ The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) 
 ### Cache clock ordering correction (0.39.1)
 
 Expiry is rechecked after database reads, and new TTLs start after acquiring the SQLite writer lock. Independent SQL trace controls advance time during the database operation and reproduce both stale-read and shortened-TTL regressions. Invalid post-lock clocks roll back without replacing the previous cache row. Engine 26 and the existing cache schema remain unchanged.
+
+Windows installed acceptance also requires explicit closure of fixture SQLite connections before temporary-directory cleanup; the transaction context alone does not close their handles. The dependency acceptance and new cache fixtures close both transactions and connections.
