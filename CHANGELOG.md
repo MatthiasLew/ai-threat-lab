@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.0
+
+- Add read-only historical signed-event receipts without replaying imports or renewing expired approvals. Require the original signed envelope and registered scope/key bindings.
+- Add combined local rehearsal/event cancellation in one attached SQLite transaction, plus aggregate status that exposes partial cancellation. Require existing distinct DELETE-mode databases in the same private directory.
+- Add rollback, concurrency, path/schema/privacy, real-process and installed-wheel checks, plus independent demo completion checks. No external API, delivery or provider cancellation is added; assessment engines remain unchanged.
+
 ## 0.29.0
 
 - Add a local shared-key training-event protocol, exclusive private key creation and binding of exact caller-approved plans to explicit alias/index, channel, issuer and key fingerprints.

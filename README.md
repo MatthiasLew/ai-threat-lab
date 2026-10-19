@@ -4,7 +4,7 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.29.0
+## Project status — 0.30.0
 
 Current completion criteria: [stable offline CLI scope and release gates](docs/OFFLINE_RELEASE_CRITERIA.md).
 
@@ -227,3 +227,5 @@ Scores are illustrative ordinal assessments, not measured probabilities, financi
 ## Educational boundaries
 
 Training demos and risk simulation consist of local fictional narratives and rule-based assessments. Actual local source/mail checks have explicitly limited coverage. It does not send phishing messages, collect credentials, impersonate real people, clone voices, generate deceptive videos, or attack external systems. Potential losses will be described qualitatively unless the user supplies explicitly fictional amounts.
+
+Local event imports also support historical receipt queries and combined rehearsal/event cancellation. See [local training control](docs/LOCAL_TRAINING_CONTROL.md) for commands and SQLite prerequisites.

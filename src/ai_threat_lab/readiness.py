@@ -94,7 +94,8 @@ def readiness():
             "local_journal",
             "implementation_required",
             "Approved plan/alias/key bindings, HMAC claims, transactional replay/conflict checks "
-            "and cancellation; simulations/automation/adapter claims separate. "
+            "and cancellation; historical read-only receipts and combined local cancellation. "
+            "Simulations/automation/adapter claims separate. "
             "Native provider webhook/delivery and participant identity/action verification absent.",
         ),
         (

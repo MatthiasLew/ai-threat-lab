@@ -57,3 +57,5 @@ GUI, PDF, additional providers and centrally authenticated history follow explic
 ## Rule for advancing work
 
 Every new milestone needs a bounded contract, independent positive/negative controls, failure/resource/privacy checks, CLI/installed-package evidence where applicable, and updated status documents. An unresolved regression blocks acceptance. No milestone is completed solely by adding scenarios, increasing test counts or supplying credentials.
+
+The 0.30.0 [local control workflow](LOCAL_TRAINING_CONTROL.md) closes lost-import-result lookup and coordinated cancellation of existing local ledgers. Native event intake, provider stop reconciliation, durable organization-wide storage, retention and controlled live acceptance remain separate engineering work.

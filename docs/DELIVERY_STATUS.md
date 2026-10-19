@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.29.0
+# Delivery status and remaining work — 0.30.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -112,3 +112,7 @@ Known default-factory SQLite connections now permit bounded synchronous with-bod
 ## Package-binding correctness follow-up (0.26.1)
 
 Assigned package attributes and uncertain module namespaces no longer silently resolve to collected child files. Ordinary attribute access is separated from child-loading imports. Explicit dotted imports retain bounded scope facts, and selected initializer imports establish their own child attributes. Positive/negative regression controls now run through local/GitHub assessment, the offline demo and the installed wheel. No target code is executed; API setup remains deferred.
+
+## Historical receipts and combined local control (0.30.0)
+
+Read-only receipts recover an accepted event result after freshness/expiry/cancellation without reimport. Combined local status exposes partial cancellation; one attached SQLite transaction revokes rehearsal starts, stops running sessions and blocks event acceptance for the registered plan. Existing distinct DELETE-mode files in the same private directory are required. This is local state only, with filesystem/SQLite durability assumptions; provider dispatch/stop and full-product gaps remain open. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).

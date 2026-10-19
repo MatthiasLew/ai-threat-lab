@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.29.0)
+# Integration contracts and current capability boundary (0.30.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -81,3 +81,7 @@ Local program-file paths now use the bounded [PE/ELF header collector](BINARY_AU
 `review-kubernetes` is an explicit local workflow with assessment kind `kubernetes_manifest`, accepted by the existing report merger. Local/GitHub project collection also recognizes supported JSON resources. Arbitrary single JSON paths in the legacy `audit`/`scan` router remain program-file inputs: use the explicit command or select the containing project. No Kubernetes provider account, cluster access or YAML/Helm execution is configured. See [KUBERNETES.md](KUBERNETES.md).
 
 HTML scope and limits: [HTML_REVIEW.md](HTML_REVIEW.md). ZIP metadata scope and limits: [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md).
+
+## Local control boundary (0.30.0)
+
+Historical receipts require the original signed envelope and registered bindings; they attest only to current local journal contents. Combined local cancellation updates rehearsal and event databases together under documented SQLite prerequisites. It does not acknowledge a provider stop or delete exported assets. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).

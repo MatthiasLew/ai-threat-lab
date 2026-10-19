@@ -100,7 +100,7 @@ Event IDs are unique per registered plan. Identical canonical contents return a 
 
 A nonautomated `stop_requested` atomically records a marker for that participant **and provenance stream**. New events in that stream are rejected; an identical accepted retry stays idempotent while the plan is active. A simulation stop cannot block a separate adapter-claim stream. Automated stop claims are excluded and do not assert participant intent. Global journal cancellation stops all new acceptance for the plan permanently. Existing records remain reportable.
 
-These commands control only this local journal. `training-cancel` controls the existing rehearsal ledger separately. No remote transport is cancelled or acknowledged by this module; a future dispatcher must honor and reconcile the relevant stop/cancellation state itself.
+These commands control only this local journal. `training-cancel` controls the existing rehearsal ledger separately. Version 0.30.0 adds [historical receipts and combined local control](LOCAL_TRAINING_CONTROL.md) when both existing databases meet the documented transaction prerequisites. No remote transport is cancelled or acknowledged by this module; a future dispatcher must honor and reconcile the relevant stop/cancellation state itself.
 
 ## Storage, limits and reports
 
@@ -113,3 +113,7 @@ This is a local SQLite journal, not a tamper-proof audit log. File owners can mo
 ## Acceptance
 
 `offline-demo` uses a fresh private key and all three approved fictional channels. Each requires one simulated action, one excluded automated event, idempotent replay, altered-signature rejection and post-cancellation rejection; no adapter action or verified behavior is claimed. Failure blocks demo completion. The installed-wheel gate repeats key creation, registration, signing/import/retry/report/cancellation using only the installed package. Regression tests cover all envelope fields, key/scope/time boundaries, concurrent duplicates/conflicts, writer-lock rechecks and transaction rollback. A fixed signature vector was independently produced with OpenSSL.
+
+## Historical receipt queries (0.30.0)
+
+`training-events-receipt ENVELOPE.json --key-file local-signing.key --ledger event-claims.sqlite` checks an original signed envelope against the existing journal without importing it again. Freshness and plan expiry/cancellation do not block this read; signature and registered scope bindings still apply. It returns `recorded_matching`, `event_id_conflict` or `not_recorded`. Receipt/report commands never create a missing journal. See [local control](LOCAL_TRAINING_CONTROL.md) for limitations.

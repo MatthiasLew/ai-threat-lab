@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.29.0
+# Offline CLI release criteria — 0.30.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -54,3 +54,7 @@ These are separate engineering tracks, not hidden conditions that can be satisfi
 6. Real-environment acceptance, deployment/retention policy and operational support.
 
 Each track needs its own target environment, bounded requirements and acceptance evidence. GUI remains a later client of the same application services. Live brute-force/login attempts, live phishing dispatch, impersonation calls and media generation are not implemented by this offline release.
+
+## Local recovery/control addition (0.30.0)
+
+Require historical signed receipt queries without writes or approval renewal; combined cancellation rollback/idempotency/concurrency; explicit partial-state diagnostics; existing-only bounded distinct DELETE-mode files in one private directory. Demo completion independently checks stored cancellation, stopped session and matching historical receipt. Installed-wheel receipt/status/cancel workflows must pass. External provider control is excluded. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).

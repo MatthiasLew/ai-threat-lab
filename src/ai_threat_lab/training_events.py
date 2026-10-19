@@ -252,35 +252,57 @@ def participant_bindings(document, recipient_count):
     return json.dumps(result, sort_keys=True, separators=(",", ":"))
 
 
+def validate_event_schema(db, *, schema="main", allow_empty=False):
+    if schema not in ("main", "events"):
+        raise ValidationError("Unsupported event database schema name")
+    revision = db.execute(f"PRAGMA {schema}.user_version").fetchone()[0]
+    tables = {
+        row[0] for row in db.execute(f"SELECT name FROM {schema}.sqlite_master WHERE type='table'")
+    }
+    if revision == 0 and not tables and allow_empty:
+        return False
+    if revision != 1:
+        raise ValidationError("Event journal needs a new empty database or schema version 1")
+    if tables != set(TABLE_COLUMNS):
+        raise ValidationError("Event journal schema tables are incompatible")
+    for table, columns in TABLE_COLUMNS.items():
+        actual = tuple(row[1] for row in db.execute(f"PRAGMA {schema}.table_info({table})"))
+        if actual != columns:
+            raise ValidationError("Event journal schema columns are incompatible")
+    return True
+
+
+def verified_envelope(envelope, key):
+    body = envelope_body(envelope)
+    fingerprint = key_id(key)
+    signature = hmac.new(key, DOMAIN + canonical(body), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, envelope["signature"]):
+        raise ValidationError("Event signature invalid")
+    return body, fingerprint
+
+
 class EventJournal:
-    def __init__(self, path, *, clock=None):
+    def __init__(self, path, *, clock=None, create=True):
+        if type(create) is not bool:
+            raise ValidationError("Event journal create option must be Boolean")
         self.path = Path(path)
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         if self.path.is_symlink() or getattr(self.path, "is_junction", lambda: False)():
             raise ValidationError("Event journal must not be a link/junction")
         if self.path.exists() and not self.path.is_file():
             raise ValidationError("Event journal path must be a regular file")
-        try:
-            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError:
-            pass
-        else:
-            os.close(fd)
-        with self.transaction() as db:
-            revision = db.execute("PRAGMA user_version").fetchone()[0]
-            tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            if revision not in (0, 1) or (revision == 0 and tables):
-                raise ValidationError(
-                    "Event journal needs a new empty database or schema version 1"
-                )
-            if revision == 1:
-                if tables != set(TABLE_COLUMNS):
-                    raise ValidationError("Event journal schema tables are incompatible")
-                for table, columns in TABLE_COLUMNS.items():
-                    # Table names come only from the fixed application schema above.
-                    actual = tuple(row[1] for row in db.execute(f"PRAGMA table_info({table})"))
-                    if actual != columns:
-                        raise ValidationError("Event journal schema columns are incompatible")
+        if create:
+            try:
+                fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                pass
+            else:
+                os.close(fd)
+        elif not self.path.is_file():
+            raise ValidationError("Existing event journal required; no file was created")
+        with self.transaction(write=create) as db:
+            if validate_event_schema(db, allow_empty=create):
+                return
             db.execute(
                 "CREATE TABLE IF NOT EXISTS event_plans (digest TEXT PRIMARY KEY, "
                 "channel TEXT,issuer TEXT,key_hash TEXT,created TEXT,expires TEXT,"
@@ -309,7 +331,8 @@ class EventJournal:
         ):
             raise ValidationError("Event journal file type/size unsupported")
         try:
-            with closing(sqlite3.connect(self.path, timeout=15)) as db:
+            uri = self.path.resolve().as_uri() + ("?mode=rw" if write else "?mode=ro")
+            with closing(sqlite3.connect(uri, timeout=15, uri=True)) as db:
                 db.row_factory = sqlite3.Row
                 db.execute("PRAGMA foreign_keys=ON")
                 db.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, 256 * 1024)
@@ -379,11 +402,7 @@ class EventJournal:
         }
 
     def accept(self, envelope, key):
-        body = envelope_body(envelope)
-        fingerprint = key_id(key)
-        signature = hmac.new(key, DOMAIN + canonical(body), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(signature, envelope["signature"]):
-            raise ValidationError("Event signature invalid")
+        body, fingerprint = verified_envelope(envelope, key)
         sent, occurred = event_time(body["sent_at"]), event_time(body["occurred_at"])
         payload_hash = hashlib.sha256(canonical(body)).hexdigest()
         with self.transaction() as db:
@@ -450,6 +469,59 @@ class EventJournal:
             "plan_digest": body["plan_digest"],
             "provenance": body["provenance"],
             "notice": NOTICE,
+        }
+
+    def receipt(self, envelope, key):
+        """Reconcile local acceptance even after TTL/expiry/cancellation; never import again."""
+        body, fingerprint = verified_envelope(envelope, key)
+        payload_hash = hashlib.sha256(canonical(body)).hexdigest()
+        with self.transaction(write=False) as db:
+            plan = self.plan(db, body["plan_digest"])
+            if (
+                body["channel"] != plan["channel"]
+                or body["issuer"] != plan["issuer"]
+                or fingerprint != plan["key_hash"]
+                or body["participant_id"] not in json.loads(plan["bindings"])
+            ):
+                raise ValidationError("Receipt key/issuer/channel/participant binding differs")
+            prior = db.execute(
+                "SELECT payload_hash FROM event_records WHERE plan=? AND event_id=?",
+                (body["plan_digest"], body["event_id"]),
+            ).fetchone()
+            state = (
+                "not_recorded"
+                if prior is None
+                else "recorded_matching"
+                if prior[0] == payload_hash
+                else "event_id_conflict"
+            )
+            stopped = (
+                db.execute(
+                    "SELECT 1 FROM event_stops WHERE plan=? AND participant=? AND provenance=?",
+                    (body["plan_digest"], body["participant_id"], body["provenance"]),
+                ).fetchone()
+                is not None
+            )
+            current = self.now()
+            status = (
+                "cancelled"
+                if plan["cancelled"]
+                else "expired"
+                if event_time(plan["expires"]) <= current
+                else "active"
+            )
+        return {
+            "schema_version": 1,
+            "mode": "local_event_receipt",
+            "plan_digest": body["plan_digest"],
+            "event_id": body["event_id"],
+            "state_in_this_journal": state,
+            "plan_status": status,
+            "stream_stopped": stopped,
+            "participant_behavior_verified": False,
+            "notice": "Read-only local record check; does not accept, renew or resend anything. "
+            "Not evidence of external delivery, participant behavior or missing history "
+            "in a different/restored journal.",
         }
 
     def cancel(self, plan_digest):

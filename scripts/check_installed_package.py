@@ -491,6 +491,60 @@ def main() -> None:
         assert not claims["participant_behavior_verified"]
         run(*report_args, "--format", "html", "--output", "installed-claims.html")
         run(*report_args, "--output", "installed-claims.html", expected=2)
+        assert demo["combined_local_control"]["both_cancelled"]
+        assert demo["combined_local_control"]["historical_receipt"] == "recorded_matching"
+        receipt_args = [executable, "training-events-receipt", *import_args[2:]]
+        assert json.loads(run(*receipt_args))["state_in_this_journal"] == "recorded_matching"
+        local = json.loads(
+            run(
+                executable,
+                "training-start",
+                "offline demo/email-plan.json",
+                "--approval",
+                "offline demo/email-approval.json",
+                "--participant-id",
+                "demo-email",
+                "--ledger",
+                "installed-local.sqlite",
+            )
+        )
+        control_args = [
+            "--training-ledger",
+            "installed-local.sqlite",
+            "--event-ledger",
+            "installed-events.sqlite",
+            "--plan-digest",
+            event_digest,
+        ]
+        assert (
+            json.loads(run(executable, "training-local-status", *control_args))[
+                "cancellation_state"
+            ]
+            == "not_cancelled"
+        )
+        controlled = json.loads(run(executable, "training-local-cancel", *control_args))
+        assert (
+            controlled["cancellation_state"] == "both_cancelled"
+            and controlled["stopped_sessions"] == 1
+        )
+        assert not json.loads(run(executable, "training-local-cancel", *control_args))["changed"]
+        recovered = json.loads(run(*receipt_args))
+        assert recovered["state_in_this_journal"] == "recorded_matching"
+        assert recovered["plan_status"] == "cancelled"
+        assert (
+            json.loads(
+                run(
+                    executable,
+                    "training-status",
+                    local["session_id"],
+                    "--ledger",
+                    "installed-local.sqlite",
+                )
+            )["status"]
+            == "stopped"
+        )
+        run(*receipt_args, "--output", "installed-receipt.json")
+        run(*receipt_args, "--output", "installed-receipt.json", expected=2)
         run(
             executable,
             "training-events-cancel",

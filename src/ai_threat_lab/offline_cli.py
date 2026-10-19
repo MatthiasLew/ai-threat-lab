@@ -38,6 +38,7 @@ from .contracts import (
 from .exercise_export import claim_directory, export_exercise, json_bytes
 from .header_review import audit_header_capture
 from .html_review import review_html_file
+from .local_training_control import cancel_local_training, local_training_status
 from .models import ValidationError
 from .readiness import readiness
 from .scan_bundle import read_bundle
@@ -131,6 +132,62 @@ def signed_event_fixture(journal, plan, approval, root, key, current):
         "duplicate_rejected": True,
         "altered_signature_rejected": True,
         "cancelled_plan_rejected": True,
+    }
+
+
+def local_control_fixture(root, journal, key, current):
+    recipient = "control@example.invalid"
+    scope = CampaignScope(
+        "synthetic-local-control", "Synthetic owner", (recipient,), current + timedelta(hours=1)
+    )
+    plan = CampaignService().prepare("email_training", scope, (recipient,), (), now=current)
+    approval = ContentApproval(plan.digest, "Synthetic reviewer", current)
+    selected = {
+        "schema_version": 1,
+        "participants": [{"participant_id": "local-control", "recipient_index": 0}],
+    }
+    journal.register(plan, approval, selected, "offline-control", key)
+    lab = TrainingLab(root / "coordinated-training.sqlite", clock=lambda: current)
+    session = lab.start(plan, approval, "local-control")
+    body = {
+        "schema_version": 1,
+        "issuer": "offline-control",
+        "plan_digest": plan.digest,
+        "channel": "email",
+        "provenance": "simulation",
+        "event_id": "local-selection",
+        "participant_id": "local-control",
+        "type": "verification_requested",
+        "automated": False,
+        "occurred_at": current.isoformat(),
+        "sent_at": current.isoformat(),
+    }
+    signed = sign_envelope(body, key)
+    journal.accept(signed, key)
+    historical = EventJournal(journal.path, create=False, clock=lambda: current + timedelta(days=2))
+    if historical.receipt(signed, key)["state_in_this_journal"] != "recorded_matching":
+        raise ValidationError("Synthetic historical receipt acceptance failed; demo incomplete")
+    result = cancel_local_training(lab.path, journal.path, plan.digest, clock=lambda: current)
+    observed = local_training_status(lab.path, journal.path, plan.digest, clock=lambda: current)
+    receipt = historical.receipt(signed, key)
+    if (
+        result["cancellation_state"] != "both_cancelled"
+        or result["stopped_sessions"] != 1
+        or observed["cancellation_state"] != "both_cancelled"
+        or lab.get(session["session_id"])["status"] != "stopped"
+        or receipt["state_in_this_journal"] != "recorded_matching"
+        or receipt["plan_status"] != "cancelled"
+    ):
+        raise ValidationError("Synthetic combined local cancellation failed; demo incomplete")
+    (root / "local-control-plan.json").write_bytes(json_bytes(plan_to_document(plan)))
+    (root / "local-control-event.json").write_bytes(json_bytes(signed))
+    (root / "local-control-status.json").write_bytes(json_bytes(observed))
+    (root / "local-control-receipt.json").write_bytes(json_bytes(receipt))
+    return {
+        "plan_digest": plan.digest,
+        "both_cancelled": True,
+        "stopped_sessions": 1,
+        "historical_receipt": "recorded_matching",
     }
 
 
@@ -485,6 +542,7 @@ def offline_demo(output, *, now=None):
         state = lab.start(plan, approval, "demo-" + channel)
         session_ids.append(state["session_id"])
         lab.record(state["session_id"], action, "demo-selection")
+    combined_control = local_control_fixture(root, event_journal, event_key, current)
     training = lab.report()
     (root / "training-report.json").write_bytes(json_bytes(training))
     (root / "training-report.html").write_text(render_training_html(training), encoding="utf-8")
@@ -522,6 +580,7 @@ def offline_demo(output, *, now=None):
         "comparison": after["comparison"],
         "training_sessions": session_ids,
         "signed_event_fixtures": signed_event_results,
+        "combined_local_control": combined_control,
         "training_channels": ["email", "voice", "video"],
         "notice": "Generated synthetic fixtures only. Selected outcomes are scripted, "
         "not observed participant behavior. Not evidence of real-target or API readiness.",

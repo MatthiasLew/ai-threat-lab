@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from .contracts import approval_from_document, plan_from_document, read_document, write_document
+from .local_training_control import cancel_local_training, local_training_status
 from .training_events import (
     EventJournal,
     create_key,
@@ -17,6 +18,9 @@ COMMANDS = {
     "training-events-import",
     "training-events-report",
     "training-events-cancel",
+    "training-events-receipt",
+    "training-local-status",
+    "training-local-cancel",
 }
 
 
@@ -38,6 +42,21 @@ def add_commands(commands):
     )
     incoming.add_argument("envelope", type=Path)
     incoming.add_argument("--key-file", type=Path, required=True)
+    receipt = commands.add_parser(
+        "training-events-receipt", help="Read prior local acceptance without resubmitting"
+    )
+    receipt.add_argument("envelope", type=Path)
+    receipt.add_argument("--key-file", type=Path, required=True)
+    local_status = commands.add_parser(
+        "training-local-status", help="Read cancellation status across two existing local ledgers"
+    )
+    local_cancel = commands.add_parser(
+        "training-local-cancel", help="Cancel local rehearsal and event intake in one transaction"
+    )
+    for command in (local_status, local_cancel):
+        command.add_argument("--training-ledger", type=Path, required=True)
+        command.add_argument("--event-ledger", type=Path, required=True)
+        command.add_argument("--plan-digest", required=True)
     report = commands.add_parser(
         "training-events-report", help="Aggregate signed claims by provenance"
     )
@@ -47,11 +66,11 @@ def add_commands(commands):
         "training-events-cancel", help="Permanently revoke local event acceptance"
     )
     cancel.add_argument("--plan-digest", required=True)
-    for command in (register, incoming, report, cancel):
+    for command in (register, incoming, receipt, report, cancel):
         command.add_argument(
             "--ledger", type=Path, required=True, help="Separate private event SQLite journal"
         )
-    for command in (key, register, incoming, report, cancel):
+    for command in (key, register, incoming, receipt, report, cancel, local_status, local_cancel):
         command.add_argument("--output", type=Path, help="New output file; never overwrite")
 
 
@@ -67,10 +86,20 @@ def run_command(args):
     elif args.command == "training-events-import":
         event, key = read_envelope(args.envelope), read_key(args.key_file)
         payload = EventJournal(args.ledger).accept(event, key)
+    elif args.command == "training-events-receipt":
+        event, key = read_envelope(args.envelope), read_key(args.key_file)
+        payload = EventJournal(args.ledger, create=False).receipt(event, key)
+    elif args.command in ("training-local-status", "training-local-cancel"):
+        operation = (
+            cancel_local_training
+            if args.command == "training-local-cancel"
+            else local_training_status
+        )
+        payload = operation(args.training_ledger, args.event_ledger, args.plan_digest)
     elif args.command == "training-events-cancel":
         payload = EventJournal(args.ledger).cancel(args.plan_digest)
     else:
-        payload = EventJournal(args.ledger).report(args.plan_digest)
+        payload = EventJournal(args.ledger, create=False).report(args.plan_digest)
         if args.format == "html":
             content = render_event_report(payload)
             if args.output:

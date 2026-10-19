@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.29.0
+# Offline acceptance kit — 0.30.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -136,3 +136,7 @@ The demo now requires all four selected failure/spray/distributed/success-after-
 ## Signed local event claims (0.29.0)
 
 The demo creates a fresh private signing key and separate event journal for all three fictional channels. Each must record one simulation action, exclude one automated event, reject changed signatures, handle identical retry without another write and reject post-cancellation claims. It exports escaped per-channel reports without claiming adapter telemetry or verified behavior. The installed-wheel gate repeats the complete CLI workflow. The demo directory contains a private fixture key and should not be published. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
+
+## Combined local control fixture (0.30.0)
+
+The demo adds one separate fictional session in `coordinated-training.sqlite` and a signed claim in the demo event journal. It checks historical lookup after expiry, cancels both ledgers, then independently reads stored status/session/receipt before publishing completion. The original three-channel session expectations remain separate. `local-control-plan.json`, `local-control-event.json`, `local-control-status.json` and `local-control-receipt.json` document the fixture; the summary includes `combined_local_control`. None measures real participant behavior.

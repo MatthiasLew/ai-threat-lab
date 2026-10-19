@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.29.0
+# Test strategy and integration readiness — 0.30.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -118,3 +118,7 @@ The demo now requires all four selected failure/spray/distributed/success-after-
 ## Signed local event claims (0.29.0)
 
 The demo creates a fresh private signing key and separate event journal for all three fictional channels. Each must record one simulation action, exclude one automated event, reject changed signatures, handle identical retry without another write and reject post-cancellation claims. It exports escaped per-channel reports without claiming adapter telemetry or verified behavior. The installed-wheel gate repeats the complete CLI workflow. The demo directory contains a private fixture key and should not be published. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
+
+## Historical receipt and combined-control gates (0.30.0)
+
+Test unchanged database bytes for receipt/status reads; signature/binding failures; expired/cancelled receipt lookup; missing/conflicting IDs; no implicit creation; malformed schemas, links, hardlinks, URI escaping, size limits and WAL rejection. Inject SQL failures into each database and require rollback of both; concurrent status/cancellation must expose no half-commit. Preserve unrelated and completed sessions. Real CLI and installed-wheel checks cover recovery, idempotency, no overwrite and stopping both local ledgers. SQL fault/concurrency tests do not simulate physical power loss.

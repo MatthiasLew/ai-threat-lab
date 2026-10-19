@@ -130,3 +130,7 @@ Supply the normalized UTC JSON Lines format described in [AUTHENTICATION_LOGS.md
 ## Signed local training-event claims
 
 Five new commands create a local signing key, register an exact approved plan/participant mapping, import a signed saved event, aggregate reports and cancel local acceptance. They do not provide a webhook listener or external transport. Follow the complete [signed-event workflow and protocol](SIGNED_TRAINING_EVENTS.md). Keep this journal separate from existing rehearsal/delivery databases.
+
+## Recover an import result or stop both local ledgers
+
+Use `training-events-receipt ENVELOPE.json --key-file KEY --ledger EVENTS.sqlite` after a lost import response. Use `training-local-status` / `training-local-cancel` with `--training-ledger`, `--event-ledger` and `--plan-digest` to inspect/stop both existing local ledgers. Both databases must be distinct DELETE-mode files in the same private directory. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md). These commands do not control external services.
