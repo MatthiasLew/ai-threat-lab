@@ -43,6 +43,7 @@ from .readiness import readiness
 from .scan_bundle import read_bundle
 from .scan_cli import assessor
 from .scan_engine import ScanOptions, ScanService
+from .training_events import EventJournal, create_key, read_key, render_event_report, sign_envelope
 from .training_lab import LabAction, TrainingLab, render_training_html
 
 COMMANDS = {"readiness", "exercise-export", "offline-demo"}
@@ -61,6 +62,76 @@ def add_commands(commands):
         "offline-demo", help="Run synthetic scan/training acceptance workflow without APIs"
     )
     demo.add_argument("--output-dir", type=Path, required=True)
+
+
+def signed_event_fixture(journal, plan, approval, root, key, current):
+    alias = "demo-" + plan.channel
+    binding = {
+        "schema_version": 1,
+        "participants": [{"participant_id": alias, "recipient_index": 0}],
+    }
+    (root / f"{plan.channel}-event-bindings.json").write_bytes(json_bytes(binding))
+    journal.register(plan, approval, binding, "offline-demo", key)
+    body = {
+        "schema_version": 1,
+        "issuer": "offline-demo",
+        "plan_digest": plan.digest,
+        "channel": plan.channel,
+        "provenance": "simulation",
+        "event_id": "selection",
+        "participant_id": alias,
+        "type": "verification_requested",
+        "automated": False,
+        "occurred_at": current.isoformat(),
+        "sent_at": current.isoformat(),
+    }
+    signed = sign_envelope(body, key)
+    (root / f"{plan.channel}-signed-event.json").write_bytes(json_bytes(signed))
+    if not journal.accept(signed, key)["accepted"] or not journal.accept(signed, key)["duplicate"]:
+        raise ValidationError("Synthetic signed event acceptance/replay failed; demo incomplete")
+    journal.accept(
+        sign_envelope(
+            {**body, "event_id": "automated", "type": "delivered", "automated": True}, key
+        ),
+        key,
+    )
+    try:
+        journal.accept({**signed, "type": "reported"}, key)
+    except ValidationError:
+        pass
+    else:
+        raise ValidationError("Synthetic altered signature accepted; demo incomplete")
+    journal.cancel(plan.digest)
+    try:
+        journal.accept(sign_envelope({**body, "event_id": "after-cancel"}, key), key)
+    except ValidationError:
+        pass
+    else:
+        raise ValidationError("Synthetic cancelled event accepted; demo incomplete")
+    report = journal.report(plan.digest)
+    sim, claim = report["groups"]["simulation"], report["groups"]["adapter_claim"]
+    if (
+        report["status"] != "cancelled"
+        or sim["automated_events_excluded"] != 1
+        or sim["nonautomated_events_by_type"] != {"verification_requested": 1}
+        or sim["claimed_action_participants"] != 1
+        or claim["nonautomated_events_by_type"]
+        or claim["claimed_action_participants"]
+        or report["participant_behavior_verified"]
+        or report["external_transport_validated"]
+    ):
+        raise ValidationError("Synthetic signed event provenance failed; demo incomplete")
+    (root / f"{plan.channel}-signed-events.json").write_bytes(json_bytes(report))
+    (root / f"{plan.channel}-signed-events.html").write_text(
+        render_event_report(report), encoding="utf-8"
+    )
+    return {
+        "simulation_actions": 1,
+        "automated_excluded": 1,
+        "duplicate_rejected": True,
+        "altered_signature_rejected": True,
+        "cancelled_plan_rejected": True,
+    }
 
 
 def offline_demo(output, *, now=None):
@@ -378,6 +449,11 @@ def offline_demo(output, *, now=None):
         namespace_counts[label] = namespace["unique_findings"]
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
+    event_key_file = root / "events-demo.key"
+    create_key(event_key_file)
+    event_key = read_key(event_key_file)
+    event_journal = EventJournal(root / "signed-events.sqlite", clock=lambda: current)
+    signed_event_results = {}
     for channel, action in (
         ("email", LabAction.REPORT),
         ("voice", LabAction.REQUEST_VERIFICATION),
@@ -403,6 +479,9 @@ def offline_demo(output, *, now=None):
         (root / f"{channel}-plan.json").write_bytes(json_bytes(plan_to_document(plan)))
         (root / f"{channel}-approval.json").write_bytes(json_bytes(approval_to_document(approval)))
         export_exercise(plan, approval, root / (channel + "-pack"), now=current)
+        signed_event_results[channel] = signed_event_fixture(
+            event_journal, plan, approval, root, event_key, current
+        )
         state = lab.start(plan, approval, "demo-" + channel)
         session_ids.append(state["session_id"])
         lab.record(state["session_id"], action, "demo-selection")
@@ -442,6 +521,7 @@ def offline_demo(output, *, now=None):
         "after_findings": after["unique_findings"],
         "comparison": after["comparison"],
         "training_sessions": session_ids,
+        "signed_event_fixtures": signed_event_results,
         "training_channels": ["email", "voice", "video"],
         "notice": "Generated synthetic fixtures only. Selected outcomes are scripted, "
         "not observed participant behavior. Not evidence of real-target or API readiness.",
@@ -454,6 +534,10 @@ def offline_demo(output, *, now=None):
         ("Before scan", "scan-before/report.html"),
         ("After scan", "scan-after/report.html"),
         ("Selected training outcomes", "training-report.html"),
+        *(
+            (channel + " signed simulation claims", channel + "-signed-events.html")
+            for channel in ("email", "voice", "video")
+        ),
         *(
             (channel + " rehearsal", channel + "-pack/preview.html")
             for channel in ("email", "voice", "video")

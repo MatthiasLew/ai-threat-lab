@@ -38,7 +38,7 @@ Acceptance: supported settings and message cases have positive/negative fixtures
 
 ## F. Training integrations and observed events — pending implementation
 
-Select consented delivery/media services only when API work resumes. Implement concrete adapters behind existing preview, scope, expiry, cancellation and ledger contracts. Add authenticated event intake, provenance, replay handling and retention controls.
+Select consented delivery/media services only when API work resumes. Implement concrete adapters behind existing preview, scope, expiry, cancellation and ledger contracts. The 0.29.0 local signed-claim journal implements shared-key validation, explicit plan/alias scope, provenance separation and transactional replay/cancellation controls. Native provider intake, participant authentication, actual delivery/stop integration and retention/rotation still require implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
 Acceptance: distinguish preview, accepted delivery, actual participant action, automated event and uncertain outcome. Stop/cancellation works through the real adapter. Local scripted choices are never counted as observed employee behavior.
 

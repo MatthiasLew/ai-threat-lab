@@ -1,4 +1,6 @@
-# Delivery status and remaining work — 0.28.0
+# Delivery status and remaining work — 0.29.0
+
+The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
 The bounded normalized authentication-log milestone adds offline failure/spray/distributed/success-sequence candidates, explicit file routing, reports and acceptance controls. See [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md). No login attempts or account access occur.
 
@@ -15,6 +17,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Exported email | Bounded headers, selected plain/HTML links, HTML forms and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
+| Signed training claims | Local HMAC journal, exact-plan/alias/key scope, freshness, replay/conflict checks, stops and separate simulation/automation/adapter aggregates | Native provider authentication/collection, participant identity/action verification, remote dispatch/stop integration, retention/rotation |
 | Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |
 | Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |

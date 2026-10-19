@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.28.0
+# Test strategy and integration readiness — 0.29.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -114,3 +114,7 @@ The demo creates a saved HTML page, a safer negative control, an HTML-form email
 ## Normalized authentication events (0.28.0)
 
 The demo now requires all four selected failure/spray/distributed/success-after-failure rule families, a zero-candidate time-separated control and verified bundles. CLI/wheel checks cover review-auth-log, invalid policy, output conflicts and redacted reports. Boundary tests and an independent generated prefix-window oracle validate selected temporal semantics. No real logins or API calls occur. See [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md).
+
+## Signed local event claims (0.29.0)
+
+The demo creates a fresh private signing key and separate event journal for all three fictional channels. Each must record one simulation action, exclude one automated event, reject changed signatures, handle identical retry without another write and reject post-cancellation claims. It exports escaped per-channel reports without claiming adapter telemetry or verified behavior. The installed-wheel gate repeats the complete CLI workflow. The demo directory contains a private fixture key and should not be published. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).

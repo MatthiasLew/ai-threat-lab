@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.28.0
+# Offline CLI release criteria — 0.29.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -13,6 +13,10 @@ The new milestone adds saved HTML, shared EML/response HTML authoring checks and
 ## Bounded authentication-log addition — 0.28.0
 
 Acceptance requires strict normalized JSONL parsing, bounded windows/thresholds, duplicate/order/reset controls, source-free evidence, explicit file-only routing, no account/network calls, independent prefix-window oracle checks, paired demo failure controls and clean installed-wheel CLI/bundle validation. Limits and unresolved native provider conversion are documented in [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md).
+
+## Bounded signed-claim journal addition — 0.29.0
+
+Require exact-plan/alias/key binding, strict envelope/time validation, independent HMAC vector, atomic duplicate/conflict/stop behavior, writer-lock scope rechecks, cancellation persistence and simulation/automation/adapter separation. The three-channel demo must reject altered signatures and post-cancellation claims before completion; installed-wheel CLI key/register/import/replay/report/cancel paths must pass. Native provider telemetry remains outside this local contract. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
 ## Required acceptance evidence
 

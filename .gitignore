@@ -24,3 +24,6 @@ coverage.xml
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+
+# Local signing material for offline training event journals
+*.key

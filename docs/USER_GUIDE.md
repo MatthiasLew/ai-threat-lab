@@ -126,3 +126,7 @@ ai-threat-lab scan logins.auth.jsonl --output-dir scans/logins-01
 ```
 
 Supply the normalized UTC JSON Lines format described in [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md). Selected failure patterns are candidates; no account access or login attempts occur. Source/project walks do not automatically ingest authentication logs.
+
+## Signed local training-event claims
+
+Five new commands create a local signing key, register an exact approved plan/participant mapping, import a signed saved event, aggregate reports and cancel local acceptance. They do not provide a webhook listener or external transport. Follow the complete [signed-event workflow and protocol](SIGNED_TRAINING_EVENTS.md). Keep this journal separate from existing rehearsal/delivery databases.

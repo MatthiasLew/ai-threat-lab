@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.28.0)
+# Integration contracts and current capability boundary (0.29.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -21,7 +21,8 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
 | Email/voice/video dispatch | Demo transports and exact preview approval | No actual sending, phone calls, media generation or live tracking backend |
-| Campaign outcomes | Aggregation of imported events | No trusted webhook collection or tracking endpoint |
+| Signed event claims | Local HMAC protocol, exact-plan binding, transactional replay checks and provenance-separated reports | No native provider/webhook/participant authentication, tracking endpoint or remote dispatch |
+| Campaign outcomes | Legacy imported-event aggregation remains untrusted; separate signed local journal available | No trusted webhook collection or tracking endpoint |
 
 Read [LIVE_SETUP.md](LIVE_SETUP.md) for commands, credential types, scopes and hard collection limits; read [API_COSTS.md](API_COSTS.md) for budget, cache, privacy and reconciliation behavior. Fixture-based tests establish local behavior, not real service readiness. A model key does not implement missing communications or assessment capabilities.
 

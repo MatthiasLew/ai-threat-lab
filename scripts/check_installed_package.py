@@ -429,6 +429,77 @@ def main() -> None:
         }
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
+        assert set(demo["signed_event_fixtures"]) == {"email", "voice", "video"}
+        for channel, checks in demo["signed_event_fixtures"].items():
+            assert checks["simulation_actions"] == checks["automated_excluded"] == 1
+            assert checks["duplicate_rejected"] and checks["altered_signature_rejected"]
+            assert checks["cancelled_plan_rejected"]
+        event_plan = json.loads((work / "offline demo/email-plan.json").read_text())
+        event_digest = event_plan["plan_digest"]
+        run(executable, "training-event-keygen", "--key-file", "installed-signing.key")
+        run(
+            executable,
+            "training-events-register",
+            "offline demo/email-plan.json",
+            "--approval",
+            "offline demo/email-approval.json",
+            "--bindings",
+            "offline demo/email-event-bindings.json",
+            "--issuer",
+            "installed-fixture",
+            "--key-file",
+            "installed-signing.key",
+            "--ledger",
+            "installed-events.sqlite",
+        )
+        # This adapter fixture uses only the installed wheel and private temporary key.
+        run(
+            python,
+            "-c",
+            "from datetime import datetime,timezone; import json; "
+            "from pathlib import Path; "
+            "from ai_threat_lab.training_events import read_key,sign_envelope; "
+            "now=datetime.now(timezone.utc).isoformat(); "
+            "plan=json.loads(Path('offline demo/email-plan.json').read_text()); "
+            "body=dict(schema_version=1,issuer='installed-fixture',plan_digest=plan['plan_digest'],"
+            "channel='email',provenance='simulation',event_id='fixture',participant_id='demo-email',"
+            "type='reported',automated=False,occurred_at=now,sent_at=now); "
+            "Path('installed-event.json').write_text(json.dumps(sign_envelope(body,"
+            "read_key('installed-signing.key'))))",
+        )
+        import_args = [
+            executable,
+            "training-events-import",
+            "installed-event.json",
+            "--key-file",
+            "installed-signing.key",
+            "--ledger",
+            "installed-events.sqlite",
+        ]
+        assert json.loads(run(*import_args))["accepted"]
+        assert json.loads(run(*import_args))["duplicate"]
+        report_args = [
+            executable,
+            "training-events-report",
+            "--ledger",
+            "installed-events.sqlite",
+            "--plan-digest",
+            event_digest,
+        ]
+        claims = json.loads(run(*report_args))
+        assert claims["groups"]["simulation"]["nonautomated_events_by_type"] == {"reported": 1}
+        assert not claims["participant_behavior_verified"]
+        run(*report_args, "--format", "html", "--output", "installed-claims.html")
+        run(*report_args, "--output", "installed-claims.html", expected=2)
+        run(
+            executable,
+            "training-events-cancel",
+            "--ledger",
+            "installed-events.sqlite",
+            "--plan-digest",
+            event_digest,
+        )
+        run(*import_args, expected=2)
         assert demo["authentication_checks"] == [
             "auth_distributed_failures",
             "auth_password_spray_pattern",

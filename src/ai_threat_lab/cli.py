@@ -25,6 +25,9 @@ from .scan_cli import run_command as run_scan_command
 from .training_cli import COMMANDS as TRAINING_COMMANDS
 from .training_cli import add_commands as add_training_commands
 from .training_cli import run_command as run_training_command
+from .training_events_cli import COMMANDS as EVENT_COMMANDS
+from .training_events_cli import add_commands as add_event_commands
+from .training_events_cli import run_command as run_event_command
 from .workflows import approve_campaign, example_request, prepare_campaign, simulate_campaign
 
 
@@ -32,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.28.0")
+    parser.add_argument("--version", action="version", version="AI Threat Lab 0.29.0")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
@@ -94,6 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--output", type=Path, help="New JSON file path; never overwrite")
     add_commands(commands)
     add_training_commands(commands)
+    add_event_commands(commands)
     add_scan_commands(commands)
     add_offline_commands(commands)
     return parser
@@ -133,6 +137,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_offline_command(args)
         if args.command in SCAN_COMMANDS:
             return run_scan_command(args)
+        if args.command in EVENT_COMMANDS:
+            return run_event_command(args)
         if args.command in TRAINING_COMMANDS:
             return run_training_command(args)
         if args.command in COMMANDS:

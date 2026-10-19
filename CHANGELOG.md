@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.29.0
+
+- Add a local shared-key training-event protocol, exclusive private key creation and binding of exact caller-approved plans to explicit alias/index, channel, issuer and key fingerprints.
+- Add bounded strict envelope validation, HMAC-SHA256, freshness/scope checks after the writer lock, transactional duplicate/conflict handling, provenance-scoped participant stops and permanent local plan cancellation.
+- Aggregate simulation, automation and adapter assertions separately without claiming participant verification or external delivery. Keep native provider intake, dispatch and retention/rotation engineering deferred.
+- Add five CLI commands, three-channel synthetic acceptance, installed-wheel workflows and signature/time/scope/concurrency/rollback regression controls including an independent OpenSSL signature vector. Assessment engines remain unchanged; API setup remains deferred.
+
 ## 0.28.0
 
 - Add bounded normalized authentication-event review for repeated failures, password-spray-like and distributed patterns, and declared success after failures, without login attempts or account access.

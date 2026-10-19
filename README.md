@@ -4,15 +4,17 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.28.0
+## Project status — 0.29.0
 
 Current completion criteria: [stable offline CLI scope and release gates](docs/OFFLINE_RELEASE_CRITERIA.md).
 
-Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, selected root/src Python package, relative-import and literal importlib linking, local Python (fourteen AST rule families including bounded Flask-to-shell/SQLite flows with branch joins, one-pass loops and bounded same-file calls and selected SQLite connection contexts, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, ZIP path/metadata review, bounded normalized authentication-event patterns, saved HTML/form/resource and exported-mail header/link/form/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
+Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, selected root/src Python package, relative-import and literal importlib linking, local Python (fourteen AST rule families including bounded Flask-to-shell/SQLite flows with branch joins, one-pass loops and bounded same-file calls and selected SQLite connection contexts, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, ZIP path/metadata review, bounded normalized authentication-event patterns, saved HTML/form/resource and exported-mail header/link/form/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, a local signed-claim journal with replay checks and provenance-separated reports, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
 Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Live email/phone campaigns, media generation, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
 Local multi-target workflow: [batch scans](docs/BATCH_SCANS.md).
+
+Signed training claims: [offline journal and adapter boundary](docs/SIGNED_TRAINING_EVENTS.md).
 
 Saved login events: [offline authentication patterns](docs/AUTHENTICATION_LOGS.md).
 

@@ -90,6 +90,14 @@ def readiness():
             "Live dispatch and observed participant telemetry absent.",
         ),
         (
+            "signed_training_events",
+            "local_journal",
+            "implementation_required",
+            "Approved plan/alias/key bindings, HMAC claims, transactional replay/conflict checks "
+            "and cancellation; simulations/automation/adapter claims separate. "
+            "Native provider webhook/delivery and participant identity/action verification absent.",
+        ),
+        (
             "voice_video",
             "text_assets_only",
             "implementation_required",
