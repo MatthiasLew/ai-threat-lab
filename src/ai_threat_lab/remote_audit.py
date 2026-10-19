@@ -4,7 +4,6 @@ import base64
 import hashlib
 import os
 import re
-import shlex
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 from urllib.parse import quote, urlencode, urlsplit
@@ -324,34 +323,117 @@ class GithubAudit:
         )
 
 
+def dns_txt(value):
+    """Decode the bounded quoted-string subset of DNS TXT presentation syntax.
+
+    Unsupported presentations fail closed; shell quoting is not DNS quoting.
+    """
+    if not isinstance(value, str) or not value or len(value) > 262144:
+        raise ProviderError("Invalid or unsupported DNS TXT response")
+    position, chunks = 0, []
+    while position < len(value):
+        if value[position] in " \t":
+            position += 1
+            continue
+        if value[position] != '"':
+            raise ProviderError("Invalid or unsupported DNS TXT response")
+        position += 1
+        chunk = []
+        while position < len(value) and value[position] != '"':
+            char = value[position]
+            position += 1
+            if char == "\\":
+                if position == len(value):
+                    raise ProviderError("Invalid or unsupported DNS TXT response")
+                char = value[position]
+                if char in "0123456789":
+                    digits = value[position:position + 3]
+                    if len(digits) != 3 or any(d not in "0123456789" for d in digits):
+                        raise ProviderError("Invalid or unsupported DNS TXT response")
+                    number = int(digits)
+                    if number > 255:
+                        raise ProviderError("Invalid or unsupported DNS TXT response")
+                    char = chr(number)
+                    position += 3
+                else:
+                    position += 1
+            if not 32 <= ord(char) <= 126:
+                raise ProviderError("Invalid or unsupported DNS TXT response")
+            chunk.append(char)
+            if len(chunk) > 255:
+                raise ProviderError("Invalid or unsupported DNS TXT response")
+        if position == len(value):
+            raise ProviderError("Invalid or unsupported DNS TXT response")
+        chunks.append("".join(chunk))
+        position += 1
+        if position < len(value) and value[position] not in " \t":
+            raise ProviderError("Invalid or unsupported DNS TXT response")
+    result = "".join(chunks)
+    if not chunks or len(result) > 65535:
+        raise ProviderError("Invalid or unsupported DNS TXT response")
+    return result
+
+
 class MailDomainAudit:
     def __init__(self, client, *, selector=None):
-        if selector is not None and not re.fullmatch(r"[A-Za-z0-9_-]{1,63}", selector):
+        if selector is not None and (
+            not isinstance(selector, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,63}", selector)
+        ):
             raise ValidationError("DKIM selector must be one DNS label")
         self.client, self.selector = client, selector
 
     def _txt(self, name):
         url = "https://cloudflare-dns.com/dns-query?" + urlencode({"name": name, "type": "TXT"})
         data = get_document(self.client, url, {"Accept": "application/dns-json"})
-        if data.get("Status") not in (0, 3):
+        status = data.get("Status")
+        if type(status) is not int or status not in (0, 3):
             raise ProviderError("DNS query failed; policy presence cannot be determined")
-        records = []
-        for answer in data.get("Answer", []):
+        if type(data.get("TC", False)) is not bool or data.get("TC", False):
+            raise ProviderError("Truncated or invalid DNS response; policy presence is unknown")
+        if "Question" in data:
+            question = data["Question"]
             if (
-                answer.get("type") == 16
-                and answer.get("name", "").rstrip(".").lower() == name.lower()
+                not isinstance(question, list) or len(question) != 1
+                or not isinstance(question[0], dict)
+                or type(question[0].get("type")) is not int or question[0]["type"] != 16
+                or not isinstance(question[0].get("name"), str)
+                or question[0]["name"].removesuffix(".").lower() != name.lower()
             ):
-                try:
-                    records.append("".join(shlex.split(answer["data"])))
-                except (ValueError, KeyError, TypeError):
-                    raise ProviderError("Invalid DNS TXT response") from None
+                raise ProviderError("DNS response does not match the requested question")
+        answers = data.get("Answer", [])
+        if not isinstance(answers, list) or len(answers) > 256 or (status == 3 and answers):
+            raise ProviderError("Invalid or contradictory DNS answer section")
+        records = []
+        for answer in answers:
+            if (
+                not isinstance(answer, dict)
+                or type(answer.get("type")) is not int or not 1 <= answer["type"] <= 65535
+                or not isinstance(answer.get("name"), str)
+                or len(answer["name"].removesuffix(".")) > 253
+                or not re.fullmatch(
+                    r"(?:[A-Za-z0-9_-]{1,63}\.)*[A-Za-z0-9_-]{1,63}\.?", answer["name"]
+                )
+                or not isinstance(answer.get("data"), str)
+            ):
+                raise ProviderError("Invalid DNS answer metadata")
+            if answer["name"].removesuffix(".").lower() != name.lower():
+                continue
+            if answer["type"] in (5, 39):
+                raise ProviderError("DNS alias resolution is outside this audit; policy is unknown")
+            if answer["type"] == 16:
+                records.append(dns_txt(answer["data"]))
         return records
 
     def assess(self, target):
         if identify_target(target) != "mail_domain":
             raise ValidationError("Expected mail-domain:example.com")
         domain = target.removeprefix("mail-domain:").lower()
-        spf = [x for x in self._txt(domain) if x.lower().startswith("v=spf1")]
+        names = [domain, "_dmarc." + domain]
+        if self.selector:
+            names.append(self.selector + "._domainkey." + domain)
+        if any(len(name) > 253 for name in names):
+            raise ValidationError("Mail DNS query name exceeds 253 characters")
+        spf = [x for x in self._txt(domain) if re.match(r"(?i)^v=spf1(?: |$)", x)]
         dmarc = [x for x in self._txt("_dmarc." + domain) if x.lower().startswith("v=dmarc1;")]
         findings = []
         for label, records in (("spf", spf), ("dmarc", dmarc)):
@@ -364,19 +446,34 @@ class MailDomainAudit:
                     )
                 )
         if len(spf) == 1 and (
-            "+all" in spf[0].split()
+            "+all" in spf[0].lower().split()
             or not any(term.lower() in ("-all", "~all") for term in spf[0].split())
         ):
             findings.append(
                 finding(
                     "weak_spf",
-                    "SPF lacks a restrictive terminal all mechanism",
+                    "SPF has permissive +all or lacks an explicit -all/~all mechanism",
                     "Review legitimate senders and SPF evaluation before tightening policy.",
                 )
             )
         if len(dmarc) == 1:
-            policy = dict(re.findall(r"(?:^|;)\s*([A-Za-z]+)\s*=\s*([^;\s]+)", dmarc[0]))
-            if policy.get("p", "").lower() not in ("quarantine", "reject"):
+            tags = [part.strip() for part in dmarc[0].split(";")]
+            if tags[-1] == "":
+                tags.pop()
+            policy = {}
+            invalid = False
+            for tag in tags:
+                match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)", tag)
+                if not match or match[1] in policy:
+                    invalid = True
+                    break
+                policy[match[1]] = match[2].strip()
+            if invalid or policy.get("p") not in ("none", "quarantine", "reject"):
+                findings.append(finding(
+                    "invalid_dmarc", "DMARC has ambiguous or unsupported policy tags",
+                    "Validate the complete DMARC record before relying on enforcement.",
+                ))
+            elif policy["p"] == "none":
                 findings.append(
                     finding(
                         "monitoring_dmarc",

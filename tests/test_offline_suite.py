@@ -125,6 +125,9 @@ def test_readiness_is_static_and_honest(monkeypatch):
     assert not result["complete_product"] and not result["api_key_alone_sufficient"]
     items = {c["id"]: c for c in result["capabilities"]}
     assert len(items) == len(result["capabilities"])
+    assert items["mail_domain"]["local_status"] == "offline_complete"
+    assert items["mail_domain"]["external_status"] == "integration_validation_required"
+    assert items["mailbox"]["local_status"] == "fixture_tested"
     assert items["binary"]["local_status"] == "static_headers_partial"
     assert items["training"]["external_status"] == "implementation_required"
     # A caller cannot mutate the next invocation's inventory.

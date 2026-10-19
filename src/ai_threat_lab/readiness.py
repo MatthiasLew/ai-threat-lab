@@ -65,10 +65,18 @@ def readiness():
             "no link visits, payload execution, malware or authenticity validation.",
         ),
         (
+            "mail_domain",
+            "offline_complete",
+            "integration_validation_required",
+            "Bounded exact-owner SPF/DMARC and supplied-selector TXT observations; "
+            "typed provider/alias/truncation failures and installed socket-blocked acceptance. "
+            "Full policy, DNSSEC, delivery and real-domain validation remain deferred.",
+        ),
+        (
             "mailbox",
             "fixture_tested",
             "integration_validation_required",
-            "Selected Gmail settings and DNS checks; controlled OAuth/account validation pending.",
+            "Selected Gmail settings; controlled OAuth/account validation pending.",
         ),
         (
             "binary",

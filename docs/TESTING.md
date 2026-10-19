@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.36.0
+# Test strategy and integration readiness — 0.37.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -146,3 +146,7 @@ The existing bounded collector is covered by the finite [offline acceptance cont
 ## Passive HTTPS offline closure (0.36.0)
 
 The finite [passive HTTPS contract](WEBSITE_OFFLINE_ACCEPTANCE.md) covers exact scope/preflight, one GET, duplicate-preserving header review, complete-body-only HTML, retained headers with explicit body gaps, strict JSON/API defaults, native short-read regressions and socket-blocked installed workflows. Engine 23 records changed collection coverage; prior bundles remain readable without cross-engine deltas. Real target/configuration acceptance and authenticated/browser/business-logic assessment remain separate. See [usage and limits](WEBSITE_AUDIT.md).
+
+## Mail-domain DNS offline closure (0.37.0)
+
+The finite [mail-domain collector contract](MAIL_DOMAIN_AUDIT.md) closes typed provider responses, exact-owner TXT collection, optional question binding, truncation/alias/contradiction failures, bounded DNS quoted-string decoding, SPF version selection and visible DMARC tag ambiguity. The socket-blocked installed CLI acceptance checks scope, query count, redaction and saved failure bundles without live or AI calls. Engine 24 preserves prior bundles as readable but prevents cross-engine observation deltas. Full policy/DNSSEC/delivery evaluation and real-domain validation remain deferred; Gmail account integration is separately fixture-tested.

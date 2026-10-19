@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Mail-domain DNS audit, limits and offline acceptance](MAIL_DOMAIN_AUDIT.md)
+
 - [Passive HTTPS audit and response-body limits](WEBSITE_AUDIT.md)
 - [Passive HTTPS offline acceptance](WEBSITE_OFFLINE_ACCEPTANCE.md)
 

@@ -133,6 +133,11 @@ def main() -> None:
             "status": "passed", "positive_requests": 5, "negative_controls": 7,
             "live_requests": 0, "ai_calls": 0,
         }
+        mail_receipt = json.loads(run(python, ROOT / "scripts/check_mail_domain_offline.py"))
+        assert mail_receipt == {
+            "status": "passed", "positive_requests": 5, "scope_rejections": 3,
+            "negative_controls": 6, "live_requests": 0, "ai_calls": 0,
+        }
         run(python, ROOT / "scripts/check_ai_offline.py")
         ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
         assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]
