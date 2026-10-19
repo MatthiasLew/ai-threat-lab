@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.23.0
+# Offline acceptance kit — 0.24.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -108,3 +108,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Root project fixture (0.23.0)
 
 `python-project-fixture` contains inert `app.py` and `helpers.py`: the caller passes selected HTTP input through a text-returning helper into a shell/SQLite helper in the second file. Its verified bundle contains PY005, PY013 and PY014, recorded as `python_project_flow_observations: 3`. Both flow observations must contain cross-file evidence before the completion marker is published. The index links the report. Target imports, functions, commands and databases are never executed. Existing fixture counts remain unchanged. See [project linking scope](PYTHON_PROJECT_FLOW.md).
+
+## Src-package fixture (0.24.0)
+
+`offline-demo` also writes `python-package-fixture/src/example/` containing an empty package marker, a caller with a relative helper import and a shell/SQLite helper. Sources are parsed only. `python-package-flow` must contain PY005, PY013 and PY014, with cross-file evidence for flow candidates, before demo completion is recorded. The summary field `python_package_flow_observations` must equal three. The clean installed-wheel gate repeats the audit and checks the report bundle.

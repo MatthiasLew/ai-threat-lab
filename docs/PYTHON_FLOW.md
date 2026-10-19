@@ -1,4 +1,4 @@
-# Selected Python input-flow analysis — 0.23.0
+# Selected Python input-flow analysis — 0.24.0
 
 `review-code`, local project scans and pinned GitHub scans now perform a bounded local dependency analysis with possible branch joins, one-pass loops and bounded same-file helper contexts alongside the existing API-pattern rules. PY013 connects selected Flask input to shell command arguments; PY014 connects it to query text sent to a statically recognized SQLite connection/cursor. Both are candidates requiring human validation.
 
@@ -8,7 +8,7 @@ ai-threat-lab review-code app.py --format sarif --output review.sarif
 ai-threat-lab scan path/to/project --output-dir scan-results/flow-01
 ```
 
-Local/GitHub directory scans additionally run a selected root-module supplement. The limits and cross-file evidence differ from this per-file pass; see [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md). Single-file `review-code` does not resolve external files.
+Local/GitHub directory scans additionally run a selected root/src regular-package supplement. The limits and cross-file evidence differ from this per-file pass; see [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md). Single-file `review-code` does not resolve external files.
 
 ## What is tracked
 
@@ -29,6 +29,7 @@ This inert example yields PY005 plus PY013 at the shell call, and PY014 at SQLit
 ```python
 from flask import request
 import os, sqlite3
+
 
 def example():
     value = request.args.get("example")
@@ -79,11 +80,14 @@ For example, this inert source produces an API-pattern and flow observation at `
 from flask import request
 import os
 
+
 def prepare(value):
     return "example-tool " + value
 
+
 def run_command(value):
     os.system(value)
+
 
 def endpoint():
     command = prepare(request.args.get("example"))

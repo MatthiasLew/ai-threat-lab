@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.24.0
+
+- Extend supplementary Python linking to collected regular packages, conventional src layouts, absolute dotted imports, lexical relative imports and definite module/helper re-exports.
+- Require collected package markers; expose ambiguous mappings, missing/unavailable or noncompleting parents, import cycles and package-depth limits. Reuse bounded source text without executing initializers or fetching imports.
+- Add package-layout regression, CLI and pinned GitHub tests plus a three-file offline fixture and installed-wheel acceptance gate.
+- Advance Python AST engine to 1.7, project pass to python-project-modules-1.1 and scan engine to 16. Retain older bundle reading, with cross-engine comparisons disabled. API setup remains deferred.
+
 ## 0.23.0
 
 - Add a supplementary static pass linking selected flat root Python modules through absolute local imports, aliases, argument/return propagation and SQLite identities.

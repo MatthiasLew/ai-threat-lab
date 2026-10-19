@@ -268,6 +268,23 @@ def main() -> None:
             if f["check"] != "PY005"
         )
         run(executable, "scan-check", "offline demo/python-project-flow")
+        assert demo["python_package_flow_observations"] == 3
+        package_assessment = json.loads(
+            run(executable, "audit", "offline demo/python-package-fixture")
+        )
+        assert {f["check"] for f in package_assessment["findings"]} == {"PY005", "PY013", "PY014"}
+        assert all(
+            "cross-file candidate" in f["evidence"]
+            for f in package_assessment["findings"]
+            if f["check"] != "PY005"
+        )
+        assert all(
+            "cross-file candidate" in f["evidence"]
+            and "src/example/" in f["evidence"]
+            for f in package_assessment["findings"]
+            if f["check"] != "PY005"
+        )
+        run(executable, "scan-check", "offline demo/python-package-flow")
         assert demo["python_local_call_observations"] == 3
         calls_review = json.loads(
             run(executable, "review-code", "offline demo/python-local-calls.py", "--format", "json")

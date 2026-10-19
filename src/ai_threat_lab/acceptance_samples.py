@@ -143,3 +143,15 @@ def synthetic_python_project():
             "    connection.execute('SELECT ' + value)\n"
         ),
     }
+
+
+def synthetic_python_package():
+    """Inert regular src package with a relative helper import."""
+    sources = synthetic_python_project()
+    return {
+        "src/example/__init__.py": "",
+        "src/example/views.py": sources["app.py"].replace(
+            "from helpers import", "from .helpers import"
+        ),
+        "src/example/helpers.py": sources["helpers.py"],
+    }

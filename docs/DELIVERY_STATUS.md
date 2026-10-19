@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.23.0
+# Delivery status and remaining work — 0.24.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -84,7 +84,7 @@ Selected previously defined module-level Python helpers now accept statically bo
 
 ## Root Python module-linking follow-up (0.23.0)
 
-Collected local/GitHub root modules now support selected absolute sibling imports, aliases, arguments, returns and SQLite identities through the shared bounded flow engine. Supplementary candidates preserve file-qualified source/sink/call/helper evidence. No target imports or extra GitHub requests occur. Packages/src layouts, relative/dynamic imports, installed-module selection, initializer effects and general cross-file semantics remain unresolved. See [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md).
+Collected local/GitHub root modules now support selected absolute sibling imports, aliases, arguments, returns and SQLite identities through the shared bounded flow engine. Supplementary candidates preserve file-qualified source/sink/call/helper evidence. No target imports or extra GitHub requests occur. At this release, packages/src layouts and relative imports were unresolved; see the 0.24.0 follow-up below. Dynamic imports, installed-module selection, initializer effects and general cross-file semantics remain unresolved. See [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md).
 
 ## Remaining order of work
 
@@ -96,3 +96,7 @@ Collected local/GitHub root modules now support selected absolute sibling import
 6. Run a reviewed real-environment acceptance exercise and record evidence/remaining gaps. Build a GUI later using the same application services.
 
 There is no estimated completion date or blanket readiness claim. `readiness` reports this distinction without inspecting credentials or contacting services.
+
+## Regular Python packages and src layouts (0.24.0)
+
+Selected collected regular packages now support absolute dotted and lexical relative imports, including a conventional src root and definite helper/module re-exports. Missing/unavailable initializers, ambiguous root/package mappings, cycles and resource limits retain explicit gaps. Namespace packages, dynamic imports, installed-module selection and initializer runtime effects remain unresolved. The offline demo and installed-wheel gate cover the new layout. API setup remains deferred; a key alone does not complete production readiness.

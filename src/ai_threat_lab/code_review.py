@@ -37,7 +37,7 @@ class CodeReviewResult:
     filename: str
     findings: tuple[CodeFinding, ...]
     limitations: tuple[str, ...] = LIMITATIONS
-    engine: str = "python-ast-1.6"
+    engine: str = "python-ast-1.7"
 
 
 def _qualified_name(node: ast.expr, aliases: dict[str, str]) -> str:

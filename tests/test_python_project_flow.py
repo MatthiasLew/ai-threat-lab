@@ -175,20 +175,24 @@ def test_invalid_or_duplicate_input_fails_without_echoing_source(sources):
 
 
 @pytest.mark.parametrize(
-    "name",
+    "name,supported",
     [
-        "src/helpers.py",
-        "pkg/__init__.py",
-        "__init__.py",
-        "../helpers.py",
-        "/tmp/helpers.py",
-        "a-b.py",
-        "café.py",
+        ("src/helpers.py", True),
+        ("pkg/__init__.py", True),
+        ("__init__.py", False),
+        ("../helpers.py", False),
+        ("/tmp/helpers.py", False),
+        ("a-b.py", False),
+        ("café.py", False),
     ],
 )
-def test_unselected_module_layouts_are_explicitly_unchecked(name):
+def test_module_layout_selection_reports_scope(name, supported):
     findings, notices = project_flows([(name, HELPER)])
-    assert not findings and any("non-flat" in n for n in notices)
+    assert not findings
+    if supported:
+        assert any("inspected 1 modules" in n for n in notices)
+    else:
+        assert any("unsupported module paths/layouts" in n for n in notices)
 
 
 def test_input_and_byte_bounds(monkeypatch):
@@ -287,7 +291,7 @@ def test_engine_fourteen_reading_without_cross_engine_comparison(tmp_path):
     (project / "helpers.py").write_text(HELPER)
     ScanService(assessor).run(ScanOptions(str(project)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-15"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-16"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-14"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

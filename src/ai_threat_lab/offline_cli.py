@@ -14,6 +14,7 @@ from .acceptance_samples import (
     synthetic_python_control_flow,
     synthetic_python_flow,
     synthetic_python_local_calls,
+    synthetic_python_package,
     synthetic_python_project,
 )
 from .audit_report import merge_reports, render_html
@@ -215,6 +216,26 @@ def offline_demo(output, *, now=None):
         )
     ):
         raise ValidationError("Synthetic Python project-flow acceptance failed; demo is incomplete")
+    package_source = root / "python-package-fixture"
+    package_source.mkdir()
+    for name, source in synthetic_python_package().items():
+        path = package_source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+    package_flow = engine.run(ScanOptions(str(package_source)), root / "python-package-flow")
+    package_bundle = read_bundle(root / "python-package-flow")
+    package_findings = package_bundle["documents"]["assessment.json"]["findings"]
+    if (
+        package_flow["failed_modules"]
+        or package_flow["unique_findings"] != 3
+        or {f["check"] for f in package_findings} != {"PY005", "PY013", "PY014"}
+        or not all(
+            "cross-file candidate" in f["evidence"]
+            for f in package_findings
+            if f["check"] in ("PY013", "PY014")
+        )
+    ):
+        raise ValidationError("Synthetic Python package-flow acceptance failed; demo is incomplete")
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -261,6 +282,7 @@ def offline_demo(output, *, now=None):
         "python_control_flow_observations": control["unique_findings"],
         "python_local_call_observations": calls["unique_findings"],
         "python_project_flow_observations": project_flow["unique_findings"],
+        "python_package_flow_observations": package_flow["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
@@ -288,6 +310,7 @@ def offline_demo(output, *, now=None):
         ("Python branch/loop observations", "python-control-flow/report.html"),
         ("Python local-call observations", "python-local-calls/report.html"),
         ("Python cross-file observations", "python-project-flow/report.html"),
+        ("Python package observations", "python-package-flow/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
         ("Synthetic HTTP header observations", "headers-review.html"),
