@@ -16,7 +16,7 @@ Acceptance: documented local workflows run from a clean installed wheel without 
 - Keep delivery status, capability inventory and documentation consistent.
 - Pass all [offline release criteria](OFFLINE_RELEASE_CRITERIA.md), including the six-platform/interpreter CI matrix.
 
-This scope is frozen for stabilization. Additional analyzer features do not replace closing a known defect. Passing this milestone accepts the existing offline subset, not the complete original product.
+The 0.27.0 bounded addition extends this gate to saved HTML, EML form checks and ZIP metadata. See [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md). Subsequent feature expansion requires another bounded milestone. Additional analyzer features do not replace closing a known defect. Passing this milestone accepts the existing offline subset, not the complete original product.
 
 ## C. Deployment-specific code assessment — pending separate scope
 

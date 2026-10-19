@@ -1,10 +1,14 @@
-# Offline CLI release criteria — 0.26.1
+# Offline CLI release criteria — 0.27.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
 ## Scope freeze
 
 Keep the currently documented Python, manifest/configuration, dependency, PE/ELF, exported-mail, reporting, cost-control and local training subsets. Fix defects and missing acceptance coverage before adding another language, framework, attack capability or provider. Unsupported semantics must stay visible as gaps rather than being guessed. New functionality requires a separately bounded milestone with positive/negative controls and an observable completion criterion.
+
+## Bounded addition — 0.27.0
+
+The new milestone adds saved HTML, shared EML/response HTML authoring checks and explicit ZIP metadata targets. Acceptance requires selected positive/negative parser controls, no rendering/member-read checks, preserved header results when a body is unavailable, local/GitHub parity, CLI/single/batch bundle routing, engine-19 compatibility, demo failure controls and clean installed-wheel execution. Limits are documented in [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md). This does not expand the live-provider scope.
 
 ## Required acceptance evidence
 

@@ -58,7 +58,13 @@ class ScanOptions:
         object.__setattr__(
             self, "allowed_hosts", tuple(sorted(set(h.lower() for h in self.allowed_hosts)))
         )
-        if kind in ("local_project", "python_source", "program_file", "mail_message"):
+        if kind in (
+            "local_project",
+            "python_source",
+            "program_file",
+            "mail_message",
+            "html_document",
+        ):
             if linked(Path(self.target)):
                 raise ValidationError("Scan root must not be a symlink/junction")
             object.__setattr__(self, "target", str(Path(self.target).resolve()))
@@ -98,7 +104,7 @@ class ScanOptions:
         return {
             "target": self.target,
             "target_kind": identify_target(self.target),
-            "engine": "read-only-pipeline-19",
+            "engine": "read-only-pipeline-20",
             "network": self.network,
             "allowed_hosts": list(self.allowed_hosts),
             "max_files": self.max_files,

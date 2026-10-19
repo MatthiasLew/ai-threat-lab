@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.0
+
+- Add bounded saved HTML form/resource authoring-pattern checks with optional declared document context, source-free line evidence and explicit browser/encoding/structure gaps.
+- Reuse the parser in selected local/verified GitHub HTML, existing successful HTTPS response bodies and bounded EML HTML parts without additional resource requests or rendering.
+- Add ZIP directory/local-header metadata review, directory preflight limits and aggregate path/collision/symlink/declared-expansion candidates without reading or extracting members.
+- Integrate CLI, single/batch bundles, readiness, positive/negative demo fixtures and installed-wheel acceptance. Advance scan engine to 20; retain old bundle reading and disable cross-engine comparisons. API setup remains deferred.
+
 ## 0.26.1
 
 - Fix false cross-file flows when assigned package attributes were silently replaced by collected child modules; retain uncertainty after skipped module-level namespace barriers.

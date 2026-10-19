@@ -15,6 +15,7 @@ MAX_TEXT_PARTS = 20
 MAX_TEXT_BYTES = 256 * 1024
 MAX_LINKS = 200
 MAX_LINK_LENGTH = 4096
+MAX_HTML_FINDINGS = 200
 ACTIVE_EXTENSIONS = {
     ".exe",
     ".com",
@@ -121,6 +122,7 @@ def inspect_message_content(message):
     counts = Counter()
     notices = set()
     links = text_parts = decoded_bytes = visited = 0
+    html_findings = []
 
     def observe(value, label=""):
         nonlocal links
@@ -215,6 +217,22 @@ def inspect_message_content(message):
             decoded_bytes += len(raw)
             text = raw.decode(part.get_content_charset() or "ascii", errors="strict")
             if kind == "text/html":
+                from .html_review import inspect_html
+
+                observed, gaps = inspect_html(text)
+                remaining = MAX_HTML_FINDINGS - len(html_findings)
+                if len(observed) > remaining:
+                    notices.add("Message HTML finding limit reached; extra candidates omitted.")
+                html_findings.extend(
+                    AssessmentFinding(
+                        "message_" + f.check,
+                        f.status,
+                        f"MIME text part {text_parts}; " + f.evidence,
+                        f.recommendation,
+                    )
+                    for f in observed[:remaining]
+                )
+                notices.update(gaps)
                 parser = _Anchors(observe)
                 parser.feed(text)
                 parser.finish()
@@ -237,4 +255,4 @@ def inspect_message_content(message):
         )
         for check in sorted(counts)
     )
-    return findings, tuple(sorted(notices))
+    return (*findings, *html_findings), tuple(sorted(notices))

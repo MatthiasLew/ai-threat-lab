@@ -32,6 +32,7 @@ COMMANDS = (
     "analyze",
     "review-code",
     "review-headers",
+    "review-html",
     "review-kubernetes",
     "campaigns",
     "campaign-demo",

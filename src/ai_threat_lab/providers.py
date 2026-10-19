@@ -16,6 +16,7 @@ TARGET_KINDS = frozenset(
         "mail_domain",
         "mailbox_account",
         "program_file",
+        "html_document",
     )
 )
 

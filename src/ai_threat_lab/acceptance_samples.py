@@ -195,3 +195,28 @@ def synthetic_python_package_shadowing(*, shadowed):
         "    helpers.inspect_example(sqlite3.connect(':memory:'), value)\n"
     )
     return sources
+
+
+def synthetic_html(*, safer=False):
+    if safer:
+        return (
+            '<form method="post" action="https://website.example.invalid/login">'
+            '<input type="password" name="fictional"></form>'
+            '<script src="https://website.example.invalid/widget.js"></script>'
+        )
+    return (
+        '<form action="http://other.example.invalid/login">'
+        '<input type="password" name="fictional"></form>\n'
+        '<script src="http://cdn.example.invalid/widget.js"></script>'
+    )
+
+
+def synthetic_zip():
+    import io
+    import zipfile
+
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr("../fictional.txt", b"INERT DEMO BYTES")
+        archive.writestr("CON.txt", b"INERT DEMO BYTES")
+    return stream.getvalue()

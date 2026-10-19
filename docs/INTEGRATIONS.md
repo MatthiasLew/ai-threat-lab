@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.26.1)
+# Integration contracts and current capability boundary (0.27.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -6,15 +6,16 @@ Concrete read-only collectors are available through the explicit `audit` command
 | --- | --- | --- |
 | Single-target scan workflow | Built-in collectors, local dependency inventory, opt-in OSV, committed bundles and observation deltas | Selected read-only checks only; no full-audit guarantee, automatic attacks or AI calls |
 | Local source/project | Selected Python syntax/flows/package links, secrets, literal config and structured Kubernetes JSON | No full semantic/runtime audit; supported dependency/OSV coverage is separate below |
-| Exported `.eml` | Bounded header/link/attachment-metadata candidates | No trusted authentication, rendered page, attachment content or malware validation |
+| Exported `.eml` | Bounded header/link/HTML-form/attachment-metadata candidates | No trusted authentication, rendered page, attachment content or malware validation |
 | GitHub | Retrieve pinned default-branch commit/tree/blobs and review selected files | Scoped token for private repos, live validation, broader analysis |
 | Saved HTTPS headers | `review-headers` over strict JSON field pairs | No URL fetch, trusted capture origin, effective browser or session validation |
-| Website | Explicit scoped HTTPS request and selected header checks | No crawling, auth/business-logic tests or exploitation |
+| Saved HTML | `review-html` with optional declared context and bounded form/resource patterns | No rendering, submission, browser tree builder or JavaScript |
+| Website | Explicit scoped HTTPS request and selected header/UTF-8 HTML checks | No crawling, auth/business-logic tests or exploitation |
 | Mail domain | Basic SPF/DMARC checks, supplied-selector DKIM TXT presence via DoH | No full policy evaluation or signature validation |
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
 | Pinned dependencies | requirements/npm/uv/Poetry/Cargo and Go checksum-record inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
 | Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
-| Program file | Bounded size/hash plus selected PE/ELF headers and permission/hardening candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
+| Program file | Bounded size/hash plus selected PE/ELF headers and ZIP metadata/path candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
 | Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
@@ -35,7 +36,7 @@ from ai_threat_lab.assessment import AssessmentService
 # service = AssessmentService({"github_repository": github_adapter})
 ```
 
-Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
+Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `html_document`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
 
 A remote adapter must validate scope and destinations itself, enforce response/time/size bounds, and treat fetched code and page content as untrusted data. The legacy default router makes no HTTP, DNS, mailbox or GitHub requests; the new `audit` workflow explicitly opts into bounded read-only collectors. Active checks must be a separate explicit operation with a defined target scope, not a side effect of target classification.
 
@@ -76,3 +77,5 @@ Local program-file paths now use the bounded [PE/ELF header collector](BINARY_AU
 ## Kubernetes JSON (0.17.0)
 
 `review-kubernetes` is an explicit local workflow with assessment kind `kubernetes_manifest`, accepted by the existing report merger. Local/GitHub project collection also recognizes supported JSON resources. Arbitrary single JSON paths in the legacy `audit`/`scan` router remain program-file inputs: use the explicit command or select the containing project. No Kubernetes provider account, cluster access or YAML/Helm execution is configured. See [KUBERNETES.md](KUBERNETES.md).
+
+HTML scope and limits: [HTML_REVIEW.md](HTML_REVIEW.md). ZIP metadata scope and limits: [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md).

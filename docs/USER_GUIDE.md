@@ -105,3 +105,14 @@ Create and approve a campaign preview, then run `training-start PLAN.json --appr
 ## One-command scans (0.7.0)
 
 `scan TARGET --output-dir NEW_DIRECTORY` runs applicable built-in collectors and publishes a JSON/HTML bundle with module status and limits. For a local project, dependency inventory is automatic; OSV still requires `--network --share-packages`. `scan-check DIRECTORY` verifies hashes and report consistency; `scan-compare BEFORE AFTER` compares observations. Use `scan ... --baseline BEFORE` to include a comparison in the new bundle. See [SCAN_WORKFLOW.md](SCAN_WORKFLOW.md).
+
+## Saved pages and ZIP archives
+
+```bash
+ai-threat-lab review-html saved-page.html --document-url https://example.com/login
+ai-threat-lab review-html saved-page.html --format html --output page-review.html
+ai-threat-lab audit archive.zip
+ai-threat-lab scan-batch saved-page.html archive.zip --output-dir scans/local-01
+```
+
+The declared document URL supplies context only; no request is made. Audit/scan routes also recognize saved HTML, and selected project/GitHub HTML and EML forms reuse the bounded parser. ZIP is an explicit file target and is inspected without reading or extracting members. All results remain partial. Details and limits: [HTML review](HTML_REVIEW.md), [archive review](ARCHIVE_REVIEW.md).

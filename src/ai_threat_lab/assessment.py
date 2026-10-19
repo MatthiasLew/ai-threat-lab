@@ -100,6 +100,8 @@ def identify_target(target: str) -> str:
         return "local_project"
     if path.suffix.lower() == ".py":
         return "python_source"
+    if path.suffix.lower() in (".html", ".htm"):
+        return "html_document"
     if path.suffix.lower() == ".eml":
         return "mail_message"
     return "program_file"
@@ -171,7 +173,8 @@ def audit_message(path: Path) -> AssessmentResult:
         (
             "Mailbox MFA, forwarding rules, permissions and account access were not checked.",
             "SPF/DKIM/DMARC DNS and cryptographic signatures were not verified.",
-            "Only bounded text links and attachment metadata were analyzed offline; no links "
+            "Only bounded text links, selected HTML forms and attachment metadata "
+            "were analyzed offline; no links "
             "were visited, attachments opened or sender reputation queried.",
             "Header observations alone cannot establish phishing or authenticity.",
             "HTML/CSS rendering, redirects, URL decoding tricks, attachment content and "
@@ -196,6 +199,10 @@ class AssessmentService:
             ):
                 raise ValidationError("Assessment adapter returned an invalid result")
             return result
+        if kind == "html_document":
+            from .html_review import review_html_file
+
+            return review_html_file(target)
         if kind == "mail_message":
             return audit_message(Path(target))
         if kind in ("python_source", "local_project"):

@@ -9,6 +9,7 @@ from .acceptance_samples import (
     synthetic_cargo_lock,
     synthetic_go_sum,
     synthetic_header_capture,
+    synthetic_html,
     synthetic_kubernetes_manifest,
     synthetic_message,
     synthetic_python_control_flow,
@@ -19,6 +20,7 @@ from .acceptance_samples import (
     synthetic_python_package_shadowing,
     synthetic_python_project,
     synthetic_python_sqlite_context,
+    synthetic_zip,
 )
 from .audit_report import merge_reports, render_html
 from .batch_scan import check_batch, run_batch
@@ -34,6 +36,7 @@ from .contracts import (
 )
 from .exercise_export import claim_directory, export_exercise, json_bytes
 from .header_review import audit_header_capture
+from .html_review import review_html_file
 from .models import ValidationError
 from .readiness import readiness
 from .scan_bundle import read_bundle
@@ -128,6 +131,60 @@ def offline_demo(output, *, now=None):
         render_html(merge_reports([header_document])),
         encoding="utf-8",
     )
+    # HTML and ZIP are parsed only: no rendering, member reads or target requests.
+    html_source = root / "saved-page.html"
+    html_source.write_text(synthetic_html(), encoding="utf-8")
+    html_review = review_html_file(
+        html_source, document_url="https://website.example.invalid/login"
+    )
+    expected_html = {
+        "html_password_form_get",
+        "html_password_form_http",
+        "html_password_form_cross_origin",
+        "html_mixed_active_content",
+        "html_external_script_without_integrity",
+    }
+    if {f.check for f in html_review.findings} != expected_html:
+        raise ValidationError("Synthetic HTML acceptance failed; demo is incomplete")
+    html_document = asdict(html_review)
+    html_document["findings"] = list(html_document["findings"])
+    (root / "html-review.json").write_bytes(json_bytes(html_document))
+    (root / "html-review.html").write_text(
+        render_html(merge_reports([html_document])), encoding="utf-8"
+    )
+    safer_html = root / "safer-page.html"
+    safer_html.write_text(synthetic_html(safer=True), encoding="utf-8")
+    if review_html_file(safer_html, document_url="https://website.example.invalid/login").findings:
+        raise ValidationError("Synthetic HTML negative control failed; demo is incomplete")
+    html_scan = engine.run(ScanOptions(str(html_source)), root / "html-observations")
+    read_bundle(root / "html-observations")
+    if html_scan["failed_modules"] or html_scan["unique_findings"] != 2:
+        raise ValidationError("Synthetic HTML scan acceptance failed; demo is incomplete")
+    form_mail = root / "saved-form.eml"
+    form_mail.write_bytes(
+        b"From: sender@example.invalid\r\nTo: recipient@example.invalid\r\n"
+        b"Content-Type: text/html; charset=utf-8\r\n\r\n" + synthetic_html().encode("utf-8")
+    )
+    form_mail_scan = engine.run(ScanOptions(str(form_mail)), root / "html-mail-observations")
+    form_mail_bundle = read_bundle(root / "html-mail-observations")
+    if form_mail_scan["failed_modules"] or {
+        f["check"] for f in form_mail_bundle["documents"]["assessment.json"]["findings"]
+    } != {"message_html_password_form_get", "message_html_password_form_http"}:
+        raise ValidationError("Synthetic HTML mail acceptance failed; demo is incomplete")
+    archive_source = root / "metadata.zip"
+    archive_source.write_bytes(synthetic_zip())
+    archive_scan = engine.run(ScanOptions(str(archive_source)), root / "zip-observations")
+    archive_bundle = read_bundle(root / "zip-observations")
+    zip_checks = {
+        f["check"]
+        for f in archive_bundle["documents"]["assessment.json"]["findings"]
+        if f["status"] == "candidate"
+    }
+    if archive_scan["failed_modules"] or zip_checks != {
+        "zip_path_escape",
+        "zip_platform_ambiguous_path",
+    }:
+        raise ValidationError("Synthetic ZIP acceptance failed; demo is incomplete")
     kube_project = root / "kubernetes-fixture"
     kube_project.mkdir()
     (kube_project / "workload.json").write_bytes(json_bytes(synthetic_kubernetes_manifest()))
@@ -349,6 +406,10 @@ def offline_demo(output, *, now=None):
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
+        "html_observations": len(html_review.findings),
+        "html_scan_observations": html_scan["unique_findings"],
+        "html_mail_observations": form_mail_scan["unique_findings"],
+        "zip_candidate_checks": sorted(zip_checks),
         "kubernetes_observations": kubernetes["unique_findings"],
         "dependency_ecosystems": ecosystems,
         "binary_fixture_observations": binary_results,
@@ -361,6 +422,8 @@ def offline_demo(output, *, now=None):
         "not observed participant behavior. Not evidence of real-target or API readiness.",
     }
     links = (
+        ("Saved HTML review", "html-review.html"),
+        ("ZIP metadata review", "zip-observations/report.html"),
         ("Before scan", "scan-before/report.html"),
         ("After scan", "scan-after/report.html"),
         ("Selected training outcomes", "training-report.html"),

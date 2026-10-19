@@ -1,4 +1,6 @@
-# Delivery status and remaining work — 0.26.1
+# Delivery status and remaining work — 0.27.0
+
+The bounded HTML/EML/ZIP milestone is implemented on top of the offline CLI. Saved pages now have a standalone command and shared form/resource checks; selected EML forms and existing successful HTTPS bodies reuse them. Explicit ZIP file targets receive metadata-only review. See [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md). These checks retain partial results and limits; they do not implement live attack or delivery capabilities. API setup remains deferred.
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -6,9 +8,9 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | --- | --- | --- |
 | Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls/SQLite connection contexts plus selected regular root/src package, relative-import and literal importlib links, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, namespace packages/cross-method analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
-| Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
-| Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
-| Exported email | Bounded headers, selected plain/HTML link properties and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
+| Website URL | Opted-in single HTTPS header and selected HTML observations; offline saved-header/HTML review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
+| Program file | Bounded size/hash, PE/ELF structures and ZIP metadata/path candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
+| Exported email | Bounded headers, selected plain/HTML links, HTML forms and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |

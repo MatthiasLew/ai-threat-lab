@@ -6,6 +6,7 @@ import stat
 import struct
 from pathlib import Path
 
+from .archive_review import ArchiveFormatError, zip_metadata
 from .assessment import AssessmentFinding, AssessmentResult
 from .models import ValidationError
 
@@ -13,7 +14,7 @@ MAX_BINARY_BYTES = 16 * 1024 * 1024
 MAX_PE_SECTIONS = 96
 MAX_ELF_SEGMENTS = 512
 LIMITATIONS = (
-    "Selected static PE/ELF headers only; not a complete loader or format validator.",
+    "Selected PE/ELF headers and ZIP metadata only; not a complete loader/format validator.",
     "No execution, disassembly, unpacking, malware detection, imports or dependency analysis.",
     "Header flags do not prove effective runtime mitigation, exploitability or overall security.",
     "No cryptographic signature, trust-chain, external catalog or provenance verification.",
@@ -241,7 +242,15 @@ def elf_headers(raw):
 def inspect_binary(raw, target="<bytes>"):
     if not isinstance(raw, bytes) or len(raw) > MAX_BINARY_BYTES:
         raise ValidationError("Binary input must be bytes within the 16 MiB limit")
-    form = "PE" if raw.startswith(b"MZ") else "ELF" if raw.startswith(b"\x7fELF") else "unknown"
+    form = (
+        "PE"
+        if raw.startswith(b"MZ")
+        else "ELF"
+        if raw.startswith(b"\x7fELF")
+        else "ZIP"
+        if raw.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"))
+        else "unknown"
+    )
     findings = [
         observation(
             "binary_metadata",
@@ -253,10 +262,16 @@ def inspect_binary(raw, target="<bytes>"):
         missing.append("Unrecognized format; only size and digest were inventoried.")
     else:
         try:
-            observed, unchecked = pe_headers(raw) if form == "PE" else elf_headers(raw)
+            observed, unchecked = (
+                pe_headers(raw)
+                if form == "PE"
+                else zip_metadata(raw)
+                if form == "ZIP"
+                else elf_headers(raw)
+            )
             findings.extend(observed)
             missing.extend(unchecked)
-        except BinaryFormatError as error:
+        except (BinaryFormatError, ArchiveFormatError) as error:
             findings.append(
                 observation(
                     "binary_structure_unavailable",

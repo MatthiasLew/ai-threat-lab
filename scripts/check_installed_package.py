@@ -429,6 +429,54 @@ def main() -> None:
         }
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
+        assert demo["html_observations"] == 5
+        assert demo["html_scan_observations"] == 2
+        assert demo["html_mail_observations"] == 2
+        assert demo["zip_candidate_checks"] == ["zip_path_escape", "zip_platform_ambiguous_path"]
+        page = json.loads(
+            run(
+                executable,
+                "review-html",
+                "offline demo/saved-page.html",
+                "--document-url",
+                "https://website.example.invalid/login",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert len(page["findings"]) == 5
+        run(
+            executable,
+            "review-html",
+            "offline demo/safer-page.html",
+            "--document-url",
+            "https://website.example.invalid/login",
+            "--fail-on-findings",
+        )
+        run(
+            executable,
+            "review-html",
+            "offline demo/saved-page.html",
+            "--format",
+            "html",
+            "--output",
+            "installed-html.html",
+        )
+        run(
+            executable,
+            "review-html",
+            "offline demo/saved-page.html",
+            "--output",
+            "installed-html.html",
+            expected=2,
+        )
+        for bundle in ("html-observations", "html-mail-observations", "zip-observations"):
+            run(executable, "scan-check", "offline demo/" + bundle)
+        archive = json.loads(run(executable, "audit", "offline demo/metadata.zip"))
+        assert {f["check"] for f in archive["findings"] if f["status"] == "candidate"} == {
+            "zip_path_escape",
+            "zip_platform_ambiguous_path",
+        }
         assert demo["header_observations"] == 6
         assert demo["kubernetes_observations"] == 10
         kube = json.loads(

@@ -18,7 +18,7 @@ from .scan_engine import ScanOptions, ScanService
 MAX_TARGETS = 10
 MAX_CHILD_BYTES = 64 * 1024 * 1024
 MAX_REPORT_BYTES = 8 * 1024 * 1024
-LOCAL_KINDS = {"local_project", "python_source", "mail_message", "program_file"}
+LOCAL_KINDS = {"local_project", "python_source", "mail_message", "program_file", "html_document"}
 NOTICE = (
     "Bounded local checks only; no network, account access or model calls. "
     "Hashes verify consistency, not authenticity or security completeness."

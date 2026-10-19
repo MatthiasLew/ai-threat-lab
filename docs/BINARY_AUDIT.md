@@ -69,3 +69,7 @@ Tests include independent synthetic 32/64-bit PE/ELF builders, both ELF byte ord
 ## Specification references
 
 Implementation field/flag references: [Microsoft PE format](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format), [gABI ELF header](https://gabi.xinuos.com/elf/02-eheader.html), [gABI program headers](https://gabi.xinuos.com/elf/07-pheader.html), [GNU ld options](https://sourceware.org/binutils/docs/ld/Options.html). The collector intentionally implements a subset of these formats; these references are not evidence that all requirements are validated.
+
+## ZIP metadata addition (0.27.0)
+
+The program-file route also recognizes selected ZIP signatures and reads bounded directory/local-header metadata without opening or decompressing members. Its path, collision, symlink and declared-expansion candidates have separate [scope and limits](ARCHIVE_REVIEW.md). PE/ELF semantics remain unchanged.

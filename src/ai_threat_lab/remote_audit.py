@@ -42,14 +42,26 @@ class WebsiteAudit:
             )
         except ValidationError:
             raise ProviderError("Response headers exceed supported structure or limits") from None
+        from .html_review import inspect_html_response
+
+        html_findings, html_missing = (
+            inspect_html_response(
+                response.body,
+                response.header_items or tuple(response.headers.items()),
+                document_url=target,
+            )
+            if response.status == 200
+            else ((), ("Non-200 response body unchecked.",))
+        )
         return AssessmentResult(
             target,
             "website",
             "partial",
-            findings,
+            (*findings, *html_findings),
             (
                 "Only one HTTPS response was checked; redirects are not followed.",
                 *missing,
+                *html_missing,
                 *(
                     ("Adapter supplied only a header mapping; duplicate fields may be missing.",)
                     if not response.header_items
@@ -182,6 +194,7 @@ class GithubAudit:
                 or (
                     not manifest
                     and path.suffix not in TEXT_SUFFIXES
+                    and path.suffix.lower() not in (".html", ".htm")
                     and path.name != ".env"
                     and not configuration_file(name)
                 )
@@ -235,6 +248,15 @@ class GithubAudit:
                 missing.append(f"Large manifest parsed for dependencies only: {name}")
                 continue
             findings.extend(inspect_text(name, source))
+            if path.suffix.lower() in (".html", ".htm"):
+                from .html_review import inspect_html
+
+                observed, gaps = inspect_html(source)
+                findings.extend(
+                    AssessmentFinding(f.check, f.status, name + ": " + f.evidence, f.recommendation)
+                    for f in observed
+                )
+                missing.extend(gaps)
             if path.suffix.lower() == ".json":
                 review = review_kubernetes_source(source, name)
                 if review is not None:

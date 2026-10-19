@@ -37,7 +37,15 @@ def readiness():
             "website",
             "fixture_tested",
             "integration_validation_required",
-            "One-response HSTS/CSP/cookie/header observations; browser/application tests absent.",
+            "One-response headers and selected UTF-8 HTML authoring patterns; "
+            "browser/application tests absent.",
+        ),
+        (
+            "saved_html",
+            "partial",
+            "not_required",
+            "Bounded UTF-8 saved HTML forms/resources; optional declared document URL; "
+            "no browser rendering, submission or JavaScript execution.",
         ),
         (
             "http_headers",
@@ -50,7 +58,7 @@ def readiness():
             "exported_mail",
             "partial",
             "not_required",
-            "Bounded EML header, link and attachment-metadata candidates; "
+            "Bounded EML header, link, HTML form and attachment-metadata candidates; "
             "no link visits, payload execution, malware or authenticity validation.",
         ),
         (
@@ -63,7 +71,8 @@ def readiness():
             "binary",
             "static_headers_partial",
             "implementation_required",
-            "Bounded PE/ELF headers; signature, disassembly and runtime analysis remain absent.",
+            "Bounded PE/ELF headers and ZIP directory/local-header metadata; "
+            "signature, decompression, disassembly and runtime analysis remain absent.",
         ),
         (
             "training",

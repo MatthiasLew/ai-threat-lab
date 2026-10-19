@@ -42,3 +42,7 @@ The checker does not verify DKIM signatures, SPF/DMARC DNS policy, sender reputa
 `offline-demo --output-dir NEW_DIR` generates a fictional `.invalid` message with an RFC documentation IP and an inert attachment containing plain training bytes. Its separate report has five expected candidate checks and no outbound activity. Failing mail acceptance prevents publication of `demo-result.json`. The same checks run through service, audit, scan, real CLI-process and clean installed-wheel tests.
 
 Primary parser references: [Python email parser](https://docs.python.org/3.12/library/email.parser.html) and [EmailMessage API](https://docs.python.org/3/library/email.message.html). See [testing](TESTING.md), [offline walkthrough](OFFLINE_ACCEPTANCE.md) and [remaining delivery work](DELIVERY_STATUS.md).
+
+## HTML forms (0.27.0)
+
+Selected HTML text parts now reuse [bounded HTML review](HTML_REVIEW.md). Absolute HTTP password form destinations can produce `message_html_password_form_get` and `message_html_password_form_http` candidates. No document URL is inferred, so relative destinations and origin/security context remain unchecked. Evidence uses MIME text-part indexes and HTML line numbers without values. Existing MIME budgets remain, with at most 200 HTML findings per message. Attachments remain metadata-only.

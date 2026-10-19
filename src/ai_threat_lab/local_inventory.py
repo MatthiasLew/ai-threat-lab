@@ -7,12 +7,25 @@ from pathlib import Path
 from .assessment import AssessmentFinding, AssessmentResult, AssessmentService, identify_target
 from .binary_audit import audit_binary
 from .config_review import NOTICE, configuration_file, inspect_configuration
+from .html_review import inspect_html
 from .kubernetes_review import NOTICE as KUBERNETES_NOTICE
 from .kubernetes_review import review_kubernetes_source
 from .models import ValidationError
 
 EXCLUDED = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
-TEXT_SUFFIXES = {".py", ".js", ".ts", ".tsx", ".json", ".toml", ".yaml", ".yml", ".env"}
+TEXT_SUFFIXES = {
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".toml",
+    ".yaml",
+    ".yml",
+    ".env",
+    ".html",
+    ".htm",
+}
 SECRET_PATTERNS = (
     r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
     r"\bAKIA[0-9A-Z]{16}\b",
@@ -87,7 +100,10 @@ def local_inventory(target: str) -> AssessmentResult:
             for name in sorted(files):
                 item = Path(directory) / name
                 if not item.is_symlink() and (
-                    item.suffix in TEXT_SUFFIXES or name == ".env" or configuration_file(name)
+                    item.suffix in TEXT_SUFFIXES
+                    or item.suffix.lower() in (".html", ".htm")
+                    or name == ".env"
+                    or configuration_file(name)
                 ):
                     candidates.append(item)
                 if len(candidates) >= 100 or visited >= 1000:
@@ -110,6 +126,14 @@ def local_inventory(target: str) -> AssessmentResult:
                     source,
                 )
             )
+            if item.suffix.lower() in (".html", ".htm"):
+                observed, gaps = inspect_html(source)
+                name = str(item.relative_to(path) if path.is_dir() else item.name)
+                findings.extend(
+                    AssessmentFinding(f.check, f.status, name + ": " + f.evidence, f.recommendation)
+                    for f in observed
+                )
+                missing.extend(gaps)
             if item.suffix.lower() == ".json":
                 name = str(item.relative_to(path) if path.is_dir() else item.name)
                 review = review_kubernetes_source(source, name)

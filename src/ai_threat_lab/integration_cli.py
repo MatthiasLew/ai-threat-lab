@@ -11,6 +11,7 @@ from .audit_report import merge_reports, render_html
 from .contracts import read_document, write_document
 from .dependencies import AdvisoryCache, OSVAudit, inventory
 from .header_review import audit_header_capture
+from .html_review import review_html_file
 from .http_client import PublicHTTPS
 from .kubernetes_review import review_kubernetes_file
 from .local_inventory import local_inventory
@@ -23,6 +24,7 @@ COMMANDS = {
     "audit-deps",
     "audit-report",
     "review-headers",
+    "review-html",
     "review-kubernetes",
     "ai-explain",
     "api-costs",
@@ -37,7 +39,11 @@ def add_commands(commands):
     kubernetes = commands.add_parser(
         "review-kubernetes", help="Review selected Kubernetes JSON fields without a cluster"
     )
-    for review in (headers, kubernetes):
+    html = commands.add_parser(
+        "review-html", help="Review saved HTML without rendering or requests"
+    )
+    html.add_argument("--document-url", help="Declared HTTP(S) context; never fetched")
+    for review in (headers, kubernetes, html):
         review.add_argument("path", type=Path)
         review.add_argument("--format", choices=("json", "html"), default="json")
         review.add_argument("--fail-on-findings", action="store_true")
@@ -99,13 +105,23 @@ def add_commands(commands):
     )
     report.add_argument("reports", nargs="+", type=Path)
     report.add_argument("--format", choices=("json", "html"), default="json")
-    for command in (audit, explain, costs, reconcile, dependencies, report, headers, kubernetes):
+    for command in (
+        audit,
+        explain,
+        costs,
+        reconcile,
+        dependencies,
+        report,
+        headers,
+        kubernetes,
+        html,
+    ):
         command.add_argument("--output", type=Path, help="New JSON file; never overwrite")
 
 
 def audit_target(args):
     kind = identify_target(args.target)
-    if kind in ("local_project", "python_source", "program_file", "mail_message"):
+    if kind in ("local_project", "python_source", "program_file", "mail_message", "html_document"):
         return local_inventory(args.target)
     if not args.network:
         raise ValidationError(
@@ -139,10 +155,12 @@ def audit_target(args):
 
 def run_command(args):
     code = 0
-    if args.command in ("review-headers", "review-kubernetes"):
+    if args.command in ("review-headers", "review-kubernetes", "review-html"):
         result = (
             audit_header_capture(args.path)
             if args.command == "review-headers"
+            else review_html_file(args.path, document_url=args.document_url)
+            if args.command == "review-html"
             else review_kubernetes_file(args.path)
         )
         payload = asdict(result)
