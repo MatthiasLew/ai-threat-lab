@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.25.0
+# Offline acceptance kit — 0.26.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -116,3 +116,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Literal importlib fixture (0.25.0)
 
 `offline-demo` writes `python-importlib-fixture/src/example/` with a regular package, a caller using `load('.helpers', package='example')` and the inert shell/SQLite helper. `python-importlib-flow` must contain PY005, PY013 and PY014 with cross-file evidence for the two flow candidates. `python_importlib_flow_observations` must equal three before completion. The installed-wheel gate repeats its audit and bundle consistency checks. No fixture is imported or executed.
+
+## SQLite context fixture (0.26.0)
+
+`offline-demo` writes inert `python-sqlite-context.py` and the `python-sqlite-context` scan bundle. A default-factory SQLite with block contains selected HTTP-to-query and HTTP-to-shell candidate paths. The demo requires exactly PY005/PY013/PY014 and `python_sqlite_context_observations == 3` before writing its completion summary. The clean installed-wheel gate repeats standalone JSON review and bundle consistency checks. Fixture source is parsed only; its database is never opened.

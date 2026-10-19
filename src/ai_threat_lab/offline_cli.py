@@ -17,6 +17,7 @@ from .acceptance_samples import (
     synthetic_python_local_calls,
     synthetic_python_package,
     synthetic_python_project,
+    synthetic_python_sqlite_context,
 )
 from .audit_report import merge_reports, render_html
 from .batch_scan import check_batch, run_batch
@@ -183,6 +184,19 @@ def offline_demo(output, *, now=None):
         or control_rules != {"PY005", "PY013", "PY014"}
     ):
         raise ValidationError("Synthetic Python control-flow acceptance failed; demo is incomplete")
+    context_source = root / "python-sqlite-context.py"
+    context_source.write_text(synthetic_python_sqlite_context(), encoding="utf-8")
+    context = engine.run(ScanOptions(str(context_source)), root / "python-sqlite-context")
+    context_bundle = read_bundle(root / "python-sqlite-context")
+    context_rules = {f["check"] for f in context_bundle["documents"]["assessment.json"]["findings"]}
+    if (
+        context["failed_modules"]
+        or context["unique_findings"] != 3
+        or context_rules != {"PY005", "PY013", "PY014"}
+    ):
+        raise ValidationError(
+            "Synthetic Python SQLite-context acceptance failed; demo is incomplete"
+        )
     calls_source = root / "python-local-calls.py"
     calls_source.write_text(synthetic_python_local_calls(), encoding="utf-8")
     calls = engine.run(ScanOptions(str(calls_source)), root / "python-local-calls")
@@ -303,6 +317,7 @@ def offline_demo(output, *, now=None):
         "python_pattern_observations": patterns["unique_findings"],
         "python_flow_observations": flows["unique_findings"],
         "python_control_flow_observations": control["unique_findings"],
+        "python_sqlite_context_observations": context["unique_findings"],
         "python_local_call_observations": calls["unique_findings"],
         "python_project_flow_observations": project_flow["unique_findings"],
         "python_package_flow_observations": package_flow["unique_findings"],
@@ -332,6 +347,7 @@ def offline_demo(output, *, now=None):
         ("Python pattern observations", "python-patterns/report.html"),
         ("Python flow observations", "python-flow/report.html"),
         ("Python branch/loop observations", "python-control-flow/report.html"),
+        ("Python SQLite context observations", "python-sqlite-context/report.html"),
         ("Python local-call observations", "python-local-calls/report.html"),
         ("Python cross-file observations", "python-project-flow/report.html"),
         ("Python package observations", "python-package-flow/report.html"),

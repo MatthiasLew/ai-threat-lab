@@ -1,10 +1,10 @@
-# Delivery status and remaining work — 0.25.0
+# Delivery status and remaining work — 0.26.0
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
 | Input/capability | Implemented now | Still missing |
 | --- | --- | --- |
-| Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls plus selected regular root/src package, relative-import and literal importlib links, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, namespace packages/cross-method analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
+| Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls/SQLite connection contexts plus selected regular root/src package, relative-import and literal importlib links, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, namespace packages/cross-method analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
 | Website URL | Opted-in single HTTPS HSTS/CSP/cookie/header observations; offline saved-header review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and selected header/permission candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
@@ -104,3 +104,7 @@ Selected collected regular packages now support absolute dotted and lexical rela
 ## Literal importlib linking (0.25.0)
 
 Selected `importlib.import_module` calls now return static descriptors for already collected modules. Imported aliases, literal absolute names and literal relative names with explicit package anchors are supported. Computed names, implicit `__package__`, built-in `__import__`, namespace packages and runtime import selection remain unresolved. Missing or noncompleting target/parent passes retain gaps. The offline demo and installed-wheel gate verify cross-file shell/SQLite observations through this route. API setup and live validation remain deferred.
+
+## Selected SQLite context bodies (0.26.0)
+
+Known default-factory SQLite connections now permit bounded synchronous with-body analysis, including simple aliases, selected helper arguments/returns, nested contexts and up to eight ordered items. Connection/cursor ambiguity, unsupported factories/call shapes, non-name targets and unknown managers retain explicit gaps. Transaction state, exit/close effects, exceptions and general context-manager protocols remain unresolved. A separate inert fixture and installed-wheel gate cover shell/SQLite observations without opening the target database. API setup remains deferred.

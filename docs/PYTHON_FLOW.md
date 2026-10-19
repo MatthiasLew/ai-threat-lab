@@ -1,4 +1,4 @@
-# Selected Python input-flow analysis — 0.25.0
+# Selected Python input-flow analysis — 0.26.0
 
 `review-code`, local project scans and pinned GitHub scans now perform a bounded local dependency analysis with possible branch joins, one-pass loops and bounded same-file helper contexts alongside the existing API-pattern rules. PY013 connects selected Flask input to shell command arguments; PY014 connects it to query text sent to a statically recognized SQLite connection/cursor. Both are candidates requiring human validation.
 
@@ -9,6 +9,18 @@ ai-threat-lab scan path/to/project --output-dir scan-results/flow-01
 ```
 
 Local/GitHub directory scans additionally run a selected root/src regular-package and literal importlib supplement. The limits and cross-file evidence differ from this per-file pass; see [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md). Single-file `review-code` does not resolve external files.
+
+## Selected SQLite connection contexts (0.26.0)
+
+The flow pass now traverses selected synchronous `with` bodies when every manager has a known default-factory SQLite connection descriptor. This includes an explicitly imported/aliased `sqlite3.connect`, previously assigned connections and selected helper arguments/returns. `as` targets must be a simple name; omitted targets retain existing bindings. Multiple items are resolved left to right, with a limit of eight items. Nested contexts share the existing block-depth/step limits. Normal body assignments and aliases remain visible after exit; return/raise stops the successor path.
+
+Connection selection requires exactly one database argument, positional or `database=`, and permits the keyword options `timeout`, `detect_types`, `isolation_level`, `check_same_thread`, `cached_statements`, `uri` and `autocommit`. It rejects additional positional arguments, duplicate/unknown keywords, unpacking and every explicit `factory=` override (including the default factory spelling). Argument types, installed API identity and connection success are unverified. Existing non-context SQLite sink recognition remains heuristic.
+
+Cursors and execute results are distinguished from connections for context selection. An ambiguous connection/cursor or connection/unknown branch join cannot enter the selected context; two known connection alternatives can. Unknown/mixed managers, non-name targets and more than eight items skip the body and reset bindings with a coverage gap. Manager expressions in an otherwise size-eligible statement are analyzed in order until an unsupported item; later manager expressions are then skipped. Async contexts, `contextlib.closing`, custom factories/subclasses and arbitrary context-manager protocols remain unsupported.
+
+Only normal-body static dependencies are approximated. The analyzer does not implement transaction state, commit/rollback effects, close/invalidation, `__enter__`/`__exit__` execution, exit exceptions, exception suppression or runtime feasibility. A candidate does not prove the database opens or the query executes. No target code is executed and no target database is opened. A parameterized query's value arguments remain separate from query text.
+
+This scope applies to standalone text/JSON/SARIF, local/GitHub assessments and the supplementary project pass. Python AST engine is `python-ast-1.8`; scan engine is `read-only-pipeline-18`. Older bundles remain readable without comparing observations across engines. See the [SQLite context-manager reference](https://docs.python.org/3.14/library/sqlite3.html#how-to-use-the-connection-context-manager).
 
 ## What is tracked
 
@@ -48,7 +60,7 @@ Findings include the sink location, up to eight sorted source line numbers and u
 
 Each module/function body is processed in statement order. Independent function review receives currently visible imported-symbol/known-helper bindings, with explicit parameters shadowed and no captured tracked data/SQLite objects. Selected calls additionally analyze AST bodies with argument descriptors as described below. No target Python function is executed. Return and raise terminate the analyzed body, and terminated branches do not contribute to successor joins. Defaults, decorators, annotations and runtime registration effects are not evaluated.
 
-With/try, match, classes and global/nonlocal effects are skipped as barriers and clear tracking. Their bodies are not flow analyzed. Selected branches and loops follow the abstraction below. Relative imports invalidate the selected imported names; star imports clear tracking. Unknown call results, unsupported expression forms and destructuring/attribute/subscript writes generate gaps. Results of unknown calls are not propagated; this must not be interpreted as successful sanitization. Results of supported local helpers follow the limited return model below. Heap updates, closure/global mutation, unknown wrappers, cross-file/cross-method paths, loop convergence and path feasibility are not modeled. String method spellings and module bindings are static approximations; monkey-patching, forward local binding and later module rebinding can invalidate them.
+Unsupported context managers, try, match, classes and global/nonlocal effects are skipped as barriers and clear tracking. Their bodies are not flow analyzed; selected SQLite with bodies follow the context subset above. Selected branches and loops follow the abstraction below. Relative imports invalidate the selected imported names; star imports clear tracking. Unknown call results, unsupported expression forms and destructuring/attribute/subscript writes generate gaps. Results of unknown calls are not propagated; this must not be interpreted as successful sanitization. Results of supported local helpers follow the limited return model below. Heap updates, closure/global mutation, unknown wrappers, cross-file/cross-method paths, loop convergence and path feasibility are not modeled. String method spellings and module bindings are static approximations; monkey-patching, forward local binding and later module rebinding can invalidate them.
 
 General limitations and per-file flow gaps are preserved in standalone and local/GitHub assessment outputs. A candidate needs review of endpoint reachability, effective runtime objects, constraints/allowlists, query context and actual attacker control before assigning a vulnerability severity. A clean or skipped path is not proof of safety.
 

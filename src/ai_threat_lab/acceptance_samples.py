@@ -169,3 +169,15 @@ def synthetic_python_importlib():
         "    helpers.inspect_example(sqlite3.connect(':memory:'), value)\n"
     )
     return sources
+
+
+def synthetic_python_sqlite_context():
+    """Parsed-only default SQLite context with three candidate observations."""
+    return (
+        "from flask import request\nimport os, sqlite3\n"
+        "def endpoint():\n"
+        "    with sqlite3.connect(':memory:') as connection:\n"
+        "        value = request.args.get('fixture')\n"
+        "        connection.execute('SELECT ' + value)\n"
+        "        os.system(value)\n"
+    )

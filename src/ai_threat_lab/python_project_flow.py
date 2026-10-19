@@ -13,7 +13,7 @@ MAX_FILE_BYTES = 256 * 1024
 MAX_TOTAL_BYTES = 2 * 1024 * 1024
 OFFSET = 1000000  # More than the maximum possible source lines in a selected file.
 NOTICE = (
-    "Project flow: engine python-project-modules-1.2; root/src modules and selected "
+    "Project flow: engine python-project-modules-1.3; root/src modules and selected "
     "regular packages, at most 20 files/2 MiB; static absolute/relative local imports, "
     "literal importlib.import_module calls only; no namespace/computed dynamic imports, "
     "installation, execution, sys.path/runtime binding "

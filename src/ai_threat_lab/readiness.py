@@ -9,7 +9,7 @@ def readiness():
             "not_required",
             "Selected Python AST rules, local Flask flows with branch joins/one-pass loops "
             "and credential patterns; "
-            "bounded calls and root/src regular-package links; "
+            "bounded calls, selected SQLite connection contexts and root/src package links; "
             "literal importlib labels only; namespace/computed dynamic imports unhandled.",
         ),
         (

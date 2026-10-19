@@ -278,7 +278,7 @@ def test_engine_thirteen_reading_without_cross_engine_deltas(tmp_path):
     source.write_text(SAMPLE)
     ScanService(assessor).run(ScanOptions(str(source)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-17"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-18"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-13"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

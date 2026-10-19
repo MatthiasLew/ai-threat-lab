@@ -1,4 +1,4 @@
-# Selected Python module and package linking — 0.25.0
+# Selected Python module and package linking — 0.26.0
 
 Directory assessments supplement per-file checks with a bounded static pass over selected Python modules and regular packages. It can connect HTTP data in one file to a selected shell/SQLite sink in another, including supported arguments, return values and SQLite identity. Findings remain candidates for human validation.
 
@@ -55,7 +55,7 @@ Each supplementary observation includes relative sink filename/line/column, sour
 
 Origins and call-site evidence merge across bounded contexts. The analyzer does not preserve an ordered, correlated whole-program trace or solve path feasibility. Only observations with cross-module source/call/helper evidence are added; entirely same-file paths remain with the existing per-file results. A cross-file context can overlap an independently observed same-file sink, so observation counts are not counts of confirmed vulnerabilities.
 
-Returns carrying input or selected SQLite identities can link back to a sink in the caller. Unknown module exports, unsupported signatures or unknown call results retain gaps; lack of a candidate is not evidence of sanitization or safety. All limitations of branch joins, one-pass loops, recursion stopping and lexical/runtime binding from the per-file engine still apply.
+Returns carrying input or selected SQLite identities can link back to a sink in the caller. Selected default-factory SQLite connection descriptors also pass through supported helpers into synchronous with blocks, using the [same context limits](PYTHON_FLOW.md#selected-sqlite-connection-contexts-0260) as the per-file engine. Unknown module exports, unsupported signatures or unknown call results retain gaps; lack of a candidate is not evidence of sanitization or safety. All limitations of branch joins, one-pass loops, recursion stopping and lexical/runtime binding from the per-file engine still apply.
 
 ## Bounds and consistency
 
@@ -65,7 +65,7 @@ The shared flow pass retains its statement/expression, block-depth, function-sco
 
 Local per-file and project analysis share decoded source text, respecting the declared Python encoding. GitHub keeps its existing UTF-8 and verified-blob policy. Links/non-regular source paths are handled by the collectors, and local Python reads reject non-file inputs before opening. Bundle hashes/checks establish report consistency, not source authenticity or runtime correctness.
 
-The project pass identifies itself as `python-project-modules-1.2`; Python AST engine `python-ast-1.7` and scan engine `read-only-pipeline-17` record the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify an inert root-module fixture, a src-package/relative-import fixture and a literal importlib fixture, each with three observations. API setup remains deferred.
+The project pass identifies itself as `python-project-modules-1.3`; Python AST engine `python-ast-1.8` and scan engine `read-only-pipeline-18` record the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify an inert root-module fixture, a src-package/relative-import fixture and a literal importlib fixture, each with three observations. API setup remains deferred.
 
 ```mermaid
 flowchart TD

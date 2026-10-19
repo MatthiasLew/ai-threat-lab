@@ -4,10 +4,13 @@ import ast
 from dataclasses import dataclass
 
 from .python_call_binding import bind_arguments
+from .python_sqlite_context import MAX_CONTEXT_ITEMS, connection_context_call
 
 NOTICE = (
     "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, "
-    "branch joins, one-pass loops and bounded same-file calls; no cross-file, path-feasibility, "
+    "branch joins, one-pass loops, selected SQLite connection contexts "
+    "and bounded same-file calls; "
+    "no cross-file, path-feasibility, "
     "heap, sanitizer, runtime-binding or exploitability validation; "
     "callee exception/effect behavior is not propagated."
 )
@@ -50,6 +53,7 @@ class Value:
     symbol: str = ""
     origins: frozenset[int] = frozenset()
     database: bool = False
+    connection: bool = False
     function: int = 0
     module: str = ""
     call_sites: frozenset[int] = frozenset()
@@ -89,6 +93,7 @@ class Flow:
     def join_value(self, values):
         symbols = {value.symbol for value in values}
         database = all(value.database for value in values)
+        connection = all(value.connection for value in values)
         functions = {value.function for value in values}
         modules = {value.module for value in values}
         if (
@@ -96,6 +101,7 @@ class Flow:
             or (len(functions) > 1 and any(functions))
             or (len(symbols) > 1 and any(symbols))
             or (any(value.database for value in values) and not database)
+            or (any(value.connection for value in values) and not connection)
         ):
             self.note("join lost ambiguous API/object bindings; some flows unchecked.")
         merged = self.merge(values)
@@ -104,6 +110,7 @@ class Flow:
             origins=merged.origins,
             call_sites=merged.call_sites,
             database=database,
+            connection=connection,
             function=values[0].function if len(functions) == 1 else 0,
             module=values[0].module if len(modules) == 1 else "",
         )
@@ -166,6 +173,26 @@ class Flow:
         env.clear()
         env.update(self.join_env(states))
         return self.block(statement.orelse, env, depth=depth + 1, scope=False)
+
+    def sqlite_context(self, statement, env, depth):
+        if not 1 <= len(statement.items) <= MAX_CONTEXT_ITEMS:
+            env.clear()
+            self.note("SQLite context-item limit reached; body skipped and tracking reset.")
+            return True
+        for item in statement.items:
+            value = self.expr(item.context_expr, env)
+            if not value.connection or (
+                item.optional_vars is not None and not isinstance(item.optional_vars, ast.Name)
+            ):
+                env.clear()
+                self.note("unsupported context manager/target; body skipped and tracking reset.")
+                return True
+            if item.optional_vars is not None:
+                env[item.optional_vars.id] = value
+        self.note(
+            "selected SQLite contexts only; transaction/exit exceptions and effects unchecked."
+        )
+        return self.block(statement.body, env, depth=depth + 1, scope=False)
 
     def record(self, rule, node, value):
         if not value.origins:
@@ -252,6 +279,7 @@ class Flow:
             symbol=result.symbol,
             origins=result.origins,
             database=result.database,
+            connection=result.connection,
             function=result.function,
             module=result.module,
             call_sites=frozenset(sorted(sites)[:8]),
@@ -355,7 +383,7 @@ class Flow:
             command = args[0] if args else kwargs.get("args", kwargs.get("command", EMPTY))
             self.record("PY013", node, command)
         if name == "sqlite3.connect":
-            return Value(database=True)
+            return Value(database=True, connection=connection_context_call(node))
         if receiver.database:
             if method == "cursor":
                 return Value(database=True)
@@ -441,6 +469,9 @@ class Flow:
                     if arg is not None:
                         local[arg.arg] = EMPTY
                 self.analyze_function(statement, local)
+            elif isinstance(statement, ast.With):
+                if not self.sqlite_context(statement, env, depth):
+                    return False
             elif isinstance(statement, ast.If):
                 if not self.conditional(statement, env, depth):
                     return False

@@ -328,6 +328,23 @@ def main() -> None:
         }
         assert any("loop-carried" in n for n in control_review["review"]["limitations"])
         run(executable, "scan-check", "offline demo/python-control-flow")
+        assert demo["python_sqlite_context_observations"] == 3
+        context_review = json.loads(
+            run(
+                executable,
+                "review-code",
+                "offline demo/python-sqlite-context.py",
+                "--format",
+                "json",
+            )
+        )
+        assert {f["rule_id"] for f in context_review["review"]["findings"]} == {
+            "PY005",
+            "PY013",
+            "PY014",
+        }
+        assert any("selected SQLite contexts" in n for n in context_review["review"]["limitations"])
+        run(executable, "scan-check", "offline demo/python-sqlite-context")
         assert demo["python_flow_observations"] == 3
         flow_review = json.loads(
             run(executable, "review-code", "offline demo/python-flow.py", "--format", "json")

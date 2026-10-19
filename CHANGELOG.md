@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.0
+
+- Traverse selected synchronous default-factory SQLite connection contexts with simple as names, ordered items (at most eight), nested bodies and normal-body successor/termination handling.
+- Carry connection kind through supported aliases, arguments, returns and definite joins; distinguish cursors/execute results for context selection. Keep unknown managers, custom factories, unsupported call/target forms and item/depth limits as explicit barriers.
+- Preserve query-value versus query-text separation, source-free evidence and existing runtime/transaction/exception limitations. No target execution or database opening.
+- Add context regression, CLI/SARIF, verified-GitHub and bundle tests, an inert offline fixture and installed-wheel acceptance checks.
+- Advance Python AST engine to 1.8, project pass to python-project-modules-1.3 and scan engine to 18. Retain older bundle reading and suppress cross-engine comparisons. API setup remains deferred.
+
 ## 0.25.0
 
 - Resolve selected imported/aliased importlib.import_module calls with literal absolute names or literal relative names and explicit package anchors over already collected sources.
