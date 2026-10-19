@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.39.0
+# Offline CLI release criteria — 0.39.1
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -94,3 +94,7 @@ The bounded [Gmail collector contract](GMAIL_AUDIT.md) closes identity matching,
 ## Dependency workflow offline closure (0.39.0)
 
 The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) covers existing manifest/inventory/OSV behavior, bounded cache files and response rows, finite clock/expiry metadata, validated writes/legacy reads and full per-package pagination-cycle detection. Socket-blocked installed CLI evidence covers pagination, cache-only reports/scans, disclosure consent and corrupt-cache failure without a clean conclusion. Engine 26 preserves historical bundles while rejecting cross-engine deltas. Broader ecosystems, dependency graphs, reachability and controlled live OSV validation remain separate.
+
+### Cache clock ordering correction (0.39.1)
+
+Expiry is rechecked after database reads, and new TTLs start after acquiring the SQLite writer lock. Independent SQL trace controls advance time during the database operation and reproduce both stale-read and shortened-TTL regressions. Invalid post-lock clocks roll back without replacing the previous cache row. Engine 26 and the existing cache schema remain unchanged.

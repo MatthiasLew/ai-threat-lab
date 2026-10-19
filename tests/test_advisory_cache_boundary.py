@@ -140,3 +140,52 @@ def test_same_token_for_different_packages_is_not_a_cycle():
                 {'results': [{}, {}]})
     result = OSVAudit(http).assess(Inventory('fixture', (PACKAGE, second), ()))
     assert result['dependency_audit']['complete_queries'] == 2
+
+
+def test_read_rechecks_expiry_after_database_work(cache, monkeypatch):
+    corrupt(cache, 101, '[]')
+    clock = [100]
+    cache.clock = lambda: clock[0]
+    original_connect = cache.connect
+
+    def delayed_connection():
+        db = original_connect()
+
+        def trace(statement):
+            if statement.startswith('SELECT'):
+                clock[0] = 102
+        db.set_trace_callback(trace)
+        return db
+
+    monkeypatch.setattr(cache, 'connect', delayed_connection)
+    assert cache.get(PACKAGE) is None
+
+
+def test_write_ttl_starts_after_writer_lock(cache, monkeypatch):
+    clock = [100]
+    cache.clock = lambda: clock[0]
+    original_connect = cache.connect
+
+    def delayed_connection():
+        db = original_connect()
+
+        def trace(statement):
+            if statement.startswith('BEGIN'):
+                clock[0] = 102
+        db.set_trace_callback(trace)
+        return db
+
+    monkeypatch.setattr(cache, 'connect', delayed_connection)
+    cache.put(PACKAGE, [])
+    with sqlite3.connect(cache.path) as db:
+        assert db.execute('SELECT expires FROM advisories').fetchone()[0] == 102 + cache.ttl
+
+
+def test_invalid_clock_after_writer_lock_rolls_back(cache, monkeypatch):
+    cache.put(PACKAGE, ['OSV-existing'])
+    moments = iter([100, float('inf')])
+    cache.clock = lambda: next(moments)
+    with pytest.raises(ValidationError, match='clock'):
+        cache.put(PACKAGE, ['OSV-new'])
+    cache.clock = lambda: 100
+    assert cache.get(PACKAGE) == ['OSV-existing']

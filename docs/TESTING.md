@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.39.0
+# Test strategy and integration readiness — 0.39.1
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -158,3 +158,7 @@ The bounded [Gmail collector contract](GMAIL_AUDIT.md) closes identity matching,
 ## Dependency workflow offline closure (0.39.0)
 
 The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) covers existing manifest/inventory/OSV behavior, bounded cache files and response rows, finite clock/expiry metadata, validated writes/legacy reads and full per-package pagination-cycle detection. Socket-blocked installed CLI evidence covers pagination, cache-only reports/scans, disclosure consent and corrupt-cache failure without a clean conclusion. Engine 26 preserves historical bundles while rejecting cross-engine deltas. Broader ecosystems, dependency graphs, reachability and controlled live OSV validation remain separate.
+
+### Cache clock ordering correction (0.39.1)
+
+Expiry is rechecked after database reads, and new TTLs start after acquiring the SQLite writer lock. Independent SQL trace controls advance time during the database operation and reproduce both stale-read and shortened-TTL regressions. Invalid post-lock clocks roll back without replacing the previous cache row. Engine 26 and the existing cache schema remain unchanged.

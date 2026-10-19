@@ -363,7 +363,7 @@ class AdvisoryCache:
         return sorted(set(value))
 
     def get(self, package):
-        now = self.now()
+        self.now()
         with closing(self.connect()) as db:
             # Bound materialization before untrusted text crosses into Python.
             row = db.execute(
@@ -379,7 +379,7 @@ class AdvisoryCache:
             or not math.isfinite(expiry)
         ):
             raise ValidationError("Invalid advisory cache expiry; no clean conclusion")
-        if expiry <= now:
+        if expiry <= self.now():
             return None
         if not isinstance(row[1], str):
             raise ValidationError("Invalid or oversized advisory cache response")
@@ -393,8 +393,10 @@ class AdvisoryCache:
 
     def put(self, package, identifiers):
         value = self.identifiers(identifiers)
-        now = self.now()
+        self.now()
         with closing(self.connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            now = self.now()
             db.execute(
                 "INSERT OR REPLACE INTO advisories VALUES(?,?,?)",
                 (self.key(package), now + self.ttl, json.dumps(value)),

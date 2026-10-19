@@ -1,6 +1,6 @@
 # Dependency inventory / OSV / cache — offline completion contract
 
-Version 0.39.0 closes the existing bounded dependency workflow, rather than adding more ecosystems or full dependency-graph analysis. It includes local/root or opted-in nested manifest inventory, pinned GitHub parity, opt-in OSV version/ID matching and a local advisory cache. API/account setup and controlled live acceptance remain deferred.
+Version 0.39.1 closes the existing bounded dependency workflow, rather than adding more ecosystems or full dependency-graph analysis. It includes local/root or opted-in nested manifest inventory, pinned GitHub parity, opt-in OSV version/ID matching and a local advisory cache. API/account setup and controlled live acceptance remain deferred.
 
 ## Scope and usage
 
@@ -25,7 +25,7 @@ OSV response position must match query position and length. Advisory IDs and tok
 | File size | Reject files over 128 MiB before opening; no automatic eviction or compaction |
 | Clock | Integer/float, finite, nonnegative, at most `10**12` seconds; booleans and unsupported values fail before reuse/write |
 | Stored expiry | Numeric finite timestamp within `0..10**12 + 86400`; malformed expiry is an explicit validation failure |
-| Freshness | Expiry equal to or before the current clock is a miss; valid cached `[]` is a hit; stale rows are not reused |
+| Freshness | Expiry is checked against a fresh clock after database work; TTL begins after acquiring the writer lock. Expiry equal to or before the current clock is a miss; valid cached `[]` is a hit; stale rows are not reused |
 | Row materialization | SQL returns response text only when its encoded size is at most 262,144 bytes; unsupported/oversized live rows fail before Python JSON parsing |
 | Identity values | At most 1000 bounded advisory-ID strings per entry; validated writes, canonical deduplication/order and validation on read |
 | Failure | Invalid writes preserve the previous valid row; malformed live entries fail visibly, without fallback to a clean assessment |
