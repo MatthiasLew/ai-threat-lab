@@ -34,6 +34,7 @@ COMMANDS = (
     "review-headers",
     "review-html",
     "review-auth-log",
+    "review-ssh-journal",
     "review-kubernetes",
     "campaigns",
     "campaign-demo",

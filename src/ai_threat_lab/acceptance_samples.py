@@ -251,3 +251,28 @@ def synthetic_auth_log(*, negative=False):
             add(10 + i, "fixture-target-" + str(i), "fixture-spray-source")
             add(20 + i, "fixture-distributed-account", "fixture-origin-" + str(i % 3))
     return "\n".join(json.dumps(event, sort_keys=True) for event in events) + "\n"
+
+
+def synthetic_ssh_journal(*, negative=False):
+    """Inert single-host OpenSSH-shaped export; no journal collection."""
+    import json
+    from datetime import datetime, timezone
+
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    sources = {}
+    rows = [{"_COMM": "unrelated", "MESSAGE": "inert ignored row"}]
+    for line in synthetic_auth_log(negative=negative).splitlines():
+        event = json.loads(line)
+        source = sources.setdefault(event["source"], "192.0.2." + str(len(sources) + 1))
+        delta = datetime.fromisoformat(event["timestamp"]) - epoch
+        microseconds = (delta.days * 86400 + delta.seconds) * 1000000 + delta.microseconds
+        state = "Accepted" if event["outcome"] == "success" else "Failed"
+        rows.append(
+            {
+                "_COMM": "sshd-session",
+                "_MACHINE_ID": "a" * 32,
+                "__REALTIME_TIMESTAMP": str(microseconds),
+                "MESSAGE": f"{state} password for {event['account']} from {source} port 54321 ssh2",
+            }
+        )
+    return "\n".join(json.dumps(row) for row in rows) + "\n"

@@ -18,6 +18,7 @@ TARGET_KINDS = frozenset(
         "program_file",
         "html_document",
         "authentication_log",
+        "ssh_journal",
     )
 )
 

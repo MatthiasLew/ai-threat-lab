@@ -98,6 +98,8 @@ def identify_target(target: str) -> str:
         raise ValidationError("Local target does not exist; use a full URL for a website")
     if path.is_dir():
         return "local_project"
+    if path.name.lower().endswith(".ssh.jsonl"):
+        return "ssh_journal"
     if path.name.lower().endswith(".auth.jsonl"):
         return "authentication_log"
     if path.suffix.lower() == ".py":
@@ -201,6 +203,10 @@ class AssessmentService:
             ):
                 raise ValidationError("Assessment adapter returned an invalid result")
             return result
+        if kind == "ssh_journal":
+            from .ssh_journal_review import review_ssh_journal_file
+
+            return review_ssh_journal_file(target)
         if kind == "authentication_log":
             from .auth_log_review import review_auth_log_file
 

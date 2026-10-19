@@ -64,7 +64,7 @@ class Event:
     line: int
 
 
-def parse_events(source):
+def capture_lines(source):
     if not isinstance(source, str):
         raise ValidationError("Authentication events require UTF-8 JSON Lines text")
     try:
@@ -78,11 +78,17 @@ def parse_events(source):
         lines.pop()
     if len(lines) > MAX_LINES:
         raise ValidationError("Authentication log exceeds the 10000-line limit")
+    for line in lines:
+        if len(line) > MAX_LINE:
+            raise ValidationError("Authentication log line exceeds its 4096-character limit")
+    return lines
+
+
+def parse_events(source):
+    lines = capture_lines(source)
     events, seen, notices = [], set(), set()
     duplicates = 0
     for number, line in enumerate(lines, 1):
-        if len(line) > MAX_LINE:
-            raise ValidationError("Authentication log line exceeds its 4096-character limit")
         if not line.strip():
             continue
         try:
@@ -143,10 +149,23 @@ class Window:
 
 
 def inspect_auth_log(source, *, policy=None, target="<authentication-events>"):
+    events, notices = parse_events(source)
+    return inspect_auth_events(events, notices, policy=policy, target=target)
+
+
+def inspect_auth_events(
+    events,
+    notices,
+    *,
+    policy=None,
+    target="<authentication-events>",
+    target_kind="authentication_log",
+    context=NOTICE,
+):
     policy = AuthPolicy() if policy is None else policy
     if not isinstance(policy, AuthPolicy):
         raise ValidationError("Authentication review needs a validated policy")
-    events, notices = parse_events(source)
+    notices = set(notices)
     pairs, accounts, sources = defaultdict(Window), defaultdict(Window), defaultdict(Window)
     account_ids, source_ids = {}, {}
     for event in sorted(events, key=lambda e: e.line):
@@ -237,18 +256,18 @@ def inspect_auth_log(source, *, policy=None, target="<authentication-events>"):
         )
     return AssessmentResult(
         target,
-        "authentication_log",
+        target_kind,
         "partial",
         tuple(findings),
         (
-            NOTICE,
+            context,
             f"Configured policy: inclusive window={policy.window_seconds}s; "
             f"minimum failures={policy.min_failures}; minimum accounts={policy.min_accounts}; "
             f"minimum sources={policy.min_sources}; maximum findings={MAX_FINDINGS}.",
             *sorted(notices),
             f"Reviewed {len(events)} unique normalized event(s); "
             "exact identities are case-sensitive. "
-            "No provider-specific log conversion, IP/NAT inference, geo-location, "
+            "No arbitrary provider-format conversion, IP/NAT inference, geo-location, "
             "session/token correlation, password-strength or lockout/MFA effectiveness assessment.",
             "Only declared outcome/method/time is used; missing records are not inferred. "
             "No candidates is not evidence of a secure account or absence of attacks.",
@@ -256,7 +275,7 @@ def inspect_auth_log(source, *, policy=None, target="<authentication-events>"):
     )
 
 
-def review_auth_log_file(path, *, policy=None):
+def read_auth_text(path):
     path = Path(path)
     if path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file():
         raise ValidationError("Authentication log must be a regular file without links")
@@ -282,4 +301,8 @@ def review_auth_log_file(path, *, policy=None):
         source = raw.decode("utf-8-sig")
     except UnicodeError:
         raise ValidationError("Authentication log requires UTF-8 text") from None
-    return inspect_auth_log(source, policy=policy, target=str(path))
+    return source
+
+
+def review_auth_log_file(path, *, policy=None):
+    return inspect_auth_log(read_auth_text(path), policy=policy, target=str(path))

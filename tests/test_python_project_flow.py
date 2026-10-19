@@ -291,7 +291,7 @@ def test_engine_fourteen_reading_without_cross_engine_comparison(tmp_path):
     (project / "helpers.py").write_text(HELPER)
     ScanService(assessor).run(ScanOptions(str(project)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-21"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-22"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-14"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.31.0
+
+- Add bounded single-host OpenSSH journal JSONL review, with exact process/machine scope, integer journal-reception timestamps, terminal outcome/method mapping and source-free original-line evidence.
+- Reuse authentication-pattern windows and success resets; reject ambiguous/unsupported terminal outcomes and disclose omitted messages, duplicate collapse and collection limits. Do not infer MFA from keyboard-interactive authentication.
+- Add review-ssh-journal, explicit .ssh.jsonl assessment/single/batch routing, paired offline-demo controls, installed-wheel workflows and native-format/privacy/resource regressions. No journal collection, subprocess, network or login attempts.
+- Advance scan engine to 22, retain engine-21 bundle reading and disable cross-engine comparisons. Python engines are unchanged; API setup remains deferred.
+
 ## 0.30.0
 
 - Add read-only historical signed-event receipts without replaying imports or renewing expired approvals. Require the original signed envelope and registered scope/key bindings.

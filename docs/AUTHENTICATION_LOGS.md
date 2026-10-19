@@ -33,7 +33,7 @@ One object per nonblank physical line, exactly these five fields:
 | `outcome` | `failure` or `success` |
 | `method` | `password`, `public_key`, `mfa` or `unknown` |
 
-The schema has no fields for passwords, tokens, raw messages or device metadata, and extra properties are rejected. Do not put secrets into account/source identifiers. Do not invent outcomes for missing records. Provider-native Windows/SSH/identity-provider log conversion is not implemented: prepare a normalized export from a trusted source. A later collector must map its actual provider semantics into this contract and validate permissions/completeness; adding a credential alone does not implement that mapping.
+The schema has no fields for passwords, tokens, raw messages or device metadata, and extra properties are rejected. Do not put secrets into account/source identifiers. Do not invent outcomes for missing records. Arbitrary provider-native Windows/SSH/identity-provider conversion is not implemented: prepare a normalized export from a trusted source. Version 0.31.0 adds a separate restricted [single-host OpenSSH journal JSONL adapter](SSH_JOURNAL_REVIEW.md). A later collector must map its actual provider semantics into this contract and validate permissions/completeness; adding a credential alone does not implement that mapping.
 
 The parser rejects duplicate keys, non-finite JSON, malformed structure, invalid dates/identifiers and unsupported fields. UTF-8 files, optional BOM, CRLF and blank lines are supported. Exact normalized duplicates, including equivalent UTC timestamp spellings, are collapsed with a notice; distinct genuine attempts identical in all five fields may therefore be undercounted. No event-ID or export replay authenticity is inferred.
 

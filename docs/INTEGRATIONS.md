@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.30.0)
+# Integration contracts and current capability boundary (0.31.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -38,7 +38,7 @@ from ai_threat_lab.assessment import AssessmentService
 # service = AssessmentService({"github_repository": github_adapter})
 ```
 
-Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `html_document`, `authentication_log`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
+Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `html_document`, `authentication_log`, `ssh_journal`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
 
 A remote adapter must validate scope and destinations itself, enforce response/time/size bounds, and treat fetched code and page content as untrusted data. The legacy default router makes no HTTP, DNS, mailbox or GitHub requests; the new `audit` workflow explicitly opts into bounded read-only collectors. Active checks must be a separate explicit operation with a defined target scope, not a side effect of target classification.
 
@@ -85,3 +85,7 @@ HTML scope and limits: [HTML_REVIEW.md](HTML_REVIEW.md). ZIP metadata scope and 
 ## Local control boundary (0.30.0)
 
 Historical receipts require the original signed envelope and registered bindings; they attest only to current local journal contents. Combined local cancellation updates rehearsal and event databases together under documented SQLite prerequisites. It does not acknowledge a provider stop or delete exported assets. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).
+
+## Saved native authentication mapping (0.31.0)
+
+`review-ssh-journal` maps selected OpenSSH journal JSONL outcomes from one declared machine. Exact process selection and scalar fields are required; unsupported terminal outcomes reject the capture. Password/public-key/unknown mapping is explicit, with no inferred MFA. Single/batch scans recognize explicit `.ssh.jsonl` targets; project source walks do not ingest them. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).

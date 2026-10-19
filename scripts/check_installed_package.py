@@ -561,6 +561,53 @@ def main() -> None:
             "auth_success_after_failures",
         ]
         assert demo["authentication_negative_findings"] == 0
+        assert demo["ssh_journal_checks"] == demo["authentication_checks"]
+        assert demo["ssh_journal_negative_findings"] == 0
+        ssh = json.loads(
+            run(
+                executable,
+                "review-ssh-journal",
+                "offline demo/logins.ssh.jsonl",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert ssh["target_kind"] == "ssh_journal"
+        assert sorted(f["check"] for f in ssh["findings"]) == demo["ssh_journal_checks"]
+        assert "192.0.2." not in json.dumps(ssh) and "fixture-account" not in json.dumps(ssh)
+        run(
+            executable,
+            "review-ssh-journal",
+            "offline demo/separated-logins.ssh.jsonl",
+            "--fail-on-findings",
+        )
+        run(
+            executable,
+            "review-ssh-journal",
+            "offline demo/logins.ssh.jsonl",
+            "--min-failures",
+            "2",
+            expected=2,
+        )
+        run(
+            executable,
+            "review-ssh-journal",
+            "offline demo/logins.ssh.jsonl",
+            "--format",
+            "html",
+            "--output",
+            "installed-ssh-review.html",
+        )
+        run(
+            executable,
+            "review-ssh-journal",
+            "offline demo/logins.ssh.jsonl",
+            "--output",
+            "installed-ssh-review.html",
+            expected=2,
+        )
+        run(executable, "scan-check", "offline demo/ssh-observations")
+        run(executable, "scan-check", "offline demo/ssh-negative-control")
         login = json.loads(
             run(
                 executable,

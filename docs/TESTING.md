@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.30.0
+# Test strategy and integration readiness — 0.31.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -122,3 +122,7 @@ The demo creates a fresh private signing key and separate event journal for all 
 ## Historical receipt and combined-control gates (0.30.0)
 
 Test unchanged database bytes for receipt/status reads; signature/binding failures; expired/cancelled receipt lookup; missing/conflicting IDs; no implicit creation; malformed schemas, links, hardlinks, URI escaping, size limits and WAL rejection. Inject SQL failures into each database and require rollback of both; concurrent status/cancellation must expose no half-commit. Preserve unrelated and completed sessions. Real CLI and installed-wheel checks cover recovery, idempotency, no overwrite and stopping both local ledgers. SQL fault/concurrency tests do not simulate physical power loss.
+
+## OpenSSH journal mapping (0.31.0)
+
+Require independent native records and expected normalized timelines, all four pattern controls, nonterminal and alternate-method success resets, exact source-line evidence, host/process isolation, microsecond epoch/year boundaries, canonical-IP grouping, strict JSON/field/message limits and identity-free output. Cover invalid selected outcomes, nonscalar/binary metadata, no-network/subprocess, file guards, CLI thresholds/HTML/no-overwrite and scan/batch integrity. Demo positive/negative failures must block completion; installed wheel must repeat both controls. Engine-21 reading remains supported; cross-engine comparisons remain disabled.

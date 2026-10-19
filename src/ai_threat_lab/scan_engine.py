@@ -65,6 +65,7 @@ class ScanOptions:
             "mail_message",
             "html_document",
             "authentication_log",
+            "ssh_journal",
         ):
             if linked(Path(self.target)):
                 raise ValidationError("Scan root must not be a symlink/junction")
@@ -105,7 +106,7 @@ class ScanOptions:
         return {
             "target": self.target,
             "target_kind": identify_target(self.target),
-            "engine": "read-only-pipeline-21",
+            "engine": "read-only-pipeline-22",
             "network": self.network,
             "allowed_hosts": list(self.allowed_hosts),
             "max_files": self.max_files,

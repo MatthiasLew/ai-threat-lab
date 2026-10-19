@@ -19,6 +19,7 @@ from .local_inventory import local_inventory
 from .models import ValidationError
 from .providers import ProviderError
 from .remote_audit import GithubAudit, GmailAudit, MailDomainAudit, WebsiteAudit
+from .ssh_journal_review import review_ssh_journal_file
 
 COMMANDS = {
     "audit",
@@ -27,6 +28,7 @@ COMMANDS = {
     "review-headers",
     "review-html",
     "review-auth-log",
+    "review-ssh-journal",
     "review-kubernetes",
     "ai-explain",
     "api-costs",
@@ -48,11 +50,15 @@ def add_commands(commands):
     auth = commands.add_parser(
         "review-auth-log", help="Review normalized saved login events without login attempts"
     )
-    auth.add_argument("--window-seconds", type=int, default=300)
-    auth.add_argument("--min-failures", type=int, default=5)
-    auth.add_argument("--min-accounts", type=int, default=5)
-    auth.add_argument("--min-sources", type=int, default=3)
-    for review in (headers, kubernetes, html, auth):
+    ssh = commands.add_parser(
+        "review-ssh-journal", help="Review a saved single-host OpenSSH journal JSONL export"
+    )
+    for auth_review in (auth, ssh):
+        auth_review.add_argument("--window-seconds", type=int, default=300)
+        auth_review.add_argument("--min-failures", type=int, default=5)
+        auth_review.add_argument("--min-accounts", type=int, default=5)
+        auth_review.add_argument("--min-sources", type=int, default=3)
+    for review in (headers, kubernetes, html, auth, ssh):
         review.add_argument("path", type=Path)
         review.add_argument("--format", choices=("json", "html"), default="json")
         review.add_argument("--fail-on-findings", action="store_true")
@@ -125,6 +131,7 @@ def add_commands(commands):
         kubernetes,
         html,
         auth,
+        ssh,
     ):
         command.add_argument("--output", type=Path, help="New JSON file; never overwrite")
 
@@ -138,6 +145,7 @@ def audit_target(args):
         "mail_message",
         "html_document",
         "authentication_log",
+        "ssh_journal",
     ):
         return local_inventory(args.target)
     if not args.network:
@@ -172,15 +180,25 @@ def audit_target(args):
 
 def run_command(args):
     code = 0
-    if args.command in ("review-headers", "review-kubernetes", "review-html", "review-auth-log"):
+    if args.command in (
+        "review-headers",
+        "review-kubernetes",
+        "review-html",
+        "review-auth-log",
+        "review-ssh-journal",
+    ):
         result = (
-            review_auth_log_file(
+            (
+                review_ssh_journal_file
+                if args.command == "review-ssh-journal"
+                else review_auth_log_file
+            )(
                 args.path,
                 policy=AuthPolicy(
                     args.window_seconds, args.min_failures, args.min_accounts, args.min_sources
                 ),
             )
-            if args.command == "review-auth-log"
+            if args.command in ("review-auth-log", "review-ssh-journal")
             else audit_header_capture(args.path)
             if args.command == "review-headers"
             else review_html_file(args.path, document_url=args.document_url)

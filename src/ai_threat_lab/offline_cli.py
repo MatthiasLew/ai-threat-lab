@@ -21,6 +21,7 @@ from .acceptance_samples import (
     synthetic_python_package_shadowing,
     synthetic_python_project,
     synthetic_python_sqlite_context,
+    synthetic_ssh_journal,
     synthetic_zip,
 )
 from .audit_report import merge_reports, render_html
@@ -336,6 +337,20 @@ def offline_demo(output, *, now=None):
         raise ValidationError(
             "Synthetic authentication negative control failed; demo is incomplete"
         )
+    ssh_checks = None
+    ssh_negative_count = None
+    for negative, label in ((False, "ssh-observations"), (True, "ssh-negative-control")):
+        source = root / ("separated-logins.ssh.jsonl" if negative else "logins.ssh.jsonl")
+        source.write_text(synthetic_ssh_journal(negative=negative), encoding="utf-8")
+        scanned = engine.run(ScanOptions(str(source)), root / label)
+        bundled = read_bundle(root / label)
+        checks = {f["check"] for f in bundled["documents"]["assessment.json"]["findings"]}
+        if scanned["failed_modules"] or checks != (set() if negative else auth_checks):
+            raise ValidationError("Synthetic SSH journal acceptance failed; demo is incomplete")
+        if negative:
+            ssh_negative_count = len(checks)
+        else:
+            ssh_checks = sorted(checks)
     kube_project = root / "kubernetes-fixture"
     kube_project.mkdir()
     (kube_project / "workload.json").write_bytes(json_bytes(synthetic_kubernetes_manifest()))
@@ -566,6 +581,8 @@ def offline_demo(output, *, now=None):
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
+        "ssh_journal_checks": ssh_checks,
+        "ssh_journal_negative_findings": ssh_negative_count,
         "authentication_checks": sorted(auth_checks),
         "authentication_negative_findings": negative_auth["unique_findings"],
         "html_observations": len(html_review.findings),
@@ -586,6 +603,8 @@ def offline_demo(output, *, now=None):
         "not observed participant behavior. Not evidence of real-target or API readiness.",
     }
     links = (
+        ("OpenSSH journal patterns", "ssh-observations/report.html"),
+        ("OpenSSH negative control", "ssh-negative-control/report.html"),
         ("Login event patterns", "authentication-observations/report.html"),
         ("Login event negative control", "authentication-negative-control/report.html"),
         ("Saved HTML review", "html-review.html"),

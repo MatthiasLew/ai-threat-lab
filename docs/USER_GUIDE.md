@@ -134,3 +134,7 @@ Five new commands create a local signing key, register an exact approved plan/pa
 ## Recover an import result or stop both local ledgers
 
 Use `training-events-receipt ENVELOPE.json --key-file KEY --ledger EVENTS.sqlite` after a lost import response. Use `training-local-status` / `training-local-cancel` with `--training-ledger`, `--event-ledger` and `--plan-digest` to inspect/stop both existing local ledgers. Both databases must be distinct DELETE-mode files in the same private directory. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md). These commands do not control external services.
+
+## Saved SSH log analysis
+
+Run `review-ssh-journal logins.ssh.jsonl` on a saved supported single-host journal export; use `--format html --output REPORT.html` or `--fail-on-findings` as needed. `.ssh.jsonl` paths also work with single and batch scans. Export instructions and strict supported formats are in [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md). No SSH connection or login attempt occurs.

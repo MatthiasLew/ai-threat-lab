@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.30.0
+# Delivery status and remaining work — 0.31.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -21,7 +21,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |
 | Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
-| Brute force / credential stuffing | Educational scenarios plus bounded normalized login-event failure/spray/distributed/success-sequence candidates | No login attempts, native provider log conversion, password-reuse or compromise confirmation |
+| Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |
 | AI explanation/cost control | Concrete budgeted adapter, evidence minimization, dry-run, deduplication/cache and reservations | Chosen model/prices/account setup and controlled live validation |
 | Reports/history | Offline multi-target batches, JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
@@ -116,3 +116,7 @@ Assigned package attributes and uncertain module namespaces no longer silently r
 ## Historical receipts and combined local control (0.30.0)
 
 Read-only receipts recover an accepted event result after freshness/expiry/cancellation without reimport. Combined local status exposes partial cancellation; one attached SQLite transaction revokes rehearsal starts, stops running sessions and blocks event acceptance for the registered plan. Existing distinct DELETE-mode files in the same private directory are required. This is local state only, with filesystem/SQLite durability assumptions; provider dispatch/stop and full-product gaps remain open. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).
+
+## Saved OpenSSH journal adapter (0.31.0)
+
+The CLI maps selected single-host journal JSONL records into the existing four authentication-pattern families. It preserves source line references, redacts identities and rejects ambiguous terminal outcomes. Explicit `.ssh.jsonl` single/batch scans, paired demo and installed-wheel workflows are covered. Native syslog/Windows/other-provider conversion, journal collection, log authenticity and real deployment acceptance remain open. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).

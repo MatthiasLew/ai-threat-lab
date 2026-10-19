@@ -25,6 +25,7 @@ LOCAL_KINDS = {
     "program_file",
     "html_document",
     "authentication_log",
+    "ssh_journal",
 }
 NOTICE = (
     "Bounded local checks only; no network, account access or model calls. "

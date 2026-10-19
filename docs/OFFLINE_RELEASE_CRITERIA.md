@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.30.0
+# Offline CLI release criteria — 0.31.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -58,3 +58,7 @@ Each track needs its own target environment, bounded requirements and acceptance
 ## Local recovery/control addition (0.30.0)
 
 Require historical signed receipt queries without writes or approval renewal; combined cancellation rollback/idempotency/concurrency; explicit partial-state diagnostics; existing-only bounded distinct DELETE-mode files in one private directory. Demo completion independently checks stored cancellation, stopped session and matching historical receipt. Installed-wheel receipt/status/cancel workflows must pass. External provider control is excluded. See [LOCAL_TRAINING_CONTROL.md](LOCAL_TRAINING_CONTROL.md).
+
+## Bounded OpenSSH journal addition (0.31.0)
+
+Require the restricted single-host JSONL contract, integer reception time, exact process/machine checks, supported terminal outcome mapping, unknown-method handling without MFA inference, original physical line evidence, privacy/resource/file limits and visible omissions. Independent mapping controls, paired demo, CLI and installed-wheel workflows must pass. No native journal collection, live attempts or arbitrary provider parsing is included. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).

@@ -79,7 +79,8 @@ def readiness():
             "partial",
             "not_required",
             "Bounded normalized UTC login-event capture review for failure/spray/distributed "
-            "and post-failure success patterns; no login attempts, raw provider log conversion "
+            "and post-failure success patterns, plus selected single-host OpenSSH journal JSONL; "
+            "no login attempts, arbitrary native log conversion "
             "or compromise/defense validation.",
         ),
         (

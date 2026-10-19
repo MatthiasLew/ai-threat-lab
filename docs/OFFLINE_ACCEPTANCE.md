@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.30.0
+# Offline acceptance kit — 0.31.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -140,3 +140,7 @@ The demo creates a fresh private signing key and separate event journal for all 
 ## Combined local control fixture (0.30.0)
 
 The demo adds one separate fictional session in `coordinated-training.sqlite` and a signed claim in the demo event journal. It checks historical lookup after expiry, cancels both ledgers, then independently reads stored status/session/receipt before publishing completion. The original three-channel session expectations remain separate. `local-control-plan.json`, `local-control-event.json`, `local-control-status.json` and `local-control-receipt.json` document the fixture; the summary includes `combined_local_control`. None measures real participant behavior.
+
+## OpenSSH journal controls (0.31.0)
+
+The demo generates `logins.ssh.jsonl` and `separated-logins.ssh.jsonl` using fictional identities/documentation IP ranges. `ssh-observations` must contain the four authentication candidates; `ssh-negative-control` must contain none. Both bundles verify before completion, are linked from `index.html`, and contribute `ssh_journal_checks` / `ssh_journal_negative_findings` to the summary. Installed-wheel review and scan-check repeat the paths. The raw synthetic exports are fixtures, not collected events or evidence of real compromises.
