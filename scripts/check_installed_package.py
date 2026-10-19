@@ -123,6 +123,11 @@ def main() -> None:
                 pipe.kill()
                 pipe.wait()
 
+        github_receipt = json.loads(run(python, ROOT / "scripts/check_github_offline.py"))
+        assert github_receipt == {
+            "status": "passed", "positive_requests": 5, "negative_controls": 7,
+            "live_requests": 0, "ai_calls": 0,
+        }
         run(python, ROOT / "scripts/check_ai_offline.py")
         ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
         assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]

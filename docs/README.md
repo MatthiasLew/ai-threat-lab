@@ -1,5 +1,8 @@
 # Documentation index
 
+- [GitHub collection and usage limits](GITHUB_COLLECTION.md)
+- [GitHub collector offline acceptance](GITHUB_OFFLINE_ACCEPTANCE.md)
+
 - [Console installation, diagnostics and exit codes](CLI_INSTALLATION.md)
 - [CLI/install completion contract](CLI_OFFLINE_ACCEPTANCE.md)
 

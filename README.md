@@ -4,7 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.34.0
+## Project status — 0.35.0
+
+GitHub collection: [usage, snapshot guarantees and bounds](docs/GITHUB_COLLECTION.md).
 
 CLI installation and diagnostics: [Linux, Windows and offline wheel guide](docs/CLI_INSTALLATION.md).
 

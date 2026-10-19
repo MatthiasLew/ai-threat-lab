@@ -29,9 +29,11 @@ def readiness():
         ),
         (
             "github",
-            "fixture_tested",
+            "offline_complete",
             "integration_validation_required",
-            "Pinned source/manifest collection; validate chosen public/private repository access.",
+            "Bounded pinned source/manifest collection, verified blobs and controlled metadata "
+            "failures; installed synthetic wire accepted with blocked sockets. "
+            "Real public/private repository and organization access remain unvalidated.",
         ),
         (
             "website",

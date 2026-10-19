@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.34.0
+# Delivery status and remaining work — 0.35.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -132,3 +132,7 @@ The finite [reporting contract](REPORTS_OFFLINE_ACCEPTANCE.md) is offline-comple
 ## CLI and installation closure (0.34.0)
 
 The finite [CLI/install contract](CLI_OFFLINE_ACCEPTANCE.md) covers exact option names, one release identity, UTF-8 process streams, quiet closed-pipe exit, local installation diagnostics and wheel/sdist resource/metadata parity. Fresh offline wheel installation exercises every command help and existing functional workflows outside the checkout. Linux/Windows Python 3.12–3.14 CI provides platform evidence. See [installation instructions](CLI_INSTALLATION.md). API setup/live validation remain deferred; broader collector/product work is separate.
+
+## GitHub collector offline closure (0.35.0)
+
+The existing bounded collector is covered by the finite [offline acceptance contract](GITHUB_OFFLINE_ACCEPTANCE.md): immutable shared source/manifest selection, verified blob reuse, strict provider metadata and local header boundaries, controlled failures without retries and a socket-blocked synthetic scan from the installed wheel. This closes the offline collector implementation/testing scope; public/private account and organization access remain deferred integration validation. Source-language coverage and assessment engines are unchanged. See [usage and exact limits](GITHUB_COLLECTION.md).

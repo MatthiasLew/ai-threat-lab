@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.35.0
+
+- Close the existing bounded GitHub collector offline contract with controlled malformed SHA/default-branch/truncation responses, boolean option checks and redacted local token-header validation.
+- Bound provider JSON to 64 container levels and convert excessive depth or decoder recursion failures into controlled integration errors. Keep immutable source/manifest selection, digest verification, budgets and analysis engines unchanged.
+- Add boundary regressions and a clean installed-wheel synthetic GitHub scan with blocked sockets, exact request/blob-reuse checks, verified reports and malformed/denied/rate-limit controls.
+- Document snapshot and selection limits, socket timeout versus command deadline, usage and remaining live-account validation. AI API setup remains deferred.
+
 ## 0.34.0
 
 - Reuse full runtime catalog validation in installation diagnostics; invalid schemas, records, control references and duplicate identities cannot report ready.

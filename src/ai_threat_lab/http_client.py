@@ -25,8 +25,23 @@ class HttpResponse:
             result = json.loads(self.body)
             if not isinstance(result, dict):
                 raise ValueError
+            # Bound structure independently of interpreter-specific JSON recursion limits.
+            # Keep iterator frames rather than duplicating a broad response into a worklist.
+            stack = [(iter(result.values()), 1)]
+            while stack:
+                children, depth = stack[-1]
+                try:
+                    value = next(children)
+                except StopIteration:
+                    stack.pop()
+                    continue
+                if isinstance(value, (dict, list)):
+                    if depth >= 64:
+                        raise ValueError
+                    nested = value.values() if isinstance(value, dict) else value
+                    stack.append((iter(nested), depth + 1))
             return result
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, RecursionError):
             raise ProviderError("Provider returned invalid JSON") from None
 
 

@@ -103,6 +103,8 @@ class GithubAudit:
         return self.collect(target).assessment
 
     def collect(self, target, *, include_dependencies=False, recursive_dependencies=False):
+        if type(include_dependencies) is not bool:
+            raise ValidationError("GitHub dependency selection must be boolean")
         if type(recursive_dependencies) is not bool or (
             recursive_dependencies and not include_dependencies
         ):
@@ -121,17 +123,23 @@ class GithubAudit:
         headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
         token = os.environ.get("GITHUB_TOKEN")
         if token:
+            if len(token) > 4096 or any(not 33 <= ord(char) <= 126 for char in token):
+                raise ProviderError("GITHUB_TOKEN has unsupported length or characters")
             headers["Authorization"] = "Bearer " + token
         repository_data = get_document(self.client, base, headers)
         branch = repository_data.get("default_branch")
-        if not isinstance(branch, str) or not branch:
-            raise ProviderError("Repository response lacks a default branch")
+        if (
+            not isinstance(branch, str)
+            or not 1 <= len(branch) <= 1024
+            or any(ord(c) <= 32 or ord(c) == 127 or 0xD800 <= ord(c) <= 0xDFFF for c in branch)
+        ):
+            raise ProviderError("Repository response lacks a usable default branch")
         commit = get_document(self.client, base + "/commits/" + quote(branch, safe=""), headers)
         sha = commit.get("sha", "")
-        if not re.fullmatch(r"[a-f0-9]{40}", sha):
+        if not isinstance(sha, str) or not re.fullmatch(r"[a-f0-9]{40}", sha):
             raise ProviderError("Repository response lacks an immutable commit")
         tree = get_document(self.client, base + f"/git/trees/{sha}?recursive=1", headers)
-        if not isinstance(tree.get("tree"), list):
+        if not isinstance(tree.get("tree"), list) or type(tree.get("truncated", False)) is not bool:
             raise ProviderError("Repository tree is invalid")
         findings = []
         missing = [
@@ -214,7 +222,7 @@ class GithubAudit:
                 missing.append("Repository review stopped at the file or total-byte limit.")
                 break
             blob_sha = item.get("sha", "")
-            if not re.fullmatch(r"[a-f0-9]{40}", blob_sha):
+            if not isinstance(blob_sha, str) or not re.fullmatch(r"[a-f0-9]{40}", blob_sha):
                 raise ProviderError("Invalid Git blob identity")
             if blob_sha not in cache:
                 blob = get_document(self.client, base + "/git/blobs/" + blob_sha, headers)
