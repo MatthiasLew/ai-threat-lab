@@ -213,3 +213,23 @@ def test_closed_error_pipe_has_quiet_documented_exit():
         if child.poll() is None:
             child.kill()
             child.wait()
+
+
+@pytest.mark.parametrize("change", ["schema", "invalid-record", "invalid-rule", "duplicate"])
+def test_catalog_diagnosis_uses_full_runtime_validation(monkeypatch, tmp_path, change):
+    raw = json.loads((SOURCE / "ai_threat_lab/data/catalog.json").read_text(encoding="utf-8"))
+    if change == "schema":
+        raw["schema_version"] = 2
+    elif change == "invalid-record":
+        raw["scenarios"] = [None]
+    elif change == "invalid-rule":
+        raw["scenarios"][0]["rules"][0]["control_id"] = "unknown-control"
+    else:
+        raw["controls"].append(raw["controls"][0])
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "catalog.json").write_text(json.dumps(raw), encoding="utf-8")
+    monkeypatch.setattr(installation, "files", lambda _: tmp_path)
+    report = installation.installation_report()
+    assert report["status"] == "inconsistent_installation"
+    assert report["checks"]["bundled_catalog"] is False

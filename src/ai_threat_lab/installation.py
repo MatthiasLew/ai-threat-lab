@@ -1,12 +1,12 @@
 """Local installation diagnostics without environment, credentials or network access."""
 
-import json
 import platform
 import sys
 from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
 
 from ._version import __version__
+from .catalog import parse_catalog
 
 
 def installation_report() -> dict:
@@ -19,14 +19,8 @@ def installation_report() -> dict:
         with files("ai_threat_lab").joinpath("data/catalog.json").open("rb") as resource:
             raw = resource.read(1024 * 1024 + 1)
         if len(raw) <= 1024 * 1024:
-            document = json.loads(raw)
-            catalog_ok = (
-                isinstance(document, dict)
-                and isinstance(document.get("scenarios"), list)
-                and bool(document["scenarios"])
-                and isinstance(document.get("controls"), list)
-                and bool(document["controls"])
-            )
+            scenarios, controls = parse_catalog(raw.decode("utf-8"))
+            catalog_ok = bool(scenarios and controls)
     except (OSError, ValueError, RecursionError):
         pass
     checks = {

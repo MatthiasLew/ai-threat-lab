@@ -27,6 +27,14 @@ def load_catalog(path: Path | None = None) -> tuple[tuple[Scenario, ...], tuple[
             if path
             else files("ai_threat_lab").joinpath("data/catalog.json").read_text(encoding="utf-8")
         )
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        raise ValidationError(f"Invalid scenario catalog: {exc}") from exc
+    return parse_catalog(text)
+
+
+def parse_catalog(text: str) -> tuple[tuple[Scenario, ...], tuple[Control, ...]]:
+    """Validate already-read catalog text with the runtime catalog contract."""
+    try:
         raw = json.loads(text)
         if type(raw["schema_version"]) is not int or raw["schema_version"] != 1:
             raise ValidationError("Unsupported catalog schema_version")

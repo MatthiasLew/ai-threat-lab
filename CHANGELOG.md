@@ -2,6 +2,8 @@
 
 ## 0.34.0
 
+- Reuse full runtime catalog validation in installation diagnostics; invalid schemas, records, control references and duplicate identities cannot report ready.
+
 - Include the Windows CI correction: normalize CRT invalid-argument errors only for pipe output and close failed buffers before shutdown; preserve file errors and platform line endings.
 
 - Close the finite CLI/install contract: require full option names on every parser, use one release-version source and add credential-free, network-free installation diagnostics.
