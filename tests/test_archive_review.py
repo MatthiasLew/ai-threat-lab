@@ -22,13 +22,16 @@ def fixture(*names, payload=b"example", compression=zipfile.ZIP_STORED, symlink=
         warnings.simplefilter("ignore", UserWarning)
         with zipfile.ZipFile(stream, "w", compression=compression) as archive:
             for name in names:
+                # ZipInfo(name) normalizes Windows backslashes before writing.
+                # Preserve the requested wire name so fixtures are platform-independent.
+                entry = zipfile.ZipInfo("fixture")
+                entry.filename = name
+                entry.orig_filename = name
+                entry.compress_type = compression
+                entry.create_system = 3
                 if symlink:
-                    entry = zipfile.ZipInfo(name)
-                    entry.create_system = 3
                     entry.external_attr = (stat.S_IFLNK | 0o777) << 16
-                    archive.writestr(entry, payload)
-                else:
-                    archive.writestr(name, payload)
+                archive.writestr(entry, payload)
     return stream.getvalue()
 
 
@@ -193,3 +196,10 @@ def test_zip_cli_audit_and_verified_scan_bundle(tmp_path):
     assert result.returncode == 1, result.stderr
     read_bundle(tmp_path / "bundle")
     assert "zip_path_escape" in (tmp_path / "bundle" / "report.html").read_text()
+
+
+def test_fixture_preserves_backslash_wire_names_on_every_platform():
+    raw = fixture("a/b", "a\\b")
+    assert b"a\\b" in raw
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        assert [entry.orig_filename for entry in archive.infolist()] == ["a/b", "a\\b"]
