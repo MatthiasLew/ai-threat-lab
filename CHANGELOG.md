@@ -2,6 +2,8 @@
 
 ## 0.34.0
 
+- Include the Windows CI correction: normalize CRT invalid-argument errors only for pipe output and close failed buffers before shutdown; preserve file errors and platform line endings.
+
 - Close the finite CLI/install contract: require full option names on every parser, use one release-version source and add credential-free, network-free installation diagnostics.
 - Share a UTF-8 process entrypoint between the console executable and module; flush help/version and command output and handle closed pipes with quiet exit 141. Reject malformed UTF-8 interactive input without a traceback.
 - Verify wheel/sdist identity, Python minimum, console entrypoint and bundled resources; extend clean offline wheel installation to every command help, module parity, diagnostics, legacy locale and closed-pipe behavior.

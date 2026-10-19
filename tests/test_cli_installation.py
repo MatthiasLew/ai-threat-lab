@@ -1,6 +1,7 @@
 """Release identity, exact CLI options and process stream regressions."""
 
 import argparse
+import errno
 import json
 import os
 import subprocess
@@ -58,7 +59,7 @@ def test_closed_output_pipe_has_quiet_documented_exit(args):
     child.stdout.close()
     try:
         errors = child.stderr.read()
-        assert child.wait(timeout=15) == 141
+        assert child.wait(timeout=15) == 141, errors.decode("utf-8", errors="replace")
         assert errors == b""
     finally:
         child.stderr.close()
@@ -130,7 +131,7 @@ def test_unsupported_python_diagnosis(monkeypatch):
 def test_invalid_utf8_interactive_input_has_no_traceback():
     result = process("interactive", input=b"\xff\n")
     assert result.returncode == 2
-    assert result.stderr == b"Error: text cannot be processed as UTF-8.\n"
+    assert result.stderr.splitlines() == [b"Error: text cannot be processed as UTF-8."]
 
 
 def test_doctor_installation_failure_exit(monkeypatch, capsys):
@@ -145,3 +146,70 @@ def test_doctor_installation_success_exit(monkeypatch, capsys):
     monkeypatch.setattr(cli, "installation_report", lambda: {"status": "ready"})
     assert cli.main(["doctor", "--installation"]) == 0
     assert json.loads(capsys.readouterr().out)["status"] == "ready"
+
+
+@pytest.mark.parametrize("method", ["write", "flush"])
+def test_windows_invalid_argument_on_pipe_becomes_broken_pipe(method):
+    from ai_threat_lab.cli import _WindowsPipeOutput
+
+    read_fd, write_fd = os.pipe()
+    class Stream:
+        def fileno(self):
+            return write_fd
+        def write(self, *args):
+            raise OSError(errno.EINVAL, "Windows CRT pipe failure")
+        flush = write
+    try:
+        wrapped = _WindowsPipeOutput(Stream())
+        with pytest.raises(BrokenPipeError):
+            getattr(wrapped, method)(*(["text"] if method == "write" else []))
+    finally:
+        os.close(read_fd)
+        os.close(write_fd)
+
+
+@pytest.mark.parametrize("code", [errno.EINVAL, errno.ENOSPC, errno.EACCES])
+def test_windows_output_wrapper_does_not_hide_file_errors(tmp_path, code):
+    from ai_threat_lab.cli import _WindowsPipeOutput
+
+    with (tmp_path / "regular file").open("w") as handle:
+        class Stream:
+            def fileno(self):
+                return handle.fileno()
+            def write(self, text):
+                raise OSError(code, "file error")
+        with pytest.raises(OSError) as caught:
+            _WindowsPipeOutput(Stream()).write("text")
+        assert not isinstance(caught.value, BrokenPipeError)
+        assert caught.value.errno == code
+
+
+def test_windows_output_wrapper_forwards_regular_stream_operations(tmp_path):
+    from ai_threat_lab.cli import _WindowsPipeOutput
+
+    path = tmp_path / "output"
+    with path.open("w", encoding="utf-8") as handle:
+        wrapped = _WindowsPipeOutput(handle)
+        assert wrapped.encoding == "utf-8"
+        assert wrapped.write("Łódź") == 4
+        wrapped.flush()
+    assert path.read_text(encoding="utf-8") == "Łódź"
+
+
+def test_closed_error_pipe_has_quiet_documented_exit():
+    env = dict(os.environ, PYTHONPATH=str(SOURCE))
+    child = subprocess.Popen(
+        [sys.executable, "-m", "ai_threat_lab", "unknown-command"],
+        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    assert child.stdout is not None and child.stderr is not None
+    child.stderr.close()
+    try:
+        output = child.stdout.read()
+        assert child.wait(timeout=15) == 141, output.decode("utf-8", errors="replace")
+        assert output == b""
+    finally:
+        child.stdout.close()
+        if child.poll() is None:
+            child.kill()
+            child.wait()

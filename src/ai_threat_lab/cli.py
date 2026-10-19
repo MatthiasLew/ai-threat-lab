@@ -1,9 +1,11 @@
 """Thin console adapter around the reusable analysis service."""
 
 import argparse
+import errno
 import json
 import os
 import sqlite3
+import stat
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -269,12 +271,44 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
         return 130
 
 
+class _WindowsPipeOutput:
+    """Normalize Windows CRT EINVAL only when writing/flushing an actual pipe."""
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+    def _call(self, method, *args):
+        try:
+            return getattr(self.stream, method)(*args)
+        except OSError as exc:
+            if exc.errno == errno.EINVAL:
+                try:
+                    pipe = stat.S_ISFIFO(os.fstat(self.stream.fileno()).st_mode)
+                except (AttributeError, OSError, ValueError):
+                    pipe = False
+                if pipe:
+                    raise BrokenPipeError(errno.EPIPE, "Output pipe closed") from None
+            raise
+
+    def write(self, text):
+        return self._call("write", text)
+
+    def flush(self):
+        return self._call("flush")
+
+
 def entrypoint() -> int:
     """Process boundary: UTF-8 streams and quiet, deterministic closed-pipe exit."""
     for stream in (sys.stdin, sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:
             reconfigure(encoding="utf-8", errors="strict")
+    if os.name == "nt":
+        sys.stdout = _WindowsPipeOutput(sys.stdout)
+        sys.stderr = _WindowsPipeOutput(sys.stderr)
     try:
         try:
             result = main()
@@ -287,11 +321,13 @@ def entrypoint() -> int:
         sys.stderr.flush()
         return result
     except BrokenPipeError:
-        # Replacing the underlying descriptors avoids a second error during shutdown.
-        with open(os.devnull, "w") as sink:
-            for stream in (sys.stdout, sys.stderr):
-                try:
-                    os.dup2(sink.fileno(), stream.fileno())
-                except (AttributeError, OSError, ValueError):
-                    pass
+        # Close the original buffered streams, including cached Windows handles.
+        # Rebinding alone leaves their destructors able to retry the failed flush.
+        streams = (sys.stdout, sys.stderr)
+        sys.stdout = sys.stderr = open(os.devnull, "w", encoding="utf-8")
+        for stream in streams:
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                pass
         return 141

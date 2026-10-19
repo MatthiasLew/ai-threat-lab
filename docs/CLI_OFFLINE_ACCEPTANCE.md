@@ -19,3 +19,5 @@ Run the complete gate with `python scripts/verify.py`. The process-level regress
 `main(argv, registry=...)` remains the reusable Python command handler. The executable and `python -m ai_threat_lab` use `entrypoint()` to configure process streams and flush output before interpreter shutdown. Applications embedding the handler keep ownership of their streams.
 
 This contract does not include a GUI, a standalone executable/Python installer, shell completion, distribution signing, macOS certification or real provider/account validation. It does not establish completeness of the assessment product. See [installation and usage](CLI_INSTALLATION.md) and [remaining product work](DELIVERY_STATUS.md).
+
+Windows CRT output can report `EINVAL` for a closed pipe. The process boundary normalizes that error only on a write/flush to an actual pipe descriptor; regular-file errors retain their normal behavior. Failed buffered streams are closed before shutdown to avoid a second flush. Process tests run on Windows as well as Linux, and byte-level diagnostics allow each platform's line endings.
