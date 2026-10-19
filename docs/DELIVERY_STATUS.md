@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.32.0
+# Delivery status and remaining work — 0.33.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -23,7 +23,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |
 | AI explanation/cost control | Offline-complete within the finite contract: budgeted adapter, evidence validation/minimization, dry-run, cache cleanup, reservations/reconciliation and output claims | Chosen model/prices/account setup and controlled live validation |
-| Reports/history | Offline multi-target batches, JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
+| Reports/history | Offline-complete within the finite local contract: single/batch bundles, JSON/HTML, Python SARIF, triage, bounded verified history catalog, saved-report export and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
 | GUI | Existing service contracts/handoff documentation | GUI implementation, deferred by console-first scope |
 
@@ -124,3 +124,7 @@ The CLI maps selected single-host journal JSONL records into the existing four a
 ## AI/cost offline completion (0.32.0)
 
 The finite [AI offline acceptance contract](AI_OFFLINE_ACCEPTANCE.md) covers the existing single-provider explanation module: strict evidence/configuration, exact local accounting, writer-lock time checks, validated legacy-compatible storage, cache lifecycle, uncertain outcomes/reconciliation and pre-dispatch output claims. This module is offline-complete after its automated release gates; no additional providers or analyzers are part of this milestone. Real account/model/price selection and controlled live validation remain deferred. See [API_COSTS.md](API_COSTS.md).
+
+## Reports/local history completion (0.33.0)
+
+The finite [reporting contract](REPORTS_OFFLINE_ACCEPTANCE.md) is offline-complete after release gates: existing JSON/HTML and Python SARIF, verified single/batch storage, conservative comparisons, a bounded one-level history catalog and saved-report export after source deletion. Invalid history stays visible; no source/provider access occurs. Central authenticated history, automated retention, encryption/signatures and PDF are outside this local contract. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md).

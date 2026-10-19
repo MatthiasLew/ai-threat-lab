@@ -39,6 +39,8 @@ from .contracts import (
 from .exercise_export import claim_directory, export_exercise, json_bytes
 from .header_review import audit_header_capture
 from .html_review import review_html_file
+from .local_history import export_report as export_saved_report
+from .local_history import history_list, render_history
 from .local_training_control import cancel_local_training, local_training_status
 from .models import ValidationError
 from .readiness import readiness
@@ -190,6 +192,40 @@ def local_control_fixture(root, journal, key, current):
         "stopped_sessions": 1,
         "historical_receipt": "recorded_matching",
     }
+
+
+def history_fixture(root, engine):
+    source = root / "history-fixture.py"
+    source.write_text("eval(fixture)\n", encoding="utf-8")
+    folder = claim_directory(root / "local-history")
+    engine.run(ScanOptions(str(source)), folder / "before")
+    source.write_text("safe = 1\n", encoding="utf-8")
+    engine.run(ScanOptions(str(source)), folder / "after", baseline=folder / "before")
+    run_batch([str(source)], folder / "batch")
+    source.unlink()
+    catalog = history_list(folder)
+    rows = {row["directory"]: row for row in catalog["runs"]}
+    if (
+        catalog["verified_runs"] != 3
+        or catalog["invalid_runs"]
+        or set(rows) != {"before", "after", "batch"}
+        or rows["before"].get("unique_findings") != 1
+        or rows["after"].get("unique_findings") != 0
+        or rows["batch"].get("target_count") != 1
+        or rows["after"].get("comparison", {}).get("counts", {}).get("no_longer_observed") != 1
+    ):
+        raise ValidationError("Synthetic local history acceptance failed; demo incomplete")
+    expected = read_bundle(folder / "before")["documents"]["report.json"]
+    for format in ("json", "html"):
+        output = root / ("history-export." + format)
+        export_saved_report(folder / "before", format=format, output=output)
+        if not output.is_file() or output.read_text(encoding="utf-8") != (
+            (json_bytes(expected).decode()) if format == "json" else render_html(expected)
+        ):
+            raise ValidationError("Synthetic saved report export failed; demo incomplete")
+    (root / "history-catalog.json").write_bytes(json_bytes(catalog))
+    (root / "history-catalog.html").write_text(render_history(catalog), encoding="utf-8")
+    return {"verified_runs": 3, "invalid_runs": 0, "exported_reports": 2, "source_removed": True}
 
 
 def offline_demo(output, *, now=None):
@@ -561,6 +597,7 @@ def offline_demo(output, *, now=None):
     training = lab.report()
     (root / "training-report.json").write_bytes(json_bytes(training))
     (root / "training-report.html").write_text(render_training_html(training), encoding="utf-8")
+    local_history = history_fixture(root, engine)
     ready = readiness()
     (root / "readiness.json").write_bytes(json_bytes(ready))
     summary = {
@@ -596,6 +633,7 @@ def offline_demo(output, *, now=None):
         "after_findings": after["unique_findings"],
         "comparison": after["comparison"],
         "training_sessions": session_ids,
+        "local_report_history": local_history,
         "signed_event_fixtures": signed_event_results,
         "combined_local_control": combined_control,
         "training_channels": ["email", "voice", "video"],
@@ -603,6 +641,8 @@ def offline_demo(output, *, now=None):
         "not observed participant behavior. Not evidence of real-target or API readiness.",
     }
     links = (
+        ("Local report history", "history-catalog.html"),
+        ("Saved report export", "history-export.html"),
         ("OpenSSH journal patterns", "ssh-observations/report.html"),
         ("OpenSSH negative control", "ssh-negative-control/report.html"),
         ("Login event patterns", "authentication-observations/report.html"),

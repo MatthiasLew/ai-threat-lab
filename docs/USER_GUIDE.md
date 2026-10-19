@@ -142,3 +142,7 @@ Run `review-ssh-journal logins.ssh.jsonl` on a saved supported single-host journ
 ## Maintain the AI cost ledger
 
 `api-costs --ledger costs.sqlite` separates recorded amounts from unconfirmed reservations. `api-cache-prune --ledger costs.sqlite` clears expired cached text; add `--all` to clear unexpired cached text too. Neither cleanup nor expiry refunds money, deletes accounting or unblocks a pending request. These operational commands require an existing compatible ledger. See [API_COSTS.md](API_COSTS.md).
+
+## Browse and export saved reports
+
+Keep saved scan/batch directories under a private history parent. `history-list HISTORY_ROOT` verifies immediate children; add `--format html --output NEW_FILE` for a local catalog. Invalid entries remain visible and cause exit 2. `report-export SAVED_RUN --format html --output NEW_FILE` regenerates a verified saved report even after sources are removed. Outputs must stay outside saved run directories. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md).

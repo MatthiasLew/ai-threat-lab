@@ -2,12 +2,15 @@
 
 import hashlib
 import json
+import os
 import re
 import tempfile
 from pathlib import Path
 
 from .contracts import _nonfinite, _pairs, fields
+from .dependency_paths import linked
 from .models import ValidationError
+from .report_io import read_regular
 
 FILES = frozenset(
     (
@@ -40,7 +43,10 @@ STATUSES = {"partial", "failed", "collected", "empty_inventory", "not_requested"
 
 
 def encoded(document):
-    return (json.dumps(document, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode()
+    try:
+        return (json.dumps(document, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode()
+    except UnicodeError:
+        raise ValidationError("Report JSON requires valid UTF-8 text") from None
 
 
 def digest(data):
@@ -202,11 +208,15 @@ def publish_bundle(destination: Path, artifacts: dict[str, bytes], metadata: dic
             for name in [*sorted(artifacts), "manifest.json"]:
                 path = destination / name
                 with path.open("xb") as stream:
-                    created.append(path)
+                    created.append((path, os.fstat(stream.fileno())))
                     stream.write((stage / name).read_bytes())
         except BaseException:
-            for path in reversed(created):
-                path.unlink(missing_ok=True)
+            for path, identity in reversed(created):
+                try:
+                    if os.path.samestat(identity, path.stat(follow_symlinks=False)):
+                        path.unlink()
+                except FileNotFoundError:
+                    pass
             try:
                 destination.rmdir()
             except OSError:
@@ -217,44 +227,67 @@ def publish_bundle(destination: Path, artifacts: dict[str, bytes], metadata: dic
 
 def read_bundle(folder: Path) -> dict:
     folder = Path(folder)
-    if folder.is_symlink() or not folder.is_dir():
+    if linked(folder) or not folder.is_dir():
         raise ValidationError("Bundle must be an existing non-symlink directory")
     manifest_path = folder / "manifest.json"
-    if manifest_path.is_symlink():
-        raise ValidationError("Bundle manifest must not be a symlink")
     try:
-        with manifest_path.open("rb") as stream:
-            raw = stream.read(1024 * 1024 + 1)
+        raw = read_regular(
+            manifest_path, 1024 * 1024, limit_message="Bundle manifest exceeds 1 MiB"
+        )
     except FileNotFoundError:
         raise ValidationError("Bundle is incomplete: no committed manifest") from None
-    if len(raw) > 1024 * 1024:
-        raise ValidationError("Bundle manifest exceeds 1 MiB")
     manifest = document(raw)
     validate_manifest(manifest)
-    if {p.name for p in folder.iterdir()} != {*manifest["files"], "manifest.json"}:
+    expected = {*manifest["files"], "manifest.json"}
+    found = set()
+    with os.scandir(folder) as entries:
+        for entry in entries:
+            if entry.name not in expected:
+                raise ValidationError("Bundle has missing or unindexed artifacts")
+            found.add(entry.name)
+    if found != expected:
         raise ValidationError("Bundle has missing or unindexed artifacts")
-    payloads = {}
+    payloads, html_bytes = {}, None
     for name, metadata in manifest["files"].items():
         path = folder / name
-        if path.is_symlink() or not path.is_file():
-            raise ValidationError("Bundle artifacts must be regular non-symlink files")
-        with path.open("rb") as stream:
-            data = stream.read(metadata["bytes"] + 1)
+        data = read_regular(path, metadata["bytes"])
+        if name == "report.html":
+            html_bytes = data
         if len(data) != metadata["bytes"] or digest(data) != metadata["sha256"]:
             raise ValidationError("Bundle artifact integrity check failed")
         if name.endswith(".json"):
             payloads[name] = document(data)
     validate_modules(payloads["modules.json"])
     # Regenerate the derived report: indexed assessment documents must agree with its content.
-    from .audit_report import merge_reports
+    from .audit_report import merge_reports, render_html
 
     inputs = [payloads["assessment.json"]]
     if "dependencies.json" in payloads:
         inputs.append(payloads["dependencies.json"])
-    if merge_reports(inputs) != payloads["report.json"]:
+    if json.dumps(merge_reports(inputs), sort_keys=True) != json.dumps(
+        payloads["report.json"], sort_keys=True
+    ):
         raise ValidationError("Bundle report does not match its assessment artifacts")
-    if payloads["assessment.json"]["target"] != manifest["scope"]["target"]:
+    try:
+        expected_html = render_html(payloads["report.json"]).encode("utf-8")
+    except UnicodeError:
+        raise ValidationError("Report HTML requires valid UTF-8 text") from None
+    if html_bytes != expected_html:
+        raise ValidationError("Bundle HTML does not match its derived report")
+    if (
+        payloads["assessment.json"]["target"] != manifest["scope"]["target"]
+        or payloads["assessment.json"]["target_kind"] != manifest["scope"]["target_kind"]
+    ):
         raise ValidationError("Bundle assessment does not match target scope")
+    if "dependencies.json" in payloads:
+        dependencies = payloads["dependencies.json"]
+        if (
+            dependencies["target"] != manifest["scope"]["target"]
+            or dependencies["target_kind"] != "dependency_manifest"
+        ):
+            raise ValidationError("Bundle dependency report does not match target scope")
+    if "comparison.json" in payloads:
+        validate_comparison(payloads["comparison.json"], manifest, payloads["report.json"])
     return {"manifest": manifest, "documents": payloads}
 
 
@@ -300,3 +333,105 @@ def compare_bundles(previous: dict, current: dict) -> dict:
         "still_observed": len(result["still_observed"]),
     }
     return result
+
+
+def validate_comparison(value, manifest, report):
+    """Validate current-side derivation; the previous bundle is not embedded here."""
+    from .assessment import AssessmentFinding
+    from .audit_report import PRIORITIES
+
+    groups = ("new_observations", "no_longer_observed", "still_observed")
+    fields(
+        value,
+        {
+            "schema_version",
+            "previous_run_id",
+            "current_run_id",
+            "comparable",
+            "reason",
+            *groups,
+            "counts",
+            "coverage_notices_changed",
+            "notice",
+        },
+    )
+    if (
+        type(value["schema_version"]) is not int
+        or value["schema_version"] != 1
+        or type(value["comparable"]) is not bool
+        or type(value["coverage_notices_changed"]) is not bool
+        or value["current_run_id"] != manifest["run_id"]
+        or not isinstance(value["previous_run_id"], str)
+        or not re.fullmatch(r"[a-f0-9]{32}", value["previous_run_id"])
+        or not isinstance(value["notice"], str)
+        or not value["notice"]
+    ):
+        raise ValidationError("Invalid saved observation comparison")
+    for key in groups:
+        if not isinstance(value[key], list) or len(value[key]) > 40000:
+            raise ValidationError("Invalid saved comparison observations")
+    if not value["comparable"]:
+        if (
+            value["reason"]
+            not in ("scope_or_options_changed", "module_failure", "module_coverage_changed")
+            or value["counts"] is not None
+            or any(value[key] for key in groups)
+        ):
+            raise ValidationError("Unavailable comparison cannot declare observation changes")
+        return
+    if value["reason"] is not None:
+        raise ValidationError("Comparable observations cannot declare an unavailable reason")
+    fields(value["counts"], set(groups))
+    all_ids, current = set(), {item["id"]: item for item in report["findings"]}
+    selected = {}
+    for key in groups:
+        if type(value["counts"][key]) is not int or value["counts"][key] != len(value[key]):
+            raise ValidationError("Saved comparison counts do not match observations")
+        selected[key] = set()
+        for item in value[key]:
+            fields(
+                item,
+                {
+                    "id",
+                    "target",
+                    "check",
+                    "status",
+                    "evidence",
+                    "recommendation",
+                    "triage_priority",
+                    "sources",
+                },
+            )
+            finding = AssessmentFinding(
+                **{k: item[k] for k in ("check", "status", "evidence", "recommendation")}
+            )
+            canonical = json.dumps(
+                {
+                    "target": item["target"],
+                    **{
+                        k: getattr(finding, k)
+                        for k in ("check", "status", "evidence", "recommendation")
+                    },
+                },
+                sort_keys=True,
+            )
+            if (
+                not isinstance(item["target"], str)
+                or not item["target"].strip()
+                or item["id"] != hashlib.sha256(canonical.encode()).hexdigest()
+                or item["id"] in all_ids
+                or item["triage_priority"] != PRIORITIES.get(finding.check, "P3")
+                or not isinstance(item["sources"], list)
+                or not item["sources"]
+                or any(type(n) is not int or not 1 <= n <= 20 for n in item["sources"])
+                or len(set(item["sources"])) != len(item["sources"])
+            ):
+                raise ValidationError("Invalid saved comparison finding/provenance")
+            all_ids.add(item["id"])
+            selected[key].add(item["id"])
+            if key != "no_longer_observed" and current.get(item["id"]) != item:
+                raise ValidationError("Saved comparison differs from current observations")
+    if selected["new_observations"] | selected["still_observed"] != set(current) or selected[
+        "no_longer_observed"
+    ] & set(current):
+        raise ValidationError("Saved comparison does not cover current observations")

@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.32.0
+# Test strategy and integration readiness — 0.33.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -130,3 +130,7 @@ Require independent native records and expected normalized timelines, all four p
 ## AI/cost closure (0.32.0)
 
 Require pre-fix failure/current success for overruns reused from cache, clock sampling before the SQLite writer lock, incompatible-ledger augmentation, price precision and the CLI output-path race. Retain exact legacy data, reject invalid state without reset, preserve reservations after completion failures, and verify cache cleanup rollback/idempotency/concurrency without deleting accounting. Test byte limits and service-level empty-findings skip. The clean-wheel verifier runs `scripts/check_ai_offline.py` using the installed package, synthetic HTTP/credential data and blocked DNS/sockets, then repeats operational CLI reads/cleanup. Live account correctness is excluded. See [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md).
+
+## Reports/local history closure (0.33.0)
+
+Require pre-fix failure/current success for rehashed inconsistent HTML, Boolean counts, assessment/dependency scope mismatches, false comparison counts, replacement-file cleanup and summary escaping. Cover original-source deletion, single/batch catalog/export, failed versus invalid runs, strict comparison metadata, root/run/read/output budgets, no network, file links/types/descriptor closure, no overwrite and write failures. Demo completion independently checks catalog counts and regenerated exports; installed-wheel CLI repeats both after the demo source was removed. No new report formats or analysis engines are part of this gate.

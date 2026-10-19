@@ -65,3 +65,7 @@ The 0.31.0 [OpenSSH journal adapter](SSH_JOURNAL_REVIEW.md) adds one bounded nat
 ## AI/cost module closure (0.32.0)
 
 Finish the existing explanation/cost module against [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md) before expanding other tracks. Local controls and the synthetic installed-package lifecycle are accepted offline; model/account/pricing, quota, output quality and real billing checks are a separately deferred live stage. Automatic model routing, Batch API and centrally authenticated cross-machine budgets are outside this finite local contract.
+
+## Local reports/history closure (0.33.0)
+
+Close [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md) before starting another module. This accepts existing report formats, verified single/batch history, bounded catalog and source-independent saved-report export. Central multi-user services, automatic retention, signatures/encryption and PDF remain separate product decisions rather than hidden requirements of this finite local module.

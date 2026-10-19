@@ -12,6 +12,7 @@ from .dependency_paths import linked
 from .exercise_export import claim_directory
 from .local_inventory import local_inventory
 from .models import ValidationError
+from .report_io import read_regular
 from .scan_bundle import document, encoded, read_bundle
 from .scan_engine import ScanOptions, ScanService
 
@@ -34,13 +35,10 @@ NOTICE = (
 
 
 def _read(path, limit):
-    if linked(path) or not path.is_file():
-        raise ValidationError("Batch artifact must be a regular file without links")
-    with path.open("rb") as stream:
-        raw = stream.read(limit + 1)
-    if len(raw) > limit:
-        raise ValidationError("Batch artifact exceeds its byte limit")
-    return raw
+    try:
+        return read_regular(path, limit)
+    except FileNotFoundError:
+        raise ValidationError("Batch artifact must be a regular file without links") from None
 
 
 def _hash(raw):
@@ -177,7 +175,7 @@ def run_batch(targets, output, *, recursive_dependencies=False, service=None):
     return {**summary, "output_directory": str(root.resolve())}
 
 
-def check_batch(path):
+def check_batch(path, *, include_report=False):
     root = Path(path)
     if linked(root) or not root.is_dir():
         raise ValidationError("Batch must be a directory without links")
@@ -227,4 +225,7 @@ def check_batch(path):
         type(marker["summary"][key]) is not type(value) for key, value in summary.items()
     ):
         raise ValidationError("Batch summary does not match child evidence")
-    return {"status": "integrity_verified", "assessment_summary": summary}
+    result = {"status": "integrity_verified", "assessment_summary": summary}
+    if include_report:
+        result["report"] = report
+    return result

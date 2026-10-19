@@ -120,10 +120,10 @@ def readiness():
         ),
         (
             "reports",
-            "partial",
+            "offline_complete",
             "not_required",
-            "Local JSON/HTML, Python SARIF, verified offline batches and scan history comparison; "
-            "authenticated central history and GUI absent.",
+            "Local JSON/HTML, Python SARIF, verified single/batch runs, bounded history catalog "
+            "and saved-report export/observation comparison; central history and GUI absent.",
         ),
         (
             "offline_demo",

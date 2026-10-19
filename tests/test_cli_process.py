@@ -68,6 +68,8 @@ COMMANDS = (
     "scan-batch",
     "batch-check",
     "scan-check",
+    "history-list",
+    "report-export",
     "scan-compare",
     "readiness",
     "exercise-export",

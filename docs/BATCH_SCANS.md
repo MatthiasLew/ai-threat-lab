@@ -61,3 +61,7 @@ verification = check_batch(Path("batch-results/run-01"))
 ```
 
 The offline demo includes a two-target example, and installed-wheel acceptance checks both commands outside the checkout. See [TESTING.md](TESTING.md), [scan bundles](SCAN_WORKFLOW.md), and the [delivery matrix](DELIVERY_STATUS.md) for what remains outside this workflow.
+
+## History and export (0.33.0)
+
+A saved batch can be one entry in `history-list PARENT_DIR` and an input to `report-export BATCH_DIR --format html --output NEW_FILE`. Its child evidence is verified without rescanning sources. The old batch format records no global run ID/time; the catalog leaves those fields unset. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md).

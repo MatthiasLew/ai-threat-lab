@@ -309,6 +309,68 @@ def main() -> None:
         assert not readiness["api_key_alone_sufficient"]
         demo = json.loads(run(executable, "offline-demo", "--output-dir", "offline demo"))
         assert demo["before_findings"] == 3 and demo["after_findings"] == 0
+        assert demo["local_report_history"] == {
+            "verified_runs": 3,
+            "invalid_runs": 0,
+            "exported_reports": 2,
+            "source_removed": True,
+        }
+        catalog = json.loads(run(executable, "history-list", "offline demo/local-history"))
+        assert catalog["verified_runs"] == 3 and catalog["invalid_runs"] == 0
+        run(
+            executable,
+            "history-list",
+            "offline demo/local-history",
+            "--format",
+            "html",
+            "--output",
+            "installed-history.html",
+        )
+        run(
+            executable,
+            "history-list",
+            "offline demo/local-history",
+            "--output",
+            "installed-history.html",
+            expected=2,
+        )
+        run(
+            executable,
+            "report-export",
+            "offline demo/local-history/before",
+            "--output",
+            "installed-report.json",
+        )
+        run(
+            executable,
+            "report-export",
+            "offline demo/local-history/batch",
+            "--format",
+            "html",
+            "--output",
+            "installed-batch-report.html",
+        )
+        run(
+            executable,
+            "report-export",
+            "offline demo/local-history/before",
+            "--output",
+            "installed-report.json",
+            expected=2,
+        )
+        run(
+            executable,
+            "report-export",
+            "offline demo/local-history/before",
+            "--output",
+            "offline demo/local-history/before/extra.json",
+            expected=2,
+        )
+        assert (
+            json.loads((work / "installed-report.json").read_text())["summary"]["unique_findings"]
+            == 1
+        )
+        assert not (work / "offline demo/history-fixture.py").exists()
         assert demo["training_channels"] == ["email", "voice", "video"]
         assert demo["python_project_flow_observations"] == 3
         project_assessment = json.loads(

@@ -9,14 +9,41 @@ from .contracts import write_document
 from .dependencies import AdvisoryCache, OSVAudit
 from .http_client import PublicHTTPS
 from .integration_cli import audit_target
+from .local_history import (
+    MAX_CATALOG_BYTES,
+    export_report,
+    history_list,
+    render_history,
+    write_new_report,
+)
+from .models import ValidationError
 from .remote_audit import GithubAudit
 from .scan_bundle import compare_bundles, read_bundle
 from .scan_engine import ScanOptions, ScanService
 
-COMMANDS = {"scan", "scan-check", "scan-compare", "scan-batch", "batch-check"}
+COMMANDS = {
+    "scan",
+    "scan-check",
+    "scan-compare",
+    "scan-batch",
+    "batch-check",
+    "history-list",
+    "report-export",
+}
 
 
 def add_commands(commands):
+    history = commands.add_parser("history-list", help="Verify a bounded local saved-run catalog")
+    history.add_argument("root", type=Path)
+    history.add_argument("--format", choices=("json", "html"), default="json")
+    history.add_argument("--output", type=Path)
+    export = commands.add_parser(
+        "report-export", help="Export a verified saved report without scanning"
+    )
+    export.add_argument("run", type=Path)
+    export.add_argument("--format", choices=("json", "html"), default="json")
+    export.add_argument("--output", type=Path)
+
     batch = commands.add_parser("scan-batch", help="Scan 1..10 distinct local targets offline")
     batch.add_argument("targets", nargs="+")
     batch.add_argument("--output-dir", type=Path, required=True)
@@ -94,6 +121,33 @@ def advisory_lookup(collected, options):
 
 def run_command(args):
     code = 0
+    if args.command == "report-export":
+        content = export_report(args.run, format=args.format, output=args.output)
+        print(
+            f"Report saved: {args.output}" if args.output else content,
+            end="\n" if args.output else "",
+        )
+        return 0
+    if args.command == "history-list":
+        # A catalog may be saved at its root, but never inside one of its saved runs.
+        if args.output is not None:
+            relative = (
+                args.output.resolve().relative_to(args.root.resolve())
+                if (args.output.resolve().is_relative_to(args.root.resolve()))
+                else None
+            )
+            if relative is not None and len(relative.parts) > 1:
+                raise ValidationError("History output must stay outside saved run directories")
+        payload = history_list(args.root)
+        content = render_history(payload) if args.format == "html" else write_document(payload)
+        if len(content.encode("utf-8")) > MAX_CATALOG_BYTES:
+            raise ValidationError("History catalog exceeds its 4 MiB output limit")
+        if args.output:
+            write_new_report(args.output, content.encode("utf-8"))
+            print(f"Report saved: {args.output}")
+        else:
+            print(content, end="")
+        return 2 if payload["invalid_runs"] else 0
     if args.command == "scan-batch":
         payload = run_batch(
             args.targets, args.output_dir, recursive_dependencies=args.recursive_dependencies

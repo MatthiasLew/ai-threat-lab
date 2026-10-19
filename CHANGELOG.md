@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.0
+
+- Close the finite local reporting/history contract with history-list JSON/HTML and report-export for verified saved single/batch runs, without original target access or provider calls.
+- Enforce bounded root/run enumeration and aggregate verification reads, visible invalid entries, source-free exports, private no-overwrite outputs and saved-run placement guards.
+- Verify derived single-bundle HTML and typed JSON, target-kind/dependency scope and saved comparison schema/current-side coverage; preserve files replaced by another actor during publication failure.
+- Harden saved-artifact readers against links/junctions/special files, include descriptor checks and fix summary HTML escaping for Python callers.
+- Add seven pre-fix reproductions, history/export/failure/CLI controls, deleted-source demo and clean-wheel acceptance. Mark local reports offline-complete; central history/PDF/retention services remain outside this contract. Assessment engines are unchanged.
+
 ## 0.32.0
 
 - Close the finite offline AI explanation/cost contract with strict legacy-compatible ledger validation, existing-only operational reads and no implicit recreation after deletion. Preserve billing/pending history.

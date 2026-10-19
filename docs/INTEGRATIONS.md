@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.32.0)
+# Integration contracts and current capability boundary (0.33.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -93,3 +93,7 @@ Historical receipts require the original signed envelope and registered bindings
 ## AI cost completion boundary (0.32.0)
 
 The existing explanation adapter is offline-complete under [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md). Shared-ledger reservation, cache expiry/cleanup, uncertainty/reconciliation and exclusive output ownership are verified without live requests. This is separate from future account/model/pricing and provider-billing validation. `api-costs`, `api-reconcile` and `api-cache-prune` require existing compatible ledgers.
+
+## Local report/history boundary (0.33.0)
+
+`history-list` verifies an explicit bounded one-level root; `report-export` regenerates a verified single/batch JSON/HTML report without original target access. Invalid entries do not receive invented clean counts. Existing report formats and comparison gates remain; no central account/API is introduced. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md) and [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md).

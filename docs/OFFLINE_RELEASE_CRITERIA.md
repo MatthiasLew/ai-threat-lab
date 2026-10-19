@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.32.0
+# Offline CLI release criteria — 0.33.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -66,3 +66,7 @@ Require the restricted single-host JSONL contract, integer reception time, exact
 ## AI/cost closure gate (0.32.0)
 
 Require every finite [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md) condition: exact local money arithmetic, writer-lock clock/TTL checks, validated legacy storage, service-level skip, no overrun cache reuse, safe cleanup preserving budget history, uncertain-outcome accounting and exclusive output ownership. The socket-blocked installed-wheel lifecycle and all six CI jobs must pass. Acceptance closes this offline module; live account/model/pricing/billing validation is explicitly deferred.
+
+## Reports/local history closure gate (0.33.0)
+
+Require every [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md) condition, including typed JSON/HTML derivation, target scope, comparison current-side validation, safe regular bounded readers/cleanup, a bounded read-only catalog with visible invalid entries and verified source-independent export. Deleted-source demo and clean-wheel CLI evidence must pass along with all six CI jobs. No remote account, analyzer expansion or new format is required.

@@ -128,7 +128,8 @@ def render_html(report: dict) -> str:
         return html.escape(str(value), quote=True)
 
     summaries = "".join(
-        f"<li><strong>{p}</strong>: {n}</li>" for p, n in report["summary"]["triage_counts"].items()
+        f"<li><strong>{escaped(p)}</strong>: {escaped(n)}</li>"
+        for p, n in report["summary"]["triage_counts"].items()
     )
     rows = "".join(
         "<tr>"

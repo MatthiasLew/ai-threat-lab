@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.23.0
+# One-command scans and history comparison — 0.33.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -100,7 +100,7 @@ This is a manifest-last protocol, not an atomic filesystem snapshot or a power-l
 
 Limits: manifest 1 MiB, individual artifact 8 MiB, all indexed artifacts together 32 MiB. Standard collector limits still apply. Oversized scopes fail publication rather than silently omitting findings. On POSIX, the new result directory uses mode `0700`; Windows inherits directory ACLs. Reports can contain private targets, paths, dependency names and evidence. There is no encryption or automatic retention cleanup.
 
-Hashes check **consistency**, not authenticity: someone able to modify all artifacts and the manifest can recompute hashes. There is no digital signature, remote attestation or evidence that the target is secure. The checker additionally regenerates the combined report from the indexed assessment documents.
+Hashes check **consistency**, not authenticity: someone able to modify all artifacts and the manifest can recompute hashes. There is no digital signature, remote attestation or evidence that the target is secure. The checker additionally regenerates combined JSON and HTML from the indexed assessment documents, validates target/kind/dependency scope, and checks saved comparison structure/current-side consistency. The old-side comparison still requires its separate baseline to be independently recomputed.
 
 ## Compare another run
 
@@ -119,7 +119,7 @@ The comparison uses exact target/finding-field IDs and reports:
 
 Disappearance is **not proof of a fix**. Changed line numbers/paths, collector limits, skipped files, code changes and advisory cache age can change observations. `coverage_notices_changed` flags changed gap/provenance notices, including a newly pinned GitHub commit. This flag does not validate the completeness of either scan.
 
-Version 0.23 uses scope engine `read-only-pipeline-15` with Go checksum-record inventory, structured Kubernetes JSON and duplicate-preserving selected HTTPS header/CSP/cookie observations, Cargo inventory, bounded EML content observations, fourteen Python AST rule families including selected local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls, selected flat-root Python module links and static PE/ELF observations and retains strict boolean `recursive_dependencies`. Versions 0.7–0.22 remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
+Version 0.33 retains scan scope engine `read-only-pipeline-22` and the documented Python analysis engines. Previously supported bundle engines remain readable, but cross-engine comparison is intentionally unavailable. Changing the recursive flag also disables deltas because dependency coverage changes. See [MONOREPOS.md](MONOREPOS.md).
 
 Deltas are suppressed (`comparable: false`, `counts: null`) if target/options scope changes, any compared module fails, or recorded module status/notices change. Options are deliberately compared conservatively, including approved-host lists, configured bounds and whether caching is enabled. No zero-removal or zero-new-finding claim is made when comparison is unavailable.
 
@@ -141,4 +141,8 @@ Offline tests cover one-command/installed workflows, real CLI processes, scope a
 
 ## Several local targets (0.15.0)
 
-Use `scan-batch PATH_A PATH_B --output-dir NEW_DIR` for up to ten explicit local targets and a combined report. `batch-check NEW_DIR` verifies the parent index and existing child bundles. Remote inputs are rejected; no network/share option is provided. See [BATCH_SCANS.md](BATCH_SCANS.md). Standalone scan engine 9 and the existing batch format remain supported.
+Use `scan-batch PATH_A PATH_B --output-dir NEW_DIR` for up to ten explicit local targets and a combined report. `batch-check NEW_DIR` verifies the parent index and existing child bundles. Remote inputs are rejected; no network/share option is provided. See [BATCH_SCANS.md](BATCH_SCANS.md). Previously supported standalone scan engines and the existing batch format remain readable.
+
+## Catalog and saved-report export (0.33.0)
+
+Use `history-list HISTORY_ROOT` to verify a bounded one-level catalog of single/batch runs, and `report-export RUN --format html --output NEW_FILE` to regenerate a verified saved report after source deletion. These commands do not rescan sources or contact providers. Invalid entries remain visible; output inside saved runs is rejected. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md) for limits and exit policy.

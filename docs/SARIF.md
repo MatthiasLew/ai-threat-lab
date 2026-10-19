@@ -1,6 +1,6 @@
 # Offline Python review SARIF export — 0.13.0
 
-`review-code` can export its nine bounded Python rule families as SARIF 2.1.0. This is a local interchange file for compatible analysis viewers; it does not upload to GitHub, contact a provider, execute the target or enable broader analysis.
+`review-code` can export its fourteen bounded Python rule families as SARIF 2.1.0. This is a local interchange file for compatible analysis viewers; it does not upload to GitHub, contact a provider, execute the target or enable broader analysis.
 
 ## Console usage
 

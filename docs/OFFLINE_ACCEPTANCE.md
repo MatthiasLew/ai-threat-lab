@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.32.0
+# Offline acceptance kit — 0.33.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -148,3 +148,7 @@ The demo generates `logins.ssh.jsonl` and `separated-logins.ssh.jsonl` using fic
 ## AI cost installed-package acceptance (0.32.0)
 
 The installed-wheel gate additionally executes `scripts/check_ai_offline.py` outside the source checkout with a synthetic transport/credential and blocked sockets/DNS. It requires estimate without a request, one generated response, a cache hit, expired-text cleanup without changed costs, timeout reservation, blocked retry, explicit zero-charge reconciliation and subsequent completion. Operational CLI reads and cleanup must preserve all accounting. This is independent of the assessment demo and does not contact a provider.
+
+## Local report history/export fixture (0.33.0)
+
+The demo adds `local-history/before`, `local-history/after` and `local-history/batch` using one separate generated Python source. It deletes that source before catalog/export. Completion requires three verified entries, the expected 1-to-0 observation comparison, one batch target and exact regenerated JSON/HTML exports. Artifacts are `history-catalog.json/html` and `history-export.json/html`; the index links the HTML. The summary has `local_report_history`. These are synthetic observations, not proof of a real fix.
