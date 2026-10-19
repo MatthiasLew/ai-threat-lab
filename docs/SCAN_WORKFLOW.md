@@ -1,4 +1,4 @@
-# One-command scans and history comparison — 0.33.0
+# One-command scans and history comparison — 0.36.0
 
 `scan` orchestrates the existing **selected read-only** collectors. It does not add active attacks, password attempts, live campaigns, model calls or comprehensive vulnerability coverage. All scan results remain partial. API/OAuth prerequisites from [LIVE_SETUP.md](LIVE_SETUP.md) still apply.
 
@@ -146,3 +146,7 @@ Use `scan-batch PATH_A PATH_B --output-dir NEW_DIR` for up to ten explicit local
 ## Catalog and saved-report export (0.33.0)
 
 Use `history-list HISTORY_ROOT` to verify a bounded one-level catalog of single/batch runs, and `report-export RUN --format html --output NEW_FILE` to regenerate a verified saved report after source deletion. These commands do not rescan sources or contact providers. Invalid entries remain visible; output inside saved runs is rejected. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md) for limits and exit policy.
+
+## Passive HTTPS collection scope (0.36.0)
+
+Current scans use `read-only-pipeline-23`: website responses can retain validated header observations while oversized/incomplete/unreadable bodies are omitted explicitly. Declared oversized bodies are skipped without download. Other analyzer scopes are unchanged. Earlier supported bundles, including engine 22, remain readable/exportable, but cross-engine comparison does not produce delta counts. See [passive HTTPS acceptance](WEBSITE_OFFLINE_ACCEPTANCE.md).

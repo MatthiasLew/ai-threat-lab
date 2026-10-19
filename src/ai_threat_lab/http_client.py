@@ -9,6 +9,7 @@ import ssl
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
+from ._version import __version__
 from .models import ValidationError
 from .providers import ProviderError
 
@@ -19,8 +20,11 @@ class HttpResponse:
     headers: dict[str, str]
     body: bytes
     header_items: tuple[tuple[str, str], ...] = ()
+    body_status: str = "complete"
 
     def document(self) -> dict:
+        if self.body_status != "complete":
+            raise ProviderError("Provider response body is incomplete")
         try:
             result = json.loads(self.body)
             if not isinstance(result, dict):
@@ -74,11 +78,20 @@ class _PinnedHTTPS(http.client.HTTPSConnection):
 
 
 class PublicHTTPS:
-    def __init__(self, allowed_hosts, *, max_bytes=1024 * 1024, max_requests=110, timeout=15):
-        if not 1 <= max_bytes <= 8 * 1024 * 1024 or not 1 <= max_requests <= 200:
+    def __init__(
+        self, allowed_hosts, *, max_bytes=1024 * 1024, max_requests=110, timeout=15,
+        allow_partial_body=False,
+    ):
+        if (
+            type(max_bytes) is not int or not 1 <= max_bytes <= 8 * 1024 * 1024
+            or type(max_requests) is not int or not 1 <= max_requests <= 200
+        ):
             raise ValidationError("Invalid HTTP size or request limit")
-        if not 0 < timeout <= 60:
+        if type(timeout) not in (int, float) or not 0 < timeout <= 60:
             raise ValidationError("HTTP timeout must be between 0 and 60 seconds")
+        if type(allow_partial_body) is not bool:
+            raise ValidationError("Partial response selection must be boolean")
+        self.allow_partial_body = allow_partial_body
         self.allowed_hosts = frozenset(h.lower() for h in allowed_hosts)
         self.max_bytes, self.max_requests, self.timeout = max_bytes, max_requests, timeout
         self.requests = 0
@@ -100,6 +113,8 @@ class PublicHTTPS:
             or method not in ("GET", "POST")
         ):
             raise ValidationError("HTTPS request is outside exact approved host scope")
+        if self.allow_partial_body and method != "GET":
+            raise ValidationError("Partial response collection is restricted to GET")
         endpoints = {("api.openai.com", "/v1/responses"), ("api.osv.dev", "/v1/querybatch")}
         if method == "POST" and ((parsed.hostname, parsed.path) not in endpoints or parsed.query):
             raise ValidationError("POST is restricted to supported model/advisory query endpoints")
@@ -113,18 +128,37 @@ class PublicHTTPS:
                 method,
                 parsed.path + ("?" + parsed.query if parsed.query else ""),
                 body=body,
-                headers={"User-Agent": "AI-Threat-Lab/0.5", **(headers or {})},
+                headers={"User-Agent": f"AI-Threat-Lab/{__version__}", **(headers or {})},
             )
             response = connection.getresponse()
-            data = response.read(self.max_bytes + 1)
-            if len(data) > self.max_bytes:
-                raise ProviderError("Provider response exceeded the size limit")
             items = tuple((key.lower(), value) for key, value in response.getheaders())
-            return HttpResponse(response.status, dict(items), data, items)
+            data, body_status = self._read_body(response)
+            return HttpResponse(response.status, dict(items), data, items, body_status)
         except (OSError, http.client.HTTPException):
             raise ProviderError("HTTPS request failed; no automatic retry was performed") from None
         finally:
             connection.close()
+
+    def _read_body(self, response):
+        remaining = getattr(response, "length", None)
+        if self.allow_partial_body and type(remaining) is int and remaining > self.max_bytes:
+            return b"", "size_limit"
+        try:
+            data = response.read(self.max_bytes + 1)
+        except (OSError, http.client.HTTPException):
+            if not self.allow_partial_body:
+                raise
+            return b"", "read_error"
+        if len(data) > self.max_bytes:
+            if not self.allow_partial_body:
+                raise ProviderError("Provider response exceeded the size limit")
+            return b"", "size_limit"
+        # Bounded HTTPResponse.read(amt) can return short without IncompleteRead.
+        if getattr(response, "length", None) not in (None, 0):
+            if not self.allow_partial_body:
+                raise ProviderError("Provider response body is incomplete")
+            return b"", "read_error"
+        return data, "complete"
 
 
 def get_document(client, url, headers=None) -> dict:

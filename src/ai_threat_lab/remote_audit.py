@@ -33,26 +33,42 @@ class WebsiteAudit:
         self.client = client
 
     def assess(self, target):
-        if identify_target(target) != "website" or urlsplit(target).scheme != "https":
-            raise ValidationError("Passive website auditing requires an HTTPS website URL")
+        kind = identify_target(target)
+        parsed = urlsplit(target)
+        if (
+            kind != "website" or parsed.scheme != "https" or parsed.port not in (None, 443)
+            or parsed.fragment or not target.isascii() or len(target) > 4096
+            or "\\" in target or any(ord(c) <= 32 or ord(c) == 127 for c in target)
+        ):
+            raise ValidationError(
+                "Use bounded ASCII HTTPS on port 443 without fragments or ambiguous characters"
+            )
         response = self.client.request(target)
         try:
-            findings, missing = inspect_response_headers(
-                response.status, response.header_items or tuple(response.headers.items())
-            )
-        except ValidationError:
-            raise ProviderError("Response headers exceed supported structure or limits") from None
+            headers = response.header_items or tuple(response.headers.items())
+            findings, missing = inspect_response_headers(response.status, headers)
+            body_status = getattr(response, "body_status", "complete")
+            if body_status not in ("complete", "size_limit", "read_error"):
+                raise ValidationError("Unsupported response body state")
+        except (ValidationError, AttributeError, TypeError):
+            raise ProviderError(
+                "Response headers/state exceed supported structure or limits"
+            ) from None
         from .html_review import inspect_html_response
 
-        html_findings, html_missing = (
-            inspect_html_response(
-                response.body,
-                response.header_items or tuple(response.headers.items()),
-                document_url=target,
+        if response.status != 200:
+            html_findings, html_missing = (), ("Non-200 response body unchecked.",)
+        elif body_status != "complete":
+            reason = (
+                "HTML body exceeded the size limit; body unchecked."
+                if body_status == "size_limit"
+                else "HTML body read incomplete or failed; body unchecked."
             )
-            if response.status == 200
-            else ((), ("Non-200 response body unchecked.",))
-        )
+            html_findings, html_missing = (), (reason,)
+        else:
+            html_findings, html_missing = inspect_html_response(
+                response.body, headers, document_url=target
+            )
         return AssessmentResult(
             target,
             "website",

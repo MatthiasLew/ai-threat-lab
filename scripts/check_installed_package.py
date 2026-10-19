@@ -123,6 +123,11 @@ def main() -> None:
                 pipe.kill()
                 pipe.wait()
 
+        website_receipt = json.loads(run(python, ROOT / "scripts/check_website_offline.py"))
+        assert website_receipt == {
+            "status": "passed", "synthetic_requests": 6, "scope_rejections": 3,
+            "live_requests": 0, "ai_calls": 0,
+        }
         github_receipt = json.loads(run(python, ROOT / "scripts/check_github_offline.py"))
         assert github_receipt == {
             "status": "passed", "positive_requests": 5, "negative_controls": 7,

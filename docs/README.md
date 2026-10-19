@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Passive HTTPS audit and response-body limits](WEBSITE_AUDIT.md)
+- [Passive HTTPS offline acceptance](WEBSITE_OFFLINE_ACCEPTANCE.md)
+
 - [GitHub collection and usage limits](GITHUB_COLLECTION.md)
 - [GitHub collector offline acceptance](GITHUB_OFFLINE_ACCEPTANCE.md)
 

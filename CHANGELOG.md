@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.0
+
+- Close the bounded passive HTTPS collector offline contract. Preserve valid header findings when the body is oversized, incomplete or unreadable; discard partial bytes and report the body gap. Skip declared oversized bodies before download.
+- Detect outstanding HTTP response length after bounded reads, including valid-looking truncated JSON. Keep generic API clients strict; partial-body transport is explicit and GET-only.
+- Use the current release identity in the HTTP User-Agent. Enforce website URL bounds/preflight and typed transport limits; normalize malformed adapter metadata to redacted provider errors. Clarify shared header-only coverage wording.
+- Add native-parser regressions and socket-blocked installed before/after/failure/redirect workflows, with scope rejection and verified report checks.
+- Advance scan engine to 23 for changed collection coverage; retain old bundle reads and prohibit cross-engine deltas. AI API setup and real-target validation remain deferred.
+
 ## 0.35.0
 
 - Close the existing bounded GitHub collector offline contract with controlled malformed SHA/default-branch/truncation responses, boolean option checks and redacted local token-header validation.

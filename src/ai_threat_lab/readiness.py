@@ -37,10 +37,11 @@ def readiness():
         ),
         (
             "website",
-            "fixture_tested",
+            "offline_complete",
             "integration_validation_required",
-            "One-response headers and selected UTF-8 HTML authoring patterns; "
-            "browser/application tests absent.",
+            "One scoped HTTPS GET, bounded headers and complete eligible HTML; "
+            "unavailable bodies preserve header evidence. Installed native-parser fixtures "
+            "accepted with blocked sockets. Real targets and browser/application tests deferred.",
         ),
         (
             "saved_html",

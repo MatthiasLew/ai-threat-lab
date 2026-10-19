@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.35.0
+# Test strategy and integration readiness — 0.36.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -142,3 +142,7 @@ The finite [CLI/install contract](CLI_OFFLINE_ACCEPTANCE.md) covers exact option
 ## GitHub collector offline closure (0.35.0)
 
 The existing bounded collector is covered by the finite [offline acceptance contract](GITHUB_OFFLINE_ACCEPTANCE.md): immutable shared source/manifest selection, verified blob reuse, strict provider metadata and local header boundaries, controlled failures without retries and a socket-blocked synthetic scan from the installed wheel. This closes the offline collector implementation/testing scope; public/private account and organization access remain deferred integration validation. Source-language coverage and assessment engines are unchanged. See [usage and exact limits](GITHUB_COLLECTION.md).
+
+## Passive HTTPS offline closure (0.36.0)
+
+The finite [passive HTTPS contract](WEBSITE_OFFLINE_ACCEPTANCE.md) covers exact scope/preflight, one GET, duplicate-preserving header review, complete-body-only HTML, retained headers with explicit body gaps, strict JSON/API defaults, native short-read regressions and socket-blocked installed workflows. Engine 23 records changed collection coverage; prior bundles remain readable without cross-engine deltas. Real target/configuration acceptance and authenticated/browser/business-logic assessment remain separate. See [usage and limits](WEBSITE_AUDIT.md).

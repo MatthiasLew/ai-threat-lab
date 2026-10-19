@@ -129,7 +129,8 @@ def _cookie_observations(cookies):
 def inspect_response_headers(status, headers):
     values = _normalize(status, headers)
     missing = [
-        "Only one supplied response was checked; redirects and response bodies were not analyzed.",
+        "Header checks cover one supplied response; redirects and bodies "
+        "are outside header-only checks.",
         "No exploitation, authentication, crawling, injection or business-logic testing.",
         "Header observations do not establish effective browser behavior or secure configuration.",
         "Cookie purpose, expiry/session state and browser defaults were not inferred. "

@@ -169,7 +169,9 @@ def audit_target(args):
     if expected not in [h.lower() for h in args.allow_host]:
         raise ValidationError("Target is not in --allow-host scope")
     if kind == "website":
-        adapter = WebsiteAudit(PublicHTTPS([expected], max_requests=1))
+        adapter = WebsiteAudit(PublicHTTPS(
+            [expected], max_requests=1, max_bytes=256 * 1024, allow_partial_body=True,
+        ))
     elif kind == "github_repository":
         adapter = GithubAudit(
             PublicHTTPS(["api.github.com"], max_bytes=8 * 1024 * 1024), max_files=args.max_files
