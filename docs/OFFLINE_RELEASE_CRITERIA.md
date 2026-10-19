@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.33.0
+# Offline CLI release criteria — 0.34.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -70,3 +70,7 @@ Require every finite [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md) condit
 ## Reports/local history closure gate (0.33.0)
 
 Require every [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md) condition, including typed JSON/HTML derivation, target scope, comparison current-side validation, safe regular bounded readers/cleanup, a bounded read-only catalog with visible invalid entries and verified source-independent export. Deleted-source demo and clean-wheel CLI evidence must pass along with all six CI jobs. No remote account, analyzer expansion or new format is required.
+
+## CLI and installation closure (0.34.0)
+
+The finite [CLI/install contract](CLI_OFFLINE_ACCEPTANCE.md) covers exact option names, one release identity, UTF-8 process streams, quiet closed-pipe exit, local installation diagnostics and wheel/sdist resource/metadata parity. Fresh offline wheel installation exercises every command help and existing functional workflows outside the checkout. Linux/Windows Python 3.12–3.14 CI provides platform evidence. See [installation instructions](CLI_INSTALLATION.md). API setup/live validation remain deferred; broader collector/product work is separate.

@@ -2,16 +2,19 @@
 
 import argparse
 import json
+import os
 import sqlite3
 import sys
 from dataclasses import asdict
 from pathlib import Path
 
+from ._version import __version__
 from .analyzer import ThreatAnalyzer
 from .campaign_cli import demo_campaign, report_events
 from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
 from .contracts import approval_to_document, config_from_document, read_document, write_document
+from .installation import installation_report
 from .integration_cli import COMMANDS, add_commands, run_command
 from .models import AnalysisRequest, TargetProfile, ValidationError
 from .offline_cli import COMMANDS as OFFLINE_COMMANDS
@@ -31,11 +34,19 @@ from .training_events_cli import run_command as run_event_command
 from .workflows import approve_campaign, example_request, prepare_campaign, simulate_campaign
 
 
+class ExactArgumentParser(argparse.ArgumentParser):
+    """Require complete option names, including in every child parser."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs["allow_abbrev"] = False
+        super().__init__(*args, **kwargs)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    parser = ExactArgumentParser(
         description="AI Threat Lab — read-only audits, budgeted AI and training workflows"
     )
-    parser.add_argument("--version", action="version", version="AI Threat Lab 0.33.0")
+    parser.add_argument("--version", action="version", version=f"AI Threat Lab {__version__}")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("scenarios", help="List available scenarios")
@@ -75,8 +86,12 @@ def build_parser() -> argparse.ArgumentParser:
     assess = commands.add_parser("assess", help="Route a target to available assessment modules")
     assess.add_argument("target")
     commands.add_parser("providers", help="List registered adapters and configuration")
-    commands.add_parser(
-        "doctor", help="Check selected adapter registrations without network access"
+    doctor = commands.add_parser(
+        "doctor", help="Check adapter registrations or installation without network access"
+    )
+    doctor.add_argument(
+        "--installation", action="store_true",
+        help="Check Python, distribution identity and bundled catalog; no credential access",
     )
     example = commands.add_parser("campaign-example", help="Create a fictional exercise request")
     example.add_argument("scenario")
@@ -143,6 +158,10 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_training_command(args)
         if args.command in COMMANDS:
             return run_command(args)
+        if args.command == "doctor" and args.installation:
+            payload = installation_report()
+            print(write_document(payload), end="")
+            return 0 if payload["status"] == "ready" else 3
         if args.command in ("providers", "doctor"):
             payload = (
                 registry.describe(config)
@@ -237,9 +256,42 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
     except ProviderError as exc:
         print(f"Integration error: {exc}", file=sys.stderr)
         return 3
+    except BrokenPipeError:
+        raise
+    except UnicodeError:
+        print("Error: text cannot be processed as UTF-8.", file=sys.stderr)
+        return 2
     except (ValidationError, OSError, EOFError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
     except KeyboardInterrupt:
         print("Cancelled.", file=sys.stderr)
         return 130
+
+
+def entrypoint() -> int:
+    """Process boundary: UTF-8 streams and quiet, deterministic closed-pipe exit."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="strict")
+    try:
+        try:
+            result = main()
+        except SystemExit:
+            # Help/version/parse errors also need a flush before interpreter shutdown.
+            sys.stdout.flush()
+            sys.stderr.flush()
+            raise
+        sys.stdout.flush()
+        sys.stderr.flush()
+        return result
+    except BrokenPipeError:
+        # Replacing the underlying descriptors avoids a second error during shutdown.
+        with open(os.devnull, "w") as sink:
+            for stream in (sys.stdout, sys.stderr):
+                try:
+                    os.dup2(sink.fileno(), stream.fileno())
+                except (AttributeError, OSError, ValueError):
+                    pass
+        return 141

@@ -2,20 +2,59 @@
 
 import json
 import os
+import runpy
 import subprocess
+import tarfile
 import tempfile
-import tomllib
 import venv
+import zipfile
+from email.parser import Parser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
+    """Check both release artifacts without extracting or running archived content."""
+    with zipfile.ZipFile(wheel) as archive:
+        names = archive.namelist()
+        metadata_path = f"ai_threat_lab-{version}.dist-info/METADATA"
+        metadata = Parser().parsestr(archive.read(metadata_path).decode("utf-8"))
+        assert metadata["Name"] == "ai-threat-lab"
+        assert metadata["Version"] == version
+        assert metadata["Requires-Python"] == ">=3.12"
+        assert all('extra == "dev"' in item for item in metadata.get_all("Requires-Dist", []))
+        entrypoints = archive.read(
+            f"ai_threat_lab-{version}.dist-info/entry_points.txt"
+        ).decode("utf-8")
+        assert "ai-threat-lab = ai_threat_lab.cli:entrypoint" in entrypoints
+        assert not any(name.startswith(("tests/", "scripts/")) for name in names)
+        catalog = archive.read("ai_threat_lab/data/catalog.json")
+        identity = archive.read("ai_threat_lab/_version.py")
+    with tarfile.open(sdist, "r:gz") as archive:
+        prefix = f"ai_threat_lab-{version}/"
+        for relative, expected in (
+            ("src/ai_threat_lab/data/catalog.json", catalog),
+            ("src/ai_threat_lab/_version.py", identity),
+        ):
+            member = archive.extractfile(prefix + relative)
+            assert member is not None
+            with member:
+                assert member.read() == expected
+        member = archive.extractfile(prefix + "PKG-INFO")
+        assert member is not None
+        with member:
+            metadata = Parser().parsestr(member.read().decode("utf-8"))
+        assert metadata["Version"] == version
+
 def main() -> None:
-    version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+    version = runpy.run_path(ROOT / "src/ai_threat_lab/_version.py")["__version__"]
     wheel = ROOT / "dist" / f"ai_threat_lab-{version}-py3-none-any.whl"
     if not wheel.is_file():
         raise SystemExit("Build the wheel first with python -m build")
+    sdist = ROOT / "dist" / f"ai_threat_lab-{version}.tar.gz"
+    check_distribution_archives(wheel, sdist, version)
     with tempfile.TemporaryDirectory(prefix="ai threat installed ") as folder:
         work = Path(folder)
         environment = work / "isolated venv"
@@ -43,7 +82,47 @@ def main() -> None:
             return result.stdout
 
         run(python, "-m", "pip", "install", "--no-index", "--no-deps", wheel)
-        assert version in run(executable, "--version")
+        expected_version = f"AI Threat Lab {version}"
+        assert run(executable, "--version").strip() == expected_version
+        assert run(python, "-m", "ai_threat_lab", "--version").strip() == expected_version
+        installation = json.loads(run(executable, "doctor", "--installation"))
+        assert installation["status"] == "ready"
+        assert installation["mode"] == "installed_distribution"
+        assert installation["distribution_version"] == installation["runtime_version"] == version
+        assert all(installation["checks"].values())
+        assert installation["network_checked"] is installation["credentials_checked"] is False
+        command_names = json.loads(run(
+            python, "-c",
+            "import argparse,json;from ai_threat_lab.cli import build_parser;"
+            "p=build_parser();print(json.dumps(sorted(next(a.choices for a in p._actions "
+            "if isinstance(a,argparse._SubParsersAction)))))",
+        ))
+        assert command_names
+        for name in command_names:
+            assert "usage:" in run(executable, name, "--help")
+        run(executable, "--ver", expected=2)
+        run(executable, "doctor", "--instal", expected=2)
+        env.update(PYTHONIOENCODING="ascii", PYTHONUTF8="0")
+        unicode_report = json.loads(run(
+            executable, "analyze", "ai_phishing", "--organization", "Łódź Żółw", "--format", "json"
+        ))
+        assert "Łódź Żółw" in json.dumps(unicode_report, ensure_ascii=False)
+        env.update(PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+        pipe = subprocess.Popen(
+            [str(executable), "--help"], cwd=work, env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        assert pipe.stdout is not None and pipe.stderr is not None
+        pipe.stdout.close()
+        try:
+            assert pipe.wait(timeout=15) == 141
+            assert pipe.stderr.read() == b""
+        finally:
+            pipe.stderr.close()
+            if pipe.poll() is None:
+                pipe.kill()
+                pipe.wait()
+
         run(python, ROOT / "scripts/check_ai_offline.py")
         ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
         assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]

@@ -126,6 +126,14 @@ def readiness():
             "and saved-report export/observation comparison; central history and GUI absent.",
         ),
         (
+            "cli_installation",
+            "offline_complete",
+            "not_required",
+            "Exact options, UTF-8 streams, process exit codes, local installation diagnostics; "
+            "wheel built from sdist, fresh dependency-free installation and every command help. "
+            "Linux/Windows Python 3.12-3.14 CI; other platforms unvalidated.",
+        ),
+        (
             "offline_demo",
             "implemented",
             "not_required",

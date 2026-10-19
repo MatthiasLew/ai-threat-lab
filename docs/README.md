@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Console installation, diagnostics and exit codes](CLI_INSTALLATION.md)
+- [CLI/install completion contract](CLI_OFFLINE_ACCEPTANCE.md)
+
 The CLI provides bounded assessments, local training rehearsals and text/JSON/HTML reports, with standalone Python SARIF. GUI and PDF remain planned. Start with the current delivery status and offline acceptance criteria.
 
 | Document | Purpose |

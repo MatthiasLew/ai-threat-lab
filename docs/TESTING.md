@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.33.0
+# Test strategy and integration readiness — 0.34.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -134,3 +134,7 @@ Require pre-fix failure/current success for overruns reused from cache, clock sa
 ## Reports/local history closure (0.33.0)
 
 Require pre-fix failure/current success for rehashed inconsistent HTML, Boolean counts, assessment/dependency scope mismatches, false comparison counts, replacement-file cleanup and summary escaping. Cover original-source deletion, single/batch catalog/export, failed versus invalid runs, strict comparison metadata, root/run/read/output budgets, no network, file links/types/descriptor closure, no overwrite and write failures. Demo completion independently checks catalog counts and regenerated exports; installed-wheel CLI repeats both after the demo source was removed. No new report formats or analysis engines are part of this gate.
+
+## CLI and installation closure (0.34.0)
+
+The finite [CLI/install contract](CLI_OFFLINE_ACCEPTANCE.md) covers exact option names, one release identity, UTF-8 process streams, quiet closed-pipe exit, local installation diagnostics and wheel/sdist resource/metadata parity. Fresh offline wheel installation exercises every command help and existing functional workflows outside the checkout. Linux/Windows Python 3.12–3.14 CI provides platform evidence. See [installation instructions](CLI_INSTALLATION.md). API setup/live validation remain deferred; broader collector/product work is separate.

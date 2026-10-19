@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.33.0
+# Delivery status and remaining work — 0.34.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -128,3 +128,7 @@ The finite [AI offline acceptance contract](AI_OFFLINE_ACCEPTANCE.md) covers the
 ## Reports/local history completion (0.33.0)
 
 The finite [reporting contract](REPORTS_OFFLINE_ACCEPTANCE.md) is offline-complete after release gates: existing JSON/HTML and Python SARIF, verified single/batch storage, conservative comparisons, a bounded one-level history catalog and saved-report export after source deletion. Invalid history stays visible; no source/provider access occurs. Central authenticated history, automated retention, encryption/signatures and PDF are outside this local contract. See [LOCAL_REPORT_HISTORY.md](LOCAL_REPORT_HISTORY.md).
+
+## CLI and installation closure (0.34.0)
+
+The finite [CLI/install contract](CLI_OFFLINE_ACCEPTANCE.md) covers exact option names, one release identity, UTF-8 process streams, quiet closed-pipe exit, local installation diagnostics and wheel/sdist resource/metadata parity. Fresh offline wheel installation exercises every command help and existing functional workflows outside the checkout. Linux/Windows Python 3.12–3.14 CI provides platform evidence. See [installation instructions](CLI_INSTALLATION.md). API setup/live validation remain deferred; broader collector/product work is separate.
