@@ -1,50 +1,43 @@
-# Implementation plan and review checklist
+# Implementation and verification order
 
-## Order of work
+## Active workflow
 
-| Step | Deliverable | Status |
+1. Use `ai-dev-cli-tools` to map the repository, plan the change and check its configured gates. Report problems in that tool as issues in `MatthiasLew/ai-dev-cli-tools`; do not create unsolicited PRs there.
+2. Reproduce a confirmed defect before changing production code. Keep positive controls so a fix cannot simply disable a feature.
+3. Inspect adjacent cases and affected entrypoints. Prefer independent language/protocol behavior over assertions copied from the implementation.
+4. Implement the smallest coherent correction with explicit limits and failure evidence.
+5. Run focused tests, then `python scripts/verify.py` for the release. Preserve old report reading and suppress comparisons if observation semantics change.
+6. Update scope, acceptance fixtures and delivery documentation. Publish directly on the project's main branch and verify the six CI jobs at that exact commit.
+
+The finite acceptance checklist is [OFFLINE_RELEASE_CRITERIA.md](OFFLINE_RELEASE_CRITERIA.md). Feature expansion is paused while confirmed defects or required acceptance gaps remain.
+
+## Current implementation
+
+| Area | Current state | Completion boundary |
 | --- | --- | --- |
-| 1 | Typed immutable request/result contract and validation | Implemented |
-| 2 | Six scenario narratives and versioned control rules | Implemented; rules provisional |
-| 3 | Deterministic baseline/residual risk engine | Implemented |
-| 4 | CLI commands, guided input and TXT/JSON reports | Implemented |
-| 5 | Tests, CI, packaging and ai-dev check configuration | Implemented |
-| 6 | Mateusz reviews behavior and agrees product choices | Next |
-| 7 | PySide6 screens calling the shared service | Planned |
-| 8 | GUI parity checks, presentation and optional PDF | Planned |
+| Domain/catalog | Validated immutable contracts and teaching scenarios | Scores are explanatory models, not measured defense effectiveness |
+| Target assessment | Bounded local checks and fixture-tested read-only collectors | Actual account validation and deeper application/binary analysis remain separate |
+| Python analysis | Selected syntax/flows, package/importlib links and SQLite contexts | Candidate evidence with explicit semantic/resource gaps |
+| Reporting | Text/JSON/HTML, standalone Python SARIF, scan/batch bundles and comparison | Local evidence consistency, not source authenticity or confirmed vulnerabilities |
+| Local training | Three text rehearsal channels, exact approvals and durable actions | Scripted local choices, no live delivery/media or observed employee telemetry |
+| AI costs | Budgeted explanation adapter, dry-run/cache/reservations | API setup and live billing/quality validation deferred |
+| Packaging | Full tests, coverage, clean-wheel workflow and Linux/Windows CI | Evidence is tied to the tested commit |
 
-## What Mateusz should verify first
+## Review without API setup
 
-1. Run `python -m ai_threat_lab interactive` and try all three scenarios.
-2. Compare voice-deepfake analysis with no controls and with callback plus independent approval: 20 → 10 at medium access and normal urgency.
-3. Add phishing-resistant authentication to the voice scenario: the payment-risk score should remain unchanged, with an explanation.
-4. Save a JSON report; verify that saving again to the same filename fails without replacing it.
-5. Check whether stages, warning signs, consequences, and recommended defenses fit the course assignment.
+```bash
+python -m ai_threat_lab --help
+python -m ai_threat_lab doctor
+python -m ai_threat_lab readiness
+python -m ai_threat_lab offline-demo --output-dir demo-review
+```
 
-## Product decisions to confirm
+Inspect `demo-review/index.html` and its generated report links. Verify the completed demo summary and bundle checks, not only terminal success. Existing output paths must be rejected instead of replaced. Use a new directory for each run.
 
-- Application language: English is implemented; should the CLI/GUI also support Polish?
-- Deadline and minimum presentation scope: CLI alone first, or GUI required for the first review?
-- GUI ownership: who integrates PySide6 and when?
-- Scoring: accept provisional ordinal rules for the class demo, or refine the rubric before GUI work?
-- Reports: are TXT/JSON enough for MVP, or is PDF required for submission?
+Automated verification is documented in [TESTING.md](TESTING.md). The demo uses synthetic fixtures and local rehearsal storage; target sources are parsed, never imported or executed by the scanner.
 
-These decisions do not block review of the current foundation. Do not claim empirical defense effectiveness; calibration is separate future work.
+## Decisions for later deployment
 
-## Offline extension delivery
+The next full-product work needs a chosen repository/framework, owned web test application, mailbox provider or consented training environment and its acceptance criteria. These choices do not prevent the existing offline acceptance work. They do prevent claiming complete real-world coverage from an unspecified target.
 
-Brute-force, credential-stuffing and insecure-generated-code narratives are implemented in the catalog. The Python AST reviewer is implemented independently of scenario scoring. The next work remains product review, then GUI integration; future API access does not block either. Candidate future rules and the adapter boundary are documented in EXTENDING_SCENARIOS.md.
-
-## Revised product direction and integration foundation
-
-The project now separates real target assessment from teaching scenarios. The implemented local checks and campaign orchestration are described in ASSESSMENT.md/CAMPAIGNS.md; INTEGRATIONS.md lists exactly which remote/provider capabilities remain absent. Next work is a concrete provider adapter plus its integration tests, rather than more narrative-only scenarios.
-
-Existing project PRs #1 and #2 were merged. Subsequent project work is committed to main per the user's workflow. Problems found in ai-dev are reported as issues going forward.
-
-## Integration-ready offline core (0.3.0)
-
-The named adapter registry, strict versioned artifacts and full offline CLI lifecycle are implemented. The expanded behavioral/subprocess suite and installed-wheel verification are release gates. The next implementation step remains selecting and writing concrete external adapters, followed by their controlled integration tests; no live provider has been silently configured.
-
-## Concrete read-only integrations and cost controls (0.4.0)
-
-GitHub, passive HTTPS, basic DNS and selected Gmail settings collectors are implemented, together with program metadata, local secret/manifest observations and a concrete OpenAI Responses explanation adapter. Budget reservations, request caps, optional caching, concurrent deduplication and reconciliation are implemented and fixture-tested. See LIVE_SETUP.md and API_COSTS.md; these supersede older next-adapter notes above. Real-account validation and unimplemented live training services must not be described as complete.
+The agreed ordering is CLI first, API/account work later, GUI later. Follow [ROADMAP.md](ROADMAP.md) for the separately scoped expansion tracks and [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for current implementation limits.

@@ -2,50 +2,35 @@
 
 ## Goal
 
-A console application accepts a target (repository URL, website, local project/program, exported mail, mailbox account or mail domain), routes it to relevant checks, and returns evidence, possible consequences, confidence/limitations and remediation priorities. Separate authorized training modules cover email, voice and video social engineering.
+A console application accepts an explicit target (repository URL, website, local project/program, exported mail, mailbox account or mail domain), routes it to relevant checks, and returns evidence, possible consequences, limitations and remediation priorities. Separate consented training modules rehearse email, voice and video social-engineering scenarios.
 
-## Current delivery
+The current delivery is a bounded offline/read-only CLI foundation. Full application coverage, live communications/media and real-provider validation require additional implementation. The exact input-by-input matrix is [DELIVERY_STATUS.md](DELIVERY_STATUS.md).
 
-- Shared immutable Python models and CLI adapters.
-- Local Python AST review, project scanning limits and exported `.eml` observations.
-- Target recognition with explicit not-configured results for missing remote/binary integrations.
-- Six explanatory risk scenarios and control comparisons.
-- Three prepared training scenarios: email, voice, video.
-- Preview/approval digest, recipient scope/expiry checks, transport contracts, cancellation and delivery ledgers.
-- Offline simulated dispatch and event aggregation.
-- Tests, build packaging, CI and integration documentation.
+## Implemented delivery
 
-## Read-only integrations delivered in 0.4.0
+- Validated request/result contracts, explanatory scenario rules and console workflows.
+- Fourteen Python AST rule families, selected Flask-to-shell/SQLite flows, bounded helper contexts, regular root/src package links, relative/literal importlib imports and selected SQLite connection contexts.
+- Secret/configuration, structured Kubernetes JSON, supported exact-version dependency, PE/ELF-header and exported-mail observations, each with explicit limits.
+- Pinned GitHub collection, passive HTTPS headers, basic mail-domain DNS and selected authenticated Gmail settings through explicit read-only workflows; remote behavior is fixture-tested.
+- Single/local-batch scans, merged remediation reports, source-free Python SARIF, integrity-checked bundles and conservative observation comparison.
+- Three local text rehearsal channels with exact preview approval, recipient/expiry checks, cancellation, durable actions and outcome provenance.
+- Budgeted explanation contracts, dry-run, cache, concurrency reservations and uncertain-outcome handling without automatic model calls.
+- Packaging, full regression tests, clean installed-wheel acceptance and Linux/Windows CI.
 
-- Concrete pinned-commit GitHub source collector, passive HTTPS header audit and basic DNS mail-policy observations.
-- Authenticated Gmail owner/settings collector, with external OAuth consent/refresh and required scopes.
-- Additional local secret/manifest inventory and program metadata.
-- Concrete OpenAI Responses explanations with evidence opt-in, optional TTL caching, persistent budgets and no automatic retries.
-- Deterministic HTTP fixtures and real CLI subprocess tests; no paid/live account validation.
+## Current engineering priority
 
-## Next implementation order
+Close confirmed defects and complete the frozen [offline release criteria](OFFLINE_RELEASE_CRITERIA.md). Keep representative positive and negative controls, explicit coverage gaps and truthful status documents. Test counts alone are not acceptance evidence. The package-binding correction in 0.26.1 includes independent inert Python import-oracle checks and paired demo controls.
 
-1. Validate the existing read-only integrations against controlled resources and actual provider grants.
-2. Select a real AI model, verify prices/access and test explanation quality and billing controls.
-3. Expand source/dependency rules and validate candidates with appropriate specialist tools.
-4. Define a separate, approved training deployment before selecting mail/telephony/media services; it requires more than a model key.
-5. Add trusted event collection, delivery/provider controls and retention policies if live training enters scope.
-6. Connect GUI to the same services.
+## Remaining product tracks
 
-Current collectors perform partial read-only checks. Active exploitation, credential attacks, live communications, generated audio/video and a production telemetry backend are absent. Existing narrative scores remain teaching models, not real scan conclusions. See LIVE_SETUP.md for precise limits.
+The [roadmap](ROADMAP.md) separates deployment-specific source analysis, application-level web assessment, expanded mail/mailbox checks, training delivery/media/events, binary/platform depth and controlled live operational acceptance. Each needs a bounded contract and independent validation. Adding another Python construct does not close these tracks.
 
-## Open product choices
+Current header checks do not implement crawling or authenticated business-logic tests. Current PE/ELF checks do not implement signature trust or dynamic analysis. Local rehearsal choices do not demonstrate actual employee behavior. Narrative brute-force/credential-stuffing scenarios do not implement login attempts.
 
-Interface language, submission deadline, GUI ownership, report/PDF priority, first provider, and permitted live test environments remain to be agreed. Offline work does not require an API or credential setup.
+## Established ordering and open deployment choices
 
-## Additional delivery in 0.5.0
+The agreed ordering is console first, no API/account setup for now, GUI later. Direct project work uses main; ai-dev tool problems are tracked as issues in its own repository.
 
-Pinned dependency inventory and opt-in OSV advisory/version matching are implemented without model calls. Combined JSON/HTML reports preserve findings, source provenance and gaps, with an explicit human-triage order. Live API/media/campaign limits above remain; dependency matches do not establish exploitability. See DEPENDENCIES_AND_REPORTS.md.
+Before real deployment, select the first target stack/environment, permitted assessment scope, mail/training providers, models/rates and retention/operational requirements. These decisions belong to the corresponding milestone. API keys alone do not implement missing collectors, communications, media or authenticated event intake.
 
-## Additional delivery in 0.6.0
-
-Approved local text rehearsals now run from CLI with durable sessions, structured choices, bounded voice policy, expiry/stop/revocation and JSON/HTML reports. They prepare and test practice flows without model calls. They do not observe real email/call behavior, prove identity verification or implement any live communication/media service.
-
-## Additional delivery in 0.7.0
-
-Single-command scanning now orchestrates available read-only checks, local dependency inventory and opt-in OSV. It publishes partial JSON/HTML reports with explicit module status and checked artifact manifests. Baseline comparison reports exact observation changes while suppressing deltas for changed scope or failed modules. It does not implement new attack techniques, live communications, automatic AI calls or comprehensive scanning.
+See [INTEGRATIONS.md](INTEGRATIONS.md) for adapter contracts, [API_COSTS.md](API_COSTS.md) for cost controls and [USER_GUIDE.md](USER_GUIDE.md) for the console workflow. Version-by-version history is preserved in [CHANGELOG.md](../CHANGELOG.md).
