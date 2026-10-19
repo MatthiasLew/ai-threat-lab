@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.31.0
+# Test strategy and integration readiness — 0.32.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -126,3 +126,7 @@ Test unchanged database bytes for receipt/status reads; signature/binding failur
 ## OpenSSH journal mapping (0.31.0)
 
 Require independent native records and expected normalized timelines, all four pattern controls, nonterminal and alternate-method success resets, exact source-line evidence, host/process isolation, microsecond epoch/year boundaries, canonical-IP grouping, strict JSON/field/message limits and identity-free output. Cover invalid selected outcomes, nonscalar/binary metadata, no-network/subprocess, file guards, CLI thresholds/HTML/no-overwrite and scan/batch integrity. Demo positive/negative failures must block completion; installed wheel must repeat both controls. Engine-21 reading remains supported; cross-engine comparisons remain disabled.
+
+## AI/cost closure (0.32.0)
+
+Require pre-fix failure/current success for overruns reused from cache, clock sampling before the SQLite writer lock, incompatible-ledger augmentation, price precision and the CLI output-path race. Retain exact legacy data, reject invalid state without reset, preserve reservations after completion failures, and verify cache cleanup rollback/idempotency/concurrency without deleting accounting. Test byte limits and service-level empty-findings skip. The clean-wheel verifier runs `scripts/check_ai_offline.py` using the installed package, synthetic HTTP/credential data and blocked DNS/sockets, then repeats operational CLI reads/cleanup. Live account correctness is excluded. See [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md).

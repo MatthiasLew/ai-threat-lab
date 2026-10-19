@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.31.0
+# Offline CLI release criteria — 0.32.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -62,3 +62,7 @@ Require historical signed receipt queries without writes or approval renewal; co
 ## Bounded OpenSSH journal addition (0.31.0)
 
 Require the restricted single-host JSONL contract, integer reception time, exact process/machine checks, supported terminal outcome mapping, unknown-method handling without MFA inference, original physical line evidence, privacy/resource/file limits and visible omissions. Independent mapping controls, paired demo, CLI and installed-wheel workflows must pass. No native journal collection, live attempts or arbitrary provider parsing is included. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).
+
+## AI/cost closure gate (0.32.0)
+
+Require every finite [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md) condition: exact local money arithmetic, writer-lock clock/TTL checks, validated legacy storage, service-level skip, no overrun cache reuse, safe cleanup preserving budget history, uncertain-outcome accounting and exclusive output ownership. The socket-blocked installed-wheel lifecycle and all six CI jobs must pass. Acceptance closes this offline module; live account/model/pricing/billing validation is explicitly deferred.

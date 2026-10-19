@@ -4,7 +4,7 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.31.0
+## Project status — 0.32.0
 
 Current completion criteria: [stable offline CLI scope and release gates](docs/OFFLINE_RELEASE_CRITERIA.md).
 
@@ -231,3 +231,5 @@ Training demos and risk simulation consist of local fictional narratives and rul
 Local event imports also support historical receipt queries and combined rehearsal/event cancellation. See [local training control](docs/LOCAL_TRAINING_CONTROL.md) for commands and SQLite prerequisites.
 
 Selected saved OpenSSH journal exports now work through `review-ssh-journal` and explicit `.ssh.jsonl` scans. See [SSH journal review](docs/SSH_JOURNAL_REVIEW.md) for export instructions, supported messages and privacy/collection limits.
+
+The AI explanation/cost module is **offline complete within its [acceptance contract](docs/AI_OFFLINE_ACCEPTANCE.md)**: reservations, budget limits, cache cleanup, unknown outcomes, reconciliation and output safety are fixture-tested. Actual model/account/prices and live billing/output validation remain deferred. See [API_COSTS.md](docs/API_COSTS.md).

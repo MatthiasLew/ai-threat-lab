@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.31.0)
+# Integration contracts and current capability boundary (0.32.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -89,3 +89,7 @@ Historical receipts require the original signed envelope and registered bindings
 ## Saved native authentication mapping (0.31.0)
 
 `review-ssh-journal` maps selected OpenSSH journal JSONL outcomes from one declared machine. Exact process selection and scalar fields are required; unsupported terminal outcomes reject the capture. Password/public-key/unknown mapping is explicit, with no inferred MFA. Single/batch scans recognize explicit `.ssh.jsonl` targets; project source walks do not ingest them. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).
+
+## AI cost completion boundary (0.32.0)
+
+The existing explanation adapter is offline-complete under [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md). Shared-ledger reservation, cache expiry/cleanup, uncertainty/reconciliation and exclusive output ownership are verified without live requests. This is separate from future account/model/pricing and provider-billing validation. `api-costs`, `api-reconcile` and `api-cache-prune` require existing compatible ledgers.

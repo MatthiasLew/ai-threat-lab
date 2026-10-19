@@ -138,3 +138,7 @@ Use `training-events-receipt ENVELOPE.json --key-file KEY --ledger EVENTS.sqlite
 ## Saved SSH log analysis
 
 Run `review-ssh-journal logins.ssh.jsonl` on a saved supported single-host journal export; use `--format html --output REPORT.html` or `--fail-on-findings` as needed. `.ssh.jsonl` paths also work with single and batch scans. Export instructions and strict supported formats are in [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md). No SSH connection or login attempt occurs.
+
+## Maintain the AI cost ledger
+
+`api-costs --ledger costs.sqlite` separates recorded amounts from unconfirmed reservations. `api-cache-prune --ledger costs.sqlite` clears expired cached text; add `--all` to clear unexpired cached text too. Neither cleanup nor expiry refunds money, deletes accounting or unblocks a pending request. These operational commands require an existing compatible ledger. See [API_COSTS.md](API_COSTS.md).

@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.31.0
+# Delivery status and remaining work — 0.32.0
 
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
@@ -22,7 +22,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |
-| AI explanation/cost control | Concrete budgeted adapter, evidence minimization, dry-run, deduplication/cache and reservations | Chosen model/prices/account setup and controlled live validation |
+| AI explanation/cost control | Offline-complete within the finite contract: budgeted adapter, evidence validation/minimization, dry-run, cache cleanup, reservations/reconciliation and output claims | Chosen model/prices/account setup and controlled live validation |
 | Reports/history | Offline multi-target batches, JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |
 | GUI | Existing service contracts/handoff documentation | GUI implementation, deferred by console-first scope |
@@ -120,3 +120,7 @@ Read-only receipts recover an accepted event result after freshness/expiry/cance
 ## Saved OpenSSH journal adapter (0.31.0)
 
 The CLI maps selected single-host journal JSONL records into the existing four authentication-pattern families. It preserves source line references, redacts identities and rejects ambiguous terminal outcomes. Explicit `.ssh.jsonl` single/batch scans, paired demo and installed-wheel workflows are covered. Native syslog/Windows/other-provider conversion, journal collection, log authenticity and real deployment acceptance remain open. See [SSH_JOURNAL_REVIEW.md](SSH_JOURNAL_REVIEW.md).
+
+## AI/cost offline completion (0.32.0)
+
+The finite [AI offline acceptance contract](AI_OFFLINE_ACCEPTANCE.md) covers the existing single-provider explanation module: strict evidence/configuration, exact local accounting, writer-lock time checks, validated legacy-compatible storage, cache lifecycle, uncertain outcomes/reconciliation and pre-dispatch output claims. This module is offline-complete after its automated release gates; no additional providers or analyzers are part of this milestone. Real account/model/price selection and controlled live validation remain deferred. See [API_COSTS.md](API_COSTS.md).

@@ -113,9 +113,10 @@ def readiness():
         ),
         (
             "ai_explanations",
-            "fixture_tested",
+            "offline_complete",
             "integration_validation_required",
-            "Budgeted Responses adapter and dry-run; selected model/prices/account unvalidated.",
+            "Offline cost contract complete: reservations, cache cleanup, unknown outcomes, "
+            "reconciliation and output claims; selected model/prices/account remain unvalidated.",
         ),
         (
             "reports",

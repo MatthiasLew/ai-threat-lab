@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.32.0
+
+- Close the finite offline AI explanation/cost contract with strict legacy-compatible ledger validation, existing-only operational reads and no implicit recreation after deletion. Preserve billing/pending history.
+- Sample BudgetedAI clocks after writer locks for cache TTL and UTC budgets. Record token overruns without caching them; validate legacy cache usage before reuse and preserve uncertain completion IDs.
+- Use exact integer token-charge arithmetic and precision-independent price validation, validate structured evidence and skip empty findings at the service boundary.
+- Add transactional api-cache-prune for expired/all cached text, separate pending versus recorded daily totals, and exclusive private AI output claims before dispatch.
+- Add pre-fix reproductions, concurrency/fault/CLI tests and a network-blocked installed-wheel lifecycle. Mark AI offline-complete within the documented contract; live model/account/pricing/billing validation remains deferred. Assessment engines are unchanged.
+
 ## 0.31.0
 
 - Add bounded single-host OpenSSH journal JSONL review, with exact process/machine scope, integer journal-reception timestamps, terminal outcome/method mapping and source-free original-line evidence.

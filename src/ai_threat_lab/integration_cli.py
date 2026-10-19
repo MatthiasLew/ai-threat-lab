@@ -1,11 +1,12 @@
 """Explicit opt-in network assessment and AI cost workflow commands."""
 
 import os
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses
+from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses, compact_evidence
 from .assessment import identify_target
 from .audit_report import merge_reports, render_html
 from .auth_log_review import AuthPolicy, review_auth_log_file
@@ -33,6 +34,7 @@ COMMANDS = {
     "ai-explain",
     "api-costs",
     "api-reconcile",
+    "api-cache-prune",
 }
 
 
@@ -98,6 +100,11 @@ def add_commands(commands):
         "--actual-usd", required=True, help="Observed charge; use 0 only for confirmed no-charge"
     )
     reconcile.add_argument("--ledger", type=Path, required=True)
+    prune = commands.add_parser(
+        "api-cache-prune", help="Clear expired cached AI text without deleting accounting"
+    )
+    prune.add_argument("--ledger", type=Path, required=True)
+    prune.add_argument("--all", action="store_true", help="Clear unexpired cached responses too")
     dependencies = commands.add_parser(
         "audit-deps", help="Inventory pinned dependencies; optionally query OSV"
     )
@@ -125,6 +132,7 @@ def add_commands(commands):
         explain,
         costs,
         reconcile,
+        prune,
         dependencies,
         report,
         headers,
@@ -243,32 +251,80 @@ def run_command(args):
                 print(content)
             return 0
     elif args.command == "ai-explain":
-        if not args.dry_run and not args.send_evidence:
-            raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")
-        config = AIConfig.from_document(read_document(args.ai_config))
-        document = read_document(args.assessment)
-        if not isinstance(document.get("findings"), list):
-            raise ValidationError("Assessment document must contain a findings array")
-        if not document["findings"]:
-            payload = {
-                "status": "skipped_no_findings",
-                "network_called": False,
-                "notice": "No AI call is needed; the audit limitations still apply.",
-            }
-        else:
-            if not args.dry_run and not os.environ.get("OPENAI_API_KEY"):
-                raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
-            ai = BudgetedAI(
-                config,
-                CostLedger(args.ledger),
-                OpenAIResponses(PublicHTTPS(["api.openai.com"], max_requests=1)),
-            )
-            payload = ai.explain(document, dry_run=args.dry_run)
+        with exclusive_ai_output(args.output, args.ledger) as stream:
+            payload = explain_payload(args)
+            text = write_document(payload, None)
+            if stream is not None:
+                stream.write(text)
+            else:
+                print(text, end="")
+        if args.output:
+            print(f"Report saved: {args.output}")
+        return 0
     else:
-        ledger = CostLedger(args.ledger)
+        ledger = CostLedger(args.ledger, create=False)
         if args.command == "api-reconcile":
             ledger.reconcile(args.request_id, args.actual_usd)
-        payload = ledger.report()
+        payload = (
+            ledger.prune_cache(all_entries=args.all)
+            if args.command == "api-cache-prune"
+            else ledger.report()
+        )
     text = write_document(payload, args.output)
     print(f"Report saved: {args.output}" if args.output else text, end="\n" if args.output else "")
     return code
+
+
+@contextmanager
+def exclusive_ai_output(path, ledger):
+    """Claim before dispatch; never spend a call on an already occupied output path."""
+    if path is None:
+        yield None
+        return
+    target, database = Path(path).resolve(), Path(ledger).resolve()
+    if target == database or (
+        target.parent == database.parent
+        and target.name in {database.name + suffix for suffix in ("-journal", "-wal", "-shm")}
+    ):
+        raise ValidationError("AI output must not alias its cost database or SQLite sidecars")
+    descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    identity, success = os.fstat(descriptor), False
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            descriptor = None
+            yield stream
+        success = True
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if not success:
+            try:
+                if os.path.samestat(identity, Path(path).stat(follow_symlinks=False)):
+                    Path(path).unlink()
+            except FileNotFoundError:
+                pass
+
+
+def explain_payload(args):
+    if not args.dry_run and not args.send_evidence:
+        raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")
+    config = AIConfig.from_document(read_document(args.ai_config))
+    document = read_document(args.assessment)
+    if not isinstance(document.get("findings"), list):
+        raise ValidationError("Assessment document must contain a findings array")
+    compact_evidence(document, config.max_input_bytes)
+    if not document["findings"]:
+        return {
+            "status": "skipped_no_findings",
+            "network_called": False,
+            "not_checked": document.get("not_checked", []),
+            "notice": "No AI call is needed; the audit limitations still apply.",
+        }
+    if not args.dry_run and not os.environ.get("OPENAI_API_KEY"):
+        raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
+    ai = BudgetedAI(
+        config,
+        CostLedger(args.ledger),
+        OpenAIResponses(PublicHTTPS(["api.openai.com"], max_requests=1)),
+    )
+    return ai.explain(document, dry_run=args.dry_run)

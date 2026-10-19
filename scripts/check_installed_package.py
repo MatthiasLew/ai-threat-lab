@@ -44,6 +44,19 @@ def main() -> None:
 
         run(python, "-m", "pip", "install", "--no-index", "--no-deps", wheel)
         assert version in run(executable, "--version")
+        run(python, ROOT / "scripts/check_ai_offline.py")
+        ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
+        assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]
+        assert (
+            json.loads(run(executable, "api-costs", "--ledger", "installed AI costs.sqlite"))
+            == ai_report
+        )
+        assert (
+            json.loads(
+                run(executable, "api-cache-prune", "--ledger", "installed AI costs.sqlite", "--all")
+            )["accounting_rows_deleted"]
+            == 0
+        )
         assert json.loads(run(executable, "doctor"))["status"] == "ready_offline"
         for scenario in ("email_training", "voice_training"):
             run(executable, "campaign-example", scenario, "--output", "request.json")
@@ -148,6 +161,46 @@ def main() -> None:
         )
         assert estimate["network_called"] is False
         assert json.loads(run(executable, "api-costs", "--ledger", "costs.sqlite"))["days"] == []
+        assert (
+            json.loads(run(executable, "api-cache-prune", "--ledger", "costs.sqlite"))[
+                "cleared_responses"
+            ]
+            == 0
+        )
+        assert (
+            json.loads(run(executable, "api-cache-prune", "--ledger", "costs.sqlite", "--all"))[
+                "accounting_rows_deleted"
+            ]
+            == 0
+        )
+        run(executable, "api-costs", "--ledger", "missing-costs.sqlite", expected=2)
+        run(executable, "api-cache-prune", "--ledger", "missing-costs.sqlite", expected=2)
+        assert not (work / "missing-costs.sqlite").exists()
+        run(
+            executable,
+            "ai-explain",
+            "audit.json",
+            "--ai-config",
+            configuration,
+            "--ledger",
+            "costs.sqlite",
+            "--dry-run",
+            "--output",
+            "estimate.json",
+        )
+        run(
+            executable,
+            "ai-explain",
+            "audit.json",
+            "--ai-config",
+            configuration,
+            "--ledger",
+            "costs.sqlite",
+            "--dry-run",
+            "--output",
+            "estimate.json",
+            expected=2,
+        )
         run(executable, "audit", "https://example.invalid", expected=2)
         requirements = work / "requirements.txt"
         requirements.write_text("fixture-package==1.2.3\n", encoding="utf-8")

@@ -61,3 +61,7 @@ Every new milestone needs a bounded contract, independent positive/negative cont
 The 0.30.0 [local control workflow](LOCAL_TRAINING_CONTROL.md) closes lost-import-result lookup and coordinated cancellation of existing local ledgers. Native event intake, provider stop reconciliation, durable organization-wide storage, retention and controlled live acceptance remain separate engineering work.
 
 The 0.31.0 [OpenSSH journal adapter](SSH_JOURNAL_REVIEW.md) adds one bounded native saved-log mapping to the offline foundation. It does not collect logs or implement arbitrary syslog/Windows/provider conversion. Deployment-specific logging permissions, completeness, supported versions and authenticity require controlled acceptance later.
+
+## AI/cost module closure (0.32.0)
+
+Finish the existing explanation/cost module against [AI_OFFLINE_ACCEPTANCE.md](AI_OFFLINE_ACCEPTANCE.md) before expanding other tracks. Local controls and the synthetic installed-package lifecycle are accepted offline; model/account/pricing, quota, output quality and real billing checks are a separately deferred live stage. Automatic model routing, Batch API and centrally authenticated cross-machine budgets are outside this finite local contract.

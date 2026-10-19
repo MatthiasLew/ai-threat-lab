@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.31.0
+# Offline acceptance kit — 0.32.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -144,3 +144,7 @@ The demo adds one separate fictional session in `coordinated-training.sqlite` an
 ## OpenSSH journal controls (0.31.0)
 
 The demo generates `logins.ssh.jsonl` and `separated-logins.ssh.jsonl` using fictional identities/documentation IP ranges. `ssh-observations` must contain the four authentication candidates; `ssh-negative-control` must contain none. Both bundles verify before completion, are linked from `index.html`, and contribute `ssh_journal_checks` / `ssh_journal_negative_findings` to the summary. Installed-wheel review and scan-check repeat the paths. The raw synthetic exports are fixtures, not collected events or evidence of real compromises.
+
+## AI cost installed-package acceptance (0.32.0)
+
+The installed-wheel gate additionally executes `scripts/check_ai_offline.py` outside the source checkout with a synthetic transport/credential and blocked sockets/DNS. It requires estimate without a request, one generated response, a cache hit, expired-text cleanup without changed costs, timeout reservation, blocked retry, explicit zero-charge reconciliation and subsequent completion. Operational CLI reads and cleanup must preserve all accounting. This is independent of the assessment demo and does not contact a provider.
