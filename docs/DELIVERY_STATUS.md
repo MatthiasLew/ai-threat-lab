@@ -1,4 +1,6 @@
-# Delivery status and remaining work — 0.27.0
+# Delivery status and remaining work — 0.28.0
+
+The bounded normalized authentication-log milestone adds offline failure/spray/distributed/success-sequence candidates, explicit file routing, reports and acceptance controls. See [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md). No login attempts or account access occur.
 
 The bounded HTML/EML/ZIP milestone is implemented on top of the offline CLI. Saved pages now have a standalone command and shared form/resource checks; selected EML forms and existing successful HTTPS bodies reuse them. Explicit ZIP file targets receive metadata-only review. See [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md). These checks retain partial results and limits; they do not implement live attack or delivery capabilities. API setup remains deferred.
 
@@ -16,7 +18,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |
 | Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
-| Brute force / credential stuffing | Educational scenarios, defenses and risk explanation | No live login-attempt implementation |
+| Brute force / credential stuffing | Educational scenarios plus bounded normalized login-event failure/spray/distributed/success-sequence candidates | No login attempts, native provider log conversion, password-reuse or compromise confirmation |
 | AI explanation/cost control | Concrete budgeted adapter, evidence minimization, dry-run, deduplication/cache and reservations | Chosen model/prices/account setup and controlled live validation |
 | Reports/history | Offline multi-target batches, JSON/escaped HTML, standalone Python SARIF export, triage queue, private no-overwrite scan bundles, consistency checks and conservative comparisons | Authenticated centralized history, organization policy and retention |
 | Offline acceptance | One-command generated fixture demo, all three local training channels, exports and readiness inventory | Real target/provider evidence remains separate |

@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.27.0
+# Offline CLI release criteria — 0.28.0
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 
@@ -9,6 +9,10 @@ Keep the currently documented Python, manifest/configuration, dependency, PE/ELF
 ## Bounded addition — 0.27.0
 
 The new milestone adds saved HTML, shared EML/response HTML authoring checks and explicit ZIP metadata targets. Acceptance requires selected positive/negative parser controls, no rendering/member-read checks, preserved header results when a body is unavailable, local/GitHub parity, CLI/single/batch bundle routing, engine-19 compatibility, demo failure controls and clean installed-wheel execution. Limits are documented in [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md). This does not expand the live-provider scope.
+
+## Bounded authentication-log addition — 0.28.0
+
+Acceptance requires strict normalized JSONL parsing, bounded windows/thresholds, duplicate/order/reset controls, source-free evidence, explicit file-only routing, no account/network calls, independent prefix-window oracle checks, paired demo failure controls and clean installed-wheel CLI/bundle validation. Limits and unresolved native provider conversion are documented in [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md).
 
 ## Required acceptance evidence
 

@@ -33,6 +33,7 @@ COMMANDS = (
     "review-code",
     "review-headers",
     "review-html",
+    "review-auth-log",
     "review-kubernetes",
     "campaigns",
     "campaign-demo",

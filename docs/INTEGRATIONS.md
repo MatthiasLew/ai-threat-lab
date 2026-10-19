@@ -1,4 +1,4 @@
-# Integration contracts and current capability boundary (0.27.0)
+# Integration contracts and current capability boundary (0.28.0)
 
 Concrete read-only collectors are available through the explicit `audit` command. Optional AI explains their existing findings; it does not autonomously attack targets. The legacy `assess` command remains an offline router unless an application registers adapters.
 
@@ -17,6 +17,7 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
 | Program file | Bounded size/hash plus selected PE/ELF headers and ZIP metadata/path candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
+| Authentication logs | Explicit normalized .auth.jsonl or review-auth-log input; bounded failure-pattern candidates | No provider log conversion, login attempts, trusted provenance or compromise confirmation |
 | Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
 | Email/voice/video dispatch | Demo transports and exact preview approval | No actual sending, phone calls, media generation or live tracking backend |
@@ -36,7 +37,7 @@ from ai_threat_lab.assessment import AssessmentService
 # service = AssessmentService({"github_repository": github_adapter})
 ```
 
-Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `html_document`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
+Kinds are `github_repository`, `website`, `python_source`, `local_project`, `mail_message`, `html_document`, `authentication_log`, `mail_domain`, `mailbox_account`, and `program_file`. Results contain candidate/unverified findings and `not_checked` items. An unavailable adapter must not claim success or security.
 
 A remote adapter must validate scope and destinations itself, enforce response/time/size bounds, and treat fetched code and page content as untrusted data. The legacy default router makes no HTTP, DNS, mailbox or GitHub requests; the new `audit` workflow explicitly opts into bounded read-only collectors. Active checks must be a separate explicit operation with a defined target scope, not a side effect of target classification.
 

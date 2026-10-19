@@ -116,3 +116,13 @@ ai-threat-lab scan-batch saved-page.html archive.zip --output-dir scans/local-01
 ```
 
 The declared document URL supplies context only; no request is made. Audit/scan routes also recognize saved HTML, and selected project/GitHub HTML and EML forms reuse the bounded parser. ZIP is an explicit file target and is inspected without reading or extracting members. All results remain partial. Details and limits: [HTML review](HTML_REVIEW.md), [archive review](ARCHIVE_REVIEW.md).
+
+## Offline login-event review
+
+```bash
+ai-threat-lab review-auth-log logins.auth.jsonl --fail-on-findings
+ai-threat-lab review-auth-log logins.auth.jsonl --format html --output login-review.html
+ai-threat-lab scan logins.auth.jsonl --output-dir scans/logins-01
+```
+
+Supply the normalized UTC JSON Lines format described in [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md). Selected failure patterns are candidates; no account access or login attempts occur. Source/project walks do not automatically ingest authentication logs.

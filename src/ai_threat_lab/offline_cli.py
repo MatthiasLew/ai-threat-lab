@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .acceptance_samples import (
+    synthetic_auth_log,
     synthetic_cargo_lock,
     synthetic_go_sum,
     synthetic_header_capture,
@@ -185,6 +186,28 @@ def offline_demo(output, *, now=None):
         "zip_platform_ambiguous_path",
     }:
         raise ValidationError("Synthetic ZIP acceptance failed; demo is incomplete")
+    auth_source = root / "logins.auth.jsonl"
+    auth_source.write_text(synthetic_auth_log(), encoding="utf-8")
+    auth_scan = engine.run(ScanOptions(str(auth_source)), root / "authentication-observations")
+    auth_bundle = read_bundle(root / "authentication-observations")
+    auth_checks = {f["check"] for f in auth_bundle["documents"]["assessment.json"]["findings"]}
+    if auth_scan["failed_modules"] or auth_checks != {
+        "auth_repeated_failures",
+        "auth_success_after_failures",
+        "auth_password_spray_pattern",
+        "auth_distributed_failures",
+    }:
+        raise ValidationError("Synthetic authentication acceptance failed; demo is incomplete")
+    negative_auth_source = root / "separated-logins.auth.jsonl"
+    negative_auth_source.write_text(synthetic_auth_log(negative=True), encoding="utf-8")
+    negative_auth = engine.run(
+        ScanOptions(str(negative_auth_source)), root / "authentication-negative-control"
+    )
+    read_bundle(root / "authentication-negative-control")
+    if negative_auth["failed_modules"] or negative_auth["unique_findings"]:
+        raise ValidationError(
+            "Synthetic authentication negative control failed; demo is incomplete"
+        )
     kube_project = root / "kubernetes-fixture"
     kube_project.mkdir()
     (kube_project / "workload.json").write_bytes(json_bytes(synthetic_kubernetes_manifest()))
@@ -406,6 +429,8 @@ def offline_demo(output, *, now=None):
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
+        "authentication_checks": sorted(auth_checks),
+        "authentication_negative_findings": negative_auth["unique_findings"],
         "html_observations": len(html_review.findings),
         "html_scan_observations": html_scan["unique_findings"],
         "html_mail_observations": form_mail_scan["unique_findings"],
@@ -422,6 +447,8 @@ def offline_demo(output, *, now=None):
         "not observed participant behavior. Not evidence of real-target or API readiness.",
     }
     links = (
+        ("Login event patterns", "authentication-observations/report.html"),
+        ("Login event negative control", "authentication-negative-control/report.html"),
         ("Saved HTML review", "html-review.html"),
         ("ZIP metadata review", "zip-observations/report.html"),
         ("Before scan", "scan-before/report.html"),

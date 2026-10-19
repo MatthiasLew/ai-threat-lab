@@ -75,6 +75,14 @@ def readiness():
             "signature, decompression, disassembly and runtime analysis remain absent.",
         ),
         (
+            "authentication_logs",
+            "partial",
+            "not_required",
+            "Bounded normalized UTC login-event capture review for failure/spray/distributed "
+            "and post-failure success patterns; no login attempts, raw provider log conversion "
+            "or compromise/defense validation.",
+        ),
+        (
             "training",
             "local_rehearsal",
             "implementation_required",

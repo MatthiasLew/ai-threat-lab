@@ -220,3 +220,34 @@ def synthetic_zip():
         archive.writestr("../fictional.txt", b"INERT DEMO BYTES")
         archive.writestr("CON.txt", b"INERT DEMO BYTES")
     return stream.getvalue()
+
+
+def synthetic_auth_log(*, negative=False):
+    import json
+    from datetime import datetime, timedelta, timezone
+
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    events = []
+
+    def add(second, account, source, outcome="failure"):
+        events.append(
+            {
+                "timestamp": (start + timedelta(seconds=second)).isoformat(),
+                "account": account,
+                "source": source,
+                "outcome": outcome,
+                "method": "password",
+            }
+        )
+
+    if negative:
+        for i in range(5):
+            add(i * 301, "fixture-account", "fixture-source")
+    else:
+        for i in range(5):
+            add(i, "fixture-account", "fixture-source")
+        add(5, "fixture-account", "fixture-source", "success")
+        for i in range(5):
+            add(10 + i, "fixture-target-" + str(i), "fixture-spray-source")
+            add(20 + i, "fixture-distributed-account", "fixture-origin-" + str(i % 3))
+    return "\n".join(json.dumps(event, sort_keys=True) for event in events) + "\n"

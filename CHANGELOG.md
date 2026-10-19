@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.28.0
+
+- Add bounded normalized authentication-event review for repeated failures, password-spray-like and distributed patterns, and declared success after failures, without login attempts or account access.
+- Preserve exact-identifier grouping, UTC ordering, inclusive windows, duplicate collapse, pair success reset, configurable bounded policy and source-free evidence. Reject invalid captures; disclose resource/interpretation gaps.
+- Integrate review-auth-log JSON/HTML, explicit .auth.jsonl assessment/scan/batch routing, readiness, paired demo and installed-wheel acceptance. Project walks do not ingest logs.
+- Add boundary/privacy/CLI regressions and independent generated prefix-window oracle controls. Advance scan engine to 21, retaining old bundle reading and disabled cross-engine comparisons. API setup remains deferred.
+
 ## 0.27.0
 
 - Add bounded saved HTML form/resource authoring-pattern checks with optional declared document context, source-free line evidence and explicit browser/encoding/structure gaps.

@@ -429,6 +429,57 @@ def main() -> None:
         }
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
+        assert demo["authentication_checks"] == [
+            "auth_distributed_failures",
+            "auth_password_spray_pattern",
+            "auth_repeated_failures",
+            "auth_success_after_failures",
+        ]
+        assert demo["authentication_negative_findings"] == 0
+        login = json.loads(
+            run(
+                executable,
+                "review-auth-log",
+                "offline demo/logins.auth.jsonl",
+                "--fail-on-findings",
+                expected=1,
+            )
+        )
+        assert sorted(f["check"] for f in login["findings"]) == demo["authentication_checks"]
+        run(
+            executable,
+            "review-auth-log",
+            "offline demo/separated-logins.auth.jsonl",
+            "--fail-on-findings",
+        )
+        run(
+            executable,
+            "review-auth-log",
+            "offline demo/logins.auth.jsonl",
+            "--format",
+            "html",
+            "--output",
+            "installed-auth-review.html",
+        )
+        run(
+            executable,
+            "review-auth-log",
+            "offline demo/logins.auth.jsonl",
+            "--output",
+            "installed-auth-review.html",
+            expected=2,
+        )
+        run(
+            executable,
+            "review-auth-log",
+            "offline demo/logins.auth.jsonl",
+            "--min-failures",
+            "2",
+            expected=2,
+        )
+        run(executable, "scan-check", "offline demo/authentication-observations")
+        run(executable, "scan-check", "offline demo/authentication-negative-control")
+        assert "fixture-account" not in json.dumps(login)
         assert demo["html_observations"] == 5
         assert demo["html_scan_observations"] == 2
         assert demo["html_mail_observations"] == 2

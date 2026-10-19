@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.27.0
+# Offline acceptance kit — 0.28.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -128,3 +128,7 @@ The demo writes two inert `python-namespace-*-fixture` projects and matching sca
 ## HTML, EML forms and ZIP milestone (0.27.0)
 
 The demo creates a saved HTML page, a safer negative control, an HTML-form email and a ZIP metadata fixture. It requires five declared-origin HTML observations, two context-free HTML scan observations, two EML form observations and the exact path-escape/reserved-name ZIP candidates before completion. Generated bundles are verified; the installed-wheel gate repeats review-html, no-overwrite and audit/scan-check routes. Unit/integration controls cover parser bounds, raw-text elements, unsupported browser semantics, response encodings, local/GitHub parity, malformed ZIP metadata and forbidden member-read/extract calls. See [HTML_REVIEW.md](HTML_REVIEW.md) and [ARCHIVE_REVIEW.md](ARCHIVE_REVIEW.md).
+
+## Normalized authentication events (0.28.0)
+
+The demo now requires all four selected failure/spray/distributed/success-after-failure rule families, a zero-candidate time-separated control and verified bundles. CLI/wheel checks cover review-auth-log, invalid policy, output conflicts and redacted reports. Boundary tests and an independent generated prefix-window oracle validate selected temporal semantics. No real logins or API calls occur. See [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md).
