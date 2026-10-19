@@ -1,9 +1,11 @@
 # Documentation index
 
-The shared engine, CLI and TXT/JSON exports are implemented. GUI and PDF remain planned.
+The CLI provides bounded assessments, local training rehearsals and text/JSON/HTML reports, with standalone Python SARIF. GUI and PDF remain planned. Start with the current delivery status and offline acceptance criteria.
 
 | Document | Purpose |
 | --- | --- |
+| [Delivery status](DELIVERY_STATUS.md) | Current implementation and missing engineering |
+| [Offline release criteria](OFFLINE_RELEASE_CRITERIA.md) | Frozen scope, required checks and completion rules |
 | [Project plan](PROJECT_PLAN.md) | Goal, MVP requirements, scope, and open decisions |
 | [Roadmap](ROADMAP.md) | Milestones, checklists, and acceptance criteria |
 | [Architecture](ARCHITECTURE.md) | Layers, proposed package layout, and service contract |

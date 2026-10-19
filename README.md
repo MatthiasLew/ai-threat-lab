@@ -4,7 +4,9 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.26.0
+## Project status — 0.26.1
+
+Current completion criteria: [stable offline CLI scope and release gates](docs/OFFLINE_RELEASE_CRITERIA.md).
 
 Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, selected root/src Python package, relative-import and literal importlib linking, local Python (fourteen AST rule families including bounded Flask-to-shell/SQLite flows with branch joins, one-pass loops and bounded same-file calls and selected SQLite connection contexts, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, bounded exported-mail header/link/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 

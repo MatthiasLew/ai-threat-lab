@@ -2,6 +2,7 @@
 
 import ast
 
+from . import python_flow as flow_limits
 from .models import ValidationError
 from .python_flow import EMPTY, Flow, Value
 from .python_import_calls import literal_import_target
@@ -13,7 +14,7 @@ MAX_FILE_BYTES = 256 * 1024
 MAX_TOTAL_BYTES = 2 * 1024 * 1024
 OFFSET = 1000000  # More than the maximum possible source lines in a selected file.
 NOTICE = (
-    "Project flow: engine python-project-modules-1.3; root/src modules and selected "
+    "Project flow: engine python-project-modules-1.4; root/src modules and selected "
     "regular packages, at most 20 files/2 MiB; static absolute/relative local imports, "
     "literal importlib.import_module calls only; no namespace/computed dynamic imports, "
     "installation, execution, sys.path/runtime binding "
@@ -34,6 +35,29 @@ class ProjectFlow(Flow):
         self.modules = {}
         self.loading = set()
         self.call_targets = {}
+        self.uncertain_namespaces = set()
+        self.initializer_children = {}
+        self.namespace_depths = {}
+
+    def block(self, body, env, *, depth=0, scope=True):
+        name = self.current_module
+        previous = self.in_progress.get(name)
+        previous_depth = self.namespace_depths.get(name, 0)
+        module_scope = not self.in_function and name in self.loading
+        if module_scope:
+            self.in_progress[name] = env
+            self.namespace_depths[name] = depth
+        try:
+            return super().block(body, env, depth=depth, scope=scope)
+        finally:
+            if module_scope:
+                self.in_progress[name] = previous
+                self.namespace_depths[name] = previous_depth
+
+    def reset_bindings(self, env, notice):
+        super().reset_bindings(env, notice)
+        if not self.in_function:
+            self.uncertain_namespaces.add(self.current_module)
 
     def module_bindings(self, name):
         if name not in self.trees:
@@ -79,7 +103,7 @@ class ProjectFlow(Flow):
             self.loading.remove(name)
             self.in_progress.pop(name, None)
 
-    def exported_binding(self, module, name):
+    def exported_binding(self, module, name, *, load_child=False):
         if module == self.current_module and module in self.loading:
             bindings = self.in_progress[module]
         else:
@@ -92,7 +116,21 @@ class ProjectFlow(Flow):
                     return value
                 self.note("ambiguous function/module export; binding unchecked.")
                 return EMPTY
+            if name in bindings:
+                self.note("package attribute shadows collected child; binding unchecked.")
+                return EMPTY
+            if not load_child:
+                self.note("collected child not established by an import; attribute unchecked.")
+                return EMPTY
+            spec = self.specs.get(module)
+            if module in self.uncertain_namespaces or not spec or not spec.package:
+                self.note("package namespace uncertain; absent child binding unchecked.")
+                return EMPTY
             self.module_bindings(child)
+            if child not in self.completed:
+                self.note("package child unavailable/incomplete; binding unchecked.")
+                return EMPTY
+            self.record_initializer_import(child)
             return Value(module=child)
         if not (value.function or value.module):
             self.note("local module export is not a definite function; binding unchecked.")
@@ -113,6 +151,57 @@ class ProjectFlow(Flow):
         base = ".".join(parts[: len(parts) - statement.level + 1])
         return base + ("." + statement.module if statement.module else "")
 
+    def record_initializer_import(self, target):
+        if self.in_function or target not in self.completed:
+            return
+        parts = target.split(".")
+        for size in range(1, len(parts)):
+            parent, child = ".".join(parts[:size]), ".".join(parts[: size + 1])
+            spec = self.specs.get(parent)
+            if parent not in self.loading or not spec or not spec.package:
+                continue
+            if self.namespace_depths.get(parent, 0):
+                self.uncertain_namespaces.add(parent)
+                self.note(
+                    "nested initializer import effects unchecked; package namespace uncertain."
+                )
+                continue
+            loaded = self.initializer_children.setdefault(parent, set())
+            if child in self.completed and child not in loaded:
+                self.in_progress[parent][parts[size]] = Value(
+                    module=child, loaded_children=frozenset({target})
+                )
+                loaded.add(child)
+
+    def imported_path_available(self, target):
+        parts = target.split(".")
+        for size in range(1, len(parts)):
+            parent, child = ".".join(parts[:size]), ".".join(parts[: size + 1])
+            bindings = self.in_progress.get(parent, self.modules.get(parent, {}))
+            if parent in self.uncertain_namespaces or (
+                child in self.initializer_children.get(parent, ())
+                and bindings.get(parts[size], EMPTY).module != child
+            ):
+                self.note("cached/rebound or uncertain package child; import binding unchecked.")
+                return False
+        return True
+
+    def scoped_child_bindings(self, target, child, env):
+        known = []
+        for value in env.values():
+            self.steps += 1
+            if self.steps > flow_limits.MAX_STEPS:
+                self.note("scoped import lookup step limit reached; extra bindings unchecked.")
+                break
+            if (
+                value.module == target
+                and any(
+                    path == child or path.startswith(child + ".") for path in value.loaded_children
+                )
+            ) or (value.module == child and child in value.loaded_children):
+                known.append(value)
+        return known
+
     def import_bindings(self, statement, env):
         if isinstance(statement, ast.Import) and any(
             self.local_import(item.name) for item in statement.names
@@ -121,7 +210,18 @@ class ProjectFlow(Flow):
                 if self.local_import(item.name):
                     self.module_bindings(item.name)
                     bound = item.name if item.asname else item.name.split(".")[0]
-                    env[item.asname or bound] = Value(module=bound)
+                    self.record_initializer_import(item.name)
+                    available = self.imported_path_available(item.name)
+                    previous = env.get(item.asname or bound, EMPTY)
+                    loaded = previous.loaded_children if previous.module == bound else frozenset()
+                    if item.asname and not available:
+                        env[item.asname] = EMPTY
+                    else:
+                        env[item.asname or bound] = Value(
+                            module=bound,
+                            loaded_children=loaded
+                            | ({item.name} if available and item.name in self.completed else set()),
+                        )
                 else:
                     env[item.asname or item.name.split(".")[0]] = Value(
                         symbol=item.name if item.asname else item.name.split(".")[0]
@@ -132,15 +232,26 @@ class ProjectFlow(Flow):
             if not statement.level and not self.local_import(target):
                 return False
             if any(item.name == "*" for item in statement.names):
-                env.clear()
-                self.note("local star imports unresolved; tracking reset.")
+                self.reset_bindings(env, "local star imports unresolved; tracking reset.")
             elif not target or not self.local_import(target):
                 for item in statement.names:
                     env[item.asname or item.name] = EMPTY
                 self.note("relative local import unresolved; binding unchecked.")
             else:
                 for item in statement.names:
-                    env[item.asname or item.name] = self.exported_binding(target, item.name)
+                    child = f"{target}.{item.name}"
+                    known = self.scoped_child_bindings(target, child, env)
+                    if known and child in self.completed and self.imported_path_available(child):
+                        value = Value(
+                            module=child,
+                            loaded_children=frozenset.union(
+                                *(value.loaded_children for value in known)
+                            ),
+                        )
+                    else:
+                        value = self.exported_binding(target, item.name, load_child=True)
+                    env[item.asname or item.name] = value
+                self.record_initializer_import(target)
             return True
         return False
 
@@ -163,10 +274,22 @@ class ProjectFlow(Flow):
         if target not in self.completed:
             self.note("importlib target pass unavailable/incomplete; result unchecked.")
             return EMPTY
-        return Value(module=target, call_sites=function.call_sites)
+        self.record_initializer_import(target)
+        return Value(
+            module=target, loaded_children=frozenset({target}), call_sites=function.call_sites
+        )
 
     def attribute(self, parent, node):
         if parent.module:
+            child = f"{parent.module}.{node.attr}"
+            if any(
+                path == child or path.startswith(child + ".") for path in parent.loaded_children
+            ):
+                self.module_bindings(child)
+                if child in self.completed:
+                    return Value(module=child, loaded_children=parent.loaded_children)
+                self.note("explicitly imported child unavailable/incomplete; attribute unchecked.")
+                return EMPTY
             return self.exported_binding(parent.module, node.attr)
         return super().attribute(parent, node)
 

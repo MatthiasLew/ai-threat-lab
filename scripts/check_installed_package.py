@@ -268,6 +268,15 @@ def main() -> None:
             if f["check"] != "PY005"
         )
         run(executable, "scan-check", "offline demo/python-project-flow")
+        assert demo["python_package_namespace_observations"] == {"control": 3, "shadowed": 1}
+        for label, expected in (("control", {"PY005", "PY013", "PY014"}), ("shadowed", {"PY005"})):
+            namespace = json.loads(
+                run(executable, "audit", "offline demo/python-namespace-" + label + "-fixture")
+            )
+            assert {f["check"] for f in namespace["findings"]} == expected
+            if label == "shadowed":
+                assert any("package attribute" in n for n in namespace["not_checked"])
+            run(executable, "scan-check", "offline demo/python-namespace-" + label)
         assert demo["python_package_flow_observations"] == 3
         package_assessment = json.loads(
             run(executable, "audit", "offline demo/python-package-fixture")

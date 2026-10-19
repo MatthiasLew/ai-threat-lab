@@ -56,6 +56,7 @@ class Value:
     connection: bool = False
     function: int = 0
     module: str = ""
+    loaded_children: frozenset[str] = frozenset()
     call_sites: frozenset[int] = frozenset()
 
 
@@ -78,6 +79,11 @@ class Flow:
 
     def note(self, text):
         self.notices.add("Flow coverage: " + text)
+
+    def reset_bindings(self, env, notice):
+        """Invalidate a skipped namespace; collectors may retain its uncertainty."""
+        env.clear()
+        self.note(notice)
 
     def merge(self, values):
         origins = set().union(*(v.origins for v in values))
@@ -113,6 +119,9 @@ class Flow:
             connection=connection,
             function=values[0].function if len(functions) == 1 else 0,
             module=values[0].module if len(modules) == 1 else "",
+            loaded_children=frozenset.intersection(*(v.loaded_children for v in values))
+            if len(modules) == 1 and values[0].module
+            else frozenset(),
         )
 
     def join_env(self, states):
@@ -149,8 +158,7 @@ class Flow:
     def loop(self, statement, env, depth):
         self.note("one-pass loops only; loop-carried dependencies/convergence unchecked.")
         if any(isinstance(node, (ast.Break, ast.Continue)) for node in ast.walk(statement)):
-            env.clear()
-            self.note("loop with break/continue skipped; tracking reset at barrier.")
+            self.reset_bindings(env, "loop with break/continue skipped; tracking reset at barrier.")
             return True
         is_while = isinstance(statement, ast.While)
         condition = self.literal_bool(statement.test) if is_while else None
@@ -176,16 +184,18 @@ class Flow:
 
     def sqlite_context(self, statement, env, depth):
         if not 1 <= len(statement.items) <= MAX_CONTEXT_ITEMS:
-            env.clear()
-            self.note("SQLite context-item limit reached; body skipped and tracking reset.")
+            self.reset_bindings(
+                env, "SQLite context-item limit reached; body skipped and tracking reset."
+            )
             return True
         for item in statement.items:
             value = self.expr(item.context_expr, env)
             if not value.connection or (
                 item.optional_vars is not None and not isinstance(item.optional_vars, ast.Name)
             ):
-                env.clear()
-                self.note("unsupported context manager/target; body skipped and tracking reset.")
+                self.reset_bindings(
+                    env, "unsupported context manager/target; body skipped and tracking reset."
+                )
                 return True
             if item.optional_vars is not None:
                 env[item.optional_vars.id] = value
@@ -282,6 +292,7 @@ class Flow:
             connection=result.connection,
             function=result.function,
             module=result.module,
+            loaded_children=result.loaded_children,
             call_sites=frozenset(sorted(sites)[:8]),
         )
 
@@ -415,8 +426,7 @@ class Flow:
 
     def block(self, body, env, *, depth=0, scope=True):
         if depth > MAX_BLOCK_DEPTH:
-            env.clear()
-            self.note("control-flow nesting limit reached; deeper blocks unchecked.")
+            self.reset_bindings(env, "control-flow nesting limit reached; deeper blocks unchecked.")
             return True
         if scope:
             self.scopes += 1
@@ -437,8 +447,7 @@ class Flow:
                     )
             elif isinstance(statement, ast.ImportFrom):
                 if any(item.name == "*" for item in statement.names):
-                    env.clear()
-                    self.note("relative/star imports are not resolved.")
+                    self.reset_bindings(env, "relative/star imports are not resolved.")
                 elif statement.module and statement.level == 0:
                     for item in statement.names:
                         env[item.asname or item.name] = Value(
@@ -506,8 +515,9 @@ class Flow:
                     self.bind(target, EMPTY, env)
             elif not isinstance(statement, ast.Pass):
                 # Exceptions/context managers/classes and scope effects remain barriers.
-                env.clear()
-                self.note("control flow/classes/scope effects skipped; tracking reset at barrier.")
+                self.reset_bindings(
+                    env, "control flow/classes/scope effects skipped; tracking reset at barrier."
+                )
 
         return True
 

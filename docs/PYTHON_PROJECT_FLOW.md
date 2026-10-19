@@ -1,4 +1,4 @@
-# Selected Python module and package linking — 0.26.0
+# Selected Python module and package linking — 0.26.1
 
 Directory assessments supplement per-file checks with a bounded static pass over selected Python modules and regular packages. It can connect HTTP data in one file to a selected shell/SQLite sink in another, including supported arguments, return values and SQLite identity. Findings remain candidates for human validation.
 
@@ -41,6 +41,14 @@ These files are parsed only. Imported module bodies and function definitions are
 
 Known local module names remain local even when their source is oversized, unparsable or excluded by selection budgets; they are not silently reinterpreted as installed libraries. A local name shadowing `flask`, `os` or `sqlite3` therefore requires manual runtime-binding review. Modules outside the collected index can still change real import behavior. Package parents must be available and their abstract initializer passes must complete before exports can be used. A currently traversed parent may resolve its child, but a later noncompleting initializer blocks subsequent cached child exports. No initializer is executed. Cycles produce explicit gaps and partial bindings, without claiming full cycle resolution. If a module's abstract pass does not complete, its exported bindings are discarded rather than assumed usable. Initializer side effects, exceptions, decorators and external environment effects are not validated.
 
+## Package attributes and loaded children (0.26.1)
+
+A collected file is not proof that its parent package exposes it as an attribute. `from pkg import helpers` may resolve a collected child when the package namespace is known, the attribute is absent and the child pass completes. An assigned/invalidated attribute such as `helpers = 42`, `None`, an unknown result or a possible branch assignment blocks that fallback with a gap. Function/module conflicts remain conservative.
+
+Ordinary `pkg.helpers` access cannot itself import a child. Explicit dotted imports establish loaded-child facts on the scoped module descriptor, including prefixes of `import pkg.sub.helpers`. These facts survive selected aliases and helper returns; branch joins retain their intersection. At most the 20 successfully inspected module names can contribute facts. Missing or incomplete targets do not establish them. Selected top-level imports in an initializer can establish its own child attributes and those of active parent initializers. Previously loaded children later overwritten in an initializer are not silently restored by a repeated dotted import. Direct qualified from-imports and importlib module lookup remain distinct from parent attribute binding. Scoped loaded-child lookup consumes the shared evaluation-step budget.
+
+Skipped module-level star imports, unknown context managers, classes, try/scope barriers, unsupported loop exits and depth barriers mark that module namespace uncertain. An absent name in it does not justify child fallback. A later definite helper export remains usable; barriers inside a function do not mark the containing module namespace. Nested/conditional initializer import effects retain an explicit uncertain-namespace gap. This is not whole-process module-state simulation: object/global attribute mutation, arbitrary import side effects and updates observed through different aliases may remain unresolved. Such missing paths must not be reported as safe.
+
 ## Literal importlib calls (0.25.0)
 
 The project pass recognizes selected `importlib.import_module` bindings from explicit imports and simple aliases. For example, `helpers = importlib.import_module("pkg.helpers")` can expose a collected helper; `load(".helpers", package="pkg")` and `load("..helpers", "pkg.sub")` use the explicitly supplied literal anchor. The result denotes the requested module, including its dotted suffix. There is no inferred `__package__` or runtime lookup. Absolute names may omit the package argument or supply a literal string/None.
@@ -65,7 +73,7 @@ The shared flow pass retains its statement/expression, block-depth, function-sco
 
 Local per-file and project analysis share decoded source text, respecting the declared Python encoding. GitHub keeps its existing UTF-8 and verified-blob policy. Links/non-regular source paths are handled by the collectors, and local Python reads reject non-file inputs before opening. Bundle hashes/checks establish report consistency, not source authenticity or runtime correctness.
 
-The project pass identifies itself as `python-project-modules-1.3`; Python AST engine `python-ast-1.8` and scan engine `read-only-pipeline-18` record the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify an inert root-module fixture, a src-package/relative-import fixture and a literal importlib fixture, each with three observations. API setup remains deferred.
+The project pass identifies itself as `python-project-modules-1.4`; Python AST engine `python-ast-1.8` and scan engine `read-only-pipeline-19` record the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify an inert root-module fixture, a src-package/relative-import fixture and a literal importlib fixture, each with three observations. API setup remains deferred.
 
 ```mermaid
 flowchart TD

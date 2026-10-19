@@ -16,6 +16,7 @@ from .acceptance_samples import (
     synthetic_python_importlib,
     synthetic_python_local_calls,
     synthetic_python_package,
+    synthetic_python_package_shadowing,
     synthetic_python_project,
     synthetic_python_sqlite_context,
 )
@@ -273,6 +274,28 @@ def offline_demo(output, *, now=None):
         raise ValidationError(
             "Synthetic Python importlib-flow acceptance failed; demo is incomplete"
         )
+    namespace_counts = {}
+    for label, shadowed in (("control", False), ("shadowed", True)):
+        fixture = root / ("python-namespace-" + label + "-fixture")
+        fixture.mkdir()
+        for name, source in synthetic_python_package_shadowing(shadowed=shadowed).items():
+            path = fixture / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(source, encoding="utf-8")
+        output = root / ("python-namespace-" + label)
+        namespace = engine.run(ScanOptions(str(fixture)), output)
+        assessment = read_bundle(output)["documents"]["assessment.json"]
+        expected = {"PY005"} if shadowed else {"PY005", "PY013", "PY014"}
+        if (
+            namespace["failed_modules"]
+            or namespace["unique_findings"] != len(expected)
+            or {finding["check"] for finding in assessment["findings"]} != expected
+            or (shadowed and not any("package attribute" in n for n in assessment["not_checked"]))
+        ):
+            raise ValidationError(
+                "Synthetic package namespace acceptance failed; demo is incomplete"
+            )
+        namespace_counts[label] = namespace["unique_findings"]
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -321,6 +344,7 @@ def offline_demo(output, *, now=None):
         "python_local_call_observations": calls["unique_findings"],
         "python_project_flow_observations": project_flow["unique_findings"],
         "python_package_flow_observations": package_flow["unique_findings"],
+        "python_package_namespace_observations": namespace_counts,
         "python_importlib_flow_observations": importlib_flow["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
@@ -351,6 +375,8 @@ def offline_demo(output, *, now=None):
         ("Python local-call observations", "python-local-calls/report.html"),
         ("Python cross-file observations", "python-project-flow/report.html"),
         ("Python package observations", "python-package-flow/report.html"),
+        ("Package namespace positive control", "python-namespace-control/report.html"),
+        ("Assigned package attribute control", "python-namespace-shadowed/report.html"),
         ("Python literal importlib observations", "python-importlib-flow/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),

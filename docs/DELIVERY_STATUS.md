@@ -1,4 +1,4 @@
-# Delivery status and remaining work — 0.26.0
+# Delivery status and remaining work — 0.26.1
 
 This matrix maps the requested console workflow to its actual implementation. API setup/live calls are deferred. The offline kit is ready to demonstrate; the full original vision is not complete.
 
@@ -86,16 +86,9 @@ Selected previously defined module-level Python helpers now accept statically bo
 
 Collected local/GitHub root modules now support selected absolute sibling imports, aliases, arguments, returns and SQLite identities through the shared bounded flow engine. Supplementary candidates preserve file-qualified source/sink/call/helper evidence. No target imports or extra GitHub requests occur. At this release, packages/src layouts and relative imports were unresolved; see the 0.24.0 follow-up below. Dynamic imports, installed-module selection, initializer effects and general cross-file semantics remain unresolved. See [PYTHON_PROJECT_FLOW.md](PYTHON_PROJECT_FLOW.md).
 
-## Remaining order of work
+## Current completion criteria and remaining work
 
-1. Agree the first real deployment's target types and acceptance criteria. Selected read-only checks cannot provide an "everything is secure" result.
-2. Extend local analysis for the chosen stack and manifest layout, with known-positive/known-negative fixtures. Binary and web application analysis are separate bounded modules.
-3. Implement external delivery/media/account adapters only for the chosen authorized exercise environment, using the existing scope/approval/cancellation contracts; adding credentials alone is insufficient.
-4. Add authenticated event intake and distinguish actual observations from scripted selections, delivery receipts and automated events. Do not infer susceptibility from email opens alone.
-5. Configure provider accounts/models/rates outside source control and run controlled integration tests: credentials, permissions, quotas, timeout/unknown outcomes, expiry/cancellation and no accidental retries.
-6. Run a reviewed real-environment acceptance exercise and record evidence/remaining gaps. Build a GUI later using the same application services.
-
-There is no estimated completion date or blanket readiness claim. `readiness` reports this distinction without inspecting credentials or contacting services.
+The current priority is closing confirmed defects and passing the finite [offline release criteria](OFFLINE_RELEASE_CRITERIA.md), with existing analyzer scope frozen. This avoids treating another Python feature as completion of the product. The remaining full-product engineering tracks are listed separately there and in the capability matrix above. They require implementation and real-environment decisions; API keys alone cannot close them.
 
 ## Regular Python packages and src layouts (0.24.0)
 
@@ -108,3 +101,7 @@ Selected `importlib.import_module` calls now return static descriptors for alrea
 ## Selected SQLite context bodies (0.26.0)
 
 Known default-factory SQLite connections now permit bounded synchronous with-body analysis, including simple aliases, selected helper arguments/returns, nested contexts and up to eight ordered items. Connection/cursor ambiguity, unsupported factories/call shapes, non-name targets and unknown managers retain explicit gaps. Transaction state, exit/close effects, exceptions and general context-manager protocols remain unresolved. A separate inert fixture and installed-wheel gate cover shell/SQLite observations without opening the target database. API setup remains deferred.
+
+## Package-binding correctness follow-up (0.26.1)
+
+Assigned package attributes and uncertain module namespaces no longer silently resolve to collected child files. Ordinary attribute access is separated from child-loading imports. Explicit dotted imports retain bounded scope facts, and selected initializer imports establish their own child attributes. Positive/negative regression controls now run through local/GitHub assessment, the offline demo and the installed wheel. No target code is executed; API setup remains deferred.

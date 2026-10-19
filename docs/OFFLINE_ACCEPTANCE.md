@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.26.0
+# Offline acceptance kit — 0.26.1
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -120,3 +120,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## SQLite context fixture (0.26.0)
 
 `offline-demo` writes inert `python-sqlite-context.py` and the `python-sqlite-context` scan bundle. A default-factory SQLite with block contains selected HTTP-to-query and HTTP-to-shell candidate paths. The demo requires exactly PY005/PY013/PY014 and `python_sqlite_context_observations == 3` before writing its completion summary. The clean installed-wheel gate repeats standalone JSON review and bundle consistency checks. Fixture source is parsed only; its database is never opened.
+
+## Package namespace regression controls (0.26.1)
+
+The demo writes two inert `python-namespace-*-fixture` projects and matching scan bundles. The `control` project has an absent package attribute and must retain PY005/PY013/PY014; the `shadowed` project assigns `helpers = 42` and must retain only PY005 with an explicit package-attribute gap. The summary field `python_package_namespace_observations` must be `{"control": 3, "shadowed": 1}`. Both bundles and audits are repeated by the installed-wheel gate. These fixtures test analyzer semantics; they are not real-target vulnerabilities or remediation evidence.

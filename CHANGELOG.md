@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.26.1
+
+- Fix false cross-file flows when assigned package attributes were silently replaced by collected child modules; retain uncertainty after skipped module-level namespace barriers.
+- Separate from-import child loading from ordinary attribute access. Preserve bounded explicit dotted-import facts through aliases/returns and definite joins; model selected initializer child bindings and later cached-child reassignments without executing target code.
+- Add paired positive/negative namespace fixtures, local/verified-GitHub and installed-wheel acceptance, regression tests, independent inert Python import-oracle checks and finite offline release criteria. Refresh stale testing/documentation status.
+- Advance project pass to python-project-modules-1.4 and scan engine to 19. Retain Python AST engine 1.8, old bundle reading and disabled cross-engine comparisons. API setup remains deferred.
+
 ## 0.26.0
 
 - Traverse selected synchronous default-factory SQLite connection contexts with simple as names, ordered items (at most eight), nested bodies and normal-body successor/termination handling.

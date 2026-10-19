@@ -1,4 +1,4 @@
-# Selected Python input-flow analysis — 0.26.0
+# Selected Python input-flow analysis — 0.26.1
 
 `review-code`, local project scans and pinned GitHub scans now perform a bounded local dependency analysis with possible branch joins, one-pass loops and bounded same-file helper contexts alongside the existing API-pattern rules. PY013 connects selected Flask input to shell command arguments; PY014 connects it to query text sent to a statically recognized SQLite connection/cursor. Both are candidates requiring human validation.
 
@@ -20,7 +20,7 @@ Cursors and execute results are distinguished from connections for context selec
 
 Only normal-body static dependencies are approximated. The analyzer does not implement transaction state, commit/rollback effects, close/invalidation, `__enter__`/`__exit__` execution, exit exceptions, exception suppression or runtime feasibility. A candidate does not prove the database opens or the query executes. No target code is executed and no target database is opened. A parameterized query's value arguments remain separate from query text.
 
-This scope applies to standalone text/JSON/SARIF, local/GitHub assessments and the supplementary project pass. Python AST engine is `python-ast-1.8`; scan engine is `read-only-pipeline-18`. Older bundles remain readable without comparing observations across engines. See the [SQLite context-manager reference](https://docs.python.org/3.14/library/sqlite3.html#how-to-use-the-connection-context-manager).
+This scope applies to standalone text/JSON/SARIF, local/GitHub assessments and the supplementary project pass. Python AST engine is `python-ast-1.8`; scan engine is `read-only-pipeline-19`. Older bundles remain readable without comparing observations across engines. See the [SQLite context-manager reference](https://docs.python.org/3.14/library/sqlite3.html#how-to-use-the-connection-context-manager).
 
 ## What is tracked
 

@@ -1,6 +1,6 @@
-# Test strategy and integration readiness — 0.23.0
+# Test strategy and integration readiness — 0.26.1
 
-The offline suite contains 1615 test cases at this revision. Coverage includes statements and branches and is enforced at a minimum of 90%. The current local result is 98.7%; child-process CLI tests are additional behavioral evidence and are not counted as subprocess coverage. This does not establish the correctness or availability of any real external API.
+The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
 ## Run the gates
 
@@ -17,13 +17,15 @@ python -m coverage run -m pytest -q
 python -m coverage report
 ```
 
+Package-binding regression tests also compare selected source-level outcomes against a fresh Python process importing only test-authored inert fixtures. This oracle checks binding semantics independently; it never imports analyzed target sources.
+
 ## Evidence covered
 
 | Area | Behavioral checks |
 | --- | --- |
 | Risk engine | All matrix values, category boundaries, profile adjustments, relevant/irrelevant controls, overlap, deduplication and reduction caps |
 | Catalog | Malformed JSON, invalid versions/types, missing fields, empty data, duplicate IDs and invalid rule reductions |
-| Code review | Nine AST rule families, explicit YAML loaders, hash exemptions, TLS-helper limitations, local/GitHub/CLI parity, risk patterns, import aliases, safer code, no source execution, encoding and size bounds, source-free reports |
+| Code review | Fourteen AST rule families, bounded Flask flows, selected module/package/importlib linking and SQLite contexts, explicit YAML loaders, hash exemptions, TLS-helper limitations, local/GitHub/CLI parity, risk patterns, import aliases, safer code, no source execution, encoding and size bounds, source-free reports |
 | Assessment | Target routing, missing adapters, malformed URLs/domains, partial results, project bounds and untrusted mail headers |
 | Campaigns | Scope validation before provider calls, exact preview approval, expiry, changed content/recipients/facts, media requirement, stop/cancellation handling |
 | Delivery | No automatic retry after ambiguous failures, duplicate rejection across service restarts, corrupt databases and concurrent claims |
@@ -36,7 +38,7 @@ python -m coverage report
 | Dependency inventories/advisories | Exact pins, normalization, unsupported/secret-bearing sources, package/manifest limits, real OSV batch wire contract, pagination/order validation, cache expiry and partial-result gaps |
 | Shared GitHub scan | Same commit for code/manifests, verified distinct-blob reuse, root format/priority bounds, shared file/byte limits, isolated parsing/advisory failures, no raw-source artifacts, explicit OSV wire and old-engine compatibility |
 | Static binary observations | Independent PE/ELF fixtures, endian/class variants, truncated prefixes, bounded counters/ranges/alignment, certificate presence limits, random inputs, descriptor cleanup, non-regular files, no execution/network, CLI reports and inert demo |
-| Monorepo inventory | Root-default/recursive opt-in, relative origins, same/different-version deduplication, global traversal/parser bounds, exclusions, links/junction guard, Unicode CLI paths, shared GitHub/OSV wire, scope mismatches and engines 1–4 |
+| Monorepo inventory | Root-default/recursive opt-in, relative origins, same/different-version deduplication, global traversal/parser bounds, exclusions, links/junction guard, Unicode CLI paths, shared GitHub/OSV wire, scope mismatches and legacy/current engine compatibility |
 | Combined reports | Per-target deduplication, provenance, triage rules, empty/not-configured results, invalid documents and escaped offline HTML |
 | Local training lab | Exact approval/scope, alias/recipient uniqueness, structured action policy, bounded voice turns, concurrency/replay, expiry and permanent plan revocation |
 | Interactive training | Numbered choices, invalid input redaction, EOF/Ctrl+C stop, terminal-control escaping, all command help and actual persisted CLI workflows |

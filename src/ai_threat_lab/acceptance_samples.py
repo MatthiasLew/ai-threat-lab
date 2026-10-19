@@ -181,3 +181,17 @@ def synthetic_python_sqlite_context():
         "        connection.execute('SELECT ' + value)\n"
         "        os.system(value)\n"
     )
+
+
+def synthetic_python_package_shadowing(*, shadowed):
+    """Paired static controls for absent versus assigned package attributes."""
+    sources = synthetic_python_package()
+    sources["src/example/__init__.py"] = "helpers = 42\n" if shadowed else ""
+    sources["src/example/views.py"] = (
+        "from flask import request\nimport sqlite3\n"
+        "from example import helpers\n"
+        "def endpoint():\n"
+        "    value = helpers.prepare(request.args.get('fixture'))\n"
+        "    helpers.inspect_example(sqlite3.connect(':memory:'), value)\n"
+    )
+    return sources
