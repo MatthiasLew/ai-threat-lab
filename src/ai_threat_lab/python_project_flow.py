@@ -4,6 +4,7 @@ import ast
 
 from .models import ValidationError
 from .python_flow import EMPTY, Flow, Value
+from .python_import_calls import literal_import_target
 from .python_module_index import module_index
 
 MAX_INPUT_FILES = 100
@@ -12,9 +13,10 @@ MAX_FILE_BYTES = 256 * 1024
 MAX_TOTAL_BYTES = 2 * 1024 * 1024
 OFFSET = 1000000  # More than the maximum possible source lines in a selected file.
 NOTICE = (
-    "Project flow: engine python-project-modules-1.1; root/src modules and selected "
+    "Project flow: engine python-project-modules-1.2; root/src modules and selected "
     "regular packages, at most 20 files/2 MiB; static absolute/relative local imports, "
-    "no namespace/dynamic import, installation, execution, sys.path/runtime binding "
+    "literal importlib.import_module calls only; no namespace/computed dynamic imports, "
+    "installation, execution, sys.path/runtime binding "
     "or exploitability validation."
 )
 
@@ -149,6 +151,19 @@ class ProjectFlow(Flow):
             return super().analyze_function(function, local, call_line=call_line)
         finally:
             self.current_module = previous
+
+    def call_result(self, function, node):
+        if function.symbol != "importlib.import_module":
+            return None
+        target = literal_import_target(node)
+        if not target or target not in self.local_names:
+            self.note("importlib call has unsupported arguments or uncollected target; unchecked.")
+            return EMPTY
+        self.module_bindings(target)
+        if target not in self.completed:
+            self.note("importlib target pass unavailable/incomplete; result unchecked.")
+            return EMPTY
+        return Value(module=target, call_sites=function.call_sites)
 
     def attribute(self, parent, node):
         if parent.module:

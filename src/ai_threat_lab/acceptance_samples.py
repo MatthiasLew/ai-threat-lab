@@ -155,3 +155,17 @@ def synthetic_python_package():
         ),
         "src/example/helpers.py": sources["helpers.py"],
     }
+
+
+def synthetic_python_importlib():
+    """Inert literal importlib call; no target module is imported at runtime."""
+    sources = synthetic_python_package()
+    sources["src/example/views.py"] = (
+        "from flask import request\nimport sqlite3\n"
+        "from importlib import import_module as load\n"
+        "def endpoint():\n"
+        "    helpers = load('.helpers', package='example')\n"
+        "    value = helpers.prepare(request.args.get('fixture'))\n"
+        "    helpers.inspect_example(sqlite3.connect(':memory:'), value)\n"
+    )
+    return sources

@@ -268,6 +268,10 @@ class Flow:
         """Extension boundary for a collector-backed static project module index."""
         return False
 
+    def call_result(self, function, node):
+        """Collector-backed extension; None leaves ordinary call handling in control."""
+        return None
+
     def expr(self, node, env, depth=0):
         if node is None:
             return EMPTY
@@ -332,6 +336,9 @@ class Flow:
         args = [evaluate(item) for item in node.args]
         kwargs = {item.arg: evaluate(item.value) for item in node.keywords}
         name = function.symbol
+        selected = self.call_result(function, node)
+        if selected is not None:
+            return selected
         if function.function:
             return self.invoke(function.function, node, args, kwargs)
         if name in ("flask.request.get_json", "flask.request.get_data"):

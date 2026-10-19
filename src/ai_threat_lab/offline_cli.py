@@ -13,6 +13,7 @@ from .acceptance_samples import (
     synthetic_message,
     synthetic_python_control_flow,
     synthetic_python_flow,
+    synthetic_python_importlib,
     synthetic_python_local_calls,
     synthetic_python_package,
     synthetic_python_project,
@@ -236,6 +237,28 @@ def offline_demo(output, *, now=None):
         )
     ):
         raise ValidationError("Synthetic Python package-flow acceptance failed; demo is incomplete")
+    importlib_source = root / "python-importlib-fixture"
+    importlib_source.mkdir()
+    for name, source in synthetic_python_importlib().items():
+        path = importlib_source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+    importlib_flow = engine.run(ScanOptions(str(importlib_source)), root / "python-importlib-flow")
+    importlib_bundle = read_bundle(root / "python-importlib-flow")
+    importlib_findings = importlib_bundle["documents"]["assessment.json"]["findings"]
+    if (
+        importlib_flow["failed_modules"]
+        or importlib_flow["unique_findings"] != 3
+        or {f["check"] for f in importlib_findings} != {"PY005", "PY013", "PY014"}
+        or not all(
+            "cross-file candidate" in f["evidence"]
+            for f in importlib_findings
+            if f["check"] in ("PY013", "PY014")
+        )
+    ):
+        raise ValidationError(
+            "Synthetic Python importlib-flow acceptance failed; demo is incomplete"
+        )
     lab = TrainingLab(root / "training.sqlite", clock=lambda: current)
     session_ids = []
     for channel, action in (
@@ -283,6 +306,7 @@ def offline_demo(output, *, now=None):
         "python_local_call_observations": calls["unique_findings"],
         "python_project_flow_observations": project_flow["unique_findings"],
         "python_package_flow_observations": package_flow["unique_findings"],
+        "python_importlib_flow_observations": importlib_flow["unique_findings"],
         "mail_observations": mail["unique_findings"],
         "batch_targets": batch["target_count"],
         "header_observations": len(header_assessment.findings),
@@ -311,6 +335,7 @@ def offline_demo(output, *, now=None):
         ("Python local-call observations", "python-local-calls/report.html"),
         ("Python cross-file observations", "python-project-flow/report.html"),
         ("Python package observations", "python-package-flow/report.html"),
+        ("Python literal importlib observations", "python-importlib-flow/report.html"),
         ("Synthetic email observations", "mail-observations/report.html"),
         ("Combined local batch", "local-batch/report.html"),
         ("Synthetic HTTP header observations", "headers-review.html"),

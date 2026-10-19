@@ -1,4 +1,4 @@
-# Selected Python module and package linking — 0.24.0
+# Selected Python module and package linking — 0.25.0
 
 Directory assessments supplement per-file checks with a bounded static pass over selected Python modules and regular packages. It can connect HTTP data in one file to a selected shell/SQLite sink in another, including supported arguments, return values and SQLite identity. Findings remain candidates for human validation.
 
@@ -12,7 +12,7 @@ The opted-in immutable GitHub collector uses the same pass over its already sele
 
 ## Selected module namespace
 
-The static namespace includes root modules and regular packages with collected `__init__.py` markers at every package level. A conventional `src/` prefix is stripped when no `src/__init__.py` label exists; with that marker, `src` is an ordinary package name. Names must use ASCII Python identifiers, with components at most 255 characters, paths at most 1024 characters and package depth at most eight. Root `__init__.py`, namespace packages, compiled extensions and dynamic imports remain unresolved.
+The static namespace includes root modules and regular packages with collected `__init__.py` markers at every package level. A conventional `src/` prefix is stripped when no `src/__init__.py` label exists; with that marker, `src` is an ordinary package name. Names must use ASCII Python identifiers, with components at most 255 characters, paths at most 1024 characters and package depth at most eight. Root `__init__.py`, namespace packages, compiled extensions and general dynamic imports remain unresolved; the literal importlib subset is described below.
 
 Selected forms include absolute dotted imports, aliases, definite helper/module re-exports and relative `from .helpers import run`, `from . import helpers` and parent-package imports. Relative imports use the defining module's lexical package even when the helper is called from another file. Imports escaping that package root are rejected. A root/src or module/package name collision produces a gap instead of choosing a runtime search order. Selected exports must be definite function or module descriptors; arbitrary globals, request objects, library re-exports, methods and module `__getattr__` are not inferred. Signatures and contexts follow the [bounded local-call model](PYTHON_FLOW.md).
 
@@ -41,6 +41,14 @@ These files are parsed only. Imported module bodies and function definitions are
 
 Known local module names remain local even when their source is oversized, unparsable or excluded by selection budgets; they are not silently reinterpreted as installed libraries. A local name shadowing `flask`, `os` or `sqlite3` therefore requires manual runtime-binding review. Modules outside the collected index can still change real import behavior. Package parents must be available and their abstract initializer passes must complete before exports can be used. A currently traversed parent may resolve its child, but a later noncompleting initializer blocks subsequent cached child exports. No initializer is executed. Cycles produce explicit gaps and partial bindings, without claiming full cycle resolution. If a module's abstract pass does not complete, its exported bindings are discarded rather than assumed usable. Initializer side effects, exceptions, decorators and external environment effects are not validated.
 
+## Literal importlib calls (0.25.0)
+
+The project pass recognizes selected `importlib.import_module` bindings from explicit imports and simple aliases. For example, `helpers = importlib.import_module("pkg.helpers")` can expose a collected helper; `load(".helpers", package="pkg")` and `load("..helpers", "pkg.sub")` use the explicitly supplied literal anchor. The result denotes the requested module, including its dotted suffix. There is no inferred `__package__` or runtime lookup. Absolute names may omit the package argument or supply a literal string/None.
+
+Only direct string constants (including parser-concatenated adjacent literals) are decoded. Names are limited to 1024 characters and ASCII identifier components of at most 255 characters. The existing package/index, source and traversal budgets still apply. Positional and `name`/`package` keyword binding is strict: missing/duplicate/unknown arguments, more than two positional arguments and unpacking are rejected. Variable names, concatenation expressions, f-strings, dynamic package anchors, built-in `__import__`, reload/loaders and uncollected third-party targets remain unchecked. Unsupported calls retain a coverage gap without reflecting argument values into evidence.
+
+Targets must be collected, unambiguous and have completed abstract module/parent passes. A local `importlib.py` or package shadows the library binding instead of silently invoking library semantics. No target import, installation, initializer execution, import hook, filesystem lookup or additional GitHub request occurs. Known module results can pass through selected local helpers and aliases, but construction history is not a complete call trace: a loader/factory site can be absent from a later helper sink's evidence. Existing source/sink and retained call/helper evidence rules still apply.
+
 ## Evidence and duplicate scope
 
 Each supplementary observation includes relative sink filename/line/column, source filename/line, retained call-site locations and resolved helper-definition locations. Source values, query strings, commands, argument names and snippets are omitted. Filenames are visible. Internal position offsets never appear in reports.
@@ -57,7 +65,7 @@ The shared flow pass retains its statement/expression, block-depth, function-sco
 
 Local per-file and project analysis share decoded source text, respecting the declared Python encoding. GitHub keeps its existing UTF-8 and verified-blob policy. Links/non-regular source paths are handled by the collectors, and local Python reads reject non-file inputs before opening. Bundle hashes/checks establish report consistency, not source authenticity or runtime correctness.
 
-The project pass identifies itself as `python-project-modules-1.1`; Python AST engine `python-ast-1.7` and scan engine `read-only-pipeline-16` records the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify both an inert two-module fixture and a three-file src-package/relative-import fixture, each with three observations. API setup remains deferred.
+The project pass identifies itself as `python-project-modules-1.2`; Python AST engine `python-ast-1.7` and scan engine `read-only-pipeline-17` record the expanded scope. Old bundles remain readable, with cross-engine comparisons disabled. The offline demo and clean installed-wheel gate verify an inert root-module fixture, a src-package/relative-import fixture and a literal importlib fixture, each with three observations. API setup remains deferred.
 
 ```mermaid
 flowchart TD
@@ -70,4 +78,4 @@ flowchart TD
     B --> G["Limits and unresolved-import gaps"]
 ```
 
-Primary reference: [Python import system](https://docs.python.org/3/reference/import.html). See [Python flow scope](PYTHON_FLOW.md), [delivery status](DELIVERY_STATUS.md), [offline acceptance](OFFLINE_ACCEPTANCE.md) and [scan workflow](SCAN_WORKFLOW.md).
+Primary references: [importlib.import_module](https://docs.python.org/3.14/library/importlib.html#importlib.import_module) and [Python import system](https://docs.python.org/3/reference/import.html). See [Python flow scope](PYTHON_FLOW.md), [delivery status](DELIVERY_STATUS.md), [offline acceptance](OFFLINE_ACCEPTANCE.md) and [scan workflow](SCAN_WORKFLOW.md).

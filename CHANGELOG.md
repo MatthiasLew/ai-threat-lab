@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.0
+
+- Resolve selected imported/aliased importlib.import_module calls with literal absolute names or literal relative names and explicit package anchors over already collected sources.
+- Enforce strict bounded argument/name decoding; retain gaps for computed/uncollected targets, missing or noncompleting modules, cycles and ambiguous mappings. Respect local importlib shadowing without target execution or additional network retrieval.
+- Add positive/negative, CLI, verified-GitHub and bundle regression cases, an inert importlib demo and installed-wheel acceptance checks. Document the limited subset and incomplete construction-site history.
+- Advance the project pass to python-project-modules-1.2 and scan engine to 17; retain Python AST engine 1.7 and old bundle reading with cross-engine comparisons disabled. API setup remains deferred.
+
 ## 0.24.0
 
 - Extend supplementary Python linking to collected regular packages, conventional src layouts, absolute dotted imports, lexical relative imports and definite module/helper re-exports.

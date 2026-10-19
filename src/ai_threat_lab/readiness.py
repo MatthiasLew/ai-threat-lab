@@ -10,7 +10,7 @@ def readiness():
             "Selected Python AST rules, local Flask flows with branch joins/one-pass loops "
             "and credential patterns; "
             "bounded calls and root/src regular-package links; "
-            "namespace/dynamic imports unhandled.",
+            "literal importlib labels only; namespace/computed dynamic imports unhandled.",
         ),
         (
             "configuration",

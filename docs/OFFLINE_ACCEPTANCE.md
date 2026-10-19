@@ -1,4 +1,4 @@
-# Offline acceptance kit — 0.24.0
+# Offline acceptance kit — 0.25.0
 
 The CLI can demonstrate source/configuration checks, exact dependency inventory, scan history and all three local training channels without keys, account access, network services or paid calls. This is repeatable synthetic acceptance evidence, not an audit of a real organization.
 
@@ -112,3 +112,7 @@ Live email delivery, telephony, speech/media providers, authenticated participan
 ## Src-package fixture (0.24.0)
 
 `offline-demo` also writes `python-package-fixture/src/example/` containing an empty package marker, a caller with a relative helper import and a shell/SQLite helper. Sources are parsed only. `python-package-flow` must contain PY005, PY013 and PY014, with cross-file evidence for flow candidates, before demo completion is recorded. The summary field `python_package_flow_observations` must equal three. The clean installed-wheel gate repeats the audit and checks the report bundle.
+
+## Literal importlib fixture (0.25.0)
+
+`offline-demo` writes `python-importlib-fixture/src/example/` with a regular package, a caller using `load('.helpers', package='example')` and the inert shell/SQLite helper. `python-importlib-flow` must contain PY005, PY013 and PY014 with cross-file evidence for the two flow candidates. `python_importlib_flow_observations` must equal three before completion. The installed-wheel gate repeats its audit and bundle consistency checks. No fixture is imported or executed.
