@@ -284,12 +284,10 @@ def test_cache_expiry_corruption_and_aggregate_size(tmp_path):
         db.execute("UPDATE advisories SET response='not json'")
     with pytest.raises(ValidationError):
         cache.get(package)
-    cache.put(package, [f"OSV-{i}" for i in range(1001)])
-    with pytest.raises(ProviderError, match="Cached"):
-        OSVAudit(HTTP(), cache=cache).assess(collected())
-    cache.put(package, [1])
+    with pytest.raises(ValidationError, match="limit"):
+        cache.put(package, [f"OSV-{i}" for i in range(1001)])
     with pytest.raises(ValidationError):
-        cache.get(package)
+        cache.put(package, [1])
 
 
 def test_cache_symlinks_rejected(tmp_path):

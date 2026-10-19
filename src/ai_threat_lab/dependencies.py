@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 import os
 import re
 import sqlite3
@@ -317,17 +318,15 @@ class AdvisoryCache:
     def __init__(self, path: Path, *, ttl_seconds=3600, clock=time.time):
         if type(ttl_seconds) is not int or not 1 <= ttl_seconds <= 86400:
             raise ValidationError("Advisory cache TTL must be between 1 second and 24 hours")
-        if Path(path).is_symlink():
-            raise ValidationError("Advisory cache must not be a symlink")
         self.path, self.ttl, self.clock = Path(path), ttl_seconds, clock
+        self.check_path(existing=False)
         try:
             descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         except FileExistsError:
-            if self.path.is_symlink():
-                raise ValidationError("Advisory cache must not be a symlink") from None
+            self.check_path()
         else:
             os.close(descriptor)
-        with closing(sqlite3.connect(self.path)) as db, db:
+        with closing(self.connect()) as db, db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS advisories "
                 "(key TEXT PRIMARY KEY, expires REAL, response TEXT)"
@@ -337,30 +336,68 @@ class AdvisoryCache:
     def key(package):
         return hashlib.sha256(json.dumps(package.query(), sort_keys=True).encode()).hexdigest()
 
+    def check_path(self, *, existing=True):
+        if linked(self.path) or (self.path.exists() and not self.path.is_file()):
+            raise ValidationError("Advisory cache must be a regular file without links/junctions")
+        if existing and not self.path.is_file():
+            raise ValidationError("Existing advisory cache required; nothing was recreated")
+        if self.path.is_file() and self.path.stat().st_size > 128 * 1024 * 1024:
+            raise ValidationError("Advisory cache exceeds the 128 MiB local limit")
+
+    def connect(self):
+        self.check_path()
+        return sqlite3.connect(self.path.resolve().as_uri() + "?mode=rw", uri=True)
+
+    def now(self):
+        value = self.clock()
+        if type(value) not in (int, float) or not 0 <= value <= 10**12 or not math.isfinite(value):
+            raise ValidationError("Advisory cache clock must be a bounded finite timestamp")
+        return value
+
+    @staticmethod
+    def identifiers(value):
+        if not isinstance(value, (list, tuple)) or len(value) > 1000 or any(
+            not isinstance(item, str) or not re.fullmatch(ADVISORY_ID, item) for item in value
+        ):
+            raise ValidationError("Invalid advisory cache identities or entry limit exceeded")
+        return sorted(set(value))
+
     def get(self, package):
-        with closing(sqlite3.connect(self.path)) as db:
+        now = self.now()
+        with closing(self.connect()) as db:
+            # Bound materialization before untrusted text crosses into Python.
             row = db.execute(
-                "SELECT expires,response FROM advisories WHERE key=?", (self.key(package),)
+                "SELECT expires, CASE WHEN typeof(response)='text' "
+                "AND length(CAST(response AS BLOB))<=262144 THEN response ELSE NULL END "
+                "FROM advisories WHERE key=?", (self.key(package),)
             ).fetchone()
-        if row is None or row[0] <= self.clock():
+        if row is None:
             return None
+        expiry = row[0]
+        if (
+            type(expiry) not in (int, float) or not 0 <= expiry <= 10**12 + 86400
+            or not math.isfinite(expiry)
+        ):
+            raise ValidationError("Invalid advisory cache expiry; no clean conclusion")
+        if expiry <= now:
+            return None
+        if not isinstance(row[1], str):
+            raise ValidationError("Invalid or oversized advisory cache response")
         try:
             value = json.loads(row[1])
-            if not isinstance(value, list) or any(
-                not isinstance(v, str) or not re.fullmatch(ADVISORY_ID, v) for v in value
-            ):
-                raise ValueError
-            return value
-        except ValueError:
-            raise ValidationError(
-                "Advisory cache entry is invalid; do not treat it as a clean result"
-            ) from None
+        except (ValueError, RecursionError):
+            raise ValidationError("Invalid advisory cache JSON; no clean conclusion") from None
+        if not isinstance(value, list):
+            raise ValidationError("Advisory cache response must contain an array")
+        return self.identifiers(value)
 
     def put(self, package, identifiers):
-        with closing(sqlite3.connect(self.path)) as db, db:
+        value = self.identifiers(identifiers)
+        now = self.now()
+        with closing(self.connect()) as db, db:
             db.execute(
                 "INSERT OR REPLACE INTO advisories VALUES(?,?,?)",
-                (self.key(package), self.clock() + self.ttl, json.dumps(identifiers)),
+                (self.key(package), now + self.ttl, json.dumps(value)),
             )
 
 
@@ -384,6 +421,7 @@ class OSVAudit:
                 queries.append((package, None))
         if sum(map(len, matches.values())) > 1000:
             raise ProviderError("Cached advisory result limit exceeded; narrow the scope")
+        seen_tokens = {package: set() for package in collected.packages}
         requests = 0
         while queries and requests < self.max_pages:
             current, queries = queries[:100], queries[100:]
@@ -407,7 +445,7 @@ class OSVAudit:
             results = response.document().get("results")
             if not isinstance(results, list) or len(results) != len(current):
                 raise ProviderError("OSV response does not match the queried packages")
-            for (package, previous_token), result in zip(current, results, strict=True):
+            for (package, _previous_token), result in zip(current, results, strict=True):
                 if not isinstance(result, dict) or not isinstance(result.get("vulns", []), list):
                     raise ProviderError("OSV response contains invalid vulnerability results")
                 for entry in result.get("vulns", []):
@@ -423,10 +461,11 @@ class OSVAudit:
                 if token is not None and (not isinstance(token, str) or len(token) > 4096):
                     raise ProviderError("OSV returned an invalid pagination token")
                 if token:
-                    if token == previous_token:
+                    if token in seen_tokens[package]:
                         raise ProviderError(
                             "OSV repeated a pagination token; results are incomplete"
                         )
+                    seen_tokens[package].add(token)
                     queries.append((package, token))
                 else:
                     complete[package] = True

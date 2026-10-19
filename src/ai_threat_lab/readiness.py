@@ -21,11 +21,11 @@ def readiness():
         ),
         (
             "dependencies",
-            "partial",
+            "offline_complete",
             "integration_validation_required",
             "Root/opt-in nested Python/npm/Cargo pins and Go checksum-record identities; "
-            "OSV fixture-tested. "
-            "Other ecosystems remain unchecked.",
+            "OSV/cache typed failures, bounded rows and installed socket-blocked acceptance. "
+            "Live OSV validation, other ecosystems and dependency graphs remain unchecked.",
         ),
         (
             "github",
@@ -74,9 +74,10 @@ def readiness():
         ),
         (
             "mailbox",
-            "fixture_tested",
+            "offline_complete",
             "integration_validation_required",
-            "Selected Gmail settings; controlled OAuth/account validation pending.",
+            "Bounded Gmail identity/forwarding/filter settings; typed metadata, token boundary and "
+            "installed socket-blocked acceptance. OAuth/account and broader controls deferred.",
         ),
         (
             "binary",

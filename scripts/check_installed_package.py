@@ -138,6 +138,16 @@ def main() -> None:
             "status": "passed", "positive_requests": 5, "scope_rejections": 3,
             "negative_controls": 6, "live_requests": 0, "ai_calls": 0,
         }
+        gmail_receipt = json.loads(run(python, ROOT / "scripts/check_gmail_offline.py"))
+        assert gmail_receipt == {
+            "status": "passed", "positive_requests": 6, "scope_rejections": 3,
+            "negative_controls": 8, "live_requests": 0, "ai_calls": 0,
+        }
+        dependency_receipt = json.loads(run(python, ROOT / "scripts/check_dependencies_offline.py"))
+        assert dependency_receipt == {
+            "status": "passed", "positive_requests": 2, "negative_controls": 4,
+            "cached_workflows": 2, "live_requests": 0, "ai_calls": 0,
+        }
         run(python, ROOT / "scripts/check_ai_offline.py")
         ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
         assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]

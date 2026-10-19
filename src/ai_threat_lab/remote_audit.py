@@ -513,17 +513,37 @@ class GmailAudit:
         token = os.environ.get("GMAIL_ACCESS_TOKEN")
         if not token:
             raise ProviderError("GMAIL_ACCESS_TOKEN is missing; OAuth consent is required")
+        if len(token) > 4096 or any(not 33 <= ord(char) <= 126 for char in token):
+            raise ProviderError("GMAIL_ACCESS_TOKEN has unsupported length or characters")
         base = "https://gmail.googleapis.com/gmail/v1/users/me"
         headers = {"Authorization": "Bearer " + token}
         profile = get_document(self.client, base + "/profile", headers)
-        if profile.get("emailAddress", "").casefold() != target.removeprefix("mailbox:").casefold():
+        identity = profile.get("emailAddress")
+        if not isinstance(identity, str) or identity.casefold() != target.removeprefix(
+            "mailbox:"
+        ).casefold():
             raise ProviderError("Authenticated Gmail account does not match the requested mailbox")
         forwarding = get_document(self.client, base + "/settings/autoForwarding", headers)
+        if type(forwarding.get("enabled")) is not bool:
+            raise ProviderError("Gmail forwarding settings response is incomplete")
         filters = get_document(self.client, base + "/settings/filters", headers)
-        if type(forwarding.get("enabled")) is not bool or not isinstance(
-            filters.get("filter", []), list
+        rules = filters.get("filter", [])
+        if (
+            not isinstance(rules, list) or len(rules) > 1000
+            or filters.get("nextPageToken") not in (None, "")
         ):
-            raise ProviderError("Gmail settings response is incomplete")
+            raise ProviderError("Gmail filter response is incomplete or exceeds the audit limit")
+        forwards = False
+        for rule in rules:
+            if not isinstance(rule, dict) or not isinstance(rule.get("action", {}), dict):
+                raise ProviderError("Invalid Gmail filter action metadata")
+            destination = rule.get("action", {}).get("forward", "")
+            if (
+                not isinstance(destination, str) or len(destination) > 1024
+                or any(not 33 <= ord(char) <= 126 for char in destination)
+            ):
+                raise ProviderError("Invalid Gmail filter forwarding metadata")
+            forwards = forwards or bool(destination)
         findings = []
         if forwarding["enabled"]:
             findings.append(
@@ -533,8 +553,7 @@ class GmailAudit:
                     "Verify the forwarding destination and whether forwarding is necessary.",
                 )
             )
-        rules = filters.get("filter", [])
-        if any(rule.get("action", {}).get("forward") for rule in rules):
+        if forwards:
             findings.append(
                 finding(
                     "mailbox_filter_forwarding",

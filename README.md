@@ -4,7 +4,11 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
-## Project status — 0.37.0
+## Project status — 0.39.0
+
+Dependencies: [inventory, OSV and cache offline acceptance](docs/DEPENDENCIES_OFFLINE_ACCEPTANCE.md).
+
+Gmail settings: [read-only scope and offline acceptance](docs/GMAIL_AUDIT.md).
 
 Mail-domain DNS: [collection, failures, usage and offline acceptance](docs/MAIL_DOMAIN_AUDIT.md).
 

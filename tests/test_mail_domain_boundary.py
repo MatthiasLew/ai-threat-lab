@@ -164,7 +164,10 @@ def test_ambiguous_dmarc_is_visible_without_raw_policy_disclosure(policy):
     assert 'PRIVATE' not in str(result)
 
 
-def test_previous_engine_remains_readable_but_not_comparable(tmp_path):
+@pytest.mark.parametrize("previous_engine", [
+    "read-only-pipeline-23", "read-only-pipeline-24", "read-only-pipeline-25",
+])
+def test_previous_engine_remains_readable_but_not_comparable(tmp_path, previous_engine):
     from ai_threat_lab.scan_bundle import compare_bundles, publish_bundle, read_bundle, scope_digest
     from ai_threat_lab.scan_engine import ScanOptions, ScanService
 
@@ -174,12 +177,12 @@ def test_previous_engine_remains_readable_but_not_comparable(tmp_path):
         tmp_path / 'current',
     )
     current = read_bundle(tmp_path / 'current')
-    assert current['manifest']['scope']['engine'] == 'read-only-pipeline-24'
+    assert current['manifest']['scope']['engine'] == 'read-only-pipeline-26'
     metadata = dict(current['manifest'])
-    metadata['scope'] = {**metadata['scope'], 'engine': 'read-only-pipeline-23'}
+    metadata['scope'] = {**metadata['scope'], 'engine': previous_engine}
     metadata['scope_digest'] = scope_digest(metadata['scope'])
     artifacts = {name: (tmp_path / 'current' / name).read_bytes() for name in metadata['files']}
     publish_bundle(tmp_path / 'previous', artifacts, metadata)
     previous = read_bundle(tmp_path / 'previous')
-    assert previous['manifest']['scope']['engine'] == 'read-only-pipeline-23'
+    assert previous['manifest']['scope']['engine'] == previous_engine
     assert compare_bundles(previous, current)['comparable'] is False

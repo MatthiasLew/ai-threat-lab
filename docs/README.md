@@ -1,5 +1,9 @@
 # Documentation index
 
+- [Dependency inventory, OSV and cache acceptance](DEPENDENCIES_OFFLINE_ACCEPTANCE.md)
+
+- [Gmail settings, limits and offline acceptance](GMAIL_AUDIT.md)
+
 - [Mail-domain DNS audit, limits and offline acceptance](MAIL_DOMAIN_AUDIT.md)
 
 - [Passive HTTPS audit and response-body limits](WEBSITE_AUDIT.md)

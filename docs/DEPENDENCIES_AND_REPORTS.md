@@ -80,3 +80,5 @@ Use `scan GITHUB_URL --network --allow-host github.com --output-dir NEW_DIR` for
 ## Nested projects — 0.14.0
 
 Add `--recursive-dependencies` to `audit-deps` or `scan` for bounded monorepo discovery. This preserves paths/line origins and deduplicates exact identities globally without interpreting workspace graphs or installing packages. Root-only selection remains the default. Local discovery in both modes now has a global 4 MiB raw-byte cap with explicit unchecked notices. See [MONOREPOS.md](MONOREPOS.md) for all bounds, exclusions and comparison semantics.
+
+The 0.39.0 [offline completion contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) adds strict cache clock/expiry/row validation, per-access file guards, validated writes and full pagination-cycle detection, with installed socket-blocked CLI acceptance.

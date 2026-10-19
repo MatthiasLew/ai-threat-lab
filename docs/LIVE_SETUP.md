@@ -77,3 +77,5 @@ The `training-*` commands provide persistent, approved **local text rehearsals**
 `ai-threat-lab review-headers capture.json --output header-review.json` parses a strict saved capture without DNS, HTTP, cookies being sent, credentials or a provider key. It shares bounded checks with WebsiteAudit but does not authenticate the supplied origin or freshness. Format, flags and privacy limits: [HTTP_HEADERS.md](HTTP_HEADERS.md).
 
 The 0.37.0 bounded mail-domain collector and offline acceptance are specified in [MAIL_DOMAIN_AUDIT.md](MAIL_DOMAIN_AUDIT.md). Provider failures remain unknown, aliases are not followed, and supported TXT decoding is deliberately bounded. Real-domain acceptance remains deferred.
+
+The 0.38.0 [Gmail settings contract](GMAIL_AUDIT.md) documents typed profile/forwarding/filter responses and socket-blocked installed acceptance. Credential setup and real-account validation remain deferred.

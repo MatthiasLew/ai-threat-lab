@@ -269,7 +269,7 @@ def test_engine_eleven_reading_without_cross_engine_comparison(tmp_path):
     source.write_text(synthetic_python_flow())
     ScanService(assessor).run(ScanOptions(str(source)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-24"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-26"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-11"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

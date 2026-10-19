@@ -1,4 +1,4 @@
-# Test strategy and integration readiness — 0.37.0
+# Test strategy and integration readiness — 0.39.0
 
 The required release evidence is defined in [Offline CLI release criteria](OFFLINE_RELEASE_CRITERIA.md). Exact test counts and coverage measurements belong to the tested commit and its CI run; coverage includes statements and branches and is enforced at a minimum of 90%. Child-process CLI tests add behavioral evidence without being counted as subprocess coverage. Fixtures do not establish real-provider correctness or availability.
 
@@ -150,3 +150,11 @@ The finite [passive HTTPS contract](WEBSITE_OFFLINE_ACCEPTANCE.md) covers exact 
 ## Mail-domain DNS offline closure (0.37.0)
 
 The finite [mail-domain collector contract](MAIL_DOMAIN_AUDIT.md) closes typed provider responses, exact-owner TXT collection, optional question binding, truncation/alias/contradiction failures, bounded DNS quoted-string decoding, SPF version selection and visible DMARC tag ambiguity. The socket-blocked installed CLI acceptance checks scope, query count, redaction and saved failure bundles without live or AI calls. Engine 24 preserves prior bundles as readable but prevents cross-engine observation deltas. Full policy/DNSSEC/delivery evaluation and real-domain validation remain deferred; Gmail account integration is separately fixture-tested.
+
+## Gmail settings offline closure (0.38.0)
+
+The bounded [Gmail collector contract](GMAIL_AUDIT.md) closes identity matching, local token preflight, strict forwarding/filter metadata, all-rule validation and finite response limits. The socket-blocked installed CLI gate checks exact endpoint/header scope, no credential or destination disclosure, verified saved success/failure bundles and zero live/AI calls. Engine 25 preserves older bundles without cross-engine comparisons. Credential/OAuth setup, actual account validation and broader mailbox security remain deferred.
+
+## Dependency workflow offline closure (0.39.0)
+
+The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) covers existing manifest/inventory/OSV behavior, bounded cache files and response rows, finite clock/expiry metadata, validated writes/legacy reads and full per-package pagination-cycle detection. Socket-blocked installed CLI evidence covers pagination, cache-only reports/scans, disclosure consent and corrupt-cache failure without a clean conclusion. Engine 26 preserves historical bundles while rejecting cross-engine deltas. Broader ecosystems, dependency graphs, reachability and controlled live OSV validation remain separate.

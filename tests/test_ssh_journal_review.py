@@ -336,7 +336,7 @@ def test_cli_thresholds_html_escaping_privacy_no_overwrite_and_scan_batch(tmp_pa
     scanned = run_cli("scan", path, "--output-dir", bundle, "--fail-on-findings")
     assert scanned.returncode == 1, scanned.stderr
     verified = read_bundle(bundle)
-    assert verified["manifest"]["scope"]["engine"] == "read-only-pipeline-24"
+    assert verified["manifest"]["scope"]["engine"] == "read-only-pipeline-26"
     assert "private-user" not in json.dumps(verified)
     assert run_cli("scan-check", bundle).returncode == 0
     batch = tmp_path / "batch"
