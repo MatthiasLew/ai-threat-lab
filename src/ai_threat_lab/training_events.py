@@ -258,6 +258,8 @@ class EventJournal:
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         if self.path.is_symlink() or getattr(self.path, "is_junction", lambda: False)():
             raise ValidationError("Event journal must not be a link/junction")
+        if self.path.exists() and not self.path.is_file():
+            raise ValidationError("Event journal path must be a regular file")
         try:
             fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         except FileExistsError:

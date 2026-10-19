@@ -766,3 +766,14 @@ def test_incompatible_columns_are_rejected_at_open(tmp_path):
     with pytest.raises(ValidationError, match="schema columns"):
         EventJournal(path)
     assert path.read_bytes() == original
+
+
+def test_directory_rejected_before_platform_dependent_open(tmp_path, monkeypatch):
+    import ai_threat_lab.training_events as events
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Directory validation must precede os.open (Windows raises PermissionError)")
+
+    monkeypatch.setattr(events.os, "open", forbidden)
+    with pytest.raises(ValidationError, match="regular file"):
+        EventJournal(tmp_path)
