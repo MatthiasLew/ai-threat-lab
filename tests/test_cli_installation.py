@@ -75,6 +75,16 @@ def test_closed_output_pipe_has_quiet_documented_exit(args):
             child.wait()
 
 
+@pytest.mark.parametrize("method", ["print_help", "print_usage"])
+def test_parser_does_not_swallow_immediate_broken_pipe(method):
+    class ClosedPipe:
+        def write(self, text):
+            raise BrokenPipeError(errno.EPIPE, "closed reader")
+
+    with pytest.raises(BrokenPipeError):
+        getattr(build_parser(), method)(file=ClosedPipe())
+
+
 def test_utf8_output_does_not_depend_on_legacy_locale():
     # No UTF-8 env opt-in; the process boundary establishes the documented encoding.
     result = process("analyze", "ai_phishing", "--organization", "Łódź Żółw",
@@ -205,17 +215,23 @@ def test_windows_output_wrapper_forwards_regular_stream_operations(tmp_path):
 
 def test_closed_error_pipe_has_quiet_documented_exit():
     env = dict(os.environ, PYTHONPATH=str(SOURCE))
+    barrier = ("import runpy,sys; assert sys.stdin.buffer.read(1) == b'x'; "
+               "runpy.run_module('ai_threat_lab', run_name='__main__')")
     child = subprocess.Popen(
-        [sys.executable, "-m", "ai_threat_lab", "unknown-command"],
-        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        [sys.executable, "-c", barrier, "unknown-command"],
+        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
-    assert child.stdout is not None and child.stderr is not None
+    assert child.stdout is not None and child.stderr is not None and child.stdin is not None
     child.stderr.close()
     try:
+        child.stdin.write(b"x")
+        child.stdin.close()
+        code = child.wait(timeout=15)
         output = child.stdout.read()
-        assert child.wait(timeout=15) == 141, output.decode("utf-8", errors="replace")
+        assert code == 141, output.decode("utf-8", errors="replace")
         assert output == b""
     finally:
+        child.stdin.close()
         child.stdout.close()
         if child.poll() is None:
             child.kill()

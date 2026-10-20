@@ -2,6 +2,9 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Preserve immediate broken-pipe errors from argparse help/usage so the process boundary
+  returns the documented quiet exit even when help exceeds the stream buffer (issue #6).
+
 - Synchronize closed-output-pipe process checks before invoking the CLI, retaining strict
   exit-code/stderr assertions while removing a Windows scheduling race (issue #6).
 

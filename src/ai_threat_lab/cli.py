@@ -56,6 +56,17 @@ class ExactArgumentParser(argparse.ArgumentParser):
         kwargs["allow_abbrev"] = False
         super().__init__(*args, **kwargs)
 
+    def _print_message(self, message, file=None):
+        # argparse suppresses OSError, including immediate large-help pipe failures.
+        # Let the process boundary handle a broken pipe consistently with final flush.
+        if message:
+            try:
+                (file or sys.stderr).write(message)
+            except BrokenPipeError:
+                raise
+            except (AttributeError, OSError):
+                pass
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = ExactArgumentParser(
