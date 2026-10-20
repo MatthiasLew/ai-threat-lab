@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "saved_mail_attachment_structures",
+            "implemented",
+            "not_required",
+            "Bounded MIME decoding and in-memory PE/ELF/ZIP structure review with indexed "
+            "evidence and explicit skipped parts. No extraction, payload execution, "
+            "malware detection, signature trust or message authenticity verification.",
+        ),
+        (
             "fictional_smtp_delivery",
             "implemented",
             "integration_validation_required",

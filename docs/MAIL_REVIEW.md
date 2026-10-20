@@ -1,5 +1,9 @@
 # Exported email review — 0.14.0
 
+For decoded attachment bytes and PE/ELF/ZIP structures, use the separate
+[attachment review workflow](ATTACHMENT_REVIEW.md). The commands below retain their
+existing message metadata, link and form scope.
+
 Inspect one locally exported `.eml` message without opening its links, extracting or executing attachments, contacting the sender, reading a mailbox account or calling an AI model.
 
 ```bash

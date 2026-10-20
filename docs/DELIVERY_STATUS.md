@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+The [attachment review](ATTACHMENT_REVIEW.md) adds bounded in-memory MIME decoding
+and shared PE/ELF/ZIP structural observations, with indexed reports usable by AI.
+Malware detection, signature trust and message authenticity remain separate.
+
 The [SMTP adapter](SMTP_TRAINING.md) implements explicit preview-bound fictional email
 delivery, durable attempt/outcome records, duplicate blocking and cancellation.
 Account/provider acceptance remains deferred. Browser captures can also be reviewed
@@ -30,9 +34,9 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | --- | --- | --- |
 | Local project path | Fourteen bounded Python AST rule families including local Flask-to-shell/SQLite flows with branch joins/one-pass loops and bounded same-file calls/SQLite connection contexts plus selected regular root/src package, relative-import and literal importlib links, credential-pattern, literal config and structured Kubernetes JSON observations; root/opt-in nested Python/npm/Cargo exact-version and Go checksum-record inventory; reports | More language families, namespace packages/cross-method analysis, loop convergence/path feasibility, dependency-graph/reachability analysis and deeper validation |
 | GitHub root URL | Immutable default-branch commit, verified bounded blobs, source/config and root/opt-in nested dependency inventory | Controlled account validation, broader repository analysis and workspace graph resolution |
-| Website URL | Opted-in single HTTPS header and selected HTML observations; offline saved-header/HTML review | Crawling, authenticated application/business-logic tests and controlled active-assessment implementation |
+| Website URL | Opted-in single HTTPS header and selected HTML observations; bounded same-host/path navigation; offline saved-header/HTML and HAR response review | Authenticated browser execution, application/business-logic tests and controlled active-assessment implementation |
 | Program file | Bounded size/hash, PE/ELF structures and ZIP metadata/path candidates | Cryptographic signature verification, disassembly, malware detection, dynamic analysis and broader formats/platform semantics |
-| Exported email | Bounded headers, selected plain/HTML links, HTML forms and attachment-metadata candidates | Trusted message-authenticity validation, gateway policy, rendered content and attachment/malware analysis |
+| Exported email | Bounded headers, selected plain/HTML links, HTML forms, attachment metadata and decoded PE/ELF/ZIP structure review | Trusted message-authenticity validation, gateway policy, rendered content, office/PDF active content and malware analysis |
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Signed training claims | Local HMAC journal, exact-plan/alias/key scope, freshness, replay/conflict checks, stops and separate simulation/automation/adapter aggregates | Native provider authentication/collection, participant identity/action verification, remote dispatch/stop integration, retention/rotation |
@@ -113,7 +117,11 @@ Collected local/GitHub root modules now support selected absolute sibling import
 
 ## Current completion criteria and remaining work
 
-The current priority is closing confirmed defects and passing the finite [offline release criteria](OFFLINE_RELEASE_CRITERIA.md), with existing analyzer scope frozen. This avoids treating another Python feature as completion of the product. The remaining full-product engineering tracks are listed separately there and in the capability matrix above. They require implementation and real-environment decisions; API keys alone cannot close them.
+The owner has requested continued console implementation before API setup, with tested
+increments published to main. The finite [offline release criteria](OFFLINE_RELEASE_CRITERIA.md)
+remain regression gates for existing behavior. They do not establish completion of the
+broader product. Remaining engineering and real-environment acceptance are listed separately
+in the capability matrix above; API keys alone cannot close implementation gaps.
 
 ## Regular Python packages and src layouts (0.24.0)
 

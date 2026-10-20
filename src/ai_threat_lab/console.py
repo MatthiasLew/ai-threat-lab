@@ -17,6 +17,7 @@ AI Threat Lab
 9. Review multiple pages within an approved website path
 10. Review a saved browser HAR capture without replaying requests
 11. Preview, send or stop approved fictional email delivery
+12. Review the structure of saved email attachments
 0. Exit
 """
 
@@ -35,7 +36,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–11: ")
+            choice = ask("Choose 0–12: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -112,8 +113,13 @@ def run_console(run):
                 from .delivery_cli import delivery_menu
 
                 code = delivery_menu(run, ask)
+            elif choice == "12":
+                source = ask("Saved EML file: ")
+                output = ask("New combined JSON report: ")
+                print("Reviewing the first 20 attachment parts locally in memory.")
+                code = run(["review-attachments", source, "--output", output])
             else:
-                print("Choose a number from 0 to 11.")
+                print("Choose a number from 0 to 12.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

@@ -5,7 +5,9 @@ import json
 import os
 import socket
 import tempfile
+import zipfile
 from contextlib import redirect_stderr, redirect_stdout
+from email.message import EmailMessage
 from pathlib import Path
 
 import ai_threat_lab.http_client as http
@@ -61,6 +63,19 @@ def main_check():
     integration.PublicHTTPS = lambda *args, **kwargs: wire
     with tempfile.TemporaryDirectory(prefix="console acceptance ") as folder:
         root = Path(folder)
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, "w") as zipped:
+            zipped.writestr("../PRIVATE", "PRIVATE")
+        message = EmailMessage()
+        message.set_content("PRIVATE")
+        message.add_attachment(archive.getvalue(), maintype="application", subtype="zip",
+                               filename="PRIVATE.zip")
+        eml, attachments = root / "attachments.eml", root / "attachments.json"
+        eml.write_bytes(message.as_bytes())
+        run("review-attachments", eml, "--output", attachments)
+        eml.unlink()
+        attachment_summary = run("brief", attachments)
+        assert "zip_path_escape" in attachment_summary and "PRIVATE" not in attachment_summary
         class SiteWire:
             calls = []
 

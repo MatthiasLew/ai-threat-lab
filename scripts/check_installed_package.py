@@ -39,6 +39,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "examples/ai-budget.json", "examples/providers.json", "scripts/verify.py",
             "scripts/check_console_offline.py", ".ai-dev-tools.toml",
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
+            "docs/ATTACHMENT_REVIEW.md",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"

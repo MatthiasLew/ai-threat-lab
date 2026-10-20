@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .ai_costs import INSTRUCTIONS, AIConfig, compact_evidence, usd
 from .ai_review import REVIEW_INSTRUCTIONS, TEXT_FORMAT
+from .attachment_review import review_attachments
 from .contracts import read_document, write_document
 from .evidence import brief, evidence_digest, load_evidence
 from .har_review import review_har
@@ -17,10 +18,18 @@ from .setup_check import setup_check
 from .site_review import SiteReview, canonical_url
 from .tool_plan import plan_target
 
-COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site", "review-har"}
+COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site", "review-har",
+            "review-attachments"}
 
 
 def add_commands(commands):
+    attachments = commands.add_parser(
+        "review-attachments", help="Review decoded saved-email attachment structures in memory")
+    attachments.add_argument("path", type=Path)
+    attachments.add_argument("--start", type=int, default=1)
+    attachments.add_argument("--max-entries", type=int, default=20)
+    attachments.add_argument("--output", type=Path)
+    attachments.add_argument("--fail-on-findings", action="store_true")
     har = commands.add_parser("review-har", help="Review saved browser responses without replay")
     har.add_argument("path", type=Path)
     har.add_argument("--start", type=int, default=1)
@@ -130,8 +139,9 @@ def _preview(value, config, evidence, *, structured):
 
 
 def run_command(args):
-    if args.command == "review-har":
-        report, failures = review_har(args.path, start=args.start, max_entries=args.max_entries)
+    if args.command in ("review-har", "review-attachments"):
+        review = review_har if args.command == "review-har" else review_attachments
+        report, failures = review(args.path, start=args.start, max_entries=args.max_entries)
         text = write_document(report)
         if args.output:
             write_new_report(args.output, text.encode("utf-8"))

@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Saved emails support [attachment structure review](docs/ATTACHMENT_REVIEW.md):
+bounded MIME decoding and PE/ELF/ZIP checks without extracting or launching attachments.
+
 Fictional email plans can use [authenticated SMTP delivery](docs/SMTP_TRAINING.md)
 after exact preview confirmation and account configuration. Local rehearsals remain local.
 

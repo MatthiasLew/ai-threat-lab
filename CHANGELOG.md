@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add offline attachment structure review with bounded MIME decoding, byte-based PE/ELF/ZIP
+  inspection, private indexed labels and combined evidence reports. No attachment extraction,
+  execution or network access occurs.
+
 - Add preview-bound fictional SMTP email delivery with verified TLS, explicit account/host
   confirmation, durable per-recipient claims/outcomes, cancellation and no automatic retries.
   Keep server acceptance distinct from delivery/participant telemetry; test only with fixtures.

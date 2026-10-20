@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Saved email attachment byte and structure review](ATTACHMENT_REVIEW.md)
+
 - [Approved fictional email delivery, journal and cancellation](SMTP_TRAINING.md)
 
 - [Bounded multi-page passive navigation](SITE_REVIEW.md)
