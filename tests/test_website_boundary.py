@@ -219,7 +219,7 @@ def test_engine_22_bundle_is_readable_but_not_comparable(tmp_path):
         ScanOptions(TARGET, network=True, allowed_hosts=("website.example",)), tmp_path / "current"
     )
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-26"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-27"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-22"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

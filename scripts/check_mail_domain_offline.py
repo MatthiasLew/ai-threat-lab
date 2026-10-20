@@ -72,7 +72,7 @@ def main():
         assert status == 0 and not err
         assert json.loads(out)['ai_calls'] == 0
         saved = read_bundle(destination)
-        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-26'
+        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-27'
         assert saved['documents']['assessment.json']['status'] == 'partial'
         assert 'PRIVATE' not in json.dumps(saved)
         assert len(client.calls) == 3

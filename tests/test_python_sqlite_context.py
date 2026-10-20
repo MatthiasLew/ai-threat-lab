@@ -277,7 +277,7 @@ def test_engine_seventeen_readable_without_comparing_expanded_context_scope(tmp_
     (project / "app.py").write_text("eval(user_value)")
     ScanService(assessor).run(ScanOptions(str(project)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-26"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-27"
     metadata = dict(current["manifest"])
     metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-17"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])

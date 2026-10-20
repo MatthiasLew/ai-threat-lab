@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+The [Composer/NuGet extension](COMPOSER_NUGET.md) adds bounded recorded identities
+to local/GitHub discovery and OSV/cache workflows. Engine 27 distinguishes the new
+coverage from earlier scans; package provenance and reachability remain unverified.
+
 The [stock-speech adapter](SPEECH_TRAINING.md) adds preview-bound generation of local
 fictional WAV assets with cost estimates and durable attempt records. Actual resource,
 audio-quality and billing acceptance remains deferred; no telephony is implemented.

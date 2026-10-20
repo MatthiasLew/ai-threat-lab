@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add bounded Composer and NuGet lock inventory to local/pinned-GitHub discovery,
+  recorded OSV identities and installed acceptance. Preserve skipped/private-feed
+  limitations; engine 27 keeps older bundles readable without cross-engine deltas.
+
 - Add an optional stock-voice speech adapter for approved fictional scripts: exact SSML
   preview, configured cost estimate, explicit provider request, validated local PCM WAV,
   persistent attempt outcomes, cancellation and duplicate blocking. No calls or voice cloning.

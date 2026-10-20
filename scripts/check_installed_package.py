@@ -41,6 +41,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
             "docs/ATTACHMENT_REVIEW.md",
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
+            "docs/COMPOSER_NUGET.md",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"
@@ -163,6 +164,7 @@ def main() -> None:
         assert dependency_receipt == {
             "status": "passed", "positive_requests": 2, "negative_controls": 4,
             "cached_workflows": 2, "live_requests": 0, "ai_calls": 0,
+            "additional_ecosystems": 2,
         }
         run(python, ROOT / "scripts/check_ai_offline.py")
         smtp_receipt = json.loads(run(python, ROOT / "scripts/check_smtp_offline.py"))

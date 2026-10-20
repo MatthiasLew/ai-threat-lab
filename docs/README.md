@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Composer and NuGet recorded dependency inventory](COMPOSER_NUGET.md)
+
 - [Fictional stock-voice asset preparation and optional synthesis](SPEECH_TRAINING.md)
 
 - [Saved email attachment byte and structure review](ATTACHMENT_REVIEW.md)

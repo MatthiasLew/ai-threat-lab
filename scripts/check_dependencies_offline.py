@@ -81,7 +81,7 @@ def main():
         assert status == 0 and not err and not cached.calls
         assert json.loads(out)['ai_calls'] == 0
         saved = read_bundle(destination)
-        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-26'
+        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-27'
         assert saved['documents']['dependencies.json']['dependency_audit']['cache_hits'] == 2
 
         negative_controls = 0
@@ -110,9 +110,29 @@ def main():
         ], malformed)
         assert status == 3 and not out and err and len(malformed.calls) == 1
         negative_controls += 1
+        additional = root / 'additional ecosystems'
+        additional.mkdir()
+        (additional / 'composer.lock').write_text(json.dumps({
+            'packages': [{'name': 'fixture/library', 'version': 'v1.2.3'}],
+        }), encoding='utf-8')
+        (additional / 'packages.lock.json').write_text(json.dumps({
+            'version': 2, 'dependencies': {'net8.0': {
+                'Fixture.Library': {'type': 'Direct', 'resolved': '1.2.3'},
+            }},
+        }), encoding='utf-8')
+        status, out, err = command(['audit-deps', str(additional)], HTTP())
+        assert status == 0 and not err
+        assert {p['ecosystem'] for p in json.loads(out)['packages']} == {'NuGet', 'Packagist'}
+        extra_bundle = root / 'additional scan'
+        status, out, err = command([
+            'scan', str(additional), '--output-dir', str(extra_bundle),
+        ], HTTP())
+        assert status == 0 and not err
+        extra_saved = read_bundle(extra_bundle)
+        assert len(extra_saved['documents']['dependency-inventory.json']['packages']) == 2
     print(json.dumps({'status': 'passed', 'positive_requests': 2,
                       'negative_controls': negative_controls, 'cached_workflows': 2,
-                      'live_requests': 0, 'ai_calls': 0}))
+                      'live_requests': 0, 'ai_calls': 0, 'additional_ecosystems': 2}))
 
 
 if __name__ == '__main__':

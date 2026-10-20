@@ -102,6 +102,7 @@ def validate_manifest(value):
         "read-only-pipeline-24",
         "read-only-pipeline-25",
         "read-only-pipeline-26",
+        "read-only-pipeline-27",
     )
     if current:
         if type(scope.get("recursive_dependencies")) is not bool:
@@ -141,6 +142,7 @@ def validate_manifest(value):
             "read-only-pipeline-24",
             "read-only-pipeline-25",
             "read-only-pipeline-26",
+            "read-only-pipeline-27",
         )
         or type(scope["network"]) is not bool
         or type(scope["share_packages"]) is not bool

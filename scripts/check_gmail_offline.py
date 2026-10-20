@@ -68,7 +68,7 @@ def main():
         saved = read_bundle(destination)
         assessment = saved['documents']['assessment.json']
         assert assessment['status'] == 'partial' and len(assessment['findings']) == 2
-        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-26'
+        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-27'
         assert all(value not in json.dumps(saved) for value in ('PRIVATE_', TOKEN))
 
         client = HTTP([{'emailAddress': 'fixture@example.com'}, {'enabled': False}, {}])

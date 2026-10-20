@@ -80,7 +80,7 @@ def readiness():
             "dependencies",
             "offline_complete",
             "integration_validation_required",
-            "Root/opt-in nested Python/npm/Cargo pins and Go checksum-record identities; "
+            "Root/opt-in nested Python/npm/Cargo/Composer/NuGet pins and Go checksum identities; "
             "OSV/cache typed failures, bounded rows and installed socket-blocked acceptance. "
             "Live OSV validation, other ecosystems and dependency graphs remain unchecked.",
         ),

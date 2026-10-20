@@ -1,5 +1,9 @@
 # Dependency inventory / OSV / cache — offline completion contract
 
+The later [Composer/NuGet extension](COMPOSER_NUGET.md) retains this cache/transport
+contract and adds two recorded-identity formats. Scan engine 27 prevents comparisons
+with earlier discovery coverage; historical bundles remain readable.
+
 Version 0.39.1 closes the existing bounded dependency workflow, rather than adding more ecosystems or full dependency-graph analysis. It includes local/root or opted-in nested manifest inventory, pinned GitHub parity, opt-in OSV version/ID matching and a local advisory cache. API/account setup and controlled live acceptance remain deferred.
 
 ## Scope and usage

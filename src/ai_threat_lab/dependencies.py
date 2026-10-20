@@ -12,6 +12,7 @@ from contextlib import closing
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 
+from .additional_locks import parse_composer, parse_nuget, release_version
 from .assessment import AssessmentFinding, AssessmentResult
 from .contracts import _nonfinite, _pairs
 from .dependency_paths import (
@@ -37,6 +38,8 @@ NAME = {
     "PyPI": r"[A-Za-z0-9][A-Za-z0-9._-]{0,213}",
     "npm": r"(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]{0,213}",
     "crates.io": r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}",
+    "Packagist": r"[a-z0-9][a-z0-9_.-]{0,99}/[a-z0-9][a-z0-9_.-]{0,99}",
+    "NuGet": r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}",
 }
 VERSION = r"[0-9][A-Za-z0-9.!+_-]{0,127}"
 ADVISORY_ID = r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}"
@@ -73,6 +76,8 @@ class Dependency:
             or (
                 not (module_path(self.name) and module_version(self.version))
                 if self.ecosystem == "Go"
+                else not release_version(self.version, composer=self.ecosystem == "Packagist")
+                if self.ecosystem in ("Packagist", "NuGet")
                 else not re.fullmatch(VERSION, self.version)
             )
         ):
@@ -171,6 +176,8 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
         "Only exact recorded versions; environment markers are not evaluated.",
         "Unresolved dependencies, unsupported formats and unrecorded "
         "transitive packages remain unchecked.",
+        "Package identities are recorded claims; registry/feed provenance and installed "
+        "bytes are unverified. Public advisory matches require applicability review.",
     ]
 
     missing.extend(not_checked)
@@ -203,7 +210,11 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
         basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")
-            if basename == "go.sum":
+            if basename in ("composer.lock", "packages.lock.json"):
+                document = json.loads(source, object_pairs_hook=_pairs, parse_constant=_nonfinite)
+                parse = parse_composer if basename == "composer.lock" else parse_nuget
+                parse(document, origin, add, note)
+            elif basename == "go.sum":
                 parse_go_sum(source, origin, add, note)
             elif basename == "Cargo.lock":
                 document = tomllib.loads(source)
@@ -293,7 +304,7 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
             else:
                 raise ValidationError(
                     "Unsupported manifest; use requirements*.txt, package-lock.json, "
-                    "uv.lock, poetry.lock, Cargo.lock or go.sum"
+                    "uv.lock, poetry.lock, Cargo.lock, go.sum, composer.lock or packages.lock.json"
                 )
         except ValidationError as exc:
             raise ValidationError(f"Invalid dependency manifest: {origin}; {exc}") from None

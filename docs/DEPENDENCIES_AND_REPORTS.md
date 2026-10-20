@@ -15,8 +15,11 @@ ai-threat-lab audit-deps path/to/requirements.txt
 | npm `package-lock.json` v2/v3 | Recorded `packages` entries, transitive/scoped packages and version differences | v1, Yarn/pnpm formats and linked workspaces unsupported |
 | `uv.lock` / `poetry.lock` | Versioned registry package records | Local/editable/git sources skipped; no dependency solving |
 | `Cargo.lock` v3/v4 | Exact crates.io name/version records | Local/git/alternate registry sources skipped; no checksum/feature/graph/installed-state validation; see [CARGO.md](CARGO.md) |
-
 | `go.sum` | Supported module-content checksum records with exact Go versions | Metadata-only records omitted; no hash/build-list/workspace verification; historical/unused versions may be included; see [GO.md](GO.md) |
+| `composer.lock` | Recorded production/development release tags | Development branches and path distributions skipped; public registry provenance unverified |
+| `packages.lock.json` v1/v2 | Direct/transitive resolved versions across recorded frameworks | Project references and unsupported kinds skipped; feeds, hashes and selected runtime unverified |
+
+See [Composer and NuGet limits](COMPOSER_NUGET.md) for exact selection and version rules.
 
 By default, only supported root manifests are read. Add `--recursive-dependencies` for bounded nested discovery, or select a subproject directly. Root symlinks/junctions are rejected; child links/non-regular manifests are skipped. Global limits: 20 manifests, 2 MiB each, 4 MiB aggregate bytes and 500 unique package/ecosystem/version tuples. File/package overflow fails before any OSV request; aggregate-byte/traversal stops preserve explicit unchecked notices. Parser warnings have a detailed-notice cap and omitted count; discovery notices have a separate bounded prefix. See [MONOREPOS.md](MONOREPOS.md) for exact selection semantics.
 

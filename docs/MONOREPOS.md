@@ -16,7 +16,12 @@ ai-threat-lab scan-check scan-results/monorepo-01
 
 The recursive option requires a project directory. It is rejected for a single file, website, mail domain or mailbox. No network flag is needed for a local inventory. `--max-files` still controls GitHub collection, not the independent fixed local traversal bounds.
 
-Supported basenames remain `requirements*.txt`, npm `package-lock.json` v2/v3, `uv.lock`, `poetry.lock` `Cargo.lock` v3/v4 (selected crates.io entries) and `go.sum` (selected module-content records; see [GO.md](GO.md)). Unsupported ecosystems such as pnpm/yarn are not silently resolved. Discovering a lockfile in a workspace is not a full interpretation of that workspace's dependency graph.
+Supported basenames are `requirements*.txt`, npm `package-lock.json` v2/v3,
+`uv.lock`, `poetry.lock`, `Cargo.lock` v3/v4 (selected crates.io entries), `go.sum`
+(selected module-content records; see [GO.md](GO.md)), `composer.lock` and
+`packages.lock.json` v1/v2 (see [Composer/NuGet](COMPOSER_NUGET.md)).
+Unsupported formats such as pnpm/yarn are not silently resolved. Discovering a
+lockfile in a workspace is not a full interpretation of its dependency graph.
 
 ## Origins and deduplication
 

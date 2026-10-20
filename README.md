@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Dependency inventory includes [Composer and NuGet locks](docs/COMPOSER_NUGET.md),
+using the same local/GitHub collection, optional OSV lookup and saved-report workflows.
+
 Approved fictional voice scripts can produce [stock-voice WAV assets](docs/SPEECH_TRAINING.md)
 through an optional speech adapter, with exact previews and persistent request outcomes.
 

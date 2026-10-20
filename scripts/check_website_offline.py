@@ -96,7 +96,7 @@ def main():
             summary = json.loads(output.getvalue())
             assert summary["failed_modules"] == [] and summary["ai_calls"] == 0
             saved = read_bundle(destination)
-            assert saved["manifest"]["scope"]["engine"] == "read-only-pipeline-26"
+            assert saved["manifest"]["scope"]["engine"] == "read-only-pipeline-27"
             document = saved["documents"]["assessment.json"]
             checks = {f["check"] for f in document["findings"]}
             assert ("cookie_missing_secure" in checks) is expected_headers
