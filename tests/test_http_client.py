@@ -73,7 +73,7 @@ def test_https_scope_rejected_before_dns(monkeypatch, url):
         {"max_requests": 0},
         {"max_requests": 201},
         {"timeout": 0},
-        {"timeout": 61},
+        {"timeout": 121},
     ],
 )
 def test_http_limits(kwargs):

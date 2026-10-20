@@ -3,6 +3,9 @@
 ## [0.39.2] - Stage 4: Gemini API Integration Repair & Diagnostics
 
 ### Fixed
+- **Unified 120s HTTP Timeout**: Aligned `PublicHTTPS` timeout ceiling with CLI and `GeminiGenerateContent` allowing up to 120 seconds (`0 < timeout <= 120`).
+- **Zero Phantom Ledger Reservations**: Instantiated `PublicHTTPS` before `CostLedger` in CLI dispatch to guarantee that local validation errors leave SQLite cost databases completely untouched.
+- **Delayed Response E2E Verification**: Added end-to-end tests for socket-level timeouts, ensuring unconfirmed retention, zero leakage, and safe reconciliation.
 - **Outbound HTTP Routing**: Resolved `PublicHTTPS` whitelist restriction blocking `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, allowing Gemini requests to proceed securely through the sandbox.
 - **Diagnostics**: Replaced generic unconfirmed exception catching with 16 granular failure categories (`API_KEY_MISSING`, `API_KEY_INVALID`, `MODEL_NOT_FOUND`, `MODEL_NOT_AVAILABLE`, `FREE_TIER_LIMIT`, `RATE_LIMITED`, `BAD_REQUEST`, `INVALID_RESPONSE_SCHEMA`, `RESPONSE_VALIDATION_FAILED`, `MODEL_REFUSAL`, `MAX_OUTPUT_TOKENS`, `NETWORK_TIMEOUT`, `TLS_ERROR`, `CONNECTION_ERROR`, `PROVIDER_SERVER_ERROR`, `UNKNOWN_PROVIDER_ERROR`).
 - **Thinking Token Budgeting**: Set `thinkingBudget: 0` for `gemini-2.5-flash` to prevent reasoning tokens from exceeding constrained max output budgets.

@@ -29,7 +29,7 @@ from ai_threat_lab.ai_costs import (
 )
 from ai_threat_lab.audit_report import merge_reports
 from ai_threat_lab.contracts import write_document
-from ai_threat_lab.gemini_adapter import GEMINI_HOST
+from ai_threat_lab.gemini_adapter import GEMINI_HOST, GeminiGenerateContent
 from ai_threat_lab.http_client import HttpResponse, PublicHTTPS
 from ai_threat_lab.models import ValidationError
 from ai_threat_lab.providers import ProviderError
@@ -532,3 +532,135 @@ def test_end_to_end_offline_audit_to_gemini_interpretation(tmp_path, monkeypatch
     assert limitations["deduplicated_count"] >= 1
     export_html = export_audit_report(out_dir, format="html")
     assert "PY001" in export_html
+
+
+# ==============================================================================
+# SECTION E: Timeout Consistency (30, 60, 90, 120, 121s) & Safe Diagnostics
+# ==============================================================================
+
+
+@pytest.mark.parametrize("valid_timeout", [30, 60, 90, 120])
+def test_timeout_valid_values_across_components(valid_timeout):
+    """Confirm 30, 60, 90, 120 seconds are accepted across client and adapter."""
+    client = PublicHTTPS(["example.com"], timeout=valid_timeout)
+    assert client.timeout == valid_timeout
+
+    adapter = GeminiGenerateContent(client, timeout=valid_timeout)
+    assert adapter.timeout == valid_timeout
+
+
+def test_timeout_121_rejected_with_validation_error():
+    """Confirm 121 seconds is rejected by PublicHTTPS and GeminiGenerateContent."""
+    with pytest.raises(ValidationError, match="between 0 and 120 seconds"):
+        PublicHTTPS(["example.com"], timeout=121)
+
+    with pytest.raises(ValidationError):
+        GeminiGenerateContent(None, timeout=121)
+
+
+def test_local_validation_error_avoids_sqlite_ledger_reservation(tmp_path, monkeypatch):
+    """Ensure that local validation failure (e.g. invalid timeout) leaves ledger untouched."""
+    from argparse import Namespace
+
+    from ai_threat_lab.integration_cli import review_payload
+
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    ledger_file = tmp_path / "never_created_ledger.sqlite"
+    rep_file = tmp_path / "assessment.json"
+    rep = make_synthetic_report(1)
+    write_document(rep, rep_file)
+
+    cfg_file = tmp_path / "ai-config.json"
+    write_document(
+        {
+            "schema_version": 1,
+            "model": "gemini-2.5-flash",
+            "input_usd_per_million": "0.30",
+            "output_usd_per_million": "2.50",
+            "max_input_bytes": 12000,
+            "max_output_tokens": 600,
+            "daily_budget_usd": "0.50",
+            "max_calls_per_day": 10,
+            "cache_ttl_seconds": 3600,
+            "namespace": "test",
+        },
+        cfg_file,
+    )
+
+    args = Namespace(
+        dry_run=False,
+        send_evidence=True,
+        provider="gemini",
+        language="pl",
+        timeout=121,  # Exceeds 120s limit!
+        ai_config=str(cfg_file),
+        assessment=str(rep_file),
+        ledger=str(ledger_file),
+        packet_index=1,
+        group_size=3,
+    )
+
+    with pytest.raises(ValidationError):
+        review_payload(args)
+
+    # Ledger database must NOT have been created
+    assert not ledger_file.exists()
+
+
+def test_simulated_delayed_response_timeout_e2e(tmp_path, monkeypatch):
+    """End-to-end test with a simulated delayed response timing out:
+    1. Pre-call reservation is recorded.
+    2. Socket read / network timeout occurs.
+    3. Failure category is classified as NETWORK_TIMEOUT.
+    4. Reservation is retained in ledger (unconfirmed).
+    5. No automatic retry is executed.
+    6. Formatted diagnosis gives Request ID and exact api-reconcile instructions.
+    7. Secret keys are never leaked in error text.
+    8. User can safely reconcile the pending reservation to $0.
+    """
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    rep = make_synthetic_report(1)
+
+    # Wire that raises TimeoutError simulating socket read timeout after delayed response
+    delayed_wire = SimulatedGeminiWire(error=TimeoutError("Socket read timed out after 30s"))
+
+    ledger_path = tmp_path / "timeout_ledger.sqlite"
+    ledger = CostLedger(ledger_path)
+    cfg = make_config(model="gemini-2.5-flash", max_output_tokens=600)
+
+    with pytest.raises(ProviderError) as exc_info:
+        gemini_review_result(
+            cfg,
+            ledger,
+            delayed_wire,
+            rep,
+            packet_index=1,
+            language="pl",
+            timeout=30,
+        )
+
+    err = exc_info.value
+    err_text = str(err)
+    assert getattr(err, "category", None) == "NETWORK_TIMEOUT"
+    assert "Failure category: [NETWORK_TIMEOUT]" in err_text
+    assert "Reached provider: No" in err_text
+    assert "Reservation retained: Yes" in err_text
+    assert "Reconciliation required: Yes" in err_text
+    assert "ai-threat-lab api-reconcile" in err_text
+    assert FAKE_KEY not in err_text
+
+    # Verify ledger state: 1 unconfirmed call, reservation retained
+    rep_data = ledger.report()
+    assert len(rep_data["unconfirmed"]) == 1
+    unconfirmed_entry = rep_data["unconfirmed"][0]
+    req_id = unconfirmed_entry["id"]
+    assert req_id in err_text
+
+    # Verify only 1 attempt was made (no automatic retry)
+    assert len(delayed_wire.calls) == 1
+
+    # Now verify user can safely reconcile the pending reservation to $0
+    ledger.reconcile(req_id, "0")
+    rep_reconciled = ledger.report()
+    assert len(rep_reconciled["unconfirmed"]) == 0
+    assert rep_reconciled["days"][0]["unconfirmed_calls"] == 0

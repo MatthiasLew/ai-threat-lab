@@ -257,3 +257,9 @@ For every failure, the diagnostics output answers:
 
 ### Outbound PublicHTTPS Sandbox Whitelisting
 The outbound HTTP sandbox (`src/ai_threat_lab/http_client.py`) restricts `POST` requests to verified API routes. The Gemini endpoint route `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` is explicitly whitelisted with strict regex validation, ensuring secure routing without blocking legitimate API calls.
+
+### Unified 120-Second HTTP Timeout & Socket Behavior
+The timeout parameter across CLI, adapter, and `PublicHTTPS` supports values from 1 up to 120 seconds (default 30s):
+- **Range & Validation**: Values outside `0 < timeout <= 120` are rejected immediately with `ValidationError("HTTP timeout must be between 0 and 120 seconds")` prior to touching the SQLite cost ledger or issuing DNS queries.
+- **Socket-Level vs. Transaction Semantics**: In Python's `http.client.HTTPSConnection` and `PublicHTTPS`, `timeout` represents an **idle socket timeout applied to each individual network operation** (TCP `socket.create_connection` to the pinned IP, TLS handshake via `wrap_socket`, sending request headers/body chunks, and blocking reads during `getresponse()` and response streaming). It is **not** a cumulative wall-clock deadline for the entire transaction. DNS resolution is performed via OS resolver prior to socket creation.
+- **Timeout Failure Semantics**: Any inactivity period exceeding `timeout` raises `TimeoutError` / `socket.timeout`, mapped cleanly to `NETWORK_TIMEOUT`. The cost ledger marks the request as unconfirmed (`reservation_retained=True`), preventing automated retries.

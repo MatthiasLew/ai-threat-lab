@@ -94,8 +94,8 @@ class PublicHTTPS:
             or not 1 <= max_requests <= 200
         ):
             raise ValidationError("Invalid HTTP size or request limit")
-        if type(timeout) not in (int, float) or not 0 < timeout <= 60:
-            raise ValidationError("HTTP timeout must be between 0 and 60 seconds")
+        if type(timeout) not in (int, float) or not 0 < timeout <= 120:
+            raise ValidationError("HTTP timeout must be between 0 and 120 seconds")
         if type(allow_partial_body) is not bool:
             raise ValidationError("Partial response selection must be boolean")
         self.allow_partial_body = allow_partial_body

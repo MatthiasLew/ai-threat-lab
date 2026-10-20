@@ -207,3 +207,15 @@ py -m ai_threat_lab api-reconcile 6afea99f1ade4e36bc017ea6bc17b52c --actual-usd 
 ```
 
 This clears the pending reservation, sets actual billed amount to $0.00 (since the request never reached Google due to the local client route check), and allows subsequent reviews to proceed immediately.
+
+### Zarządzanie limitem czasu (`--timeout`) i diagnostyka `NETWORK_TIMEOUT`
+
+Wszystkie komendy AI (`ai-review`, `ai-explain`) oraz klient `PublicHTTPS` obsługują zakres `--timeout` od 1 do 120 sekund (domyślnie 30s):
+
+- **Wartości dozwolone**: od 1 do 120 sekund (np. `--timeout 30`, `--timeout 60`, `--timeout 90`, `--timeout 120`).
+- **Walidacja lokalna**: Wartości poza zakresem (np. `--timeout 121` lub `--timeout 0`) są odrzucane natychmiast błędem `ValidationError` przed zainicjowaniem bazy `runs/costs.sqlite`, dzięki czemu nie tworzą żadnych niepotrzebnych rezerwacji.
+- **Rzeczywiste zachowanie timeout**: Limit `--timeout` jest timeoutem na poziomie operacji gniazda TCP/TLS (połączenie z przypiętym adresem IP, handshake TLS, wysyłanie bajtów żądania, odczyt odpowiedzi), a nie sztywnym czasem całkowitej transakcji.
+- **Postępowanie w przypadku timeoutu**: Gdy serwer Google nie odpowie w zadanym czasie, proces zgłasza błąd z kategorią `[NETWORK_TIMEOUT]`. Rezerwacja pozostaje w stanie niepotwierdzonym (`unconfirmed`), a użytkownik może ją bezpłatnie uzgodnić poleceniem:
+  ```powershell
+  py -m ai_threat_lab api-reconcile <REQUEST_ID> --actual-usd 0 --ledger runs/costs.sqlite
+  ```

@@ -365,10 +365,12 @@ def explain_payload(args):
             )
         if not os.environ.get("GEMINI_API_KEY"):
             raise ProviderError("GEMINI_API_KEY is missing; no request was reserved or sent")
+        client = PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1)
+        ledger = CostLedger(args.ledger)
         return gemini_explain_result(
             config,
-            CostLedger(args.ledger),
-            PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1),
+            ledger,
+            client,
             document,
             dry_run=False,
             language=language,
@@ -376,10 +378,12 @@ def explain_payload(args):
         )
     if not args.dry_run and not os.environ.get("OPENAI_API_KEY"):
         raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
+    client = PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1)
+    ledger = CostLedger(args.ledger)
     ai = BudgetedAI(
         config,
-        CostLedger(args.ledger),
-        OpenAIResponses(PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1)),
+        ledger,
+        OpenAIResponses(client),
         provider_id="openai",
         language=language,
     )
@@ -410,19 +414,23 @@ def review_payload(args):
     if provider == "gemini":
         if not os.environ.get("GEMINI_API_KEY"):
             raise ProviderError("GEMINI_API_KEY is missing; no request was reserved or sent")
+        client = PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1)
+        ledger = CostLedger(args.ledger)
         return review_result(
             config,
-            CostLedger(args.ledger),
-            PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1),
+            ledger,
+            client,
             saved["report"],
             **packet_options,
         )
     if not os.environ.get("OPENAI_API_KEY"):
         raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
+    client = PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1)
+    ledger = CostLedger(args.ledger)
     return review_result(
         config,
-        CostLedger(args.ledger),
-        PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1),
+        ledger,
+        client,
         saved["report"],
         **packet_options,
     )
