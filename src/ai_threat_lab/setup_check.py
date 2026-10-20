@@ -8,7 +8,7 @@ from .installation import installation_report
 from .setup_profiles import integration_profiles
 
 
-def setup_check(path=None, *, smtp_path=None, speech_path=None, avatar_path=None):
+def setup_check(path=None, *, smtp_path=None, speech_path=None, avatar_path=None, call_path=None):
     installation = installation_report()
     config = AIConfig.from_document(read_document(path)) if path is not None else None
     placeholder = bool(config and any(
@@ -32,7 +32,7 @@ def setup_check(path=None, *, smtp_path=None, speech_path=None, avatar_path=None
                   else "local_configuration_valid",
         "installation": installation, "ai_config": asdict(config) if config else None,
         "integrations": integration_profiles(smtp_path=smtp_path, speech_path=speech_path,
-                                             avatar_path=avatar_path),
+                                             avatar_path=avatar_path, call_path=call_path),
         "network_called": False, "credentials_inspected": False,
         "live_ready": False, "remaining_live_checks": remaining,
         "notice": "Configuration validation is not account, model, price or service validation. "

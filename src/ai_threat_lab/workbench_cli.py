@@ -71,6 +71,7 @@ def add_commands(commands):
     setup.add_argument("--smtp-config", type=Path)
     setup.add_argument("--speech-config", type=Path)
     setup.add_argument("--avatar-config", type=Path)
+    setup.add_argument("--call-config", type=Path)
     setup.add_argument("--output", type=Path)
     plan = commands.add_parser("plan", help="Preview prepared tools, scope and data disclosures")
     inspect = commands.add_parser(
@@ -237,7 +238,7 @@ def run_command(args):
     if args.command == "setup-check":
         text = write_document(setup_check(
             args.ai_config, smtp_path=args.smtp_config, speech_path=args.speech_config,
-            avatar_path=args.avatar_config))
+            avatar_path=args.avatar_config, call_path=args.call_config))
     elif args.command in ("plan", "inspect"):
         options = dict(
             network=args.network, allowed_hosts=args.allow_host, max_files=args.max_files,

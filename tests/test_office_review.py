@@ -217,4 +217,4 @@ def test_office_menu_routes_local_paths_without_network_flags(monkeypatch):
     monkeypatch.setattr("builtins.input", answer)
     assert run_console(lambda args: calls.append(args) or 0) == 0
     assert calls == [["review-office", "source.docm", "--output", "report.json"]]
-    assert prompts[0] == "Choose 0–18: "
+    assert prompts[0] == "Choose 0–19: "

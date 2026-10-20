@@ -24,6 +24,7 @@ AI Threat Lab
 16. Import a saved SARIF report from a static analyzer
 17. Prepare, generate and review a fictional stock-avatar video
 18. Review saved Office package declarations
+19. Preview, place or stop one approved fictional training call
 0. Exit
 """
 
@@ -42,7 +43,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–18: ")
+            choice = ask("Choose 0–19: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -90,6 +91,7 @@ def run_console(run):
                     ("--smtp-config", "SMTP configuration file"),
                     ("--speech-config", "Speech configuration file"),
                     ("--avatar-config", "Stock-avatar configuration file"),
+                    ("--call-config", "Fictional-call configuration file"),
                 ):
                     config = ask(f"{label} (Enter to skip): ", required=False)
                     if config:
@@ -172,8 +174,12 @@ def run_console(run):
                 source = ask("Saved Office package: ")
                 output = ask("New assessment JSON: ")
                 code = run(["review-office", source, "--output", output])
+            elif choice == "19":
+                from .call_cli import call_menu
+
+                code = call_menu(run, ask)
             else:
-                print("Choose a number from 0 to 18.")
+                print("Choose a number from 0 to 19.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

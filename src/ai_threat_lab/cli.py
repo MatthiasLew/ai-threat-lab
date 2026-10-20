@@ -15,6 +15,9 @@ from .analyzer import ThreatAnalyzer
 from .avatar_cli import COMMANDS as AVATAR_COMMANDS
 from .avatar_cli import add_commands as add_avatar_commands
 from .avatar_cli import run_command as run_avatar_command
+from .call_cli import COMMANDS as CALL_COMMANDS
+from .call_cli import add_commands as add_call_commands
+from .call_cli import run_command as run_call_command
 from .campaign_cli import demo_campaign, report_events
 from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
@@ -82,6 +85,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_speech_commands(commands)
     add_reputation_commands(commands)
     add_avatar_commands(commands)
+    add_call_commands(commands)
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
@@ -193,6 +197,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_speech_command(args)
         if args.command in REPUTATION_COMMANDS:
             return run_reputation_command(args)
+        if args.command in CALL_COMMANDS:
+            return run_call_command(args)
         if args.command in AVATAR_COMMANDS:
             return run_avatar_command(args)
         if args.command == "console":

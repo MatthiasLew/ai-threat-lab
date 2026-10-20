@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+[Fictional call delivery](FICTIONAL_CALLS.md) adds one fixed approved announcement,
+provider status and explicit remote stop. Real call/account/billing acceptance,
+conversation, automatic expiry monitoring and participant telemetry remain separate.
+
 [Office package review](OFFICE_REVIEW.md) adds explicit local declaration checks
 for macro/ActiveX/OLE markers and external relationships with bounded XML decompression.
 Document bodies, active payloads, PDF/legacy formats and runtime behavior remain unchecked.
@@ -74,7 +78,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Signed training claims | Local HMAC journal, exact-plan/alias/key scope, freshness, replay/conflict checks, stops and separate simulation/automation/adapter aggregates | Native provider authentication/collection, participant identity/action verification, remote dispatch/stop integration, retention/rotation |
 | Email training | Exact-preview plans, local rehearsal, inert `.eml` export, selected-outcome report, preview-bound authenticated SMTP adapter and durable delivery journal | Real SMTP acceptance, delivery telemetry and authenticated participant events |
-| Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export and preview-bound stock-speech WAV adapter | Telephony, live interaction and controlled speech/account/audio-quality validation |
+| Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export, stock-speech WAV and fixed single-call adapter with status/stop | Live interaction, automatic expiry monitoring and controlled call/account/audio-quality validation |
 | Deepfake/video training | Scenario, approved preview, local selections, storyboard and stock-avatar generation/download with new media approval | Controlled resource/media/billing acceptance, distribution and observed participant events; likeness cloning is not implemented |
 | Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |
 | AI explanation/cost control | Offline-complete within the finite contract: budgeted adapter, evidence validation/minimization, dry-run, cache cleanup, reservations/reconciliation and output claims | Chosen model/prices/account setup and controlled live validation |

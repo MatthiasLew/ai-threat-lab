@@ -226,3 +226,31 @@ def test_dns_success_and_tls_original_hostname(monkeypatch):
     with pytest.raises(OSError):
         connection.connect()
     assert calls[-1] == "closed"
+
+
+@pytest.mark.parametrize("suffix", ["/Calls.json", "/Calls/CA" + "b" * 32 + ".json"])
+def test_call_post_routes_preserve_exact_path(monkeypatch, suffix):
+    path = "/2010-04-01/Accounts/AC" + "a" * 32 + suffix
+    monkeypatch.setattr(module, "public_address", lambda value: "8.8.8.8")
+    monkeypatch.setattr(module, "_PinnedHTTPS", Connection)
+    client = PublicHTTPS(["api.twilio.com"], max_requests=1)
+    client.request("https://api.twilio.com" + path, method="POST", body=b"Status=completed")
+    connection = Connection.instances[-1]
+    assert connection.host == "api.twilio.com" and connection.requested[0] == ("POST", path)
+    assert connection.closed
+
+
+@pytest.mark.parametrize("host,path", [
+    ("api.twilio.com", "/2010-04-01/Accounts/AC" + "a" * 32 + "/Messages.json"),
+    ("api.twilio.com", "/2010-04-01/Accounts/ACshort/Calls.json"),
+    ("api.twilio.com", "/2010-04-01/Accounts/AC" + "a" * 32 + "/Calls/CAshort.json"),
+    ("api.twilio.com", "/2010-04-01/Accounts/AC" + "a" * 32 + "/Calls.json?extra=1"),
+    ("api.twilio.com.evil.invalid", "/2010-04-01/Accounts/AC" + "a" * 32 + "/Calls.json"),
+])
+def test_call_post_other_routes_fail_before_dns(monkeypatch, host, path):
+    def forbidden(*args):
+        raise AssertionError("Invalid route reached DNS")
+
+    monkeypatch.setattr(module, "public_address", forbidden)
+    with pytest.raises(ValidationError):
+        PublicHTTPS([host]).request("https://" + host + path, method="POST")

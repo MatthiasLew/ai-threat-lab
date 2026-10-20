@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "account_sid": "AC00000000000000000000000000000000",
+  "caller": "+12025550101",
+  "usd_per_minute": "0.10",
+  "max_request_estimate_usd": "0.10"
+}

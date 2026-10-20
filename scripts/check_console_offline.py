@@ -170,8 +170,8 @@ def main_check():
         setup = run("setup-check", "--smtp-config", smtp, "--speech-config", speech)
         assert "PRIVATE" not in setup
         profiles = json.loads(setup)["integrations"]
-        assert [row["id"] for row in profiles] == ["smtp", "speech", "avatar"]
-        assert profiles[-1]["status"] == "not_selected"
+        assert [row["id"] for row in profiles] == ["smtp", "speech", "avatar", "call"]
+        assert all(row["status"] == "not_selected" for row in profiles[2:])
         assert all(row["status"] == "local_configuration_valid" for row in profiles[:2])
         assert all(row["live_ready"] is False for row in profiles[:2])
         packets = json.loads(run("ai-prepare", bundle, "--ai-config", config,

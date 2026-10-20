@@ -120,8 +120,14 @@ class PublicHTTPS:
             (f"{region}.tts.speech.microsoft.com", "/cognitiveservices/v1")
             for region in ("eastus", "westeurope", "northeurope")
         )
-        if method == "POST" and ((parsed.hostname, parsed.path) not in endpoints or parsed.query):
-            raise ValidationError("POST is restricted to supported model/advisory/speech endpoints")
+        call_route = parsed.hostname == "api.twilio.com" and re.fullmatch(
+            r"/2010-04-01/Accounts/AC[a-fA-F0-9]{32}/Calls(?:/CA[a-fA-F0-9]{32})?\.json",
+            parsed.path,
+        )
+        if method == "POST" and (
+            ((parsed.hostname, parsed.path) not in endpoints and not call_route) or parsed.query
+        ):
+            raise ValidationError("POST is restricted to supported provider routes")
         if method == "PUT" and not (
             re.fullmatch(
                 r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.cognitiveservices\.azure\.com",

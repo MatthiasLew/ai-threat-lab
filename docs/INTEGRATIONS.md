@@ -21,7 +21,7 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Authentication logs | Explicit normalized .auth.jsonl or review-auth-log input; bounded failure-pattern candidates | No provider log conversion, login attempts, trusted provenance or compromise confirmation |
 | Training content | Offline templates, approved fictional scripts, stock-speech WAV and stock-avatar adapters | Account/media/billing acceptance; no arbitrary generated scripts or identity cloning |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
-| Email/voice/video dispatch | Demo transports, exact preview approval and explicit SMTP adapter; separate stock-media generation/download | Real delivery acceptance, phone calls, media distribution and live tracking backend |
+| Email/voice/video dispatch | Demo transports, exact preview approval and explicit SMTP and fixed single-call/status/stop adapters; separate stock-media generation/download | Real delivery acceptance, conversation, automatic call-expiry monitoring, media distribution and live tracking backend |
 | Signed event claims | Local HMAC protocol, exact-plan binding, transactional replay checks and provenance-separated reports | No native provider/webhook/participant authentication, tracking endpoint or remote dispatch |
 | Campaign outcomes | Legacy imported-event aggregation remains untrusted; separate signed local journal available | No trusted webhook collection or tracking endpoint |
 

@@ -46,10 +46,12 @@ Mail domain: two DNS queries, or three with a selector. No SPF include traversal
 
 These read-only collectors are complemented by separate, explicitly approved
 [SMTP delivery](SMTP_TRAINING.md), [stock-speech generation](SPEECH_TRAINING.md) and
-[stock-avatar job/download](STOCK_AVATAR.md) adapters for fictional training content.
+[stock-avatar job/download](STOCK_AVATAR.md) and [single-call/status/stop](FICTIONAL_CALLS.md)
+adapters for fictional training content.
 They have synthetic acceptance tests; actual account, delivery, media and billing
 acceptance remains required. They do not implement active exploitation, password
-guessing, likeness cloning, phone calls, speech understanding, tracking-link services
+guessing, likeness cloning, live conversation, automatic call-expiry monitoring,
+speech understanding, tracking-link services
 or a webhook backend. See the current [delivery matrix](DELIVERY_STATUS.md) for
 implementation gaps. Adding a model key does not implement those services.
 

@@ -72,14 +72,14 @@ first-pass explanation needs no model or API account.
 
 ```bash
 ai-threat-lab setup-check --ai-config examples/ai-budget.json
-ai-threat-lab setup-check --smtp-config examples/smtp.json --speech-config examples/speech.json --avatar-config examples/avatar.json
+ai-threat-lab setup-check --smtp-config examples/smtp.json --speech-config examples/speech.json --avatar-config examples/avatar.json --call-config examples/call.json
 ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --structured --split --output preview.json
 ```
 
 Example model/prices are placeholders, usable for estimates rather than live setup.
 `setup-check` validates installation and configuration without reading credentials;
-it never declares a live service ready. Console setup optionally accepts all four
-profiles. SMTP, speech and avatar entries distinguish unselected profiles from valid local
+it never declares a live service ready. Console setup optionally accepts all five
+profiles. SMTP, speech, avatar and call entries distinguish unselected profiles from valid local
 configuration and describe the remaining account checks. The preview contains exact outgoing input,
 instructions, output schema, evidence hashes and configured-price reservation
 estimates. No ledger is written and no request occurs.
@@ -143,7 +143,7 @@ prices, usage, output quality, quotas and controlled target behavior.
 
 SMTP delivery, stock-speech WAV generation and stock-avatar job/download workflows
 have separate console adapters and offline acceptance checks; see their linked guides.
-GUI, active attacks, telephony, arbitrary language coverage and dynamic binary analysis
+GUI, active attacks, live conversation, arbitrary language coverage and dynamic binary analysis
 remain outside this interpretation layer and need further implementation, not just a key.
 
 Reference: [official Responses structured output guide](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses).

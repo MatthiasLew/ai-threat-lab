@@ -13,6 +13,14 @@ def readiness():
             "caps; resource access, real media and billing need controlled acceptance.",
         ),
         (
+            "fictional_training_call",
+            "implemented",
+            "integration_validation_required",
+            "One approved fixed fictional announcement, durable submission, exact call status "
+            "and explicit remote stop. No conversation, recording, verbal-refusal detection "
+            "or automatic expiry watcher; real account, audio and billing acceptance required.",
+        ),
+        (
             "office_package_declarations",
             "implemented",
             "not_required",
@@ -218,8 +226,8 @@ def readiness():
             "voice_video",
             "partial",
             "implementation_required",
-            "Voice script, video storyboard, stock-speech WAV and stock-avatar video adapters. "
-            "No calls, live dialogue, likeness cloning or media distribution.",
+            "Voice script, storyboard, stock-media and fixed single-call status/stop adapters. "
+            "No live dialogue, automatic expiry watcher, likeness cloning or media distribution.",
         ),
         (
             "password_attacks",
