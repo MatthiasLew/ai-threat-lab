@@ -132,25 +132,69 @@ def evidence_digest(value):
     ).encode("utf-8")).hexdigest()
 
 
-def brief(value):
+def brief(value, *, language: str = "en"):
+    from .finding_details import describe_finding, validate_report_language
+
+    validate_report_language(language)
+    pl = language == "pl"
     report = value["report"]
-    lines = ["AI Threat Lab — review summary", "",
-             f'Evidence: {value["origin"]}',
-             f'Observations to review: {report["summary"]["unique_findings"]}',
-             "Priorities order review; they do not prove severity or exploitability.", ""]
+    header = (
+        "AI Threat Lab — podsumowanie audytu offline"
+        if pl
+        else "AI Threat Lab — review summary"
+    )
+    lines = [
+        header,
+        "",
+        f'Evidence: {value["origin"]}',
+        f'Observations to review: {report["summary"]["unique_findings"]}',
+        "Priorities order review; they do not prove severity or exploitability.",
+        "",
+    ]
     if value["failed_components"]:
         lines += ["Some collectors failed. Missing results are not a clean assessment.", ""]
     for row in report["findings"]:
-        lines += [f'{row["triage_priority"]} | {row["check"]} | {row["status"]}',
-                  f'Where: {row["target"]}', f'Observation: {row["evidence"]}',
-                  f'Review: {row["recommendation"]}', f'Reference: {row["id"]}', ""]
+        detail = describe_finding(row, target=row.get("target"), language=language)
+        loc = detail.file_path or row["target"]
+        if detail.line_number is not None:
+            loc = f"{loc}:{detail.line_number}"
+        lines += [
+            f'{row["triage_priority"]} | {row["check"]} | {row["status"]} '
+            f'({detail.threat_category})',
+            f'Where: {row["target"]}',
+            f"Location: {loc}",
+            f'Observation: {row["evidence"]}',
+            f'Co wykryto? (What was detected?): {detail.what_was_detected}',
+            f"Dlaczego jest to potencjalnie niebezpieczne? (Why dangerous?): {detail.mechanism}",
+            f"Do czego może doprowadzić? (Potential consequences?): {detail.consequences}",
+            f'Jak to naprawić? / Review: {row["recommendation"]}',
+        ]
+        if detail.code_example:
+            example_one_line = " | ".join(
+                part.strip()
+                for part in detail.code_example.splitlines()
+                if part.strip() and not part.strip().startswith("#")
+            )
+            if example_one_line:
+                lines.append(f"Example fix: {example_one_line}")
+        lines += [
+            f"Jak sprawdzić poprawkę? (Verification): {detail.verification_steps}",
+            f"Czego analizator nie ustalił? (Limitations): {detail.analysis_limitations}",
+            f'Reference: {row["id"]}',
+            "",
+        ]
     if not report["findings"]:
-        lines += ["No observations were returned by the selected checks.",
-                  "This does not establish that the target is secure.", ""]
+        lines += [
+            "No observations were returned by the selected checks.",
+            "This does not establish that the target is secure.",
+            "",
+        ]
     lines.append("Not checked / limitations:")
     lines.extend(f'- {row["target"]}: {row["notice"]}' for row in report["not_checked"])
     lines += ["", report["notice"], "No model or target was contacted to create this summary."]
     # Do not allow terminal control characters from saved evidence to affect the terminal.
     text = "\n".join(lines) + "\n"
-    return "".join(c if c in "\n\t" or (ord(c) >= 32 and not 127 <= ord(c) <= 159)
-                   else f"\\u{ord(c):04x}" for c in text)
+    return "".join(
+        c if c in "\n\t" or (ord(c) >= 32 and not 127 <= ord(c) <= 159) else f"\\u{ord(c):04x}"
+        for c in text
+    )

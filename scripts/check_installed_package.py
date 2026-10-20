@@ -47,6 +47,8 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
             "docs/COMPOSER_NUGET.md",
             "docs/SAVED_SITE_SESSION.md",
+            "docs/QUICK_START.md",
+            "docs/GUI_API_HANDOFF.md",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"

@@ -126,8 +126,14 @@ def inventory(path: Path, *, recursive=False) -> Inventory:
         if linked(manifest) or not manifest.is_file():
             skipped.append(f"{origin}: skipped symlink or non-file.")
             continue
-        with manifest.open("rb") as stream:
-            raw = stream.read(MAX_BYTES + 1)
+        try:
+            with manifest.open("rb") as stream:
+                raw = stream.read(MAX_BYTES + 1)
+        except OSError as exc:
+            if not path.is_dir():
+                raise
+            skipped.append(f"{origin}: skipped unreadable manifest ({type(exc).__name__}).")
+            continue
         if len(raw) > MAX_BYTES:
             raise ValidationError("Dependency manifest exceeds 2 MiB")
         if total + len(raw) > MAX_TOTAL_BYTES:

@@ -1,7 +1,11 @@
 # Changelog
 
-## 0.39.1 — Offline CLI finalization and controlled API testing readiness
+## 0.39.1 — Offline CLI finalization, developer audit reports, and GUI API readiness
 
+- Add structured `DetailedFinding` descriptions (`ai_threat_lab.finding_details`) answering all six developer remediation questions (*Co wykryto?*, *Dlaczego jest to potencjalnie niebezpieczne?*, *Do czego może doprowadzić?*, *Jak to naprawić?*, *Jak sprawdzić poprawkę?*, *Czego analizator nie ustalił?*) in English (`en`) and Polish (`pl`) without inventing line numbers or elevating heuristic observations to confirmed status.
+- Upgrade `inspect`, `brief`, and HTML audit reports (`render_html`) with full remediation cards, target recognition summaries, executed/skipped check disclosures, and `--language en|pl` support.
+- Add offline multilingual AI contract helpers (`build_multilingual_ai_packet`, `attach_ai_interpretation`, `review_instructions(language=...)`) that keep local technical reports immutable and isolated from invalid or hallucinated model output.
+- Add the stable Python GUI integration API (`ai_threat_lab.gui_api`), `docs/GUI_API_HANDOFF.md`, `docs/QUICK_START.md`, and end-to-end tests across 8 representative reference projects (`tests/test_stage2_audit_and_gui_api.py`).
 - Emit explicit `REQUIRES_LIVE_VALIDATION` status in `setup-check`, optional integration profiles and `doctor` diagnostics whenever a property cannot be confirmed without a live external service.
 - Enforce strict separation between `--dry-run` and `--send-evidence` in `ai-explain` and `ai-review`, and detect model refusal (`type="refusal"`) and non-object/non-array wire payloads in `OpenAIResponses`.
 - Fix cross-module pytest fixture resolution in `tests/test_ai_costs_closure.py` when running the full test suite.

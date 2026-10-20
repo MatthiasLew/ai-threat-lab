@@ -7,10 +7,11 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .ai_costs import INSTRUCTIONS, AIConfig, compact_evidence, usd
-from .ai_review import REVIEW_INSTRUCTIONS, TEXT_FORMAT
+from .ai_review import TEXT_FORMAT, review_instructions
 from .attachment_review import review_attachments
 from .contracts import read_document, write_document
 from .evidence import brief, evidence_digest, load_evidence
+from .finding_details import validate_report_language
 from .har_review import review_har
 from .local_history import write_new_report
 from .models import ValidationError
@@ -91,12 +92,14 @@ def add_commands(commands):
     inspect.add_argument("--baseline", type=Path)
     inspect.add_argument("--advisory-cache", type=Path)
     inspect.add_argument("--format", choices=("txt", "json"), default="txt")
+    inspect.add_argument("--language", choices=("en", "pl"), default="en")
     inspect.add_argument("--fail-on-findings", action="store_true")
     summary = commands.add_parser("brief", help="Explain saved observations locally without AI")
     summary.add_argument(
         "evidence", type=Path, help="Assessment/report JSON or scan/batch directory"
     )
     summary.add_argument("--format", choices=("txt", "json"), default="txt")
+    summary.add_argument("--language", choices=("en", "pl"), default="en")
     summary.add_argument("--output", type=Path)
     prepare = commands.add_parser(
         "ai-prepare", help="Preview exact minimized evidence and cost without API or ledger writes"
@@ -107,11 +110,13 @@ def add_commands(commands):
     prepare.add_argument("--split", action="store_true", help="Preview every structured packet")
     prepare.add_argument("--packet-index", type=int)
     prepare.add_argument("--group-size", type=int, default=3)
+    prepare.add_argument("--language", choices=("en", "pl"), default="en")
     prepare.add_argument("--output", type=Path)
 
 
 def prepare_evidence(path, config, *, structured=False, split=False,
-                     packet_index=None, group_size=3):
+                     packet_index=None, group_size=3, language: str = "en"):
+    validate_report_language(language)
     value = load_evidence(path)
     if (split or packet_index is not None or group_size != 3) and not structured:
         raise ValidationError("Packet options require --structured")
@@ -119,11 +124,14 @@ def prepare_evidence(path, config, *, structured=False, split=False,
         raise ValidationError("Choose --split or --packet-index, not both")
     if structured and split:
         groups = review_packets(value["report"], config.max_input_bytes, group_size=group_size)
-        previews = [_preview(value, config, evidence, structured=True) for evidence in groups]
+        previews = [
+            _preview(value, config, evidence, structured=True, language=language)
+            for evidence in groups
+        ]
         for index, item in enumerate(previews, 1):
             item.update(packet_index=index, packet_count=len(previews))
         reserved = sum(int(item["reserved_usd"].replace(".", "")) for item in previews)
-        return {
+        payload = {
             "schema_version": 1, "mode": "structured_review_packets", "network_called": False,
             "packet_count": len(previews), "total_finding_count": len(value["report"]["findings"]),
             "maximum_reserved_usd": usd(reserved), "packets": previews,
@@ -131,21 +139,24 @@ def prepare_evidence(path, config, *, structured=False, split=False,
                       "Review packets and request one explicitly with ai-review --packet-index. "
                       "Daily budget/request limits and current ledger state apply to each call.",
         }
+        if language != "en":
+            payload["report_language"] = language
+        return payload
     if structured:
         evidence, index, count = select_packet(value["report"], config.max_input_bytes,
                                               packet_index=packet_index, group_size=group_size)
-        return {**_preview(value, config, evidence, structured=True),
+        return {**_preview(value, config, evidence, structured=True, language=language),
                 "packet_index": index, "packet_count": count}
-    return _preview(value, config, value["ai_document"], structured=False)
+    return _preview(value, config, value["ai_document"], structured=False, language=language)
 
 
-def _preview(value, config, evidence, *, structured):
-    instructions = REVIEW_INSTRUCTIONS if structured else INSTRUCTIONS
+def _preview(value, config, evidence, *, structured, language: str = "en"):
+    instructions = review_instructions(language) if structured else INSTRUCTIONS
     overhead = len(json.dumps({"text": {"format": TEXT_FORMAT}}).encode()) if structured else 0
     prompt = compact_evidence(evidence, config.max_input_bytes)
     bound = len((instructions + prompt).encode("utf-8")) + overhead + 1024
     count = len(json.loads(prompt)["findings"])
-    return {
+    payload = {
         "schema_version": 1, "status": "prepared" if count else "skipped_no_findings",
         "origin": value["origin"], "failed_components": value["failed_components"],
         "network_called": False, "credentials_inspected": False, "ledger_written": False,
@@ -161,6 +172,41 @@ def _preview(value, config, evidence, *, structured):
                   "the estimate is not provider billing. "
                   "AI cannot execute tools or change evidence.",
     }
+    if language != "en":
+        payload["report_language"] = language
+    return payload
+
+
+def render_inspection_summary(plan: dict, result: dict, evidence: dict, output_dir: Path, *,
+                              language: str = "en") -> str:
+    validate_report_language(language)
+    pl = language == "pl"
+    lines = [
+        "AI Threat Lab — kompletny audyt celu (offline)" if pl
+        else "AI Threat Lab — target inspection overview",
+        f'Target: {plan["target"]}',
+        f'Recognized target kind: {plan["target_kind"]}',
+        "",
+        "Available / prepared analyzers:",
+    ]
+    for tool in plan["tools"]:
+        lines.append(f'- {tool["id"]}: {tool["purpose"]} (Limit: {tool["limit"]})')
+    lines.extend(["", "Executed and skipped checks:"])
+    for module_id, info in result["modules"].items():
+        lines.append(f'- {module_id}: {info["status"]} — {info["notice"]}')
+    lines.extend([
+        "",
+        brief(evidence, language=language).rstrip("\n"),
+        "",
+        f"Saved run: {output_dir}",
+        f'Final JSON report: {Path(output_dir) / "report.json"}',
+        f'Final HTML report: {Path(output_dir) / "report.html"}',
+    ])
+    text = "\n".join(lines) + "\n"
+    return "".join(
+        c if c in "\n\t" or (ord(c) >= 32 and not 127 <= ord(c) <= 159) else f"\\u{ord(c):04x}"
+        for c in text
+    )
 
 
 def run_command(args):
@@ -248,12 +294,19 @@ def run_command(args):
         if args.command == "plan":
             text = write_document(plan_target(args.target, **options))
         else:
+            plan = plan_target(args.target, **options)
             result = ScanService(assessor, advisory_lookup=advisory_lookup).run(
                 ScanOptions(args.target, **options, advisory_cache=args.advisory_cache),
                 args.output_dir, baseline=args.baseline,
             )
-            text = (write_document(result) if args.format == "json" else
-                    brief(load_evidence(args.output_dir)) + f"\nSaved run: {args.output_dir}\n")
+            language = getattr(args, "language", "en")
+            text = (
+                write_document(result)
+                if args.format == "json"
+                else render_inspection_summary(
+                    plan, result, load_evidence(args.output_dir), args.output_dir, language=language
+                )
+            )
             print(text, end="")
             return (2 if result["failed_modules"] else
                     1 if args.fail_on_findings and result["unique_findings"] else 0)
@@ -261,12 +314,14 @@ def run_command(args):
         value = load_evidence(args.evidence)
         # ai_document is an internal projection, not another user-visible source of truth.
         value.pop("ai_document")
-        text = brief(value) if args.format == "txt" else write_document(value)
+        language = getattr(args, "language", "en")
+        text = brief(value, language=language) if args.format == "txt" else write_document(value)
     else:
         config = AIConfig.from_document(read_document(args.ai_config))
+        language = getattr(args, "language", "en")
         text = write_document(prepare_evidence(
             args.evidence, config, structured=args.structured, split=args.split,
-            packet_index=args.packet_index, group_size=args.group_size,
+            packet_index=args.packet_index, group_size=args.group_size, language=language,
         ))
         if len(text.encode("utf-8")) > 32 * 1024 * 1024:
             raise ValidationError("Preview exceeds 32 MiB; narrow the assessment scope")

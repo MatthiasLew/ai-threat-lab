@@ -230,6 +230,7 @@ class AssessmentService:
             paths = [Path(target)]
             omitted = 0
             traversal_limited = False
+            walk_errors = []
             if kind == "local_project":
                 # Walk deterministically, do not follow directory symlinks or dependency folders.
                 import os
@@ -237,7 +238,9 @@ class AssessmentService:
                 paths = []
                 excluded = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
                 visited = examined = 0
-                for directory, dirs, filenames in os.walk(target, followlinks=False):
+                for directory, dirs, filenames in os.walk(
+                    target, followlinks=False, onerror=walk_errors.append
+                ):
                     visited += 1
                     if visited > 1000:
                         traversal_limited = True
@@ -309,6 +312,9 @@ class AssessmentService:
                 missing.extend(notices)
             if traversal_limited:
                 missing.append("Python traversal stopped at the 1000-directory/10000-entry limit.")
+            for err in walk_errors:
+                err_path = getattr(err, "filename", None) or target
+                missing.append(f"Skipped directory {err_path}: {type(err).__name__}")
             if not paths:
                 missing.append("No Python source files were found.")
             if omitted:

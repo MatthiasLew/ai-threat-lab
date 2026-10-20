@@ -47,15 +47,16 @@ review. It does not generate attack code or execute tools. Start with
 
 ```bash
 ai-threat-lab plan path/to/project
-ai-threat-lab inspect path/to/project --output-dir results/run-01
-ai-threat-lab brief results/run-01
-ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --structured --split --output preview.json
+ai-threat-lab inspect path/to/project --output-dir results/run-01 --language pl
+ai-threat-lab brief results/run-01 --language pl
+ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --language pl --structured --split --output preview.json
 ai-threat-lab setup-check --ai-config examples/ai-budget.json
 ```
 
 These commands need no AI account. Saved single/batch results can feed optional
 reference-validated AI advice after explicit sharing and budget configuration.
-See [the complete console workflow](docs/CONSOLE_WORKFLOW.md) for packets, estimates,
+See [Quick Start](docs/QUICK_START.md), [the complete console workflow](docs/CONSOLE_WORKFLOW.md),
+and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs,
 setup and limitations. GUI remains a separate contributor's responsibility.
 
 ## Project status — 0.39.1

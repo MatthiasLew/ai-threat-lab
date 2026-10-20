@@ -123,7 +123,12 @@ def merge_reports(documents: list[dict]) -> dict:
     }
 
 
-def render_html(report: dict) -> str:
+def render_html(report: dict, *, language: str = "en") -> str:
+    from .finding_details import describe_finding, validate_report_language
+
+    validate_report_language(language)
+    pl = language == "pl"
+
     def escaped(value):
         return html.escape(str(value), quote=True)
 
@@ -147,27 +152,140 @@ def render_html(report: dict) -> str:
         + "</tr>"
         for f in report["findings"]
     )
+    cards = []
+    for f in report["findings"]:
+        detail = describe_finding(f, target=f.get("target"), language=language)
+        loc_parts = []
+        if detail.file_path:
+            loc_parts.append(f'<code class="path">{escaped(detail.file_path)}</code>')
+        if detail.line_number is not None:
+            line_lbl = "Linia" if pl else "Line"
+            loc_parts.append(
+                f'<span class="badge">{line_lbl}: {escaped(detail.line_number)}</span>'
+            )
+        loc_html = (
+            " ".join(loc_parts)
+            if loc_parts
+            else f'<code class="path">{escaped(detail.target)}</code>'
+        )
+        example_html = (
+            f'<pre class="code-block"><code>{escaped(detail.code_example)}</code></pre>'
+            if detail.code_example
+            else ""
+        )
+        if pl:
+            q_detected = "Co wykryto?"
+            q_why = "Dlaczego jest to potencjalnie niebezpieczne?"
+            q_impact = "Do czego może doprowadzić?"
+            q_fix = "Jak to naprawić?"
+            q_verify = "Jak sprawdzić poprawkę?"
+            q_limits = "Czego analizator nie ustalił?"
+            meta_cat = "Kategoria"
+            meta_status = "Status potwierdzenia"
+            meta_loc = "Lokalizacja"
+        else:
+            q_detected = "What was detected? (Co wykryto?)"
+            q_why = (
+                "Why is it potentially dangerous? (Dlaczego jest to potencjalnie niebezpieczne?)"
+            )
+            q_impact = "What could it lead to? (Do czego może doprowadzić?)"
+            q_fix = "How to fix it? (Jak to naprawić?)"
+            q_verify = "How to verify the fix? (Jak sprawdzić poprawkę?)"
+            q_limits = "What did the analyzer not establish? (Czego analizator nie ustalił?)"
+            meta_cat = "Category"
+            meta_status = "Confirmation status"
+            meta_loc = "Location"
+        cards.append(
+            f'<article class="finding-card">'
+            f'<header class="finding-header">'
+            f'<span class="priority priority-{escaped(detail.triage_priority)}">'
+            f"{escaped(detail.triage_priority)}</span> "
+            f"<strong>{escaped(detail.rule_code)}</strong> — {escaped(detail.title)} "
+            f'<span class="badge">{meta_cat}: {escaped(detail.threat_category)}</span> '
+            f'<span class="badge">{meta_status}: {escaped(detail.confirmation_status)}</span>'
+            f'<div class="finding-meta">{meta_loc}: {loc_html} | '
+            f"ID: <code>{escaped(detail.id)}</code></div>"
+            f"</header>"
+            f'<dl class="finding-details">'
+            f"<dt>{q_detected}</dt><dd>{escaped(detail.what_was_detected)}</dd>"
+            f"<dt>{q_why}</dt><dd>{escaped(detail.mechanism)}</dd>"
+            f"<dt>{q_impact}</dt><dd>{escaped(detail.consequences)}</dd>"
+            f"<dt>{q_fix}</dt><dd><p>{escaped(detail.recommendation)}</p>{example_html}</dd>"
+            f"<dt>{q_verify}</dt><dd>{escaped(detail.verification_steps)}</dd>"
+            f"<dt>{q_limits}</dt><dd>{escaped(detail.analysis_limitations)}</dd>"
+            f"</dl></article>"
+        )
+    cards_html = (
+        "".join(cards)
+        if cards
+        else (
+            '<p class="empty-state">Brak wykrytych obserwacji w wybranych kontrolach. '
+            "Nie oznacza to, że cel jest wolny od błędów bezpieczeństwa.</p>"
+            if pl
+            else '<p class="empty-state">No observations were returned by the selected checks. '
+            "This does not establish that the target is secure.</p>"
+        )
+    )
     sources = "".join(
-        f"<li>#{escaped(s['source'])} {escaped(s['target'])} — "
+        f'<li>#{escaped(s["source"])} <code class="path">{escaped(s["target"])}</code> — '
         f"{escaped(s['target_kind'])} / {escaped(s['status'])}</li>"
         for s in report["assessments"]
     )
     limitations = "".join(
         f"<li>#{escaped(s['source'])}: {escaped(s['notice'])}</li>" for s in report["not_checked"]
     )
+    lang_attr = "pl" if pl else "en"
+    heading_main = (
+        "Ocena bezpieczeństwa — kolejka naprawcza i szczegółowy raport offline"
+        if pl
+        else "Security assessment — remediation queue"
+    )
+    heading_details = (
+        "Szczegółowe ustalenia bezpieczeństwa (przewodnik naprawczy)"
+        if pl
+        else "Detailed security findings (offline remediation guide)"
+    )
+    style_css = (
+        "body{font:16px/1.5 system-ui,-apple-system,sans-serif;margin:2rem auto;"
+        "max-width:1200px;padding:0 1rem;color:#182536;background:#fafbfc}\n"
+        "h1,h2,h3{color:#123959}table{border-collapse:collapse;width:100%;background:#fff}"
+        "td,th{border:1px solid #cad4dc;\n"
+        "padding:.6rem;text-align:left;vertical-align:top;overflow-wrap:anywhere}"
+        "th{background:#edf3f8}\n"
+        ".notice{background:#fff3cc;border-left:4px solid #d9a300;padding:1rem;border-radius:4px}"
+        "li{margin:.4rem 0}.scroll{overflow-x:auto}\n"
+        ".finding-card{background:#fff;border:1px solid #cad4dc;border-radius:6px;"
+        "margin:1rem 0;padding:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}\n"
+        ".finding-header{border-bottom:1px solid #e2e8f0;padding-bottom:.6rem;"
+        "margin-bottom:.8rem;overflow-wrap:anywhere}\n"
+        ".finding-meta{font-size:.88rem;color:#475569;margin-top:.35rem;overflow-wrap:anywhere}\n"
+        ".finding-details{margin:0}"
+        ".finding-details dt{font-weight:700;color:#123959;margin-top:.65rem}\n"
+        ".finding-details dd{margin:.2rem 0 0 0;overflow-wrap:anywhere}\n"
+        ".badge{display:inline-block;background:#edf3f8;color:#1e293b;padding:.1rem .45rem;"
+        "border-radius:4px;font-size:.82rem;margin-left:.3rem}\n"
+        ".priority{display:inline-block;font-weight:700;padding:.1rem .5rem;"
+        "border-radius:4px;font-size:.85rem}\n"
+        ".priority-P1{background:#fee2e2;color:#991b1b}"
+        ".priority-P2{background:#fef3c7;color:#92400e}"
+        ".priority-P3{background:#e0f2fe;color:#075985}\n"
+        "code,.path{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;"
+        "background:#f1f5f9;padding:.1rem .3rem;border-radius:3px;overflow-wrap:anywhere}\n"
+        ".code-block{background:#0f172a;color:#f8fafc;padding:.75rem;border-radius:4px;"
+        "overflow-x:auto;margin:.4rem 0}\n"
+        ".code-block code{background:none;color:inherit;padding:0}\n"
+        "@media print{body{margin:0;max-width:none;background:#fff}td,th{font-size:10px}"
+        ".finding-card{break-inside:avoid}}"
+    )
     return (
-        """<!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<meta http-equiv="Content-Security-Policy" 
+        f"""<!doctype html>
+<html lang="{lang_attr}"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<meta http-equiv="Content-Security-Policy"
 content="default-src 'none'; style-src 'unsafe-inline';
 base-uri 'none'; form-action 'none'">
 <title>AI Threat Lab — remediation report</title>
-<style>body{font:16px system-ui;margin:2rem auto;max-width:1200px;padding:0 1rem;color:#182536}
-h1,h2{color:#123959}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cad4dc;
-padding:.6rem;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#edf3f8}
-.notice{background:#fff3cc;padding:1rem}li{margin:.4rem 0}.scroll{overflow-x:auto}
-@media print{body{margin:0;max-width:none}td,th{font-size:10px}}</style>
-<h1>Security assessment — remediation queue</h1>
+<style>{style_css}</style>
+<h1>{heading_main}</h1>
 <p class="notice">"""
         + escaped(report["notice"])
         + """</p>
@@ -180,7 +298,11 @@ padding:.6rem;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{backg
 <h2>Findings</h2><div class="scroll"><table><thead><tr><th>Priority</th><th>Target</th>
 <th>Check</th><th>Status</th><th>Evidence</th><th>Recommended action</th></tr></thead><tbody>"""
         + rows
-        + """</tbody></table></div>
+        + f"""</tbody></table></div>
+<h2>{heading_details}</h2>
+<div class="findings-guide">"""
+        + cards_html
+        + """</div>
 <h2>Not checked and limitations</h2><ul>"""
         + limitations
         + """</ul></html>"""

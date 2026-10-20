@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Quick Start Guide](QUICK_START.md)
+- [GUI Python API Handoff](GUI_API_HANDOFF.md)
 - [Ready for controlled API testing](READY_FOR_API_TESTING.md)
 
 - [Saved website session scope and private URL maps](SAVED_SITE_SESSION.md)

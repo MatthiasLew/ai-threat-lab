@@ -92,7 +92,10 @@ def local_inventory(target: str) -> AssessmentResult:
         candidates = []
         stopped = False
         visited = 0
-        for directory, dirs, files in os.walk(path, followlinks=False):
+        walk_errors = []
+        for directory, dirs, files in os.walk(
+            path, followlinks=False, onerror=walk_errors.append
+        ):
             dirs[:] = sorted(
                 d for d in dirs if d not in EXCLUDED and not (Path(directory) / d).is_symlink()
             )
@@ -112,6 +115,9 @@ def local_inventory(target: str) -> AssessmentResult:
             if stopped or visited >= 1000:
                 missing.append("Inventory traversal stopped at the file/directory limit.")
                 break
+        for err in walk_errors:
+            err_name = Path(getattr(err, "filename", None) or target).name
+            missing.append(f"Could not enumerate directory: {err_name}")
     for item in candidates:
         try:
             with item.open("rb") as stream:
