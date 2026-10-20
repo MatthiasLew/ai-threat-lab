@@ -302,7 +302,7 @@ class ProjectFlow(Flow):
         return value
 
 
-def project_flows(sources, *, unavailable=()):
+def project_flows(sources, *, unavailable=(), _parsed_trees=None):
     """Assess already-collected text. Filenames are labels, never opened or imported."""
     from .assessment import AssessmentFinding
 
@@ -348,11 +348,15 @@ def project_flows(sources, *, unavailable=()):
             continue
         attempts += 1
         total += size
-        try:
-            tree = ast.parse(source, filename=name)
-        except (SyntaxError, ValueError, RecursionError):
-            notices.append(f"Project flow: {name}: unparsable module skipped.")
-            continue
+        cached_tree = _parsed_trees.get(name) if isinstance(_parsed_trees, dict) else None
+        if cached_tree is not None:
+            tree = cached_tree
+        else:
+            try:
+                tree = ast.parse(source, filename=name)
+            except (SyntaxError, ValueError, RecursionError):
+                notices.append(f"Project flow: {name}: unparsable module skipped.")
+                continue
         ast.increment_lineno(tree, len(selected) * OFFSET)
         selected.append((name, tree))
     trees = {by_path[name].name: tree for name, tree in selected}

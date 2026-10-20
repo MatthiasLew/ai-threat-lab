@@ -3,8 +3,9 @@
 Provides structured functions and typed exceptions (`ValidationError`, `ProviderError`,
 `FileExistsError`, `OSError`) so a desktop/web GUI can discover analyzers, inspect
 capabilities and limitations, configure and run audits, check run status, retrieve
-detailed findings and reports (in English or Polish), browse history, and prepare
-minimized AI evidence packets without rewriting the audit engine.
+detailed findings and reports (in English or Polish), browse history, prepare
+minimized AI evidence packets (for OpenAI or Google Gemini), and attach/validate
+AI interpretations without rewriting the audit engine.
 """
 
 from __future__ import annotations
@@ -14,15 +15,28 @@ from dataclasses import replace
 from pathlib import Path
 
 from .ai_costs import AIConfig
-from .ai_review import attach_ai_interpretation, build_multilingual_ai_packet
+from .ai_review import (
+    SUPPORTED_AI_PROVIDERS,
+    attach_ai_interpretation,
+    build_multilingual_ai_packet,
+    validate_ai_provider,
+)
 from .audit_report import render_html
-from .evidence import brief, load_evidence
+from .evidence import brief, interpretation_evidence, load_evidence
 from .finding_details import (
     SUPPORTED_LANGUAGES,
     DetailedFinding,
     describe_finding,
     detailed_findings,
     validate_report_language,
+)
+from .gemini_adapter import (
+    GEMINI_RESPONSE_SCHEMA,
+    GeminiGenerateContent,
+    build_sample_validated_ai_response,
+    gemini_explain_result,
+    gemini_review_result,
+    gemini_review_service,
 )
 from .local_history import MAX_EXPORT_BYTES, history_list, load_saved_run, write_new_report
 from .local_history import export_report as export_saved_report
@@ -92,6 +106,7 @@ def get_capabilities() -> dict:
     """Return static capability and limitation inventory without probing accounts or network."""
     caps = dict(readiness())
     caps["supported_languages"] = list(SUPPORTED_LANGUAGES)
+    caps["supported_ai_providers"] = list(SUPPORTED_AI_PROVIDERS)
     caps["export_formats"] = ["json", "html", "sarif"]
     return caps
 
@@ -202,6 +217,23 @@ def get_audit_status(run_dir: Path | str) -> dict:
         "triage_counts": dict(report["summary"]["triage_counts"]),
         "comparison": saved["comparison"],
         "not_checked_count": len(report["not_checked"]),
+    }
+
+
+def get_audit_limitations(run_or_report: Path | str) -> dict:
+    """Retrieve structured analysis limitations and failed components for a saved run or report."""
+    loaded = load_evidence(Path(run_or_report))
+    report = loaded["report"]
+    minimized = interpretation_evidence(report)
+    return {
+        "schema_version": 1,
+        "origin": loaded["origin"],
+        "failed_components": loaded["failed_components"],
+        "not_checked": report["not_checked"],
+        "deduplicated_ai_not_checked": minimized["not_checked"],
+        "raw_count": len(report["not_checked"]),
+        "deduplicated_count": len(minimized["not_checked"]),
+        "notice": report["notice"],
     }
 
 
@@ -333,15 +365,17 @@ def prepare_ai_packets(
     config: AIConfig | None = None,
     *,
     language: str = "en",
+    provider: str = "openai",
     structured: bool = True,
     split: bool = True,
     packet_index: int | None = None,
     group_size: int = 3,
 ) -> dict:
     """Prepare minimized AI evidence packets and cost estimates without calling any API."""
+    validate_ai_provider(provider)
     if config is None:
         config = AIConfig(
-            model="offline-contract-v1",
+            model="gemini-2.5-flash" if provider == "gemini" else "offline-contract-v1",
             input_usd_per_million="0.50",
             output_usd_per_million="1.50",
         )
@@ -357,20 +391,29 @@ def prepare_ai_packets(
         packet_index=packet_index,
         group_size=group_size,
         language=language,
+        provider=provider,
     )
 
 
 __all__ = [
+    "GEMINI_RESPONSE_SCHEMA",
+    "SUPPORTED_AI_PROVIDERS",
     "SUPPORTED_LANGUAGES",
     "DetailedFinding",
+    "GeminiGenerateContent",
     "attach_ai_interpretation",
     "build_multilingual_ai_packet",
+    "build_sample_validated_ai_response",
     "create_audit_options",
     "describe_finding",
     "detailed_findings",
     "encoded",
     "export_audit_report",
+    "gemini_explain_result",
+    "gemini_review_result",
+    "gemini_review_service",
     "get_audit_history",
+    "get_audit_limitations",
     "get_audit_results",
     "get_audit_status",
     "get_capabilities",
@@ -378,5 +421,6 @@ __all__ = [
     "plan_audit",
     "prepare_ai_packets",
     "run_audit",
+    "validate_ai_provider",
     "validate_report_language",
 ]

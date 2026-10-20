@@ -10,6 +10,17 @@ NOTICE = (
     "build, expression expansion, inherited-image or effective-permission analysis."
 )
 
+_DOCKER_USER_ROOT_RE = re.compile(r"(?i)USER\s+(root|0)(?::[^\s#]+)?\s*(?:#.*)?")
+_DOCKER_FROM_RE = re.compile(r"(?i)FROM\s+([^\s]+)(?:\s+AS\s+(\S+))?\s*(?:#.*)?")
+_DOCKER_SHA256_RE = re.compile(r"@sha256:[a-fA-F0-9]{64}$")
+_DOCKER_REMOTE_ADD_RE = re.compile(r"(?i)ADD\s+(?:--\S+\s+)*https?://")
+_WORKFLOW_WRITE_ALL_RE = re.compile(r"permissions:\s*['\"]?write-all['\"]?\s*(?:#.*)?")
+_WORKFLOW_USES_RE = re.compile(
+    r"(?:-\s*)?uses:\s*['\"]?([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)"
+    r"@([A-Za-z0-9_.+-]+)['\"]?\s*(?:#.*)?"
+)
+_SHA40_RE = re.compile(r"[a-fA-F0-9]{40}")
+
 
 def configuration_file(name):
     path = PurePosixPath(name.replace("\\", "/"))
@@ -24,6 +35,8 @@ def inspect_configuration(name, source):
     path = PurePosixPath(name.replace("\\", "/"))
     docker = configuration_file(name)
     workflow = path.suffix in (".yml", ".yaml") and path.parts[-3:-1] == (".github", "workflows")
+    if not docker and not workflow:
+        return ()
     findings, stages = [], set()
 
     def add(check, line, title, recommendation):
@@ -37,7 +50,7 @@ def inspect_configuration(name, source):
             continue
         if docker:
             # Only simple single-line instructions; never reproduce their arguments.
-            match = re.fullmatch(r"(?i)USER\s+(root|0)(?::[^\s#]+)?\s*(?:#.*)?", stripped)
+            match = _DOCKER_USER_ROOT_RE.fullmatch(stripped)
             if match:
                 add(
                     "container_explicit_root",
@@ -45,13 +58,13 @@ def inspect_configuration(name, source):
                     "Explicit root USER instruction",
                     "Review every build stage and use a suitable non-root runtime user.",
                 )
-            match = re.fullmatch(r"(?i)FROM\s+([^\s]+)(?:\s+AS\s+(\S+))?\s*(?:#.*)?", stripped)
+            match = _DOCKER_FROM_RE.fullmatch(stripped)
             if match and not match[1].startswith("$") and match[1].lower() != "scratch":
                 image = match[1]
                 if (
                     image.lower() not in stages
                     and not image.isdecimal()
-                    and not re.search(r"@sha256:[a-fA-F0-9]{64}$", image)
+                    and not _DOCKER_SHA256_RE.search(image)
                 ):
                     add(
                         "container_mutable_base",
@@ -61,7 +74,7 @@ def inspect_configuration(name, source):
                     )
             if match and match[2]:
                 stages.add(match[2].lower())
-            if re.match(r"(?i)ADD\s+(?:--\S+\s+)*https?://", stripped):
+            if _DOCKER_REMOTE_ADD_RE.match(stripped):
                 add(
                     "container_remote_add",
                     number,
@@ -69,19 +82,15 @@ def inspect_configuration(name, source):
                     "Review source integrity and use verified, reproducible build inputs.",
                 )
         if workflow:
-            if re.fullmatch(r"permissions:\s*['\"]?write-all['\"]?\s*(?:#.*)?", stripped):
+            if _WORKFLOW_WRITE_ALL_RE.fullmatch(stripped):
                 add(
                     "workflow_write_all",
                     number,
                     "Explicit write-all token permissions",
                     "Set minimal job-specific permissions and review untrusted event inputs.",
                 )
-            match = re.fullmatch(
-                r"(?:-\s*)?uses:\s*['\"]?([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+)"
-                r"@([A-Za-z0-9_.+-]+)['\"]?\s*(?:#.*)?",
-                stripped,
-            )
-            if match and not re.fullmatch(r"[a-fA-F0-9]{40}", match[2]):
+            match = _WORKFLOW_USES_RE.fullmatch(stripped)
+            if match and not _SHA40_RE.fullmatch(match[2]):
                 add(
                     "workflow_mutable_action",
                     number,

@@ -56,7 +56,7 @@ ai-threat-lab setup-check --ai-config examples/ai-budget.json
 These commands need no AI account. Saved single/batch results can feed optional
 reference-validated AI advice after explicit sharing and budget configuration.
 See [Quick Start](docs/QUICK_START.md), [the complete console workflow](docs/CONSOLE_WORKFLOW.md),
-and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs,
+and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs, as well as [Gemini API Adapter](docs/GEMINI_API_ADAPTER.md), [Performance Report](docs/PERFORMANCE_REPORT.md), and [Real Project Validation](docs/REAL_PROJECT_VALIDATION.md)
 setup and limitations. GUI remains a separate contributor's responsibility.
 
 ## Project status — 0.39.1

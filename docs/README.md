@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Google Gemini API Adapter Specification](GEMINI_API_ADAPTER.md)
+- [Performance & Benchmark Optimization Report](PERFORMANCE_REPORT.md)
+- [Real Project Validation Report](REAL_PROJECT_VALIDATION.md)
 - [Quick Start Guide](QUICK_START.md)
 - [GUI Python API Handoff](GUI_API_HANDOFF.md)
 - [Ready for controlled API testing](READY_FOR_API_TESTING.md)

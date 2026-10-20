@@ -35,7 +35,8 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
 
 | Obszar / Komenda | Wymagana zmienna środowiskowa | Wymagany plik konfiguracyjny | Wymagane flagi zgody w CLI |
 | --- | --- | --- | --- |
-| Wyjaśnienia i przegląd AI (`ai-explain`, `ai-review`) | `OPENAI_API_KEY` | `--ai-config ai.json` | `--send-evidence` (lub `--dry-run` bez klucza i bez sieci) |
+| Wyjaśnienia i przegląd AI OpenAI (`ai-explain`, `ai-review`) | `OPENAI_API_KEY` | `--ai-config ai.json` | `--provider openai --send-evidence` (lub `--dry-run` bez klucza i bez sieci) |
+| Wyjaśnienia i przegląd AI Google Gemini (`ai-explain`, `ai-review`) | `GEMINI_API_KEY` | `--ai-config ai.json` | `--provider gemini --send-evidence` (lub `--dry-run` bez klucza i bez sieci) |
 | Pasywny audyt repozytorium GitHub (`audit`, `scan`) | Opcjonalnie `GITHUB_TOKEN` (dla prywatnych repozytoriów / wyższych limitów) | Brak | `--network --allow-host github.com` |
 | Pasywny przegląd strony HTTPS (`audit`, `scan`, `review-site`) | Brak (lub `--session-file` z jawnym nagłówkiem sesji) | Opcjonalny plik sesji JSON | `--network --allow-host <dokładny-host>` |
 | Audyt DNS domeny pocztowej (`audit`, `scan`) | Brak (używa Cloudflare DoH) | Brak | `--network --allow-host <domena>` |

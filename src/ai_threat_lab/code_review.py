@@ -20,6 +20,23 @@ LIMITATIONS = (
     "A clean result does not establish that code is secure. Source is never executed or uploaded.",
 )
 
+_EVAL_CALLS = frozenset(("eval", "exec", "builtins.eval", "builtins.exec"))
+_SUBPROCESS_CALLS = frozenset(
+    (
+        "subprocess.run",
+        "subprocess.call",
+        "subprocess.Popen",
+        "subprocess.check_call",
+        "subprocess.check_output",
+    )
+)
+_PICKLE_CALLS = frozenset(("pickle.load", "pickle.loads", "_pickle.load", "_pickle.loads"))
+_REQUESTS_CALLS = frozenset(
+    f"requests.{method}"
+    for method in ("get", "post", "put", "patch", "delete", "head", "options", "request")
+)
+_OS_SHELL_CALLS = frozenset(("os.system", "os.popen"))
+
 
 @dataclass(frozen=True)
 class CodeFinding:
@@ -87,7 +104,12 @@ def _weak_digest(node, name):
     )
 
 
-def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
+def review_source(
+    source: str,
+    filename: str = "<snippet>",
+    *,
+    _tree_out: list[ast.AST] | None = None,
+) -> CodeReviewResult:
     """Inspect source without importing it, evaluating expressions, or calling a provider."""
     if not isinstance(source, str):
         raise ValidationError("Python source must be text")
@@ -101,9 +123,14 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
         line = getattr(exc, "lineno", None)
         # Do not echo source text: a syntax error can contain secrets or private code.
         raise ValidationError(f"Cannot parse Python source (line {line or 'unknown'})") from exc
+    if _tree_out is not None:
+        _tree_out.append(tree)
     aliases: dict[str, str] = {}
+    calls: list[ast.Call] = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
+        if isinstance(node, ast.Call):
+            calls.append(node)
+        elif isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.asname:
                     aliases[alias.asname] = alias.name
@@ -112,12 +139,12 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 if alias.name != "*":
                     aliases[alias.asname or alias.name] = f"{node.module}.{alias.name}"
     findings = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
+    for node in calls:
         name = _qualified_name(node.func, aliases)
+        if not name:
+            continue
         rule = None
-        if name in ("eval", "exec", "builtins.eval", "builtins.exec"):
+        if name in _EVAL_CALLS:
             rule = (
                 "PY001",
                 "High",
@@ -126,13 +153,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 "Avoid dynamic execution; parse a restricted data format "
                 "or use explicit operations.",
             )
-        elif name in (
-            "subprocess.run",
-            "subprocess.call",
-            "subprocess.Popen",
-            "subprocess.check_call",
-            "subprocess.check_output",
-        ) and any(
+        elif name in _SUBPROCESS_CALLS and any(
             keyword.arg == "shell"
             and isinstance(keyword.value, ast.Constant)
             and keyword.value.value is True
@@ -145,7 +166,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 "shell=True can interpret metacharacters if untrusted input reaches the command.",
                 "Use an argument list with shell=False and validate allowed commands/arguments.",
             )
-        elif name in ("pickle.load", "pickle.loads", "_pickle.load", "_pickle.loads"):
+        elif name in _PICKLE_CALLS:
             rule = (
                 "PY003",
                 "High",
@@ -153,10 +174,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 "Loading a pickle from an untrusted source can execute code.",
                 "Use a data-only format such as JSON for untrusted input; confirm provenance.",
             )
-        elif name in {
-            f"requests.{method}"
-            for method in ("get", "post", "put", "patch", "delete", "head", "options", "request")
-        } and any(
+        elif name in _REQUESTS_CALLS and any(
             keyword.arg == "verify"
             and isinstance(keyword.value, ast.Constant)
             and keyword.value.value is False
@@ -169,7 +187,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
                 "verify=False prevents normal server-certificate verification.",
                 "Enable certificate verification and configure a trusted CA bundle when necessary.",
             )
-        elif name in ("os.system", "os.popen"):
+        elif name in _OS_SHELL_CALLS:
             rule = (
                 "PY005",
                 "High",
@@ -268,7 +286,7 @@ def review_source(source: str, filename: str = "<snippet>") -> CodeReviewResult:
     )
 
 
-def read_python_source(path: Path) -> str:
+def read_python_source(path: Path, *, _raw_cache: dict[Path, bytes] | None = None) -> str:
     path = Path(path)
     if path.suffix.lower() != ".py":
         raise ValidationError("Code review currently accepts a single .py file")
@@ -278,6 +296,8 @@ def read_python_source(path: Path) -> str:
         raw = source_file.read(MAX_SOURCE_BYTES + 1)
     if len(raw) > MAX_SOURCE_BYTES:
         raise ValidationError(f"Python file exceeds the {MAX_SOURCE_BYTES}-byte limit")
+    if _raw_cache is not None:
+        _raw_cache[path] = raw
     try:
         encoding, _ = tokenize.detect_encoding(io.BytesIO(raw).readline)
         source = raw.decode(encoding)

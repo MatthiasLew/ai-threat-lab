@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.40.0 — Real-project validation, AST performance optimizations, and Google Gemini adapter
+
+- Added real-world project validation across 8 diverse Python repositories (psf/requests, pallets/click, bottlepy/bottle, pypa/packaging, MatthiasLew/ai-dev-cli-tools, MatthiasLew/freelance-dev-suite, MatthiasLew/hol-guard, MatthiasLew/github-org-sync) and synthetic scale targets (docs/REAL_PROJECT_VALIDATION.md).
+- Optimized static code scanning performance: implemented single-pass AST sharing between syntax and project flow analysis, precompiled regex rules across config and finding formatters, combined credential heuristics, and added automated virtual environment filtering (.venv*, *-venv, pyvenv.cfg) with benchmark documentation (docs/PERFORMANCE_REPORT.md).
+- Solved AI packet token bloat: deduplicated repeated per-file limitations in interpretation evidence, grouped recurring rule context, stripped private local path prefixes, and redacted high-entropy secrets while keeping technical reports intact.
+- Enforced cryptographic cache key isolation across providers (OpenAI, Gemini), models, languages (pl, en), schemas, and parameters with backward compatibility for legacy OpenAI entries.
+- Added offline Google Gemini REST adapter (src/ai_threat_lab/gemini_adapter.py) targeting v1beta/models/{model}:generateContent with strict JSON schema enforcement, tools/function-calling disabled, API key redaction in all failure modes, 20 offline test scenarios, and reference responses in PL/EN (docs/GEMINI_API_ADAPTER.md).
+- Added Gemini integration to Workbench and Integration CLIs (--provider gemini) and exposed get_audit_limitations and Gemini review functions in gui_api.
+
 ## 0.39.1 — Offline CLI finalization, developer audit reports, and GUI API readiness
 
 - Add structured `DetailedFinding` descriptions (`ai_threat_lab.finding_details`) answering all six developer remediation questions (*Co wykryto?*, *Dlaczego jest to potencjalnie niebezpieczne?*, *Do czego może doprowadzić?*, *Jak to naprawić?*, *Jak sprawdzić poprawkę?*, *Czego analizator nie ustalił?*) in English (`en`) and Polish (`pl`) without inventing line numbers or elevating heuristic observations to confirmed status.

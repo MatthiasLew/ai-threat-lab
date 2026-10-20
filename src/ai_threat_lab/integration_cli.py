@@ -6,14 +6,16 @@ from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses, compact_evidence
-from .ai_review import review_result
+from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses, compact_evidence, integer
+from .ai_review import review_result, validate_ai_provider
 from .assessment import identify_target
 from .audit_report import merge_reports, render_html
 from .auth_log_review import AuthPolicy, review_auth_log_file
 from .contracts import read_document, write_document
 from .dependencies import AdvisoryCache, OSVAudit, inventory
 from .evidence import load_evidence
+from .finding_details import validate_report_language
+from .gemini_adapter import GEMINI_HOST, gemini_explain_result, validate_gemini_model
 from .header_review import audit_header_capture
 from .html_review import review_html_file
 from .http_client import PublicHTTPS
@@ -89,8 +91,11 @@ def add_commands(commands):
         "--dry-run", action="store_true", help="Estimate only; no credential or network needed"
     )
     explain.add_argument(
-        "--send-evidence", action="store_true", help="Permit sending reviewed evidence to OpenAI"
+        "--send-evidence", action="store_true", help="Permit sending reviewed evidence to AI API"
     )
+    explain.add_argument("--provider", choices=("openai", "gemini"), default="openai")
+    explain.add_argument("--language", choices=("en", "pl"), default="en")
+    explain.add_argument("--timeout", type=int, default=30)
     review = commands.add_parser(
         "ai-review", help="Interpret saved evidence with validated observation references"
     )
@@ -103,6 +108,9 @@ def add_commands(commands):
     review.add_argument("--send-evidence", action="store_true")
     review.add_argument("--packet-index", type=int, help="1-based packet from the prepared preview")
     review.add_argument("--group-size", type=int, default=3, help="1..20 observations per packet")
+    review.add_argument("--provider", choices=("openai", "gemini"), default="openai")
+    review.add_argument("--language", choices=("en", "pl"), default="en")
+    review.add_argument("--timeout", type=int, default=30)
     costs = commands.add_parser(
         "api-costs", help="Show local estimated charges and unresolved reservations"
     )
@@ -185,9 +193,14 @@ def audit_target(args):
     if expected not in [h.lower() for h in args.allow_host]:
         raise ValidationError("Target is not in --allow-host scope")
     if kind == "website":
-        adapter = WebsiteAudit(PublicHTTPS(
-            [expected], max_requests=1, max_bytes=256 * 1024, allow_partial_body=True,
-        ))
+        adapter = WebsiteAudit(
+            PublicHTTPS(
+                [expected],
+                max_requests=1,
+                max_bytes=256 * 1024,
+                allow_partial_body=True,
+            )
+        )
     elif kind == "github_repository":
         adapter = GithubAudit(
             PublicHTTPS(["api.github.com"], max_bytes=8 * 1024 * 1024), max_files=args.max_files
@@ -328,7 +341,12 @@ def explain_payload(args):
         raise ValidationError("Choose either --dry-run or --send-evidence, not both")
     if not args.dry_run and not args.send_evidence:
         raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")
+    provider = validate_ai_provider(getattr(args, "provider", "openai"))
+    language = validate_report_language(getattr(args, "language", "en"))
+    timeout = integer(getattr(args, "timeout", 30), 1, 120, "AI request timeout")
     config = AIConfig.from_document(read_document(args.ai_config))
+    if provider == "gemini":
+        validate_gemini_model(config.model)
     document = load_evidence(args.assessment)["ai_document"]
     if not isinstance(document.get("findings"), list):
         raise ValidationError("Assessment document must contain a findings array")
@@ -340,12 +358,30 @@ def explain_payload(args):
             "not_checked": document.get("not_checked", []),
             "notice": "No AI call is needed; the audit limitations still apply.",
         }
+    if provider == "gemini":
+        if args.dry_run:
+            return gemini_explain_result(
+                config, None, None, document, dry_run=True, language=language, timeout=timeout
+            )
+        if not os.environ.get("GEMINI_API_KEY"):
+            raise ProviderError("GEMINI_API_KEY is missing; no request was reserved or sent")
+        return gemini_explain_result(
+            config,
+            CostLedger(args.ledger),
+            PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1),
+            document,
+            dry_run=False,
+            language=language,
+            timeout=timeout,
+        )
     if not args.dry_run and not os.environ.get("OPENAI_API_KEY"):
         raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
     ai = BudgetedAI(
         config,
         CostLedger(args.ledger),
-        OpenAIResponses(PublicHTTPS(["api.openai.com"], max_requests=1)),
+        OpenAIResponses(PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1)),
+        provider_id="openai",
+        language=language,
     )
     return ai.explain(document, dry_run=args.dry_run)
 
@@ -355,16 +391,38 @@ def review_payload(args):
         raise ValidationError("Choose either --dry-run or --send-evidence, not both")
     if not args.dry_run and not args.send_evidence:
         raise ValidationError("Review the evidence and use --send-evidence, or choose --dry-run")
+    provider = validate_ai_provider(getattr(args, "provider", "openai"))
+    language = validate_report_language(getattr(args, "language", "en"))
+    timeout = integer(getattr(args, "timeout", 30), 1, 120, "AI request timeout")
     config = AIConfig.from_document(read_document(args.ai_config))
     saved = load_evidence(args.assessment)
     # Complete offline preflight before credential inspection or ledger creation.
-    packet_options = {"packet_index": args.packet_index, "group_size": args.group_size}
+    packet_options = {
+        "packet_index": args.packet_index,
+        "group_size": args.group_size,
+        "language": language,
+        "provider": provider,
+        "timeout": timeout,
+    }
     estimate = review_result(config, None, None, saved["report"], dry_run=True, **packet_options)
     if args.dry_run or estimate["status"] == "skipped_no_findings":
         return estimate
+    if provider == "gemini":
+        if not os.environ.get("GEMINI_API_KEY"):
+            raise ProviderError("GEMINI_API_KEY is missing; no request was reserved or sent")
+        return review_result(
+            config,
+            CostLedger(args.ledger),
+            PublicHTTPS([GEMINI_HOST], timeout=timeout, max_requests=1),
+            saved["report"],
+            **packet_options,
+        )
     if not os.environ.get("OPENAI_API_KEY"):
         raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
     return review_result(
-        config, CostLedger(args.ledger), PublicHTTPS(["api.openai.com"], max_requests=1),
-        saved["report"], **packet_options,
+        config,
+        CostLedger(args.ledger),
+        PublicHTTPS(["api.openai.com"], timeout=timeout, max_requests=1),
+        saved["report"],
+        **packet_options,
     )

@@ -6,6 +6,7 @@ claim; a bundle additionally provides consistency checks, never authenticity.
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from .audit_report import merge_reports
@@ -17,6 +18,35 @@ from .scan_bundle import document
 
 MAX_EVIDENCE_BYTES = 8 * 1024 * 1024
 CORE_FINDING = {"check", "status", "evidence", "recommendation"}
+_FLOW_COVERAGE_NOTICE_RE = re.compile(r"^.+?:\s*(Flow coverage:\s*.+)$")
+
+
+def _strip_target_prefix(text: str, target: str) -> str:
+    """Remove private local target directory prefixes while keeping relative file locations."""
+    if not target or "://" in target or target.startswith(("mailbox:", "mail-domain:", "(")):
+        return text
+    for candidate in (target, target.replace("\\", "/")):
+        trimmed = candidate.rstrip("/\\")
+        if not trimmed:
+            continue
+        for sep in ("/", "\\"):
+            prefix = trimmed + sep
+            if text.startswith(prefix):
+                return text[len(prefix) :]
+            skipped_prefix = "Skipped " + prefix
+            if text.startswith(skipped_prefix):
+                return "Skipped " + text[len(skipped_prefix) :]
+        if text.startswith(trimmed + ":"):
+            leaf = Path(trimmed.replace("\\", "/")).name
+            if ("/" in trimmed or "\\" in trimmed) and leaf and leaf != trimmed:
+                return leaf + text[len(trimmed) :]
+            return text[len(trimmed) + 1 :].lstrip()
+        if text.startswith("Skipped " + trimmed + ":"):
+            leaf = Path(trimmed.replace("\\", "/")).name
+            if ("/" in trimmed or "\\" in trimmed) and leaf and leaf != trimmed:
+                return "Skipped " + leaf + text[len("Skipped " + trimmed) :]
+            return "Skipped target" + text[len("Skipped " + trimmed) :]
+    return text
 
 
 def validate_combined(value):
@@ -115,13 +145,19 @@ not an anonymizer; the user must review the exact outgoing preview.
     aliases = {target: f"T{index:03d}" for index, target in enumerate(targets, 1)}
     findings = []
     for row in report["findings"]:
+        cleaned_evidence = _strip_target_prefix(row["evidence"], row["target"])
         findings.append({k: row[k] for k in CORE_FINDING} | {
             "evidence_id": row["id"],
-            "evidence": f'[{aliases[row["target"]]}] {row["evidence"]}',
+            "evidence": f'[{aliases[row["target"]]}] {cleaned_evidence}',
         })
-    limitations = list(dict.fromkeys(
-        f'[{aliases[row["target"]]}] {row["notice"]}' for row in report["not_checked"]
-    ))
+    normalized_notices = []
+    for row in report["not_checked"]:
+        cleaned_notice = _strip_target_prefix(row["notice"], row["target"])
+        flow_match = _FLOW_COVERAGE_NOTICE_RE.match(cleaned_notice)
+        if flow_match:
+            cleaned_notice = flow_match.group(1)
+        normalized_notices.append(f'[{aliases[row["target"]]}] {cleaned_notice}')
+    limitations = list(dict.fromkeys(normalized_notices))
     return {"target_kind": "saved_assessment_evidence", "status": "partial",
             "findings": findings, "not_checked": limitations}
 

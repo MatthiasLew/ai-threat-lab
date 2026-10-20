@@ -7,7 +7,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .ai_costs import INSTRUCTIONS, AIConfig, compact_evidence, usd
-from .ai_review import TEXT_FORMAT, review_instructions
+from .ai_review import TEXT_FORMAT, review_instructions, validate_ai_provider
 from .attachment_review import review_attachments
 from .contracts import read_document, write_document
 from .evidence import brief, evidence_digest, load_evidence
@@ -24,25 +24,38 @@ from .setup_check import setup_check
 from .site_review import SiteReview, canonical_url
 from .tool_plan import plan_target
 
-COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site", "review-har",
-            "review-attachments", "review-sarif", "review-office"}
+COMMANDS = {
+    "brief",
+    "ai-prepare",
+    "plan",
+    "inspect",
+    "setup-check",
+    "review-site",
+    "review-har",
+    "review-attachments",
+    "review-sarif",
+    "review-office",
+}
 
 
 def add_commands(commands):
     office = commands.add_parser(
-        "review-office", help="Inspect saved Office package declarations without opening content")
+        "review-office", help="Inspect saved Office package declarations without opening content"
+    )
     office.add_argument("path", type=Path)
     office.add_argument("--output", type=Path)
     office.add_argument("--fail-on-findings", action="store_true")
     sarif = commands.add_parser(
-        "review-sarif", help="Import saved external static-analysis claims without executing tools")
+        "review-sarif", help="Import saved external static-analysis claims without executing tools"
+    )
     sarif.add_argument("path", type=Path)
     sarif.add_argument("--start", type=int, default=1)
     sarif.add_argument("--max-entries", type=int, default=200)
     sarif.add_argument("--output", type=Path)
     sarif.add_argument("--fail-on-findings", action="store_true")
     attachments = commands.add_parser(
-        "review-attachments", help="Review decoded saved-email attachment structures in memory")
+        "review-attachments", help="Review decoded saved-email attachment structures in memory"
+    )
     attachments.add_argument("path", type=Path)
     attachments.add_argument("--start", type=int, default=1)
     attachments.add_argument("--max-entries", type=int, default=20)
@@ -59,10 +72,16 @@ def add_commands(commands):
     site.add_argument("--network", action="store_true")
     site.add_argument("--allow-host", action="append", default=[])
     site.add_argument("--path-prefix", default="/")
-    site.add_argument("--session-file", type=Path,
-                      help="Explicit host/path/expiry-bound Authorization/Cookie JSON")
-    site.add_argument("--private-path-map", type=Path,
-                      help="Separate private session-page URL index; never sent as AI evidence")
+    site.add_argument(
+        "--session-file",
+        type=Path,
+        help="Explicit host/path/expiry-bound Authorization/Cookie JSON",
+    )
+    site.add_argument(
+        "--private-path-map",
+        type=Path,
+        help="Separate private session-page URL index; never sent as AI evidence",
+    )
     site.add_argument("--max-pages", type=int, default=10)
     site.add_argument("--max-depth", type=int, default=2)
     site.add_argument("--output", type=Path)
@@ -111,12 +130,23 @@ def add_commands(commands):
     prepare.add_argument("--packet-index", type=int)
     prepare.add_argument("--group-size", type=int, default=3)
     prepare.add_argument("--language", choices=("en", "pl"), default="en")
+    prepare.add_argument("--provider", choices=("openai", "gemini"), default="openai")
     prepare.add_argument("--output", type=Path)
 
 
-def prepare_evidence(path, config, *, structured=False, split=False,
-                     packet_index=None, group_size=3, language: str = "en"):
+def prepare_evidence(
+    path,
+    config,
+    *,
+    structured=False,
+    split=False,
+    packet_index=None,
+    group_size=3,
+    language: str = "en",
+    provider: str = "openai",
+):
     validate_report_language(language)
+    validate_ai_provider(provider)
     value = load_evidence(path)
     if (split or packet_index is not None or group_size != 3) and not structured:
         raise ValidationError("Packet options require --structured")
@@ -125,64 +155,126 @@ def prepare_evidence(path, config, *, structured=False, split=False,
     if structured and split:
         groups = review_packets(value["report"], config.max_input_bytes, group_size=group_size)
         previews = [
-            _preview(value, config, evidence, structured=True, language=language)
+            _preview(value, config, evidence, structured=True, language=language, provider=provider)
             for evidence in groups
         ]
         for index, item in enumerate(previews, 1):
             item.update(packet_index=index, packet_count=len(previews))
         reserved = sum(int(item["reserved_usd"].replace(".", "")) for item in previews)
         payload = {
-            "schema_version": 1, "mode": "structured_review_packets", "network_called": False,
-            "packet_count": len(previews), "total_finding_count": len(value["report"]["findings"]),
-            "maximum_reserved_usd": usd(reserved), "packets": previews,
+            "schema_version": 1,
+            "mode": "structured_review_packets",
+            "network_called": False,
+            "packet_count": len(previews),
+            "total_finding_count": len(value["report"]["findings"]),
+            "maximum_reserved_usd": usd(reserved),
+            "packets": previews,
             "notice": "No requests were sent. Each packet preserves all limitations. "
-                      "Review packets and request one explicitly with ai-review --packet-index. "
-                      "Daily budget/request limits and current ledger state apply to each call.",
+            "Review packets and request one explicitly with ai-review --packet-index. "
+            "Daily budget/request limits and current ledger state apply to each call.",
         }
         if language != "en":
             payload["report_language"] = language
+        if provider != "openai":
+            payload["provider"] = provider
         return payload
     if structured:
-        evidence, index, count = select_packet(value["report"], config.max_input_bytes,
-                                              packet_index=packet_index, group_size=group_size)
-        return {**_preview(value, config, evidence, structured=True, language=language),
-                "packet_index": index, "packet_count": count}
-    return _preview(value, config, value["ai_document"], structured=False, language=language)
+        evidence, index, count = select_packet(
+            value["report"],
+            config.max_input_bytes,
+            packet_index=packet_index,
+            group_size=group_size,
+        )
+        return {
+            **_preview(
+                value, config, evidence, structured=True, language=language, provider=provider
+            ),
+            "packet_index": index,
+            "packet_count": count,
+        }
+    return _preview(
+        value,
+        config,
+        value["ai_document"],
+        structured=False,
+        language=language,
+        provider=provider,
+    )
 
 
-def _preview(value, config, evidence, *, structured, language: str = "en"):
+def _preview(
+    value,
+    config,
+    evidence,
+    *,
+    structured,
+    language: str = "en",
+    provider: str = "openai",
+):
     instructions = review_instructions(language) if structured else INSTRUCTIONS
-    overhead = len(json.dumps({"text": {"format": TEXT_FORMAT}}).encode()) if structured else 0
+    if structured and provider == "gemini":
+        from .gemini_adapter import GEMINI_RESPONSE_SCHEMA, validate_gemini_model
+
+        validate_gemini_model(config.model)
+        contract_format = {
+            "responseMimeType": "application/json",
+            "responseSchema": GEMINI_RESPONSE_SCHEMA,
+        }
+        overhead = len(json.dumps(contract_format).encode("utf-8"))
+    elif structured:
+        contract_format = TEXT_FORMAT
+        overhead = len(json.dumps({"text": {"format": TEXT_FORMAT}}).encode("utf-8"))
+    else:
+        contract_format = None
+        overhead = 0
     prompt = compact_evidence(evidence, config.max_input_bytes)
+    parsed_prompt = json.loads(prompt)
     bound = len((instructions + prompt).encode("utf-8")) + overhead + 1024
-    count = len(json.loads(prompt)["findings"])
+    count = len(parsed_prompt["findings"])
     payload = {
-        "schema_version": 1, "status": "prepared" if count else "skipped_no_findings",
-        "origin": value["origin"], "failed_components": value["failed_components"],
-        "network_called": False, "credentials_inspected": False, "ledger_written": False,
-        "model": config.model, "evidence_sha256": evidence_digest(json.loads(prompt)),
-        "finding_count": count, "input_bytes": len(prompt.encode("utf-8")),
+        "schema_version": 1,
+        "status": "prepared" if count else "skipped_no_findings",
+        "origin": value["origin"],
+        "failed_components": value["failed_components"],
+        "network_called": False,
+        "credentials_inspected": False,
+        "ledger_written": False,
+        "model": config.model,
+        "evidence_sha256": evidence_digest(parsed_prompt),
+        "finding_count": count,
+        "input_bytes": len(prompt.encode("utf-8")),
         "input_token_planning_bound": bound if count else 0,
         "max_output_tokens": config.max_output_tokens if count else 0,
         "reserved_usd": usd(config.charge(bound, config.max_output_tokens)) if count else usd(0),
-        "instructions": instructions, "input": json.loads(prompt), "input_text": prompt,
-        "text_format": TEXT_FORMAT if structured else None,
+        "instructions": instructions,
+        "input": parsed_prompt,
+        "input_text": prompt,
+        "text_format": contract_format,
         "notice": "Preview only. Review every evidence string before sharing. Target fields are "
-                  "omitted, but evidence may contain sensitive data. Prices are configured claims; "
-                  "the estimate is not provider billing. "
-                  "AI cannot execute tools or change evidence.",
+        "omitted, but evidence may contain sensitive data. Prices are configured claims; "
+        "the estimate is not provider billing. "
+        "AI cannot execute tools or change evidence.",
     }
     if language != "en":
         payload["report_language"] = language
+    if provider != "openai":
+        payload["provider"] = provider
     return payload
 
 
-def render_inspection_summary(plan: dict, result: dict, evidence: dict, output_dir: Path, *,
-                              language: str = "en") -> str:
+def render_inspection_summary(
+    plan: dict,
+    result: dict,
+    evidence: dict,
+    output_dir: Path,
+    *,
+    language: str = "en",
+) -> str:
     validate_report_language(language)
     pl = language == "pl"
     lines = [
-        "AI Threat Lab — kompletny audyt celu (offline)" if pl
+        "AI Threat Lab — kompletny audyt celu (offline)"
+        if pl
         else "AI Threat Lab — target inspection overview",
         f'Target: {plan["target"]}',
         f'Recognized target kind: {plan["target_kind"]}',
@@ -194,14 +286,16 @@ def render_inspection_summary(plan: dict, result: dict, evidence: dict, output_d
     lines.extend(["", "Executed and skipped checks:"])
     for module_id, info in result["modules"].items():
         lines.append(f'- {module_id}: {info["status"]} — {info["notice"]}')
-    lines.extend([
-        "",
-        brief(evidence, language=language).rstrip("\n"),
-        "",
-        f"Saved run: {output_dir}",
-        f'Final JSON report: {Path(output_dir) / "report.json"}',
-        f'Final HTML report: {Path(output_dir) / "report.html"}',
-    ])
+    lines.extend(
+        [
+            "",
+            brief(evidence, language=language).rstrip("\n"),
+            "",
+            f"Saved run: {output_dir}",
+            f'Final JSON report: {Path(output_dir) / "report.json"}',
+            f'Final HTML report: {Path(output_dir) / "report.html"}',
+        ]
+    )
     text = "\n".join(lines) + "\n"
     return "".join(
         c if c in "\n\t" or (ord(c) >= 32 and not 127 <= ord(c) <= 159) else f"\\u{ord(c):04x}"
@@ -221,8 +315,11 @@ def run_command(args):
         candidates = any(item.status == "candidate" for item in result.findings)
         return 2 if failures else 1 if args.fail_on_findings and candidates else 0
     if args.command in ("review-har", "review-attachments", "review-sarif"):
-        review = {"review-har": review_har, "review-attachments": review_attachments,
-                  "review-sarif": review_sarif}[args.command]
+        review = {
+            "review-har": review_har,
+            "review-attachments": review_attachments,
+            "review-sarif": review_sarif,
+        }[args.command]
         report, failures = review(args.path, start=args.start, max_entries=args.max_entries)
         text = write_document(report)
         if args.output:
@@ -242,8 +339,9 @@ def run_command(args):
             raise ValidationError("Site navigation requires --network and exact --allow-host")
         if args.output and (args.output.exists() or args.output.is_symlink()):
             raise ValidationError("Output already exists")
-        client = PublicHTTPS([host], max_bytes=256 * 1024, max_requests=20,
-                             allow_partial_body=True)
+        client = PublicHTTPS(
+            [host], max_bytes=256 * 1024, max_requests=20, allow_partial_body=True
+        )
         session_file = getattr(args, "session_file", None)
         private_map = getattr(args, "private_path_map", None)
         if private_map is not None and (
@@ -253,11 +351,14 @@ def run_command(args):
         if session_file is not None:
             from .session_http import ScopedSession
 
-            client = ScopedSession.from_file(session_file, client, target=target,
-                                             path_prefix=args.path_prefix)
+            client = ScopedSession.from_file(
+                session_file, client, target=target, path_prefix=args.path_prefix
+            )
         review = SiteReview(
-            client, session_supplied=session_file is not None,
-            max_pages=args.max_pages, max_depth=args.max_depth,
+            client,
+            session_supplied=session_file is not None,
+            max_pages=args.max_pages,
+            max_depth=args.max_depth,
         )
         with ExitStack() as stack:
             mapping = None
@@ -266,12 +367,17 @@ def run_command(args):
                 mapping = stack.enter_context(os.fdopen(descriptor, "w", encoding="utf-8"))
             report, failures = review.run(target, path_prefix=args.path_prefix)
             if mapping is not None:
-                mapping.write(write_document({
-                    "schema_version": 1, "mode": "private_session_path_map",
-                    "paths": review.private_paths,
-                    "notice": "Private local URL index; paths can contain sensitive data. "
-                              "Not an assessment and not accepted as AI evidence.",
-                }))
+                mapping.write(
+                    write_document(
+                        {
+                            "schema_version": 1,
+                            "mode": "private_session_path_map",
+                            "paths": review.private_paths,
+                            "notice": "Private local URL index; paths can contain sensitive data. "
+                            "Not an assessment and not accepted as AI evidence.",
+                        }
+                    )
+                )
         text = write_document(report)
         if args.output:
             write_new_report(args.output, text.encode("utf-8"))
@@ -282,14 +388,24 @@ def run_command(args):
             print(f"Private page map saved separately: {private_map}")
         return 2 if failures else 1 if args.fail_on_findings and report["findings"] else 0
     if args.command == "setup-check":
-        text = write_document(setup_check(
-            args.ai_config, smtp_path=args.smtp_config, speech_path=args.speech_config,
-            avatar_path=args.avatar_config, call_path=args.call_config))
+        text = write_document(
+            setup_check(
+                args.ai_config,
+                smtp_path=args.smtp_config,
+                speech_path=args.speech_config,
+                avatar_path=args.avatar_config,
+                call_path=args.call_config,
+            )
+        )
     elif args.command in ("plan", "inspect"):
         options = dict(
-            network=args.network, allowed_hosts=args.allow_host, max_files=args.max_files,
-            recursive_dependencies=args.recursive_dependencies, share_packages=args.share_packages,
-            dkim_selector=args.dkim_selector, max_pages=args.max_pages,
+            network=args.network,
+            allowed_hosts=args.allow_host,
+            max_files=args.max_files,
+            recursive_dependencies=args.recursive_dependencies,
+            share_packages=args.share_packages,
+            dkim_selector=args.dkim_selector,
+            max_pages=args.max_pages,
         )
         if args.command == "plan":
             text = write_document(plan_target(args.target, **options))
@@ -297,7 +413,8 @@ def run_command(args):
             plan = plan_target(args.target, **options)
             result = ScanService(assessor, advisory_lookup=advisory_lookup).run(
                 ScanOptions(args.target, **options, advisory_cache=args.advisory_cache),
-                args.output_dir, baseline=args.baseline,
+                args.output_dir,
+                baseline=args.baseline,
             )
             language = getattr(args, "language", "en")
             text = (
@@ -308,8 +425,13 @@ def run_command(args):
                 )
             )
             print(text, end="")
-            return (2 if result["failed_modules"] else
-                    1 if args.fail_on_findings and result["unique_findings"] else 0)
+            return (
+                2
+                if result["failed_modules"]
+                else 1
+                if args.fail_on_findings and result["unique_findings"]
+                else 0
+            )
     elif args.command == "brief":
         value = load_evidence(args.evidence)
         # ai_document is an internal projection, not another user-visible source of truth.
@@ -319,10 +441,19 @@ def run_command(args):
     else:
         config = AIConfig.from_document(read_document(args.ai_config))
         language = getattr(args, "language", "en")
-        text = write_document(prepare_evidence(
-            args.evidence, config, structured=args.structured, split=args.split,
-            packet_index=args.packet_index, group_size=args.group_size, language=language,
-        ))
+        provider = getattr(args, "provider", "openai")
+        text = write_document(
+            prepare_evidence(
+                args.evidence,
+                config,
+                structured=args.structured,
+                split=args.split,
+                packet_index=args.packet_index,
+                group_size=args.group_size,
+                language=language,
+                provider=provider,
+            )
+        )
         if len(text.encode("utf-8")) > 32 * 1024 * 1024:
             raise ValidationError("Preview exceeds 32 MiB; narrow the assessment scope")
     if args.output:

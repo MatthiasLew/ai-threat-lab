@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import sqlite3
 import time
 import uuid
@@ -30,6 +31,14 @@ INSTRUCTIONS = (
     " Do not write attack code or claim to have performed additional tests."
     " When evidence_id is supplied, cite that exact reference for each observation."
     " Explain where to look, what might be wrong and how to review a safe remediation."
+)
+
+_AI_SECRET_REDACT_RE = re.compile(
+    r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
+    r"|(?:\bAKIA[0-9A-Z]{16}\b)"
+    r"|(?:\bgh[pousr]_[A-Za-z0-9]{30,}\b)"
+    r"|(?:\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}\b)"
+    r"|(?:\bAIza[0-9A-Za-z_-]{35}\b)"
 )
 
 
@@ -400,10 +409,17 @@ def compact_evidence(document: dict, maximum: int) -> str:
             raise ValidationError("Assessment findings need check/status/evidence/recommendation")
         for key, value in filtered.items():
             require_text(value, "assessment finding " + key)
+        if _AI_SECRET_REDACT_RE.search(filtered["evidence"]):
+            filtered["evidence"] = _AI_SECRET_REDACT_RE.sub(
+                "[REDACTED_SECRET]", filtered["evidence"]
+            )
         if "evidence_id" in item:
             identifier = item["evidence_id"]
-            if (not isinstance(identifier, str) or len(identifier) != 64
-                    or any(c not in "0123456789abcdef" for c in identifier)):
+            if (
+                not isinstance(identifier, str)
+                or len(identifier) != 64
+                or any(c not in "0123456789abcdef" for c in identifier)
+            ):
                 raise ValidationError("Evidence reference must be a SHA-256 identifier")
             filtered["evidence_id"] = identifier
         encoded = json.dumps(filtered, sort_keys=True, ensure_ascii=False, allow_nan=False)
@@ -424,44 +440,80 @@ def compact_evidence(document: dict, maximum: int) -> str:
 
 
 class BudgetedAI:
-    def __init__(self, config: AIConfig, ledger: CostLedger, provider, *, clock=time.time,
-                 instructions=INSTRUCTIONS, response_validator=None, extra_input_bytes=0,
-                 response_contract=""):
+    def __init__(
+        self,
+        config: AIConfig,
+        ledger: CostLedger,
+        provider,
+        *,
+        clock=time.time,
+        instructions=INSTRUCTIONS,
+        response_validator=None,
+        extra_input_bytes=0,
+        response_contract="",
+        provider_id: str | None = None,
+        language: str = "en",
+        schema_version: int = 1,
+    ):
         self.config, self.ledger, self.provider, self.clock = config, ledger, provider, clock
         require_text(instructions, "AI instructions")
+        require_text(language, "AI report language")
+        integer(schema_version, 1, 100, "AI cache schema version")
         integer(extra_input_bytes, 0, 100000, "extra input bytes")
         if not isinstance(response_contract, str) or len(response_contract.encode()) > 100000:
             raise ValidationError("Response contract must be bounded text")
+        resolved_provider = provider_id or getattr(provider, "PROVIDER_ID", "openai")
+        require_text(resolved_provider, "AI provider identifier")
         self.instructions = instructions
         self.response_validator = response_validator
         self.extra_input_bytes = extra_input_bytes
         self.response_contract = response_contract
+        self.provider_id = resolved_provider
+        self.language = language
+        self.schema_version = schema_version
+
+    def compute_cache_key(self, prompt: str) -> str:
+        """Compute a deterministic cache key binding evidence, schema, provider, model, and lang."""
+        require_text(prompt, "compacted AI prompt")
+        if self.provider_id == "openai" and self.language == "en" and self.schema_version == 1:
+            # Legacy key layout: existing OpenAI/English cache entries remain valid.
+            legacy = {
+                "version": 1,
+                "config": asdict(self.config),
+                "instructions": self.instructions,
+                "extra_input_bytes": self.extra_input_bytes,
+                "response_contract": self.response_contract,
+                "prompt": prompt,
+            }
+            return hashlib.sha256(json.dumps(legacy, sort_keys=True).encode()).hexdigest()
+        payload = {
+            "version": self.schema_version,
+            "schema_version": self.schema_version,
+            "provider": self.provider_id,
+            "language": self.language,
+            "config": asdict(self.config),
+            "instructions": self.instructions,
+            "extra_input_bytes": self.extra_input_bytes,
+            "response_contract": self.response_contract,
+            "evidence_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            "prompt": prompt,
+        }
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
     def explain(self, document, *, dry_run=False):
         prompt = compact_evidence(document, self.config.max_input_bytes)
-        if not json.loads(prompt)["findings"]:
+        parsed_prompt = json.loads(prompt)
+        if not parsed_prompt["findings"]:
             return {
                 "status": "skipped_no_findings",
                 "network_called": False,
-                "not_checked": json.loads(prompt).get("not_checked", []),
+                "not_checked": parsed_prompt.get("not_checked", []),
                 "notice": "No AI call is needed; the audit limitations still apply.",
             }
         # Byte length plus framing allowance is a conservative planning bound, not a tokenizer.
         bound = len((self.instructions + prompt).encode()) + self.extra_input_bytes + 1024
         reserve = self.config.charge(bound, self.config.max_output_tokens)
-        cache_key = hashlib.sha256(
-            json.dumps(
-                {
-                    "version": 1,
-                    "config": asdict(self.config),
-                    "instructions": self.instructions,
-                    "extra_input_bytes": self.extra_input_bytes,
-                    "response_contract": self.response_contract,
-                    "prompt": prompt,
-                },
-                sort_keys=True,
-            ).encode()
-        ).hexdigest()
+        cache_key = self.compute_cache_key(prompt)
         if dry_run:
             return {
                 "status": "estimate_only",
@@ -479,8 +531,10 @@ class BudgetedAI:
                 try:
                     self.response_validator(cached)
                 except Exception:
-                    raise ProviderError("Cached AI interpretation failed evidence validation; "
-                                        "no automatic retry.") from None
+                    raise ProviderError(
+                        "Cached AI interpretation failed evidence validation; "
+                        "no automatic retry."
+                    ) from None
             return {"status": "cached", "request_id": identifier, "text": cached}
         try:
             result = self.provider.respond(
@@ -541,6 +595,8 @@ class BudgetedAI:
 class OpenAIResponses:
     """Fixed-endpoint Responses API with no tools, history, storage or automatic retries."""
 
+    PROVIDER_ID = "openai"
+
     def __init__(self, client, *, text_format=None):
         self.client = client
         self.text_format = text_format
@@ -550,14 +606,14 @@ class OpenAIResponses:
         if not token:
             raise ProviderError("OPENAI_API_KEY is missing")
         payload = {
-                "model": model,
-                "instructions": instructions,
-                "input": prompt,
-                "max_output_tokens": max_output_tokens,
-                "store": False,
-                "tools": [],
-                "truncation": "disabled",
-            }
+            "model": model,
+            "instructions": instructions,
+            "input": prompt,
+            "max_output_tokens": max_output_tokens,
+            "store": False,
+            "tools": [],
+            "truncation": "disabled",
+        }
         if self.text_format is not None:
             payload["text"] = {"format": self.text_format}
         body = json.dumps(payload).encode()

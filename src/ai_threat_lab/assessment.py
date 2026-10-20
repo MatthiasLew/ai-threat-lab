@@ -1,5 +1,6 @@
 """Target routing and honest capability results for local/optional remote adapters."""
 
+import ast
 import re
 from dataclasses import dataclass
 from email import policy
@@ -200,6 +201,7 @@ def audit_message(path: Path) -> AssessmentResult:
 class AssessmentService:
     def __init__(self, adapters: dict[str, TargetAdapter] | None = None) -> None:
         self.adapters = dict(adapters or {})
+        self._raw_cache: dict[Path, bytes] | None = None
 
     def assess(self, target: str) -> AssessmentResult:
         kind = identify_target(target)
@@ -235,12 +237,17 @@ class AssessmentService:
                 # Walk deterministically, do not follow directory symlinks or dependency folders.
                 import os
 
+                from .local_inventory import is_excluded_dirname
+
                 paths = []
-                excluded = {".git", ".venv", "venv", "node_modules", "__pycache__", "dist", "build"}
+                target_path = Path(target)
                 visited = examined = 0
                 for directory, dirs, filenames in os.walk(
                     target, followlinks=False, onerror=walk_errors.append
                 ):
+                    if "pyvenv.cfg" in filenames and Path(directory) != target_path:
+                        dirs[:] = []
+                        continue
                     visited += 1
                     if visited > 1000:
                         traversal_limited = True
@@ -248,7 +255,7 @@ class AssessmentService:
                     dirs[:] = sorted(
                         d
                         for d in dirs
-                        if d not in excluded and not (Path(directory) / d).is_symlink()
+                        if not is_excluded_dirname(d) and not (Path(directory) / d).is_symlink()
                     )
                     for filename in sorted(filenames):
                         examined += 1
@@ -271,6 +278,7 @@ class AssessmentService:
                 "Only selected Python AST patterns were checked; no execution or full audit.",
             ]
             project_sources, unavailable_sources = [], []
+            parsed_trees: dict[str, ast.AST] = {}
             for path in paths:
                 decoded = False
                 origin = (
@@ -279,11 +287,14 @@ class AssessmentService:
                     else path.name
                 )
                 try:
-                    source = read_python_source(path)
+                    source = read_python_source(path, _raw_cache=self._raw_cache)
                     decoded = True
                     if kind == "local_project":
                         project_sources.append((origin, source))
-                    result = review_source(source, str(path))
+                    tree_holder: list[ast.AST] = []
+                    result = review_source(source, str(path), _tree_out=tree_holder)
+                    if kind == "local_project" and tree_holder:
+                        parsed_trees[origin] = tree_holder[0]
                 except (ValidationError, OSError) as exc:
                     if kind == "local_project" and not decoded:
                         unavailable_sources.append(origin)
@@ -307,7 +318,11 @@ class AssessmentService:
             if kind == "local_project":
                 from .python_project_flow import project_flows
 
-                extra, notices = project_flows(project_sources, unavailable=unavailable_sources)
+                extra, notices = project_flows(
+                    project_sources,
+                    unavailable=unavailable_sources,
+                    _parsed_trees=parsed_trees,
+                )
                 findings.extend(extra)
                 missing.extend(notices)
             if traversal_limited:

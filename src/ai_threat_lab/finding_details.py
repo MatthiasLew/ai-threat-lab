@@ -981,32 +981,39 @@ _RULE_CATALOG: dict[str, dict[str, str | None]] = {
 }
 
 
+_LOC_AST_RE = re.compile(r"^(.+?):(\d+):(\d+)\s+[—-]\s+")
+_LOC_LINE_RE = re.compile(r"^((?:[A-Za-z]:)?[^:\r\n]+):(\d+):\s+")
+_LOC_SARIF_URI_RE = re.compile(r"\buri=([^;\s]+)")
+_LOC_SARIF_LINE_RE = re.compile(r"\bstart_line=(\d+)")
+_LOC_EXPLICIT_LINE_RE = re.compile(r"\bline\s+(\d+)\b")
+_LOC_PREFIX_RE = re.compile(
+    r"^((?:[A-Za-z]:)?[^\s:;#]+(?:\.[A-Za-z0-9_-]+|Dockerfile[^:\s#]*))(?:#|:|\s)"
+)
+
+
 def _extract_location(target: str, evidence: str) -> tuple[str | None, int | None, str | None]:
     """Extract file path and line number ONLY when explicitly present in evidence/target."""
     # Pattern 1: "<path>:<line>:<col> — ..." (Python AST review findings)
-    match = re.match(r"^(.+?):(\d+):(\d+)\s+[—-]\s+", evidence)
+    match = _LOC_AST_RE.match(evidence)
     if match:
         return match.group(1), int(match.group(2)), match.group(2)
     # Pattern 2: "<path>:<line>: ..." (local_inventory secret / config_review findings)
     if not evidence.startswith(("http://", "https://")):
-        match = re.match(r"^((?:[A-Za-z]:)?[^:\r\n]+):(\d+):\s+", evidence)
+        match = _LOC_LINE_RE.match(evidence)
         if match:
             return match.group(1), int(match.group(2)), match.group(2)
     # Pattern 3: SARIF location "uri=<path>; start_line=<line>"
-    sarif_uri = re.search(r"\buri=([^;\s]+)", evidence)
-    sarif_line = re.search(r"\bstart_line=(\d+)", evidence)
+    sarif_uri = _LOC_SARIF_URI_RE.search(evidence)
+    sarif_line = _LOC_SARIF_LINE_RE.search(evidence)
     if sarif_uri:
         line_val = int(sarif_line.group(1)) if sarif_line else None
         return sarif_uri.group(1), line_val, str(line_val) if line_val is not None else None
     # Pattern 4: explicit "line <N>" in evidence when target is a file path
-    line_match = re.search(r"\bline\s+(\d+)\b", evidence)
+    line_match = _LOC_EXPLICIT_LINE_RE.search(evidence)
     is_url_or_prefix = "://" in target or target.startswith(("mail-domain:", "mailbox:", "("))
     file_path = None
     if not is_url_or_prefix:
-        prefix_match = re.match(
-            r"^((?:[A-Za-z]:)?[^\s:;#]+(?:\.[A-Za-z0-9_-]+|Dockerfile[^:\s#]*))(?:#|:|\s)",
-            evidence,
-        )
+        prefix_match = _LOC_PREFIX_RE.match(evidence)
         if prefix_match:
             file_path = prefix_match.group(1)
         elif Path(target).suffix or Path(target).name.startswith("Dockerfile"):
