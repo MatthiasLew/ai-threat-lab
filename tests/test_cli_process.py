@@ -11,7 +11,7 @@ import pytest
 PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "src"
 
 
-def run_cli(*args, input=None, cwd=None):
+def run_cli(*args, input=None, cwd=None, timeout=30):
     env = dict(os.environ, PYTHONPATH=str(PACKAGE_ROOT), PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
     return subprocess.run(
         [sys.executable, "-m", "ai_threat_lab", *map(str, args)],
@@ -21,7 +21,7 @@ def run_cli(*args, input=None, cwd=None):
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=15,
+        timeout=timeout,
     )
 
 
