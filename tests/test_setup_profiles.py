@@ -29,8 +29,9 @@ def test_optional_profiles_validate_without_network_or_secret_output(tmp_path, m
     result = setup_check(smtp_path=smtp, speech_path=speech)
     assert result["status"] == "configuration_needed"  # AI model was not selected.
     assert not result["credentials_inspected"] and not result["network_called"]
-    assert all(row["status"] == "local_configuration_valid" for row in result["integrations"])
-    assert all(not row["live_ready"] for row in result["integrations"])
+    selected = [row for row in result["integrations"] if row["id"] != "avatar"]
+    assert all(row["status"] == "local_configuration_valid" for row in selected)
+    assert all(not row["live_ready"] for row in selected)
     assert "PRIVATE" not in json.dumps(result)
 
 
@@ -54,4 +55,4 @@ def test_cli_configuration_check(tmp_path, capsys):
     assert main(["setup-check", "--smtp-config", str(smtp),
                  "--speech-config", str(speech)]) == 0
     result = json.loads(capsys.readouterr().out)
-    assert [row["id"] for row in result["integrations"]] == ["smtp", "speech"]
+    assert [row["id"] for row in result["integrations"]] == ["smtp", "speech", "avatar"]

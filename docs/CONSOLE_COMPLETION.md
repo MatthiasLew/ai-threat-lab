@@ -40,9 +40,11 @@ this delivery contains the console and reusable application services only.
 ## Beyond this contract
 
 Arbitrary language/framework analysis, dynamic malware execution, business-logic
-penetration testing, live password attacks, communications/media generation and
-organization-wide infrastructure are not implied by adding an interpretation
-API. They need specific target/provider requirements. Existing training continues
-to use approved fictional text exercises and inert exports.
+penetration testing, live password attacks, telephony and organization-wide
+infrastructure are not implied by adding an interpretation API. They need specific
+target/provider requirements and additional implementation. Subsequent console work
+also supplies explicit SMTP delivery, stock-speech WAV and stock-avatar generation
+adapters for approved fictional scenarios; their real account, delivery, media and
+billing acceptance is still deferred. Local rehearsals and inert exports remain available.
 
 Implementation and validation evidence will be recorded with the final delivery.

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "resource_host": "replace-resource.cognitiveservices.azure.com",
+  "voice": "en-US-JennyNeural",
+  "usd_per_video_minute": "0.50",
+  "max_request_estimate_usd": "1.00"
+}

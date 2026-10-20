@@ -94,6 +94,22 @@ def test_no_arbitrary_mutations(url, method):
         PublicHTTPS(["example.com", "api.openai.com"]).request(url, method=method)
 
 
+@pytest.mark.parametrize("host,path,query", [
+    ("example.com", "/avatar/batchsyntheses/" + "a" * 64, "api-version=2024-08-01"),
+    ("fixture.cognitiveservices.azure.com", "/other", "api-version=2024-08-01"),
+    ("fixture.cognitiveservices.azure.com", "/avatar/batchsyntheses/not-reviewed",
+     "api-version=2024-08-01"),
+    ("fixture.cognitiveservices.azure.com", "/avatar/batchsyntheses/" + "a" * 64,
+     "api-version=2024-08-01&other=1"),
+    ("fixture.cognitiveservices.azure.com.evil.invalid", "/avatar/batchsyntheses/" + "a" * 64,
+     "api-version=2024-08-01"),
+])
+def test_avatar_put_scope_before_dns(monkeypatch, host, path, query):
+    monkeypatch.setattr(module, "public_address", lambda *a: pytest.fail("Unexpected DNS"))
+    with pytest.raises(ValidationError):
+        PublicHTTPS([host]).request(f"https://{host}{path}?{query}", method="PUT")
+
+
 class Connection:
     instances = []
     body = b"{}"
@@ -138,6 +154,20 @@ def test_connection_pinning_bounds_cleanup_and_budget(monkeypatch):
     with pytest.raises(ProviderError, match="size"):
         PublicHTTPS(["example.com"], max_bytes=4).request("https://example.com")
     assert Connection.instances[-1].closed
+
+
+def test_avatar_put_uses_fixed_path_and_request_budget(monkeypatch):
+    host = "fixture.cognitiveservices.azure.com"
+    path = "/avatar/batchsyntheses/" + "a" * 64 + "?api-version=2024-08-01"
+    monkeypatch.setattr(module, "public_address", lambda value: "8.8.8.8")
+    monkeypatch.setattr(module, "_PinnedHTTPS", Connection)
+    client = PublicHTTPS([host], max_requests=1)
+    client.request(f"https://{host}{path}", method="PUT", body=b"{}", headers={"X-Fixture": "1"})
+    connection = Connection.instances[-1]
+    assert connection.host == host and connection.requested[0] == ("PUT", path)
+    assert connection.requested[1]["body"] == b"{}" and connection.closed
+    with pytest.raises(ProviderError, match="budget"):
+        client.request(f"https://{host}{path}", method="PUT")
 
 
 @pytest.mark.parametrize("failure", [OSError("SECRET"), http.client.HTTPException("SECRET")])

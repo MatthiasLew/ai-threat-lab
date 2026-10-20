@@ -18,9 +18,9 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Program file | Bounded size/hash plus selected PE/ELF headers and ZIP metadata/path candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
 | Authentication logs | Explicit normalized .auth.jsonl or review-auth-log input; bounded failure-pattern candidates | No provider log conversion, login attempts, trusted provenance or compromise confirmation |
-| Training content | Offline templates and approved scenario scripts | Live text/media integrations remain absent |
+| Training content | Offline templates, approved fictional scripts, stock-speech WAV and stock-avatar adapters | Account/media/billing acceptance; no arbitrary generated scripts or identity cloning |
 | Local training sessions | Approved text previews, structured selections, persistence, cancellation, JSON/HTML reports | No raw responses, speech analysis or real employee-behavior measurement |
-| Email/voice/video dispatch | Demo transports and exact preview approval | No actual sending, phone calls, media generation or live tracking backend |
+| Email/voice/video dispatch | Demo transports, exact preview approval and explicit SMTP adapter; separate stock-media generation/download | Real delivery acceptance, phone calls, media distribution and live tracking backend |
 | Signed event claims | Local HMAC protocol, exact-plan binding, transactional replay checks and provenance-separated reports | No native provider/webhook/participant authentication, tracking endpoint or remote dispatch |
 | Campaign outcomes | Legacy imported-event aggregation remains untrusted; separate signed local journal available | No trusted webhook collection or tracking endpoint |
 
@@ -56,7 +56,7 @@ A receipt status is `accepted`, `unknown` or `simulated`; acceptance is not proo
 
 The default ledger is process-local. Supply `SQLiteLedger(path)` for atomic persistence across restarts. It stores hashed attempt identifiers rather than addresses/content. An attempt is claimed before provider invocation, including an ambiguous timeout: investigate before retrying. Use the same plan/recipient-derived idempotency key at the provider; local SQLite alone cannot guarantee exactly-once external delivery. Protect the ledger and approval records with deployment access controls.
 
-There is no global bulk-send command or configured live provider. The campaign CLI exposes only offline demos; an application must register actual adapters and supply authorization/approval records explicitly.
+There is no global bulk-send command. The generic campaign CLI retains its offline demos; separate [SMTP](SMTP_TRAINING.md), [speech](SPEECH_TRAINING.md) and [stock-avatar](STOCK_AVATAR.md) commands implement explicit provider operations with configuration, exact approval and durable journals. Provider credentials and real-service acceptance are still required.
 
 ## Integration acceptance before live use
 

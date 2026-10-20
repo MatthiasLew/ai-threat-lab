@@ -42,6 +42,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "docs/ATTACHMENT_REVIEW.md",
             "docs/FILE_REPUTATION.md", "scripts/check_reputation_offline.py",
             "docs/SARIF_IMPORT.md",
+            "docs/STOCK_AVATAR.md", "examples/avatar.json", "scripts/check_avatar_offline.py",
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
             "docs/COMPOSER_NUGET.md",
             "docs/SAVED_SITE_SESSION.md",
@@ -190,6 +191,11 @@ def main() -> None:
         assert reputation_receipt == {
             "status": "passed", "synthetic_requests": 2, "live_requests": 0,
             "source_independent_summary": True, "file_bytes_uploaded": False,
+        }
+        avatar_receipt = json.loads(run(python, ROOT / "scripts/check_avatar_offline.py"))
+        assert avatar_receipt == {
+            "status": "passed", "synthetic_submissions": 1, "live_requests": 0,
+            "download_verified": True, "new_approval_required": True,
         }
         assert console_receipt == {
             "status": "passed", "synthetic_ai_requests": 2, "live_requests": 0,

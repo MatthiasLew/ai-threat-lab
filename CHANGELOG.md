@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add fictional stock-avatar preview, durable asynchronous submission, explicit status and
+  bounded credential-separated media download. Bind downloaded bytes into a new plan digest
+  requiring fresh media approval; preserve unknown attempts and local-only cancellation.
+
 - Preserve immediate broken-pipe errors from argparse help/usage so the process boundary
   returns the documented quiet exit even when help exceeds the stream buffer (issue #6).
 

@@ -4,6 +4,15 @@
 def readiness():
     rows = (
         (
+            "stock_avatar_asset",
+            "implemented",
+            "integration_validation_required",
+            "Exact fictional-script preview, durable stock-avatar job submission, explicit "
+            "status/download and hash-bound new plan requiring media approval. No cloning, "
+            "calls or distribution. Configured estimates are not provider-enforced billing "
+            "caps; resource access, real media and billing need controlled acceptance.",
+        ),
+        (
             "external_static_results",
             "implemented",
             "not_required",
@@ -185,7 +194,8 @@ def readiness():
             "implementation_required",
             "Three approved text channels, inert exports and selected-outcome reports. "
             "Separate fictional SMTP email delivery is available; observed participant "
-            "telemetry and live voice/video dispatch remain absent.",
+            "telemetry and live voice/video dispatch remain absent. Stock media generation "
+            "has separate preview-bound adapters.",
         ),
         (
             "signed_training_events",
@@ -200,8 +210,8 @@ def readiness():
             "voice_video",
             "partial",
             "implementation_required",
-            "Voice script, video storyboard and optional stock-speech WAV generation. "
-            "No calls, live dialogue, video generation or media distribution.",
+            "Voice script, video storyboard, stock-speech WAV and stock-avatar video adapters. "
+            "No calls, live dialogue, likeness cloning or media distribution.",
         ),
         (
             "password_attacks",

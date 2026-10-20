@@ -110,7 +110,7 @@ class PublicHTTPS:
             or parsed.password
             or parsed.fragment
             or re.search(r"[\x00-\x20\x7f]", url)
-            or method not in ("GET", "POST")
+            or method not in ("GET", "POST", "PUT")
         ):
             raise ValidationError("HTTPS request is outside exact approved host scope")
         if self.allow_partial_body and method != "GET":
@@ -122,6 +122,15 @@ class PublicHTTPS:
         )
         if method == "POST" and ((parsed.hostname, parsed.path) not in endpoints or parsed.query):
             raise ValidationError("POST is restricted to supported model/advisory/speech endpoints")
+        if method == "PUT" and not (
+            re.fullmatch(
+                r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.cognitiveservices\.azure\.com",
+                parsed.hostname,
+            )
+            and re.fullmatch(r"/avatar/batchsyntheses/[a-f0-9]{64}", parsed.path)
+            and parsed.query == "api-version=2024-08-01"
+        ):
+            raise ValidationError("PUT is restricted to an exact stock-avatar job endpoint")
         if self.requests >= self.max_requests:
             raise ProviderError("HTTP request budget exhausted")
         address = public_address(parsed.hostname)

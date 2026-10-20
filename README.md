@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Approved fictional video scripts can use the [stock-avatar lifecycle](docs/STOCK_AVATAR.md):
+exact preview, durable job, explicit download and a new plan requiring media approval.
+
 [Saved SARIF results](docs/SARIF_IMPORT.md) from external static analyzers can feed
 the same summaries and AI previews, retaining producer failures and unverified status.
 
@@ -67,7 +70,7 @@ Current completion criteria: [stable offline CLI scope and release gates](docs/O
 
 Implemented: offline multi-target batches with verified combined reports, one-command scoped scans with integrity-checked report bundles and observation comparison, bounded read-only GitHub retrieval/review with shared-commit root/opt-in nested dependency inventory, passive HTTPS HSTS/CSP/cookie/header observations, basic SPF/DMARC and supplied-selector DKIM observations, authenticated Gmail forwarding/filter checks, selected root/src Python package, relative-import and literal importlib linking, local Python (fourteen AST rule families including bounded Flask-to-shell/SQLite flows with branch joins, one-pass loops and bounded same-file calls and selected SQLite connection contexts, text/JSON/SARIF export)/secret/manifest, literal Dockerfile/workflow and structured Kubernetes JSON review, pinned Python/npm/Cargo and Go checksum-record dependency inventory and opt-in OSV matches, combined JSON/HTML remediation reports, bounded PE/ELF header and flag observations, ZIP path/metadata review, bounded normalized and selected saved OpenSSH journal authentication-event patterns, saved HTML/form/resource and exported-mail header/link/form/attachment-metadata observations, approved local text-training sessions with durable actions/cancellation, a local signed-claim journal with replay checks and provenance-separated reports, offline training workflows, and an OpenAI Responses explanation adapter with persistent cost controls.
 
-Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Fictional SMTP delivery and stock-speech generation have separate adapters and confirmation workflows. Telephony, video generation, observed participant telemetry, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
+Remote collection is explicit through `audit --network --allow-host ...`; default commands stay offline. All assessment results remain partial. Integrations are fixture-tested, not live-account validated. Fictional SMTP delivery, stock speech and stock-avatar video have separate adapters and confirmation workflows. Telephony, observed participant telemetry, active exploitation, comprehensive dependency/binary analysis and a GUI are not implemented. A key alone does not provide these features.
 
 Local multi-target workflow: [batch scans](docs/BATCH_SCANS.md).
 
