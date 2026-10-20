@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "region": "westeurope",
+  "voice": "en-US-JennyNeural",
+  "usd_per_million_characters": "20",
+  "max_request_usd": "0.10"
+}

@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Fictional stock-voice asset preparation and optional synthesis](SPEECH_TRAINING.md)
+
 - [Saved email attachment byte and structure review](ATTACHMENT_REVIEW.md)
 
 - [Approved fictional email delivery, journal and cancellation](SMTP_TRAINING.md)

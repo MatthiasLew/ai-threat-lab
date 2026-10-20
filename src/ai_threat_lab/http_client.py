@@ -116,8 +116,12 @@ class PublicHTTPS:
         if self.allow_partial_body and method != "GET":
             raise ValidationError("Partial response collection is restricted to GET")
         endpoints = {("api.openai.com", "/v1/responses"), ("api.osv.dev", "/v1/querybatch")}
+        endpoints.update(
+            (f"{region}.tts.speech.microsoft.com", "/cognitiveservices/v1")
+            for region in ("eastus", "westeurope", "northeurope")
+        )
         if method == "POST" and ((parsed.hostname, parsed.path) not in endpoints or parsed.query):
-            raise ValidationError("POST is restricted to supported model/advisory query endpoints")
+            raise ValidationError("POST is restricted to supported model/advisory/speech endpoints")
         if self.requests >= self.max_requests:
             raise ProviderError("HTTP request budget exhausted")
         address = public_address(parsed.hostname)

@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Approved fictional voice scripts can produce [stock-voice WAV assets](docs/SPEECH_TRAINING.md)
+through an optional speech adapter, with exact previews and persistent request outcomes.
+
 Saved emails support [attachment structure review](docs/ATTACHMENT_REVIEW.md):
 bounded MIME decoding and PE/ELF/ZIP checks without extracting or launching attachments.
 

@@ -40,6 +40,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "scripts/check_console_offline.py", ".ai-dev-tools.toml",
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
             "docs/ATTACHMENT_REVIEW.md",
+            "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"
@@ -168,6 +169,11 @@ def main() -> None:
         assert smtp_receipt["status"] == "passed"
         assert smtp_receipt["live_submissions"] == 0
         assert smtp_receipt["unknown_outcome_preserved"]
+        speech_receipt = json.loads(run(python, ROOT / "scripts/check_speech_offline.py"))
+        assert speech_receipt == {
+            "status": "passed", "synthetic_generations": 1, "live_requests": 0,
+            "duplicate_blocking": True, "audio_validated": True,
+        }
         console_receipt = json.loads(run(python, ROOT / "scripts/check_console_offline.py"))
         assert console_receipt == {
             "status": "passed", "synthetic_ai_requests": 2, "live_requests": 0,

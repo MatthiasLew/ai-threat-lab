@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add an optional stock-voice speech adapter for approved fictional scripts: exact SSML
+  preview, configured cost estimate, explicit provider request, validated local PCM WAV,
+  persistent attempt outcomes, cancellation and duplicate blocking. No calls or voice cloning.
+
 - Add offline attachment structure review with bounded MIME decoding, byte-based PE/ELF/ZIP
   inspection, private indexed labels and combined evidence reports. No attachment extraction,
   execution or network access occurs.

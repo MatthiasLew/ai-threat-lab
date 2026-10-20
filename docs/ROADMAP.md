@@ -2,6 +2,11 @@
 
 ## Console integration update
 
+Continued console implementation adds passive site navigation, saved HAR response review,
+decoded attachment structures, approved fictional SMTP delivery and stock-speech assets.
+The latter adapters are locally fixture-tested; accounts and live acceptance remain deferred.
+See the current delivery matrix for the precise boundary of each implemented path.
+
 The [console workflow](CONSOLE_WORKFLOW.md) now connects prepared-tool plans,
 inspection, source-independent summaries, configuration checks, bounded AI evidence
 packets and advisory JSON with validated observation references. The model does
@@ -35,7 +40,9 @@ Acceptance: each new construct has independent controls, observable evidence and
 
 ## D. Web-application assessment — pending implementation
 
-Define an owned test application and the permitted navigation/authentication scope. Add bounded application-level collection and checks with session isolation, target boundaries, cancellation and request limits. Current one-response header observations remain a separate completed subset.
+Define an owned test application and the permitted navigation/authentication scope.
+Bounded passive same-host/path navigation and offline HAR response review are now implemented.
+Browser execution, session interaction and business-logic checks remain separate work.
 
 Acceptance: controlled application fixtures demonstrate both candidate and noncandidate cases, scope rejection, failure reporting and reproducible evidence. Header presence alone must not imply application security.
 
@@ -47,7 +54,13 @@ Acceptance: supported settings and message cases have positive/negative fixtures
 
 ## F. Training integrations and observed events — pending implementation
 
-Select consented delivery/media services only when API work resumes. Implement concrete adapters behind existing preview, scope, expiry, cancellation and ledger contracts. The 0.29.0 local signed-claim journal implements shared-key validation, explicit plan/alias scope, provenance separation and transactional replay/cancellation controls. Native provider intake, participant authentication, actual delivery/stop integration and retention/rotation still require implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
+Preview-bound fictional SMTP delivery and local stock-speech generation now have concrete
+adapters behind approval, expiry and durable attempt contracts. Account setup and real
+provider acceptance remain deferred. The 0.29.0 local signed-claim journal implements
+shared-key validation, explicit plan/alias scope, provenance separation and transactional
+replay/cancellation controls. Native provider intake, participant authentication, live
+voice/video interaction and retention/rotation remain separate work.
+See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
 Acceptance: distinguish preview, accepted delivery, actual participant action, automated event and uncertain outcome. Stop/cancellation works through the real adapter. Local scripted choices are never counted as observed employee behavior.
 

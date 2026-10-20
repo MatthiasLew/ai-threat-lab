@@ -18,6 +18,7 @@ AI Threat Lab
 10. Review a saved browser HAR capture without replaying requests
 11. Preview, send or stop approved fictional email delivery
 12. Review the structure of saved email attachments
+13. Prepare or generate a fictional stock-voice audio asset
 0. Exit
 """
 
@@ -36,7 +37,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–12: ")
+            choice = ask("Choose 0–13: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -118,8 +119,12 @@ def run_console(run):
                 output = ask("New combined JSON report: ")
                 print("Reviewing the first 20 attachment parts locally in memory.")
                 code = run(["review-attachments", source, "--output", output])
+            elif choice == "13":
+                from .speech_cli import speech_menu
+
+                code = speech_menu(run, ask)
             else:
-                print("Choose a number from 0 to 12.")
+                print("Choose a number from 0 to 13.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

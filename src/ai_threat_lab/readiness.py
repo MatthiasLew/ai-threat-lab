@@ -4,6 +4,15 @@
 def readiness():
     rows = (
         (
+            "stock_speech_asset",
+            "implemented",
+            "integration_validation_required",
+            "Preview-bound Azure stock-voice synthesis of approved fictional scripts, "
+            "configured per-request cost estimate, validated local WAV and durable "
+            "duplicate/uncertain-outcome journal. No calling, cloning or distribution; "
+            "resource, voice, audio quality and billed usage require live acceptance.",
+        ),
+        (
             "saved_mail_attachment_structures",
             "implemented",
             "not_required",
@@ -162,9 +171,10 @@ def readiness():
         ),
         (
             "voice_video",
-            "text_assets_only",
+            "partial",
             "implementation_required",
-            "Voice script and video storyboard only. No calls, speech or media generation.",
+            "Voice script, video storyboard and optional stock-speech WAV generation. "
+            "No calls, live dialogue, video generation or media distribution.",
         ),
         (
             "password_attacks",

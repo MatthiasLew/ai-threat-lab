@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+The [stock-speech adapter](SPEECH_TRAINING.md) adds preview-bound generation of local
+fictional WAV assets with cost estimates and durable attempt records. Actual resource,
+audio-quality and billing acceptance remains deferred; no telephony is implemented.
+
 The [attachment review](ATTACHMENT_REVIEW.md) adds bounded in-memory MIME decoding
 and shared PE/ELF/ZIP structural observations, with indexed reports usable by AI.
 Malware detection, signature trust and message authenticity remain separate.
@@ -41,7 +45,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Signed training claims | Local HMAC journal, exact-plan/alias/key scope, freshness, replay/conflict checks, stops and separate simulation/automation/adapter aggregates | Native provider authentication/collection, participant identity/action verification, remote dispatch/stop integration, retention/rotation |
 | Email training | Exact-preview plans, local rehearsal, inert `.eml` export, selected-outcome report, preview-bound authenticated SMTP adapter and durable delivery journal | Real SMTP acceptance, delivery telemetry and authenticated participant events |
-| Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
+| Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export and preview-bound stock-speech WAV adapter | Telephony, live interaction and controlled speech/account/audio-quality validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |
 | AI explanation/cost control | Offline-complete within the finite contract: budgeted adapter, evidence validation/minimization, dry-run, cache cleanup, reservations/reconciliation and output claims | Chosen model/prices/account setup and controlled live validation |
