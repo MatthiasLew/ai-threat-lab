@@ -41,6 +41,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
             "docs/ATTACHMENT_REVIEW.md",
             "docs/FILE_REPUTATION.md", "scripts/check_reputation_offline.py",
+            "docs/SARIF_IMPORT.md",
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
             "docs/COMPOSER_NUGET.md",
             "docs/SAVED_SITE_SESSION.md",
@@ -127,16 +128,22 @@ def main() -> None:
         ))
         assert "Łódź Żółw" in json.dumps(unicode_report, ensure_ascii=False)
         env.update(PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+        # The installed executable starts only after its output reader is closed.
+        barrier = ("import subprocess,sys; assert sys.stdin.buffer.read(1) == b'x'; "
+                   "raise SystemExit(subprocess.call(sys.argv[1:]))")
         pipe = subprocess.Popen(
-            [str(executable), "--help"], cwd=work, env=env,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            [str(python), "-c", barrier, str(executable), "--help"], cwd=work, env=env,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
-        assert pipe.stdout is not None and pipe.stderr is not None
+        assert pipe.stdout is not None and pipe.stderr is not None and pipe.stdin is not None
         pipe.stdout.close()
         try:
+            pipe.stdin.write(b"x")
+            pipe.stdin.close()
             assert pipe.wait(timeout=15) == 141
             assert pipe.stderr.read() == b""
         finally:
+            pipe.stdin.close()
             pipe.stderr.close()
             if pipe.poll() is None:
                 pipe.kill()

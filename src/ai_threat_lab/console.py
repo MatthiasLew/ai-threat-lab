@@ -21,6 +21,7 @@ AI Threat Lab
 13. Prepare or generate a fictional stock-voice audio asset
 14. Review an approved website path using a saved session
 15. Preview or query existing file reputation by SHA-256
+16. Import a saved SARIF report from a static analyzer
 0. Exit
 """
 
@@ -39,7 +40,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–15: ")
+            choice = ask("Choose 0–16: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -154,8 +155,14 @@ def run_console(run):
                 from .reputation_cli import reputation_menu
 
                 code = reputation_menu(run, ask)
+            elif choice == "16":
+                source = ask("Saved SARIF 2.1.0 file: ")
+                output = ask("New combined JSON report: ")
+                print("Importing the first 200 results locally. "
+                      "Messages and source locations may contain private data.")
+                code = run(["review-sarif", source, "--output", output])
             else:
-                print("Choose a number from 0 to 15.")
+                print("Choose a number from 0 to 16.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

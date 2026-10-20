@@ -51,17 +51,24 @@ def test_root_and_child_options_require_full_names(args):
                                   ("controls",), ("doctor", "--installation")])
 def test_closed_output_pipe_has_quiet_documented_exit(args):
     env = dict(os.environ, PYTHONPATH=str(SOURCE))
+    # Establish the closed-reader precondition before the CLI can write anything.
+    barrier = ("import runpy,sys; assert sys.stdin.buffer.read(1) == b'x'; "
+               "runpy.run_module('ai_threat_lab', run_name='__main__')")
     child = subprocess.Popen(
-        [sys.executable, "-m", "ai_threat_lab", *args],
-        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        [sys.executable, "-c", barrier, *args],
+        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
-    assert child.stdout is not None and child.stderr is not None
+    assert child.stdout is not None and child.stderr is not None and child.stdin is not None
     child.stdout.close()
     try:
+        child.stdin.write(b"x")
+        child.stdin.close()
+        code = child.wait(timeout=15)
         errors = child.stderr.read()
-        assert child.wait(timeout=15) == 141, errors.decode("utf-8", errors="replace")
+        assert code == 141, errors.decode("utf-8", errors="replace")
         assert errors == b""
     finally:
+        child.stdin.close()
         child.stderr.close()
         if child.poll() is None:
             child.kill()

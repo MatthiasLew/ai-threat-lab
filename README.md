@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+[Saved SARIF results](docs/SARIF_IMPORT.md) from external static analyzers can feed
+the same summaries and AI previews, retaining producer failures and unverified status.
+
 Program files can optionally use [existing SHA-256 reputation](docs/FILE_REPUTATION.md),
 with an exact local preview and explicit hash sharing. File bytes are not uploaded.
 

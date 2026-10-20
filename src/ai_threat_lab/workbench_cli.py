@@ -14,6 +14,7 @@ from .har_review import review_har
 from .local_history import write_new_report
 from .models import ValidationError
 from .review_packets import review_packets, select_packet
+from .sarif_review import review_sarif
 from .scan_cli import advisory_lookup, assessor
 from .scan_engine import ScanOptions, ScanService
 from .setup_check import setup_check
@@ -21,10 +22,17 @@ from .site_review import SiteReview, canonical_url
 from .tool_plan import plan_target
 
 COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site", "review-har",
-            "review-attachments"}
+            "review-attachments", "review-sarif"}
 
 
 def add_commands(commands):
+    sarif = commands.add_parser(
+        "review-sarif", help="Import saved external static-analysis claims without executing tools")
+    sarif.add_argument("path", type=Path)
+    sarif.add_argument("--start", type=int, default=1)
+    sarif.add_argument("--max-entries", type=int, default=200)
+    sarif.add_argument("--output", type=Path)
+    sarif.add_argument("--fail-on-findings", action="store_true")
     attachments = commands.add_parser(
         "review-attachments", help="Review decoded saved-email attachment structures in memory")
     attachments.add_argument("path", type=Path)
@@ -147,8 +155,9 @@ def _preview(value, config, evidence, *, structured):
 
 
 def run_command(args):
-    if args.command in ("review-har", "review-attachments"):
-        review = review_har if args.command == "review-har" else review_attachments
+    if args.command in ("review-har", "review-attachments", "review-sarif"):
+        review = {"review-har": review_har, "review-attachments": review_attachments,
+                  "review-sarif": review_sarif}[args.command]
         report, failures = review(args.path, start=args.start, max_entries=args.max_entries)
         text = write_document(report)
         if args.output:

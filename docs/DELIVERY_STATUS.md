@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+[SARIF import](SARIF_IMPORT.md) brings selected external analyzer results into shared
+summary/AI workflows. It does not implement or run those analyzers; their actual
+language coverage, configuration and execution evidence remain external requirements.
+
 [Existing file reputation](FILE_REPUTATION.md) supplements local structure checks
 with an explicitly authorized SHA-256 lookup. Provider counts remain dated unverified
 claims; no upload, rescan or execution occurs. Real account/response acceptance is deferred.

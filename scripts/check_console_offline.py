@@ -138,6 +138,11 @@ def main_check():
         run("brief", root / "pages.paths.private.json", expected=2)
         source, bundle = root / "source.py", root / "saved run"
         source.write_text("eval(input())\n", encoding="utf-8")
+        external, imported = root / "external.sarif", root / "imported.json"
+        run("review-code", source, "--format", "sarif", "--output", external)
+        run("review-sarif", external, "--output", imported)
+        external.unlink()
+        assert "external_sarif_result" in run("brief", imported)
         plan = json.loads(run("plan", source))
         assert plan["tools"][0]["id"] == "python_review" and plan["ai_calls"] == 0
         assert "PY001" in run("inspect", source, "--output-dir", bundle)
@@ -148,6 +153,10 @@ def main_check():
             "schema_version": 1, "model": "fixture-model", "input_usd_per_million": "2",
             "output_usd_per_million": "8", "cache_ttl_seconds": 60,
         }), encoding="utf-8")
+        external_preview = json.loads(run("ai-prepare", imported, "--ai-config", config,
+                                          "--structured", "--split"))
+        assert external_preview["total_finding_count"] == 1
+        assert "unverified" in json.dumps(external_preview)
         assert json.loads(run("setup-check", "--ai-config", config))["live_ready"] is False
         smtp, speech = root / "smtp.json", root / "speech.json"
         smtp.write_text(json.dumps({

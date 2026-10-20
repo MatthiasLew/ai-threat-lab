@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "external_static_results",
+            "implemented",
+            "not_required",
+            "Bounded offline SARIF 2.1.0 import: rule/message/location claims, classifications, "
+            "suppression states and producer failures. No scanner execution or source access. "
+            "External analyzer coverage, authenticity and freshness remain unverified.",
+        ),
+        (
             "file_hash_reputation",
             "implemented",
             "integration_validation_required",

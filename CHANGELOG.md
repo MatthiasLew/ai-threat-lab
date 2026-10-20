@@ -2,6 +2,13 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Synchronize closed-output-pipe process checks before invoking the CLI, retaining strict
+  exit-code/stderr assertions while removing a Windows scheduling race (issue #6).
+
+- Import bounded saved SARIF 2.1.0 results into local/AI evidence workflows, retaining
+  reported classifications, suppression states, locations, producer limitations and failures.
+  Never invoke scanners, open referenced sources, load external properties or apply fixes.
+
 - Add exact-hash preview and explicit existing VirusTotal reputation lookup, preserving
   local file evidence on provider failures. Validate returned identity, size, dates and
   bounded statistics; omit free-form provider content. No upload, rescan or execution.
