@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add explicit saved-session headers to passive site review with exact host/path binding,
+  UTC expiry and access-denial stop. Use aliased report targets and a separately claimed
+  private URL map so authenticated paths do not enter AI evidence.
+
 - Add bounded Composer and NuGet lock inventory to local/pinned-GitHub discovery,
   recorded OSV identities and installed acceptance. Preserve skipped/private-feed
   limitations; engine 27 keeps older bundles readable without cross-engine deltas.

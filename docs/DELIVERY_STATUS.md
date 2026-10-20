@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+[Saved test-account sessions](SAVED_SITE_SESSION.md) can now supply bounded static headers
+for scoped passive navigation. Private URLs stay separate from aliased assessment evidence.
+Automated login, browser execution and application/business-logic validation remain absent.
+
 The [Composer/NuGet extension](COMPOSER_NUGET.md) adds bounded recorded identities
 to local/GitHub discovery and OSV/cache workflows. Engine 27 distinguishes the new
 coverage from earlier scans; package provenance and reachability remain unverified.

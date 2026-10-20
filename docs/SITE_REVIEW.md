@@ -3,6 +3,9 @@
 `review-site` extends the one-response collector with explicit, bounded link navigation.
 It needs no model or account. Existing `scan`/`inspect` keep their one-response contract.
 
+The default route is unauthenticated. For an explicitly supplied test-account session,
+see [saved session scope and private path maps](SAVED_SITE_SESSION.md).
+
 ```bash
 ai-threat-lab review-site https://owned.example/app/ --network --allow-host owned.example --path-prefix /app/ --max-pages 10 --max-depth 2 --output site.json
 ai-threat-lab brief site.json
@@ -17,9 +20,10 @@ transport. No API key is read. No target source code is executed.
 
 Only eligible complete UTF-8 HTML anchor links are followed. Queries, credentials,
 encoded/ambiguous URLs, other origins, downloads and documents with base elements
-are excluded. Redirects, scripts, embedded resources, cookies and forms are never
-followed or submitted. Duplicate URLs/fragments are deduplicated. Depth/page/parser
-limits remain explicit. This is not a browser or authenticated application test.
+are excluded. Redirects, scripts, embedded resources and forms are never followed or
+submitted. The default route sends no session headers. Duplicate URLs/fragments are
+deduplicated. Depth/page/parser limits remain explicit. This is not a browser or
+application-logic test.
 Ordinary GET requests can have effects on incorrectly designed websites; explicitly
 approve the exact host and path before collection.
 

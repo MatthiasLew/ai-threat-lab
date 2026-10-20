@@ -27,3 +27,7 @@ coverage.xml
 
 # Local signing material for offline training event journals
 *.key
+
+# Explicit private saved-session headers for passive website review
+*.session.json
+*.paths.private.json

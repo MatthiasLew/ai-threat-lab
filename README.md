@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Passive website review can reuse an [explicitly scoped saved session](docs/SAVED_SITE_SESSION.md)
+while keeping private page URLs separate from evidence prepared for AI.
+
 Dependency inventory includes [Composer and NuGet locks](docs/COMPOSER_NUGET.md),
 using the same local/GitHub collection, optional OSV lookup and saved-report workflows.
 

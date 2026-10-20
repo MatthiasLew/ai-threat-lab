@@ -19,6 +19,7 @@ AI Threat Lab
 11. Preview, send or stop approved fictional email delivery
 12. Review the structure of saved email attachments
 13. Prepare or generate a fictional stock-voice audio asset
+14. Review an approved website path using a saved session
 0. Exit
 """
 
@@ -37,7 +38,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–13: ")
+            choice = ask("Choose 0–14: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -123,8 +124,26 @@ def run_console(run):
                 from .speech_cli import speech_menu
 
                 code = speech_menu(run, ask)
+            elif choice == "14":
+                from urllib.parse import urlsplit
+
+                from .site_review import canonical_url
+
+                target = canonical_url(ask("Start HTTPS URL (no query or credentials): "))
+                prefix = ask("Approved path prefix ending in /: ")
+                session = ask("Private saved-session JSON file: ")
+                output = ask("New combined JSON report: ")
+                private_map = ask("New private page-map JSON (keep local): ")
+                print("Up to 10 GET requests with the supplied credentials, restricted to "
+                      "this exact host/path. Use an approved test account; no forms or redirects.")
+                if ask("Allow these session requests? [y/N]: ", required=False).lower() != "y":
+                    continue
+                code = run(["review-site", target, "--network", "--allow-host",
+                            urlsplit(target).hostname, "--path-prefix", prefix,
+                            "--session-file", session, "--output", output,
+                            "--private-path-map", private_map])
             else:
-                print("Choose a number from 0 to 13.")
+                print("Choose a number from 0 to 14.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

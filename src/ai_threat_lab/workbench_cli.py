@@ -1,6 +1,8 @@
 """Console entry points joining prepared tools, saved evidence and AI previews."""
 
 import json
+import os
+from contextlib import ExitStack
 from pathlib import Path
 
 from .ai_costs import INSTRUCTIONS, AIConfig, compact_evidence, usd
@@ -41,6 +43,10 @@ def add_commands(commands):
     site.add_argument("--network", action="store_true")
     site.add_argument("--allow-host", action="append", default=[])
     site.add_argument("--path-prefix", default="/")
+    site.add_argument("--session-file", type=Path,
+                      help="Explicit host/path/expiry-bound Authorization/Cookie JSON")
+    site.add_argument("--private-path-map", type=Path,
+                      help="Separate private session-page URL index; never sent as AI evidence")
     site.add_argument("--max-pages", type=int, default=10)
     site.add_argument("--max-depth", type=int, default=2)
     site.add_argument("--output", type=Path)
@@ -160,18 +166,44 @@ def run_command(args):
             raise ValidationError("Site navigation requires --network and exact --allow-host")
         if args.output and (args.output.exists() or args.output.is_symlink()):
             raise ValidationError("Output already exists")
+        client = PublicHTTPS([host], max_bytes=256 * 1024, max_requests=20,
+                             allow_partial_body=True)
+        session_file = getattr(args, "session_file", None)
+        private_map = getattr(args, "private_path_map", None)
+        if private_map is not None and (
+            session_file is None or (args.output and private_map.resolve() == args.output.resolve())
+        ):
+            raise ValidationError("Private path map requires a session and a separate output file")
+        if session_file is not None:
+            from .session_http import ScopedSession
+
+            client = ScopedSession.from_file(session_file, client, target=target,
+                                             path_prefix=args.path_prefix)
         review = SiteReview(
-            PublicHTTPS([host], max_bytes=256 * 1024, max_requests=20,
-                        allow_partial_body=True),
+            client, session_supplied=session_file is not None,
             max_pages=args.max_pages, max_depth=args.max_depth,
         )
-        report, failures = review.run(target, path_prefix=args.path_prefix)
+        with ExitStack() as stack:
+            mapping = None
+            if private_map is not None:
+                descriptor = os.open(private_map, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                mapping = stack.enter_context(os.fdopen(descriptor, "w", encoding="utf-8"))
+            report, failures = review.run(target, path_prefix=args.path_prefix)
+            if mapping is not None:
+                mapping.write(write_document({
+                    "schema_version": 1, "mode": "private_session_path_map",
+                    "paths": review.private_paths,
+                    "notice": "Private local URL index; paths can contain sensitive data. "
+                              "Not an assessment and not accepted as AI evidence.",
+                }))
         text = write_document(report)
         if args.output:
             write_new_report(args.output, text.encode("utf-8"))
             print(f"Report saved: {args.output}")
         else:
             print(text, end="")
+        if private_map is not None and args.output:
+            print(f"Private page map saved separately: {private_map}")
         return 2 if failures else 1 if args.fail_on_findings and report["findings"] else 0
     if args.command == "setup-check":
         text = write_document(setup_check(args.ai_config))

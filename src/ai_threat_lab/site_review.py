@@ -80,12 +80,24 @@ def page_links(response, target):
 
 
 class SiteReview:
-    def __init__(self, client, *, max_pages=10, max_depth=2):
+    def __init__(self, client, *, max_pages=10, max_depth=2, session_supplied=False):
         if type(max_pages) is not int or not 1 <= max_pages <= 20:
             raise ValidationError("Site page limit must be between 1 and 20")
         if type(max_depth) is not int or not 0 <= max_depth <= 5:
             raise ValidationError("Site navigation depth must be between 0 and 5")
+        if type(session_supplied) is not bool:
+            raise ValidationError("Session selection must be boolean")
         self.client, self.max_pages, self.max_depth = client, max_pages, max_depth
+        self.session_supplied = session_supplied
+        self.private_paths = {}
+        self.notice = NOTICE
+        self.session_failures = {}
+        if session_supplied:
+            from .session_http import FAILURES
+            from .session_http import NOTICE as SESSION_NOTICE
+
+            self.notice = SESSION_NOTICE
+            self.session_failures = FAILURES
 
     def run(self, target, *, path_prefix="/"):
         start = canonical_url(target)
@@ -100,8 +112,12 @@ class SiteReview:
             raise ValidationError("Start URL is outside the approved path scope")
         queue, seen = deque([(start, 0)]), {start}
         documents, failures = [], 0
+        self.private_paths = {}
         while queue and len(documents) < self.max_pages:
             url, depth = queue.popleft()
+            label = f"Session page {len(documents) + 1:04d}" if self.session_supplied else url
+            if self.session_supplied:
+                self.private_paths[label] = url
             try:
                 # Capture exactly one response, reused by the existing analyzer and navigation.
                 response = self.client.request(url)
@@ -138,14 +154,17 @@ class SiteReview:
                         seen.add(candidate)
                         queue.append((candidate, depth + 1))
                 documents.append(asdict(AssessmentResult(
-                    url, "website", "partial", assessment.findings,
-                    (*assessment.not_checked, *limits, NOTICE),
+                    label, "website", "partial", assessment.findings,
+                    (*assessment.not_checked, *limits, self.notice),
                 )))
             except (ProviderError, ValidationError):
                 failures += 1
+                code = getattr(self.client, "failure_code", None)
+                reason = self.session_failures.get(code) if isinstance(code, str) else None
                 documents.append(asdict(AssessmentResult(
-                    url, "website", "not_configured", (),
-                    ("Page collection failed; no security conclusion for this page.", NOTICE),
+                    label, "website", "not_configured", (),
+                    ("Page collection failed; no security conclusion for this page.",
+                     *((reason,) if reason else ()), self.notice),
                 )))
         # Normalize tuples through the existing contract's JSON representation.
         import json

@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "saved_site_session",
+            "implemented",
+            "integration_validation_required",
+            "Explicit host/path-bound static Authorization/Cookie headers with a UTC expiry, "
+            "access-denial stop and aliased evidence plus an optional private URL map. "
+            "No automated login, cookie renewal, browser or business-logic validation.",
+        ),
+        (
             "stock_speech_asset",
             "implemented",
             "integration_validation_required",
@@ -42,7 +50,8 @@ def readiness():
             "integration_validation_required",
             "Explicit same-host/path HTTPS navigation, at most 20 pages and depth 5. "
             "Prepared header/HTML checks, bounded discovery and per-page failure evidence. "
-            "No authentication, queries, JavaScript, redirects, forms or active tests.",
+            "Default requests have no session headers; queries, JavaScript, redirects, "
+            "forms and active tests remain excluded.",
         ),
         (
             "console_workflow",

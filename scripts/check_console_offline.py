@@ -7,6 +7,7 @@ import socket
 import tempfile
 import zipfile
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -107,6 +108,31 @@ def main_check():
         assert "cookie_missing_secure" in har_report
         assert "PRIVATE" not in har_report
         assert len(site_wire.calls) == 2  # HAR did not replay anything through any transport.
+        class SessionWire:
+            calls = 0
+            def request(self, url, **kwargs):
+                assert url == "https://site.example/app/"
+                assert kwargs["headers"] == {"Cookie": "session=PRIVATE"}
+                self.calls += 1
+                return HttpResponse(200, {"content-type": "text/html"}, b"<p>fixture</p>")
+        session_wire = SessionWire()
+        http.PublicHTTPS = lambda *args, **kwargs: session_wire
+        session = root / "private.session.json"
+        session.write_text(json.dumps({
+            "schema_version": 1, "host": "site.example", "path_prefix": "/app/",
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "headers": {"Cookie": "session=PRIVATE"},
+        }), encoding="utf-8")
+        session_report = run(
+            "review-site", "https://site.example/app/", "--network", "--allow-host",
+            "site.example", "--path-prefix", "/app/", "--session-file", session,
+            "--private-path-map", root / "pages.paths.private.json")
+        assert session_wire.calls == 1 and "PRIVATE" not in session_report
+        assert "Operator-supplied static session" in session_report
+        assert json.loads((root / "pages.paths.private.json").read_text())["paths"] == {
+            "Session page 0001": "https://site.example/app/",
+        }
+        run("brief", root / "pages.paths.private.json", expected=2)
         source, bundle = root / "source.py", root / "saved run"
         source.write_text("eval(input())\n", encoding="utf-8")
         plan = json.loads(run("plan", source))
