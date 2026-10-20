@@ -41,8 +41,20 @@ def add_commands(commands):
         "report-export", help="Export a verified saved report without scanning"
     )
     export.add_argument("run", type=Path)
-    export.add_argument("--format", choices=("json", "html"), default="json")
+    export.add_argument("--format", choices=("json", "html", "pdf"), default="json")
     export.add_argument("--output", type=Path)
+    export.add_argument(
+        "--lang",
+        choices=("pl", "en"),
+        default=None,
+        help="Report language (pl/en) for PDF or localized formats",
+    )
+    export.add_argument(
+        "--ai-review",
+        type=Path,
+        default=None,
+        help="Optional AI review JSON file to attach to PDF report",
+    )
 
     batch = commands.add_parser("scan-batch", help="Scan 1..10 distinct local targets offline")
     batch.add_argument("targets", nargs="+")
@@ -122,7 +134,18 @@ def advisory_lookup(collected, options):
 def run_command(args):
     code = 0
     if args.command == "report-export":
-        content = export_report(args.run, format=args.format, output=args.output)
+        if args.format == "pdf":
+            from .gui_api import export_audit_report
+
+            content = export_audit_report(
+                args.run,
+                output=args.output,
+                format="pdf",
+                language=args.lang or "en",
+                ai_review_path=args.ai_review,
+            )
+        else:
+            content = export_report(args.run, format=args.format, output=args.output)
         print(
             f"Report saved: {args.output}" if args.output else content,
             end="\n" if args.output else "",

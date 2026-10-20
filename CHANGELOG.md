@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.41.0] - Stage 5: Multilingual UX, Interactive CLI Menu & Professional PDF Reports
+
+### Added
+- **Interactive Terminal Workflow (`menu` / `ai-threat-lab`)**:
+  - Interactive, human-friendly text console when invoked without arguments in a terminal.
+  - Non-blocking execution in automated environments: non-interactive or piped stdin runs (`not sys.stdin.isatty()`) bypass prompts and immediately exit with usage instructions and code 2.
+  - Language selection prompt on first run with persistent preference stored in `~/.ai-threat-lab/config.json`.
+  - Guided audit flow: target path entry, plan preview, offline scan execution, automatic PDF report generation, and optional Google Gemini AI enrichment with explicit cost and token confirmation.
+- **Pure-Python PDF 1.4 Reporting Engine (`pdf_writer.py`, `pdf_report.py`)**:
+  - Zero external dependencies: completely standalone generator with no requirement for ReportLab, WeasyPrint, or browser engines.
+  - Publication-grade A4 layout answering the 7 key user questions: What was inspected?, Were threats found?, Where are they?, What could happen?, How to fix it?, How to verify the fix?, and What could not be checked?
+  - Universal Polish diacritics support via standard Adobe Type-1 glyph mapping (`/Differences`) and embedded `/ToUnicode` CMap table ensuring perfect copy-paste, rendering, and searchability across all PDF viewers without external font downloads.
+  - Rich visual elements: colored severity badges (P1, P2, P3, P4), divider lines, overview KPI metric cards, and running header/footers with two-pass page numbering ("Strona X z Y" / "Page X of Y").
+  - Source code snippet extraction (`code_snippet.py`) with line numbering, secret redaction (`[REDACTED_SECRET]`), target line highlight (`>`), and content hash divergence detection.
+  - Optional Google Gemini AI advisory section with model metadata and explicit disclaimer distinguishing deterministic scanner findings from generative AI explanations.
+- **Complete Internationalization Architecture (`i18n.py`)**:
+  - Dual-language support (`pl` and `en`) with exhaustive translation dictionaries across all labels, prompts, error states, and report sections.
+  - Safe parameter interpolation and multi-tier fallback ensuring no unhandled exceptions on missing keys or unfamiliar locales.
+  - Persistent user preference loading and saving outside source control.
+- **Python GUI Integration API (`gui_api.py`)**:
+  - Added `export_audit_pdf(run_or_report, output, language="en", ai_review=None)`.
+  - Extended `export_audit_report(run_dir, output, format="pdf", language="pl", ...)` to support direct PDF rendering.
+  - CLI subcommand `report-export --format pdf --lang pl --ai-review ...` for offline and post-scan PDF export.
+- **Automated Verification & Documentation**:
+  - Comprehensive Stage 5 test suite (`tests/test_stage5_i18n_and_pdf_reports.py`) covering i18n, preference persistence, non-blocking CLI, snippet extraction, PDF writer syntax, Polish diacritics, and end-to-end PDF report generation.
+  - Sample generated PDF reports: `docs/samples/sample_audit_pl.pdf` and `docs/samples/sample_audit_en.pdf`.
+  - Comprehensive architecture guides: `docs/I18N_SYSTEM.md` and `docs/PDF_REPORTS.md`.
+
 ## [0.39.2] - Stage 4: Gemini API Integration Repair & Diagnostics
 
 ### Fixed

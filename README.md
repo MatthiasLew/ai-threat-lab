@@ -42,21 +42,34 @@ and [offline browser HAR response review](docs/HAR_REVIEW.md), including saved r
 from authenticated sessions without replaying requests or sharing account credentials.
 
 Prepared tools collect evidence; optional AI interprets it and explains what to
-review. It does not generate attack code or execute tools. Start with
-`ai-threat-lab console`, or use:
+review. It does not generate attack code or execute tools.
+
+### Interactive User Menu & PDF Reports (Stage 5)
+
+Run `ai-threat-lab` with no arguments in a terminal to launch the interactive text menu:
+
+```bash
+ai-threat-lab          # Launches guided terminal workflow with language selection (PL/EN)
+ai-threat-lab menu     # Explicit command to open interactive menu
+```
+
+Or run standard commands with full PDF report export support:
 
 ```bash
 ai-threat-lab plan path/to/project
 ai-threat-lab inspect path/to/project --output-dir results/run-01 --language pl
+ai-threat-lab report-export results/run-01 --format pdf --lang pl --output audit_report.pdf
 ai-threat-lab brief results/run-01 --language pl
 ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --language pl --structured --split --output preview.json
 ai-threat-lab setup-check --ai-config examples/ai-budget.json
 ```
 
+See [PDF Reports](docs/PDF_REPORTS.md) and [i18n Architecture](docs/I18N_SYSTEM.md) for details.
+
 These commands need no AI account. Saved single/batch results can feed optional
 reference-validated AI advice after explicit sharing and budget configuration.
 See [Quick Start](docs/QUICK_START.md), [the complete console workflow](docs/CONSOLE_WORKFLOW.md),
-and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs, as well as [Gemini API Adapter](docs/GEMINI_API_ADAPTER.md), [Performance Report](docs/PERFORMANCE_REPORT.md), and [Real Project Validation](docs/REAL_PROJECT_VALIDATION.md)
+and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs, as well as [Gemini API Adapter](docs/GEMINI_API_ADAPTER.md), [Performance Report](docs/PERFORMANCE_REPORT.md), and [Real Project Validation](docs/REAL_PROJECT_VALIDATION.md), [PDF Reports](docs/PDF_REPORTS.md), and [i18n Architecture](docs/I18N_SYSTEM.md)
 setup and limitations. GUI remains a separate contributor's responsibility.
 
 ## Project status — 0.39.1

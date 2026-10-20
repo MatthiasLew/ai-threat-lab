@@ -18,6 +18,7 @@ from .analyzer import ThreatAnalyzer
 from .assessment import AssessmentService
 from .campaigns import CampaignService
 from .code_review import CodeReviewResult, review_file, review_source
+from .code_snippet import CodeSnippet, extract_code_snippet
 from .finding_details import DetailedFinding, describe_finding, detailed_findings
 from .gemini_adapter import (
     GEMINI_RESPONSE_SCHEMA,
@@ -29,6 +30,7 @@ from .gemini_adapter import (
 )
 from .gui_api import (
     create_audit_options,
+    export_audit_pdf,
     export_audit_report,
     get_audit_history,
     get_audit_limitations,
@@ -40,7 +42,15 @@ from .gui_api import (
     prepare_ai_packets,
     run_audit,
 )
+from .i18n import (
+    get_active_language,
+    load_language_preference,
+    save_language_preference,
+    set_active_language,
+    t,
+)
 from .models import AnalysisRequest, AnalysisResult, TargetProfile, ValidationError
+from .pdf_report import generate_pdf_report
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report
 from .scan_engine import ScanOptions, ScanService
@@ -75,8 +85,17 @@ __all__ = [
     "get_audit_status",
     "get_audit_limitations",
     "get_audit_results",
+    "export_audit_pdf",
     "export_audit_report",
     "get_audit_history",
+    "generate_pdf_report",
+    "extract_code_snippet",
+    "CodeSnippet",
+    "get_active_language",
+    "set_active_language",
+    "load_language_preference",
+    "save_language_preference",
+    "t",
     "prepare_ai_packets",
     "ThreatAnalyzer",
     "ProviderRegistry",

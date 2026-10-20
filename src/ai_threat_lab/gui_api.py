@@ -325,8 +325,10 @@ def export_audit_report(
     *,
     format: str = "json",
     language: str = "en",
+    ai_review: dict | None = None,
+    ai_review_path: Path | str | None = None,
 ) -> str:
-    """Export a verified saved scan or batch report as JSON, SARIF, or localized HTML."""
+    """Export a verified saved scan or batch report as JSON, SARIF, localized HTML, or PDF."""
     validate_report_language(language)
     root = Path(run_dir)
     target_out = Path(output) if output is not None else None
@@ -336,6 +338,20 @@ def export_audit_report(
         and target_out.resolve().is_relative_to(root.resolve())
     ):
         raise ValidationError("Export must stay outside the saved run")
+    if format == "pdf":
+        saved = load_saved_run(root)
+        from .pdf_report import generate_pdf_report
+
+        ai_data = ai_review
+        if ai_data is None and ai_review_path is not None:
+            with open(ai_review_path, "r", encoding="utf-8") as f:
+                ai_data = json.load(f)
+        raw = generate_pdf_report(saved["report"], ai_review=ai_data, lang=language)
+        if len(raw) > MAX_EXPORT_BYTES:
+            raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
+        if target_out is not None:
+            write_new_report(target_out, raw)
+        return str(target_out) if target_out is not None else f"<PDF binary data: {len(raw)} bytes>"
     if format == "sarif":
         saved = load_saved_run(root)
         raw = _render_report_sarif(saved["report"], language=language).encode("utf-8")
@@ -353,6 +369,36 @@ def export_audit_report(
             write_new_report(target_out, raw)
         return raw.decode("utf-8")
     return export_saved_report(root, format=format, output=target_out)
+
+
+def export_audit_pdf(
+    run_or_report: Path | str | dict,
+    output: Path | str,
+    *,
+    language: str = "en",
+    ai_review: dict | None = None,
+) -> Path:
+    """Export a verified scan/batch report or dictionary directly as a PDF file."""
+    validate_report_language(language)
+    out_path = Path(output)
+    from .pdf_report import generate_pdf_report
+
+    if isinstance(run_or_report, dict):
+        report_dict = run_or_report
+    else:
+        path = Path(run_or_report)
+        if path.is_dir():
+            saved = load_saved_run(path)
+            report_dict = saved["report"]
+        else:
+            with open(path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            report_dict = loaded.get("report", loaded)
+    raw = generate_pdf_report(report_dict, ai_review=ai_review, lang=language)
+    if len(raw) > MAX_EXPORT_BYTES:
+        raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
+    write_new_report(out_path, raw)
+    return out_path
 
 
 def get_audit_history(history_root: Path | str) -> dict:
@@ -408,6 +454,7 @@ __all__ = [
     "describe_finding",
     "detailed_findings",
     "encoded",
+    "export_audit_pdf",
     "export_audit_report",
     "gemini_explain_result",
     "gemini_review_result",

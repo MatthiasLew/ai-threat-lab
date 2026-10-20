@@ -90,6 +90,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
     commands.add_parser(
+        "menu", help="Interactive text menu with language selection and guided audit"
+    )
+    commands.add_parser(
         "console", help="Guided target, saved report, AI preview and setup workflow"
     )
     analyze = commands.add_parser("analyze", help="Analyze a fictional scenario")
@@ -130,7 +133,8 @@ def build_parser() -> argparse.ArgumentParser:
         "doctor", help="Check adapter registrations or installation without network access"
     )
     doctor.add_argument(
-        "--installation", action="store_true",
+        "--installation",
+        action="store_true",
         help="Check Python, distribution identity and bundled catalog; no credential access",
     )
     example = commands.add_parser("campaign-example", help="Create a fictional exercise request")
@@ -181,6 +185,11 @@ def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
 
 
 def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = None) -> int:
+    if argv is None and len(sys.argv) <= 1:
+        if sys.stdin.isatty() and sys.stdout.isatty():
+            from .interactive_menu import run_interactive_entrypoint
+
+            return run_interactive_entrypoint(registry=registry)
     args = build_parser().parse_args(argv)
     try:
         registry = registry or ProviderRegistry()
@@ -201,6 +210,10 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_call_command(args)
         if args.command in AVATAR_COMMANDS:
             return run_avatar_command(args)
+        if args.command == "menu":
+            from .interactive_menu import run_interactive_entrypoint
+
+            return run_interactive_entrypoint(registry=registry)
         if args.command == "console":
             prefix = ["--config", str(args.config)] if args.config else []
             return run_console(lambda argv: main([*prefix, *argv], registry=registry))

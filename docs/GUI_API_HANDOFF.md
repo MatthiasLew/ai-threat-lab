@@ -188,7 +188,7 @@ Zwraca kompletny słownik wyników gotowy do wyświetlenia w widokach tabelarycz
 - `html_report` / `html`: pełny raport HTML z rygorystycznym `Content-Security-Policy` w wybranym języku
 - `not_checked`: lista pominiętych kontroli i ograniczeń
 
-### 3.7 Eksport raportów — `export_audit_report(...)`
+### 3.7 Eksport raportów — `export_audit_report(...)`, `export_audit_pdf(...)`
 
 ```python
 def export_audit_report(
@@ -197,10 +197,20 @@ def export_audit_report(
     *,
     format: str = "json",
     language: str = "en",
+    ai_review: dict | None = None,
+    ai_review_path: Path | str | None = None,
 ) -> str: ...
+
+def export_audit_pdf(
+    run_or_report: Path | str | dict,
+    output: Path | str,
+    *,
+    language: str = "en",
+    ai_review: dict | None = None,
+) -> Path: ...
 ```
 
-Eksportuje zweryfikowany przebieg do formatu `"json"`, `"html"` (w języku `"en"` lub `"pl"`) lub `"sarif"` (SARIF v2.1.0). Jeżeli podano `output`, zapisuje plik atomowo z flagą `O_CREAT | O_EXCL` poza katalogiem przebiegu.
+Eksportuje zweryfikowany przebieg do formatu `"json"`, `"html"` (w języku `"en"` lub `"pl"`), `"sarif"` (SARIF v2.1.0) lub profesjonalnego `"pdf"`. Generator PDF tworzy dokument PDF 1.4 z obsługą polskich znaków diakrytycznych, kartami wyników, wycinkami kodu źródłowego i opcjonalną interpretacją doradczą Gemini AI. Jeżeli podano `output`, zapisuje plik atomowo z flagą `O_CREAT | O_EXCL` poza katalogiem przebiegu.
 
 ### 3.8 Pobranie historii uruchomień — `get_audit_history(...)`
 

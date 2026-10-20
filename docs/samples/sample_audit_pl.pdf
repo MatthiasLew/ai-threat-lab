@@ -1,0 +1,247 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Length 626 >>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def
+/CMapName /Custom-ToUnicode def
+/CMapType 2 def
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+18 beginbfrange
+<8C> <8C> <015A>
+<8F> <8F> <0179>
+<9C> <9C> <015B>
+<9F> <9F> <017A>
+<A3> <A3> <0141>
+<A5> <A5> <0104>
+<AF> <AF> <017B>
+<B3> <B3> <0142>
+<B9> <B9> <0105>
+<BF> <BF> <017C>
+<C6> <C6> <0106>
+<CA> <CA> <0118>
+<D1> <D1> <0143>
+<D3> <D3> <00D3>
+<E6> <E6> <0107>
+<EA> <EA> <0119>
+<F1> <F1> <0144>
+<F3> <F3> <00F3>
+endbfrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /F1 /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [ 140 /Sacute 143 /Zacute 156 /sacute 159 /zacute 163 /Lslash 165 /Aogonek 175 /Zdotaccent 179 /lslash 185 /aogonek 191 /zdotaccent 198 /Cacute 202 /Eogonek 209 /Nacute 211 /Oacute 230 /cacute 234 /eogonek 241 /nacute 243 /oacute ] >> /ToUnicode 1 0 R >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /F2 /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [ 140 /Sacute 143 /Zacute 156 /sacute 159 /zacute 163 /Lslash 165 /Aogonek 175 /Zdotaccent 179 /lslash 185 /aogonek 191 /zdotaccent 198 /Cacute 202 /Eogonek 209 /Nacute 211 /Oacute 230 /cacute 234 /eogonek 241 /nacute 243 /oacute ] >> /ToUnicode 1 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /F3 /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [ 140 /Sacute 143 /Zacute 156 /sacute 159 /zacute 163 /Lslash 165 /Aogonek 175 /Zdotaccent 179 /lslash 185 /aogonek 191 /zdotaccent 198 /Cacute 202 /Eogonek 209 /Nacute 211 /Oacute 230 /cacute 234 /eogonek 241 /nacute 243 /oacute ] >> /ToUnicode 1 0 R >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /F4 /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [ 140 /Sacute 143 /Zacute 156 /sacute 159 /zacute 163 /Lslash 165 /Aogonek 175 /Zdotaccent 179 /lslash 185 /aogonek 191 /zdotaccent 198 /Cacute 202 /Eogonek 209 /Nacute 211 /Oacute 230 /cacute 234 /eogonek 241 /nacute 243 /oacute ] >> /ToUnicode 1 0 R >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /F5 /Encoding << /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [ 140 /Sacute 143 /Zacute 156 /sacute 159 /zacute 163 /Lslash 165 /Aogonek 175 /Zdotaccent 179 /lslash 185 /aogonek 191 /zdotaccent 198 /Cacute 202 /Eogonek 209 /Nacute 211 /Oacute 230 /cacute 234 /eogonek 241 /nacute 243 /oacute ] >> /ToUnicode 1 0 R >>
+endobj
+7 0 obj
+<< /Length 3996 >>
+stream
+0.080 0.160 0.320 rg 45.00 791.89 505.28 6.00 re f
+0.080 0.160 0.320 rg BT /F2 22.00 Tf 45.00 756.89 Td (AI THREAT LAB) Tj ET
+0.400 0.450 0.520 rg BT /F1 10.00 Tf 45.00 736.89 Td (Bezpieczne audyty offline, przejrzyste raporty i doradcze analizy AI) Tj ET
+0.120 0.150 0.200 rg BT /F2 20.00 Tf 45.00 691.89 Td (Raport Analizy Bezpieczeñstwa) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.970 0.980 0.990 rg 45.00 606.89 505.28 65.00 re B
+0.080 0.160 0.320 rg BT /F2 15.00 Tf 61.00 653.89 Td (Projekt: Sklep Internetowy ? Backend API) Tj ET
+0.400 0.450 0.520 rg BT /F4 9.00 Tf 61.00 629.89 Td (Sklep Internetowy ? Backend API) Tj ET
+1.00 w 0.850 0.880 0.920 RG 1.000 1.000 1.000 rg 45.00 466.89 505.28 120.00 re B
+0.220 0.350 0.550 rg BT /F2 9.50 Tf 61.00 564.89 Td (Data analizy:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 215.00 564.89 Td (2026-10-20 21:59 UTC) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.50 Tf 61.00 544.89 Td (Jêzyk raportu:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 215.00 544.89 Td (Polski \(pl\)) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.50 Tf 61.00 524.89 Td (Zakres analizy:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 215.00 524.89 Td (Lokalny audyt statyczny \(offline\)) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.50 Tf 61.00 504.89 Td (Status przebiegu:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 215.00 504.89 Td (CANDIDATE_FINDINGS) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.50 Tf 61.00 484.89 Td (Interpretacja AI:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 215.00 484.89 Td (Google Gemini \(gemini-2.5-flash\)) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.940 0.960 0.980 rg 45.00 341.89 505.28 100.00 re B
+0.080 0.160 0.320 rg BT /F2 10.00 Tf 61.00 421.89 Td (Wa¿na informacja o zakresie analizy) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 61.00 405.89 Td (Niniejszy raport zawiera wyniki automatycznej, statycznej analizy bezpieczeñstwa wykonanej w bezpiecznym trybie) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 61.00 393.39 Td (offline. Wszelkie wykryte problemy stanowi¹ kandydatów do weryfikacji i wymagaj¹ sprawdzenia kontekstu przez) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 61.00 380.89 Td (programistê. Raport nie stanowi pe³nego audytu bezpieczeñstwa, testu penetracyjnego ani gwarancji braku innych) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 61.00 368.39 Td (podatnoœci.) Tj ET
+0.080 0.160 0.320 rg BT /F2 13.00 Tf 45.00 311.89 Td (Podsumowanie dla kierownictwa i u¿ytkownika) Tj ET
+1.00 w 0.220 0.350 0.550 RG 45.00 305.89 m 550.28 305.89 l S
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 45.00 291.89 Td (W projekcie wykryto ³¹cznie 3 potencjalnych problemów bezpieczeñstwa \(P1: 1, P2: 1, P3: 1\). Wszystkie wykrycia) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 45.00 277.89 Td (maj¹ charakter kandydatów wymagaj¹cych weryfikacji. Zaleca siê priorytetowe zbadanie problemów P1 przed) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.50 Tf 45.00 263.89 Td (wdro¿eniem produkcyjnym.) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.970 0.980 0.990 rg 45.00 156.89 120.32 55.00 re B
+0.400 0.450 0.520 rg BT /F2 6.50 Tf 53.00 193.89 Td (POTENCJALNE ZAGRO¯ENIA) Tj ET
+0.080 0.160 0.320 rg BT /F2 20.00 Tf 53.00 166.89 Td (3) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.970 0.980 0.990 rg 173.32 156.89 120.32 55.00 re B
+0.400 0.450 0.520 rg BT /F2 6.50 Tf 181.32 193.89 Td (WYSOKI PRIORYTET \(P1\)) Tj ET
+0.700 0.100 0.100 rg BT /F2 20.00 Tf 181.32 166.89 Td (1) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.970 0.980 0.990 rg 301.64 156.89 120.32 55.00 re B
+0.400 0.450 0.520 rg BT /F2 6.50 Tf 309.64 193.89 Td (ŒREDNI PRIORYTET \(P2\)) Tj ET
+0.700 0.400 0.000 rg BT /F2 20.00 Tf 309.64 166.89 Td (1) Tj ET
+1.00 w 0.850 0.880 0.920 RG 0.970 0.980 0.990 rg 429.96 156.89 120.32 55.00 re B
+0.400 0.450 0.520 rg BT /F2 6.50 Tf 437.96 193.89 Td (POMINIÊTE ELEMENTY) Tj ET
+0.400 0.450 0.520 rg BT /F2 20.00 Tf 437.96 166.89 Td (3) Tj ET
+0.50 w 0.850 0.880 0.920 RG 45.00 32.00 m 550.28 32.00 l S
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 45.00 20.00 Td (Sklep Internetowy ? Backend API) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 470.28 20.00 Td (Strona 1 z 3) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Length 6101 >>
+stream
+0.080 0.160 0.320 rg BT /F2 15.00 Tf 45.00 796.89 Td (Szczegó³owe opisy wykrytych zagro¿eñ) Tj ET
+1.00 w 0.220 0.350 0.550 RG 45.00 788.89 m 550.28 788.89 l S
+0.080 0.160 0.320 rg BT /F2 12.00 Tf 45.00 768.89 Td (Zagro¿enie nr 1: Obserwacja audytowa \(unspecified\)) Tj ET
+0.75 w 0.970 0.710 0.710 RG 0.990 0.910 0.910 rg 430.28 756.89 95.44 16.00 re B
+0.610 0.110 0.110 rg BT /F2 8.00 Tf 436.28 761.39 Td (Wysoki priorytet \(P1\)) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 45.00 750.89 Td (Status ustalenia: Kandydat do weryfikacji  |  Lokalizacja: src/tasks/exporter.py) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 736.89 Td (Co wykryto?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 724.89 Td (Obserwacja audytowa \(unspecified\) ? lokalizacja: src/tasks/exporter.py. Dowód: ) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 704.89 Td (Dlaczego mo¿e to byæ niebezpieczne?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 692.89 Td (Analizator zg³osi³ obserwacjê dla regu³y `unspecified` na podstawie dowodu:  Wymaga przegl¹du przez in¿yniera w celu oceny) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 680.89 Td (wp³ywu w kontekœcie docelowego systemu.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 660.89 Td (Fragment kodu Ÿród³owego) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 648.89 Td (Kod Ÿród³owy niedostêpny lokalnie lub brak dostêpu do pliku.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 632.89 Td (Co nale¿y sprawdziæ?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 620.89 Td (SprawdŸ, czy dane wejœciowe przekazywane do tej operacji mog¹ pochodziæ z zewn¹trz i czy s¹ odpowiednio sanityzowane.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 600.89 Td (Jak naprawiæ problem?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 588.89 Td (Zast¹p wywo³anie shell=True przekazaniem listy argumentów: subprocess.run\(['tar', '-czf', archive, path], check=True,) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 576.89 Td (shell=False\).) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 556.89 Td (Jak zweryfikowaæ naprawê?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 544.89 Td (Zastosuj zalecenie \(Zast¹p wywo³anie shell=True przekazaniem listy argumentów: subprocess.run\(['tar', '-czf', archive,) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 532.89 Td (path], check=True, shell=False\).\) i ponownie uruchom kontrolê `ai-threat-lab`.) Tj ET
+0.400 0.450 0.520 rg BT /F2 8.50 Tf 45.00 512.89 Td (Ograniczenia analizy) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 501.89 Td (Statyczna obserwacja czêœciowa; nie stanowi potwierdzonej podatnoœci bez weryfikacji kontekstu.) Tj ET
+1.00 w 0.700 0.800 0.950 RG 0.950 0.960 0.990 rg 45.00 432.89 505.28 55.00 re B
+0.080 0.160 0.320 rg BT /F2 8.50 Tf 53.00 470.89 Td (Interpretacja AI \(Google Gemini\):) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.00 Tf 53.00 457.89 Td () Tj ET
+0.75 w 0.850 0.880 0.920 RG 45.00 410.89 m 550.28 410.89 l S
+0.080 0.160 0.320 rg BT /F2 12.00 Tf 45.00 392.89 Td (Zagro¿enie nr 2: Obserwacja audytowa \(unspecified\)) Tj ET
+0.75 w 0.990 0.880 0.280 RG 0.990 0.940 0.540 rg 430.28 380.89 93.92 16.00 re B
+0.470 0.210 0.060 rg BT /F2 8.00 Tf 436.28 385.39 Td (Œredni priorytet \(P2\)) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 45.00 374.89 Td (Status ustalenia: Kandydat do weryfikacji  |  Lokalizacja: src/config/integrations.py) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 360.89 Td (Co wykryto?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 348.89 Td (Obserwacja audytowa \(unspecified\) ? lokalizacja: src/config/integrations.py. Dowód: ) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 328.89 Td (Dlaczego mo¿e to byæ niebezpieczne?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 316.89 Td (Analizator zg³osi³ obserwacjê dla regu³y `unspecified` na podstawie dowodu:  Wymaga przegl¹du przez in¿yniera w celu oceny) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 304.89 Td (wp³ywu w kontekœcie docelowego systemu.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 284.89 Td (Fragment kodu Ÿród³owego) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 272.89 Td (Kod Ÿród³owy niedostêpny lokalnie lub brak dostêpu do pliku.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 256.89 Td (Co nale¿y sprawdziæ?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 244.89 Td (SprawdŸ, czy dane wejœciowe przekazywane do tej operacji mog¹ pochodziæ z zewn¹trz i czy s¹ odpowiednio sanityzowane.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 224.89 Td (Jak naprawiæ problem?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 212.89 Td (Przenieœ klucz do zmiennych œrodowiskowych lub bezpiecznego mened¿era sekretów \(np. os.environ['INTEGRATION_KEY']\) i) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 200.89 Td (dodaj go do pliku .env.example.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 180.89 Td (Jak zweryfikowaæ naprawê?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 168.89 Td (Zastosuj zalecenie \(Przenieœ klucz do zmiennych œrodowiskowych lub bezpiecznego mened¿era sekretów \(np.) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 156.89 Td (os.environ['INTEGRATION_KEY']\) i dodaj go do pliku .env.example.\) i ponownie uruchom kontrolê `ai-threat-lab`.) Tj ET
+0.400 0.450 0.520 rg BT /F2 8.50 Tf 45.00 136.89 Td (Ograniczenia analizy) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 125.89 Td (Statyczna obserwacja czêœciowa; nie stanowi potwierdzonej podatnoœci bez weryfikacji kontekstu.) Tj ET
+1.00 w 0.700 0.800 0.950 RG 0.950 0.960 0.990 rg 45.00 56.89 505.28 55.00 re B
+0.080 0.160 0.320 rg BT /F2 8.50 Tf 53.00 94.89 Td (Interpretacja AI \(Google Gemini\):) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.00 Tf 53.00 81.89 Td () Tj ET
+0.75 w 0.850 0.880 0.920 RG 45.00 34.89 m 550.28 34.89 l S
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 45.00 813.89 Td (AI THREAT LAB ? Raport Analizy Bezpieczeñstwa) Tj ET
+0.50 w 0.850 0.880 0.920 RG 45.00 809.89 m 550.28 809.89 l S
+0.50 w 0.850 0.880 0.920 RG 45.00 32.00 m 550.28 32.00 l S
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 45.00 20.00 Td (Sklep Internetowy ? Backend API) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 470.28 20.00 Td (Strona 2 z 3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Length 4285 >>
+stream
+0.080 0.160 0.320 rg BT /F2 12.00 Tf 45.00 796.89 Td (Zagro¿enie nr 3: Obserwacja audytowa \(unspecified\)) Tj ET
+0.75 w 0.640 0.790 0.990 RG 0.880 0.940 0.990 rg 430.28 784.89 87.84 16.00 re B
+0.120 0.260 0.620 rg BT /F2 8.00 Tf 436.28 789.39 Td (Niski priorytet \(P3\)) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 45.00 778.89 Td (Status ustalenia: Kandydat do weryfikacji  |  Lokalizacja: src/utils/checksum.py) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 764.89 Td (Co wykryto?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 752.89 Td (Obserwacja audytowa \(unspecified\) ? lokalizacja: src/utils/checksum.py. Dowód: ) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 732.89 Td (Dlaczego mo¿e to byæ niebezpieczne?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 720.89 Td (Analizator zg³osi³ obserwacjê dla regu³y `unspecified` na podstawie dowodu:  Wymaga przegl¹du przez in¿yniera w celu oceny) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 708.89 Td (wp³ywu w kontekœcie docelowego systemu.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 688.89 Td (Fragment kodu Ÿród³owego) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 676.89 Td (Kod Ÿród³owy niedostêpny lokalnie lub brak dostêpu do pliku.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 660.89 Td (Co nale¿y sprawdziæ?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 648.89 Td (SprawdŸ, czy dane wejœciowe przekazywane do tej operacji mog¹ pochodziæ z zewn¹trz i czy s¹ odpowiednio sanityzowane.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 628.89 Td (Jak naprawiæ problem?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 616.89 Td (Zast¹p hashlib.md5 bezpiecznym algorytmem hashlib.sha256.) Tj ET
+0.220 0.350 0.550 rg BT /F2 9.00 Tf 45.00 596.89 Td (Jak zweryfikowaæ naprawê?) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.50 Tf 45.00 584.89 Td (Zastosuj zalecenie \(Zast¹p hashlib.md5 bezpiecznym algorytmem hashlib.sha256.\) i ponownie uruchom kontrolê `ai-threat-lab`.) Tj ET
+0.400 0.450 0.520 rg BT /F2 8.50 Tf 45.00 564.89 Td (Ograniczenia analizy) Tj ET
+0.400 0.450 0.520 rg BT /F3 8.00 Tf 45.00 553.89 Td (Statyczna obserwacja czêœciowa; nie stanowi potwierdzonej podatnoœci bez weryfikacji kontekstu.) Tj ET
+1.00 w 0.700 0.800 0.950 RG 0.950 0.960 0.990 rg 45.00 484.89 505.28 55.00 re B
+0.080 0.160 0.320 rg BT /F2 8.50 Tf 53.00 522.89 Td (Interpretacja AI \(Google Gemini\):) Tj ET
+0.120 0.150 0.200 rg BT /F1 8.00 Tf 53.00 509.89 Td () Tj ET
+0.75 w 0.850 0.880 0.920 RG 45.00 462.89 m 550.28 462.89 l S
+0.080 0.160 0.320 rg BT /F2 13.00 Tf 45.00 444.89 Td (Doradcza interpretacja AI \(Google Gemini\)) Tj ET
+1.00 w 0.220 0.350 0.550 RG 45.00 436.89 m 550.28 436.89 l S
+0.120 0.150 0.200 rg BT /F2 9.50 Tf 45.00 418.89 Td (Podsumowanie modelu:) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.00 Tf 45.00 406.89 Td (Audytowany kod zawiera krytyczny punkt ryzyka zwi¹zany z wykonaniem poleceñ pow³oki w module eksportu oraz) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.00 Tf 45.00 393.89 Td (wyciek danych uwierzytelniaj¹cych. Wdro¿enie rekomendacji zabezpieczy aplikacjê przed zdalnym przejêciem œrodowiska) Tj ET
+0.120 0.150 0.200 rg BT /F1 9.00 Tf 45.00 380.89 Td (wykonawczego.) Tj ET
+0.080 0.160 0.320 rg BT /F2 13.00 Tf 45.00 353.89 Td (Ograniczenia analizy i elementy nieobjête badaniem) Tj ET
+1.00 w 0.220 0.350 0.550 RG 45.00 345.89 m 550.28 345.89 l S
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 53.00 329.89 Td (? {'tool_id': 'dynamic_taint_tracking', 'reason': 'Statyczna analiza offline nie œledzi przep³ywu danych w czasie wykonania programu.'}) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 53.00 315.89 Td (? {'tool_id': 'network_port_audit', 'reason': 'Tryb audytu offline zabrania wysy³ania pakietów sieciowych do badanych hostów.'}) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.50 Tf 53.00 301.89 Td (? {'tool_id': 'binary_dependency_decompilation', 'reason': 'Zewnêtrzne skompilowane biblioteki C \(.dll/.so\) zosta³y pominiête.'}) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 45.00 813.89 Td (AI THREAT LAB ? Raport Analizy Bezpieczeñstwa) Tj ET
+0.50 w 0.850 0.880 0.920 RG 45.00 809.89 m 550.28 809.89 l S
+0.50 w 0.850 0.880 0.920 RG 45.00 32.00 m 550.28 32.00 l S
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 45.00 20.00 Td (Sklep Internetowy ? Backend API) Tj ET
+0.400 0.450 0.520 rg BT /F1 8.00 Tf 470.28 20.00 Td (Strona 3 z 3) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 13 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> /Contents 7 0 R >>
+endobj
+11 0 obj
+<< /Type /Page /Parent 13 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> /Contents 8 0 R >>
+endobj
+12 0 obj
+<< /Type /Page /Parent 13 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R /F5 6 0 R >> >> /Contents 9 0 R >>
+endobj
+13 0 obj
+<< /Type /Pages /Kids [ 10 0 R 11 0 R 12 0 R ] /Count 3 >>
+endobj
+14 0 obj
+<< /Type /Catalog /Pages 13 0 R >>
+endobj
+xref
+0 15
+0000000000 65535 f 
+0000000015 00000 n 
+0000000692 00000 n 
+0000001080 00000 n 
+0000001468 00000 n 
+0000001856 00000 n 
+0000002244 00000 n 
+0000002632 00000 n 
+0000006680 00000 n 
+0000012833 00000 n 
+0000017170 00000 n 
+0000017344 00000 n 
+0000017518 00000 n 
+0000017692 00000 n 
+0000017767 00000 n 
+trailer
+<< /Size 15 /Root 14 0 R >>
+startxref
+17818
+%%EOF
