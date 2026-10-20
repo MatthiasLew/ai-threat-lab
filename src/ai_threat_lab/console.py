@@ -14,6 +14,7 @@ AI Threat Lab
 6. Show capabilities and limits
 7. Prepare, approve and run local training
 8. Browse history, compare, export or scan a local batch
+9. Review multiple pages within an approved website path
 0. Exit
 """
 
@@ -32,7 +33,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–8: ")
+            choice = ask("Choose 0–9: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -83,8 +84,24 @@ def run_console(run):
                 code = training_menu(run, ask)
             elif choice == "8":
                 code = history_menu(run, ask)
+            elif choice == "9":
+                from urllib.parse import urlsplit
+
+                from .site_review import canonical_url
+
+                target = canonical_url(ask("Start HTTPS URL (no query or credentials): "))
+                prefix = ask("Approved path prefix ending in /: ")
+                output = ask("New combined JSON report: ")
+                print("Up to 10 GET requests, depth 2, within this host and path. "
+                      "No cookies, login, forms or redirects. "
+                      "GET can have effects on incorrectly designed applications.")
+                if ask("Allow these requests? [y/N]: ", required=False).lower() != "y":
+                    continue
+                code = run(["review-site", target, "--network", "--allow-host",
+                            urlsplit(target).hostname, "--path-prefix", prefix,
+                            "--output", output])
             else:
-                print("Choose a number from 0 to 8.")
+                print("Choose a number from 0 to 9.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

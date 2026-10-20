@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+The additional [passive site review](SITE_REVIEW.md) supports bounded same-host/path
+navigation through eligible HTML links and combines per-page header/HTML evidence.
+Authenticated browser/application logic, form submission and active testing remain absent.
+
 The [console integration workflow](CONSOLE_WORKFLOW.md) adds guided navigation,
 prepared-tool planning, inspection, local saved summaries, setup diagnostics and
 optional reference-validated AI advice. Combined reports and verified single/batch

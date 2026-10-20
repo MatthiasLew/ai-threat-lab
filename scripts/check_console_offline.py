@@ -8,6 +8,7 @@ import tempfile
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
+import ai_threat_lab.http_client as http
 import ai_threat_lab.integration_cli as integration
 from ai_threat_lab.cli import main
 from ai_threat_lab.http_client import HttpResponse
@@ -60,6 +61,25 @@ def main_check():
     integration.PublicHTTPS = lambda *args, **kwargs: wire
     with tempfile.TemporaryDirectory(prefix="console acceptance ") as folder:
         root = Path(folder)
+        class SiteWire:
+            calls = []
+
+            def request(self, url):
+                self.calls.append(url)
+                assert url in ("https://site.example/app/", "https://site.example/app/one")
+                body = (b'<a href="one">one</a><a href="/outside">skip</a>'
+                        if url.endswith("/") else
+                        b'<form><input type="password" name="p"></form>')
+                return HttpResponse(200, {"content-type": "text/html"}, body,
+                                    (("content-type", "text/html"),))
+
+        site_wire = SiteWire()
+        http.PublicHTTPS = lambda *args, **kwargs: site_wire
+        site_output = root / "site.json"
+        run("review-site", "https://site.example/app/", "--network", "--allow-host",
+            "site.example", "--path-prefix", "/app/", "--output", site_output)
+        assert len(site_wire.calls) == 2
+        assert "html_password_form_get" in run("brief", site_output)
         source, bundle = root / "source.py", root / "saved run"
         source.write_text("eval(input())\n", encoding="utf-8")
         plan = json.loads(run("plan", source))

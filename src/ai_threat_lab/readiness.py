@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "passive_site_navigation",
+            "implemented",
+            "integration_validation_required",
+            "Explicit same-host/path HTTPS navigation, at most 20 pages and depth 5. "
+            "Prepared header/HTML checks, bounded discovery and per-page failure evidence. "
+            "No authentication, queries, JavaScript, redirects, forms or active tests.",
+        ),
+        (
             "console_workflow",
             "implemented",
             "not_required",

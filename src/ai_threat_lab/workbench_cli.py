@@ -13,12 +13,22 @@ from .review_packets import review_packets, select_packet
 from .scan_cli import advisory_lookup, assessor
 from .scan_engine import ScanOptions, ScanService
 from .setup_check import setup_check
+from .site_review import SiteReview, canonical_url
 from .tool_plan import plan_target
 
-COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check"}
+COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site"}
 
 
 def add_commands(commands):
+    site = commands.add_parser("review-site", help="Bounded passive same-host page navigation")
+    site.add_argument("target")
+    site.add_argument("--network", action="store_true")
+    site.add_argument("--allow-host", action="append", default=[])
+    site.add_argument("--path-prefix", default="/")
+    site.add_argument("--max-pages", type=int, default=10)
+    site.add_argument("--max-depth", type=int, default=2)
+    site.add_argument("--output", type=Path)
+    site.add_argument("--fail-on-findings", action="store_true")
     setup = commands.add_parser("setup-check", help="Validate local setup without inspecting keys")
     setup.add_argument("--ai-config", type=Path)
     setup.add_argument("--output", type=Path)
@@ -113,6 +123,30 @@ def _preview(value, config, evidence, *, structured):
 
 
 def run_command(args):
+    if args.command == "review-site":
+        from urllib.parse import urlsplit
+
+        from .http_client import PublicHTTPS
+
+        target = canonical_url(args.target)
+        host = urlsplit(target).hostname
+        if not args.network or host not in [h.lower() for h in args.allow_host]:
+            raise ValidationError("Site navigation requires --network and exact --allow-host")
+        if args.output and (args.output.exists() or args.output.is_symlink()):
+            raise ValidationError("Output already exists")
+        review = SiteReview(
+            PublicHTTPS([host], max_bytes=256 * 1024, max_requests=20,
+                        allow_partial_body=True),
+            max_pages=args.max_pages, max_depth=args.max_depth,
+        )
+        report, failures = review.run(target, path_prefix=args.path_prefix)
+        text = write_document(report)
+        if args.output:
+            write_new_report(args.output, text.encode("utf-8"))
+            print(f"Report saved: {args.output}")
+        else:
+            print(text, end="")
+        return 2 if failures else 1 if args.fail_on_findings and report["findings"] else 0
     if args.command == "setup-check":
         text = write_document(setup_check(args.ai_config))
     elif args.command in ("plan", "inspect"):

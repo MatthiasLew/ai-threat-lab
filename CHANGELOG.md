@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add `review-site` and guided passive site navigation: explicit host/path scope, bounded
+  breadth-first discovery, reused header/HTML checks, per-page failures and standard combined
+  evidence usable by brief/AI review. Exercise installed navigation with all sockets blocked.
+
 - Add guided `console`, deterministic `plan`, `inspect` using the existing scan service,
   source-independent `brief`, exact `ai-prepare` previews and credential-free `setup-check`.
 - Connect single assessments, internally validated combined reports and verified single/batch
