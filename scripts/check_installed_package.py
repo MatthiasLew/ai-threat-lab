@@ -40,6 +40,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "scripts/check_console_offline.py", ".ai-dev-tools.toml",
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
             "docs/ATTACHMENT_REVIEW.md",
+            "docs/FILE_REPUTATION.md", "scripts/check_reputation_offline.py",
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
             "docs/COMPOSER_NUGET.md",
             "docs/SAVED_SITE_SESSION.md",
@@ -178,6 +179,11 @@ def main() -> None:
             "duplicate_blocking": True, "audio_validated": True,
         }
         console_receipt = json.loads(run(python, ROOT / "scripts/check_console_offline.py"))
+        reputation_receipt = json.loads(run(python, ROOT / "scripts/check_reputation_offline.py"))
+        assert reputation_receipt == {
+            "status": "passed", "synthetic_requests": 2, "live_requests": 0,
+            "source_independent_summary": True, "file_bytes_uploaded": False,
+        }
         assert console_receipt == {
             "status": "passed", "synthetic_ai_requests": 2, "live_requests": 0,
             "source_independent_summary": True, "invalid_advice_rejected": True,

@@ -20,6 +20,7 @@ AI Threat Lab
 12. Review the structure of saved email attachments
 13. Prepare or generate a fictional stock-voice audio asset
 14. Review an approved website path using a saved session
+15. Preview or query existing file reputation by SHA-256
 0. Exit
 """
 
@@ -38,7 +39,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–14: ")
+            choice = ask("Choose 0–15: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -149,8 +150,12 @@ def run_console(run):
                             urlsplit(target).hostname, "--path-prefix", prefix,
                             "--session-file", session, "--output", output,
                             "--private-path-map", private_map])
+            elif choice == "15":
+                from .reputation_cli import reputation_menu
+
+                code = reputation_menu(run, ask)
             else:
-                print("Choose a number from 0 to 14.")
+                print("Choose a number from 0 to 15.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

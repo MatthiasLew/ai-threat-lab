@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+[Existing file reputation](FILE_REPUTATION.md) supplements local structure checks
+with an explicitly authorized SHA-256 lookup. Provider counts remain dated unverified
+claims; no upload, rescan or execution occurs. Real account/response acceptance is deferred.
+
 Ordinary EML scans now include the bounded decoded-attachment checks, preserving
 message evidence when an attachment fails. Engine 28 records this coverage change.
 Local setup diagnostics also validate optional SMTP/speech profiles without reading keys.

@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add exact-hash preview and explicit existing VirusTotal reputation lookup, preserving
+  local file evidence on provider failures. Validate returned identity, size, dates and
+  bounded statistics; omit free-form provider content. No upload, rescan or execution.
+
 - Integrate bounded attachment structure checks into ordinary EML assessment and scans,
   retaining message evidence on attachment failures. Engine 28 preserves historical bundles.
   Extend credential-free setup checks and console setup to optional SMTP and speech profiles.

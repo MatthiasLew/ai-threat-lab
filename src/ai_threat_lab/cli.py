@@ -28,6 +28,9 @@ from .offline_cli import add_commands as add_offline_commands
 from .offline_cli import run_command as run_offline_command
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report, render_json, render_text
+from .reputation_cli import COMMANDS as REPUTATION_COMMANDS
+from .reputation_cli import add_commands as add_reputation_commands
+from .reputation_cli import run_command as run_reputation_command
 from .scan_cli import COMMANDS as SCAN_COMMANDS
 from .scan_cli import add_commands as add_scan_commands
 from .scan_cli import run_command as run_scan_command
@@ -63,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     add_delivery_commands(commands)
     add_speech_commands(commands)
+    add_reputation_commands(commands)
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
@@ -172,6 +176,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_delivery_command(args)
         if args.command in SPEECH_COMMANDS:
             return run_speech_command(args)
+        if args.command in REPUTATION_COMMANDS:
+            return run_reputation_command(args)
         if args.command == "console":
             prefix = ["--config", str(args.config)] if args.config else []
             return run_console(lambda argv: main([*prefix, *argv], registry=registry))

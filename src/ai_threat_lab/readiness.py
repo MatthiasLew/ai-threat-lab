@@ -4,6 +4,15 @@
 def readiness():
     rows = (
         (
+            "file_hash_reputation",
+            "implemented",
+            "integration_validation_required",
+            "Exact-hash preview and explicit existing VirusTotal report lookup. "
+            "Local structures plus dated unverified engine counts; no upload, rescan or "
+            "execution. Missing records remain unknown; account/quota and real responses "
+            "require validation. Hash sharing can disclose a private file's identity.",
+        ),
+        (
             "saved_site_session",
             "implemented",
             "integration_validation_required",

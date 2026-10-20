@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Program files can optionally use [existing SHA-256 reputation](docs/FILE_REPUTATION.md),
+with an exact local preview and explicit hash sharing. File bytes are not uploaded.
+
 Passive website review can reuse an [explicitly scoped saved session](docs/SAVED_SITE_SESSION.md)
 while keeping private page URLs separate from evidence prepared for AI.
 
