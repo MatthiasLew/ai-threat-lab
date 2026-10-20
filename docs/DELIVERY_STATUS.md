@@ -1,5 +1,14 @@
 # Delivery status and remaining work — 0.39.1
 
+The [console integration workflow](CONSOLE_WORKFLOW.md) adds guided navigation,
+prepared-tool planning, inspection, local saved summaries, setup diagnostics and
+optional reference-validated AI advice. Combined reports and verified single/batch
+bundles can now feed the interpretation layer; lossless bounded packets require
+explicit selection before paid calls. See [completion criteria](CONSOLE_COMPLETION.md).
+The model interprets collected evidence, never generates attack code or executes
+tools. GUI is deliberately assigned to a different contributor. Remaining broader
+collector/provider capabilities in the matrix below are not claimed complete.
+
 The local signed-training-event milestone adds approved plan/alias/key bindings, strict shared-key envelope validation, transactional replay/conflict checks, local cancellation and provenance-separated aggregate reports. It is not a native provider webhook or participant-verification implementation. See [SIGNED_TRAINING_EVENTS.md](SIGNED_TRAINING_EVENTS.md).
 
 The bounded normalized authentication-log milestone adds offline failure/spray/distributed/success-sequence candidates, explicit file routing, reports and acceptance controls. See [AUTHENTICATION_LOGS.md](AUTHENTICATION_LOGS.md). No login attempts or account access occur.

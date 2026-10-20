@@ -1,5 +1,36 @@
 # Architecture
 
+## Console orchestration and evidence interpretation
+
+`tool_plan` selects existing tools deterministically without invoking them.
+`workbench_cli` exposes `plan`, `inspect`, `brief`, `ai-prepare` and `setup-check`;
+`console` provides guided navigation using the existing validated CLI entrypoints.
+`inspect` reuses `ScanService`, not another collector implementation.
+
+`evidence` verifies saved single/batch runs or validates bare report claims and
+preserves stable references/provenance. `review_packets` partitions findings without
+discarding limitations. `ai_review` requests structured advisory prose and validates
+exact reference coverage before caching. `BudgetedAI` records known usage even when
+advice is invalid, and retains reservations when outcomes are unknown. None of these
+modules executes model output. Existing assessment results remain authoritative.
+
+```mermaid
+flowchart LR
+    Target[User-selected target] --> Plan[Prepared-tool plan]
+    Plan --> Scope[Explicit scope and permissions]
+    Scope --> Tools[Existing collectors]
+    Tools --> Evidence[Verified saved evidence]
+    Evidence --> Summary[Local review summary]
+    Evidence --> Preview[Bounded evidence preview]
+    Preview --> Consent[Explicit sharing and budget]
+    Consent --> AI[Optional AI interpretation]
+    AI --> Validation[Reference validation]
+    Validation --> Advice[Unverified advice beside original evidence]
+```
+
+See [console workflow](CONSOLE_WORKFLOW.md). GUI is a separate client of these
+services and is implemented by another contributor.
+
 ## Layers
 
 | Layer | Responsibility |

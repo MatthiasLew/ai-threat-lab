@@ -1,5 +1,11 @@
 # AI integration and cost controls — 0.32.0
 
+The newer [console workflow](CONSOLE_WORKFLOW.md) adds `ai-prepare` and `ai-review`:
+exact previews, bounded explicit packets and validated observation references.
+Both explanation routes share the accounting contract. Known-usage invalid advice
+is recorded without caching or automatic retry. Structured previews/dry-runs do
+not create a ledger.
+
 The `ai-explain` command has a concrete OpenAI Responses adapter, not just an interface. It explains an existing partial assessment. It does not run tools, execute source, generate campaigns, collect personal information or control other adapters. No API calls are made by the default assessment commands or by `--dry-run`.
 
 The finite [offline completion contract](AI_OFFLINE_ACCEPTANCE.md) is the acceptance boundary for version 0.32.0. It covers local accounting, request/cache safety, CLI and fixture-backed adapter behavior. Choosing and validating a real account/model/prices remains deferred. Completion does not claim provider billing guarantees or live output quality.

@@ -34,6 +34,19 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
         identity = archive.read("ai_threat_lab/_version.py")
     with tarfile.open(sdist, "r:gz") as archive:
         prefix = f"ai_threat_lab-{version}/"
+        for relative in (
+            "docs/CONSOLE_WORKFLOW.md", "docs/CLI_INSTALLATION.md", "CHANGELOG.md",
+            "examples/ai-budget.json", "examples/providers.json", "scripts/verify.py",
+            "scripts/check_console_offline.py", ".ai-dev-tools.toml",
+        ):
+            member = archive.extractfile(prefix + relative)
+            assert member is not None, f"Source archive is missing {relative}"
+            with member:
+                assert member.read() == (ROOT / relative).read_bytes()
+        assert not any(
+            name.endswith((".sqlite", ".key", "/.env")) or "/.venv/" in name
+            for name in archive.getnames()
+        )
         for relative, expected in (
             ("src/ai_threat_lab/data/catalog.json", catalog),
             ("src/ai_threat_lab/_version.py", identity),
@@ -149,6 +162,11 @@ def main() -> None:
             "cached_workflows": 2, "live_requests": 0, "ai_calls": 0,
         }
         run(python, ROOT / "scripts/check_ai_offline.py")
+        console_receipt = json.loads(run(python, ROOT / "scripts/check_console_offline.py"))
+        assert console_receipt == {
+            "status": "passed", "synthetic_ai_requests": 2, "live_requests": 0,
+            "source_independent_summary": True, "invalid_advice_rejected": True,
+        }
         ai_report = json.loads((work / "installed-ai-costs-result.json").read_text())
         assert ai_report["days"][0]["calls"] == 3 and not ai_report["unconfirmed"]
         assert (

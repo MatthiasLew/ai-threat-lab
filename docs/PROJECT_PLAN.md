@@ -19,6 +19,13 @@ The current delivery is a bounded offline/read-only CLI foundation. Full applica
 
 ## Current engineering priority
 
+The owner's 2026-10-19 clarification establishes the [console completion contract](CONSOLE_COMPLETION.md):
+prepared tools gather evidence, AI optionally interprets it, and another contributor
+owns the GUI. The [console workflow](CONSOLE_WORKFLOW.md) joins planning, inspection,
+saved summaries, explicit evidence packets and reference-validated advice. Account
+setup and controlled live acceptance remain deferred. This supersedes the earlier
+feature freeze below for these console integration features.
+
 Close confirmed defects and complete the frozen [offline release criteria](OFFLINE_RELEASE_CRITERIA.md). Keep representative positive and negative controls, explicit coverage gaps and truthful status documents. Test counts alone are not acceptance evidence. The package-binding correction in 0.26.1 includes independent inert Python import-oracle checks and paired demo controls.
 
 ## Remaining product tracks

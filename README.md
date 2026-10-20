@@ -4,6 +4,25 @@ Read-only security assessments, optional AI explanations with budget controls, a
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
+## Console workflow
+
+Prepared tools collect evidence; optional AI interprets it and explains what to
+review. It does not generate attack code or execute tools. Start with
+`ai-threat-lab console`, or use:
+
+```bash
+ai-threat-lab plan path/to/project
+ai-threat-lab inspect path/to/project --output-dir results/run-01
+ai-threat-lab brief results/run-01
+ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --structured --split --output preview.json
+ai-threat-lab setup-check --ai-config examples/ai-budget.json
+```
+
+These commands need no AI account. Saved single/batch results can feed optional
+reference-validated AI advice after explicit sharing and budget configuration.
+See [the complete console workflow](docs/CONSOLE_WORKFLOW.md) for packets, estimates,
+setup and limitations. GUI remains a separate contributor's responsibility.
+
 ## Project status — 0.39.1
 
 Dependencies: [inventory, OSV and cache offline acceptance](docs/DEPENDENCIES_OFFLINE_ACCEPTANCE.md).

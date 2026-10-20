@@ -4,6 +4,22 @@
 def readiness():
     rows = (
         (
+            "console_workflow",
+            "implemented",
+            "not_required",
+            "Guided console, deterministic prepared-tool planning, scoped inspection, "
+            "saved source-independent summaries and local setup checks. GUI is separate.",
+        ),
+        (
+            "grounded_ai_review",
+            "implemented",
+            "integration_validation_required",
+            "Verified single/batch evidence input, exact previews, lossless bounded packets, "
+            "explicit call selection and reference-validated advisory JSON. "
+            "No generated attack code, model-executed tools or automatic paid retries. "
+            "Real account/model/schema/prices and prose correctness need controlled validation.",
+        ),
+        (
             "local_code",
             "partial",
             "not_required",
