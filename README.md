@@ -6,6 +6,10 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+Website workflows now include [bounded same-host navigation](docs/SITE_REVIEW.md)
+and [offline browser HAR response review](docs/HAR_REVIEW.md), including saved responses
+from authenticated sessions without replaying requests or sharing account credentials.
+
 Prepared tools collect evidence; optional AI interprets it and explains what to
 review. It does not generate attack code or execute tools. Start with
 `ai-threat-lab console`, or use:

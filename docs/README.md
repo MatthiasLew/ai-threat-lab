@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Bounded multi-page passive navigation](SITE_REVIEW.md)
+- [Saved browser traffic review without request replay](HAR_REVIEW.md)
+
 - [Complete console workflow and optional AI interpretation](CONSOLE_WORKFLOW.md)
 - [Console completion contract](CONSOLE_COMPLETION.md)
 

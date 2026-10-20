@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "saved_browser_capture",
+            "implemented",
+            "not_required",
+            "HAR 1.2 selected response headers/HTML, including captured authenticated sessions. "
+            "No request replay or credential export; malformed/missing bodies stay explicit. "
+            "Not browser/session execution, authenticity or application-logic validation.",
+        ),
+        (
             "passive_site_navigation",
             "implemented",
             "integration_validation_required",

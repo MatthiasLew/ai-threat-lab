@@ -15,6 +15,7 @@ AI Threat Lab
 7. Prepare, approve and run local training
 8. Browse history, compare, export or scan a local batch
 9. Review multiple pages within an approved website path
+10. Review a saved browser HAR capture without replaying requests
 0. Exit
 """
 
@@ -33,7 +34,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–9: ")
+            choice = ask("Choose 0–10: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -100,8 +101,14 @@ def run_console(run):
                 code = run(["review-site", target, "--network", "--allow-host",
                             urlsplit(target).hostname, "--path-prefix", prefix,
                             "--output", output])
+            elif choice == "10":
+                source = ask("Saved HAR 1.2 file: ")
+                output = ask("New combined JSON report: ")
+                print("Reviewing the first 20 entries locally. "
+                      "Captured requests are never replayed.")
+                code = run(["review-har", source, "--output", output])
             else:
-                print("Choose a number from 0 to 9.")
+                print("Choose a number from 0 to 10.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

@@ -80,6 +80,18 @@ def main_check():
             "site.example", "--path-prefix", "/app/", "--output", site_output)
         assert len(site_wire.calls) == 2
         assert "html_password_form_get" in run("brief", site_output)
+        har = root / "browser.har"
+        har.write_text(json.dumps({"log": {"version": "1.2", "entries": [{
+            "request": {"url": "https://site.example/PRIVATE?key=PRIVATE",
+                        "method": "POST", "postData": {"text": "PRIVATE"}},
+            "response": {"status": 200, "headers": [
+                {"name": "set-cookie", "value": "session=PRIVATE"},
+            ], "content": {}},
+        }]}}), encoding="utf-8")
+        har_report = run("review-har", har)
+        assert "cookie_missing_secure" in har_report
+        assert "PRIVATE" not in har_report
+        assert len(site_wire.calls) == 2  # HAR did not replay anything through any transport.
         source, bundle = root / "source.py", root / "saved run"
         source.write_text("eval(input())\n", encoding="utf-8")
         plan = json.loads(run("plan", source))

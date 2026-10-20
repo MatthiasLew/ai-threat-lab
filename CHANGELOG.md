@@ -2,6 +2,9 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add offline HAR 1.2 response review with no request replay, secret-free entry aliases,
+  bounded paging/body decoding, preserved header evidence and explicit malformed/body gaps.
+
 - Add `review-site` and guided passive site navigation: explicit host/path scope, bounded
   breadth-first discovery, reused header/HTML checks, per-page failures and standard combined
   evidence usable by brief/AI review. Exercise installed navigation with all sockets blocked.
