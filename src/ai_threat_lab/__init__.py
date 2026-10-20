@@ -1,7 +1,13 @@
 """AI Threat Lab public integration API."""
 
 from ._version import __version__
-from .ai_costs import AIConfig, CostLedger
+from .ai_costs import (
+    ALL_FAILURE_CATEGORIES,
+    AIConfig,
+    CostLedger,
+    FailureDiagnosis,
+    classify_ai_failure,
+)
 from .ai_review import (
     SUPPORTED_AI_PROVIDERS,
     attach_ai_interpretation,
@@ -43,6 +49,9 @@ __all__ = [
     "__version__",
     "AIConfig",
     "CostLedger",
+    "ALL_FAILURE_CATEGORIES",
+    "FailureDiagnosis",
+    "classify_ai_failure",
     "ScanOptions",
     "ScanService",
     "DetailedFinding",

@@ -26,6 +26,17 @@ TARGET_KINDS = frozenset(
 class ProviderError(RuntimeError):
     """Redacted integration failure; callers must not retry dispatch blindly."""
 
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        category: str | None = None,
+        diagnosis=None,
+    ) -> None:
+        super().__init__(message)
+        self.category = category
+        self.diagnosis = diagnosis
+
 
 @dataclass(frozen=True)
 class ProviderConfig:
@@ -177,5 +188,5 @@ class ProviderRegistry:
             "missing": missing,
             "network_checked": False,
             "notice": "REQUIRES_LIVE_VALIDATION: Registration is not proof of API credentials "
-                      "or provider availability.",
+            "or provider availability.",
         }

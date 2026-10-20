@@ -542,14 +542,14 @@ class BudgetedAI:
             )
             text, inputs, outputs = result
             if not isinstance(text, str) or not text.strip() or len(text.encode()) > 128 * 1024:
-                raise ValueError
+                raise ValueError("Response text is empty, invalid, or exceeds 128KB limit")
             integer(inputs, 0, 10**9, "input_tokens")
             integer(outputs, 0, 10**9, "output_tokens")
-        except Exception:
-            raise ProviderError(
-                f"AI response unconfirmed; reservation retained. Request ID: {identifier}; "
-                "no automatic retry."
-            ) from None
+        except Exception as exc:
+            diagnosis = classify_ai_failure(exc)
+            safe_detail = extract_safe_exception_detail(exc)
+            err_msg = format_ai_failure_message(identifier, diagnosis, safe_detail)
+            raise ProviderError(err_msg, category=diagnosis.category, diagnosis=diagnosis) from None
         within_bounds = inputs <= bound and outputs <= self.config.max_output_tokens
         valid_response = True
         if self.response_validator is not None:
@@ -573,15 +573,59 @@ class BudgetedAI:
                 "inspect local state and billing before retrying; no automatic retry."
             ) from None
         if not within_bounds:
-            raise ProviderError(
-                f"Provider exceeded planned token bounds; usage recorded, cache disabled. "
-                f"Request ID: {identifier}; inspect billing"
+            outputs_val = outputs
+            diagnosis = FailureDiagnosis(
+                category="MAX_OUTPUT_TOKENS",
+                summary="Provider response exceeded max output token budget",
+                reached_provider=True,
+                token_usage_known=True,
+                reservation_retained=False,
+                reconciliation_required=False,
+                action_required=(
+                    "Increase max_output_tokens in ai-config.json or split evidence packets."
+                ),
+                detail=f"in={inputs}, out={outputs_val}, max={self.config.max_output_tokens}",
             )
+            err_msg = (
+                f"Provider exceeded planned token bounds; usage recorded, cache disabled.\n"
+                f"Request ID: {identifier}; inspect billing\n"
+                f"Failure category: [MAX_OUTPUT_TOKENS]\n"
+                f"Description: Output tokens ({outputs_val}) exceeded max_output_tokens limit "
+                f"({self.config.max_output_tokens})\n"
+                f"Detail: in={inputs}, out={outputs_val}, max={self.config.max_output_tokens}\n"
+                f"Reached provider: Yes\n"
+                f"Token usage known: Yes\n"
+                f"Reservation retained: No (actual token usage recorded in ledger)\n"
+                f"Reconciliation required: No\n"
+                f"Action required: Increase max_output_tokens or split evidence."
+            )
+            raise ProviderError(err_msg, category="MAX_OUTPUT_TOKENS", diagnosis=diagnosis)
         if not valid_response:
-            raise ProviderError(
-                f"AI interpretation failed evidence validation; usage recorded, cache disabled. "
-                f"Request ID: {identifier}; no automatic retry."
+            diagnosis = FailureDiagnosis(
+                category="RESPONSE_VALIDATION_FAILED",
+                summary="AI interpretation failed evidence grounding validation",
+                reached_provider=True,
+                token_usage_known=True,
+                reservation_retained=False,
+                reconciliation_required=False,
+                action_required=(
+                    "Review model instructions or prompt to ensure exact references."
+                ),
+                detail="Supplied observations not addressed exactly once or unknown evidence_id",
             )
+            err_msg = (
+                f"AI interpretation failed evidence validation; usage recorded, cache disabled.\n"
+                f"Request ID: {identifier}; inspect billing\n"
+                f"Failure category: [RESPONSE_VALIDATION_FAILED]\n"
+                f"Description: Model response did not pass evidence grounding validator\n"
+                f"Detail: Supplied observations not addressed exactly once or unknown evidence_id\n"
+                f"Reached provider: Yes\n"
+                f"Token usage known: Yes (in={inputs}, out={outputs})\n"
+                f"Reservation retained: No (actual token usage recorded in ledger)\n"
+                f"Reconciliation required: No\n"
+                f"Action required: Review model instructions or prompt to ensure exact references."
+            )
+            raise ProviderError(err_msg, category="RESPONSE_VALIDATION_FAILED", diagnosis=diagnosis)
         return {
             "status": "generated",
             "request_id": identifier,
@@ -657,3 +701,409 @@ class OpenAIResponses:
         if refused and not text.strip():
             raise ProviderError("AI model refused the request")
         return text, inputs, outputs
+
+@dataclass(frozen=True)
+class FailureDiagnosis:
+    category: str
+    summary: str
+    reached_provider: bool
+    token_usage_known: bool
+    reservation_retained: bool
+    reconciliation_required: bool
+    action_required: str
+    detail: str = ""
+
+
+ALL_FAILURE_CATEGORIES = (
+    "API_KEY_MISSING",
+    "API_KEY_INVALID",
+    "MODEL_NOT_FOUND",
+    "MODEL_NOT_AVAILABLE",
+    "FREE_TIER_LIMIT",
+    "RATE_LIMITED",
+    "BAD_REQUEST",
+    "INVALID_RESPONSE_SCHEMA",
+    "RESPONSE_VALIDATION_FAILED",
+    "MODEL_REFUSAL",
+    "MAX_OUTPUT_TOKENS",
+    "NETWORK_TIMEOUT",
+    "TLS_ERROR",
+    "CONNECTION_ERROR",
+    "PROVIDER_SERVER_ERROR",
+    "UNKNOWN_PROVIDER_ERROR",
+)
+
+
+def extract_safe_exception_detail(exc: BaseException) -> str:
+    import socket
+    import ssl
+
+    from .gemini_adapter import redact_api_key
+
+    if isinstance(exc, (OSError, socket.error, TimeoutError, ssl.SSLError)):
+        return f"Transport error ({type(exc).__name__})"
+    raw_str = str(exc)
+    return redact_api_key(raw_str)
+
+
+def format_ai_failure_message(
+    request_id: str, diagnosis: FailureDiagnosis, detail: str = ""
+) -> str:
+    msg_detail = detail or diagnosis.detail
+    reached = "Yes" if diagnosis.reached_provider else "No"
+    known = "Yes" if diagnosis.token_usage_known else "No"
+    retained = "Yes" if diagnosis.reservation_retained else "No"
+    recon = "Yes" if diagnosis.reconciliation_required else "No"
+    header = (
+        "AI response unconfirmed; reservation retained."
+        if diagnosis.reservation_retained
+        else "AI request failed."
+    )
+    parts = [
+        header,
+        f"Request ID: {request_id}; no automatic retry.",
+        f"Failure category: [{diagnosis.category}]",
+        f"Description: {diagnosis.summary}",
+    ]
+    if msg_detail:
+        parts.append(f"Detail: {msg_detail}")
+    parts.extend(
+        [
+            f"Reached provider: {reached}",
+            f"Token usage known: {known}",
+            f"Reservation retained: {retained}",
+            f"Reconciliation required: {recon}",
+            f"Action required: {diagnosis.action_required}",
+        ]
+    )
+    return "\n".join(parts)
+
+
+def classify_ai_failure(exc: BaseException) -> FailureDiagnosis:
+    import socket
+    import ssl
+
+    from .gemini_adapter import redact_api_key
+    from .models import ValidationError
+    from .providers import ProviderError
+
+    if isinstance(exc, ProviderError) and getattr(exc, "diagnosis", None) is not None:
+        return exc.diagnosis
+
+    raw_msg = str(exc)
+    msg = redact_api_key(raw_msg)
+    msg_lower = msg.lower()
+
+    if "api_key is missing" in msg_lower or "api key is missing" in msg_lower:
+        return FailureDiagnosis(
+            category="API_KEY_MISSING",
+            summary="API key environment variable is missing",
+            reached_provider=False,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Export GEMINI_API_KEY (or OPENAI_API_KEY) in your terminal session before sending "
+                "evidence. Reconcile the pending reservation with: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "api_key_invalid" in msg_lower
+        or "api key not valid" in msg_lower
+        or "unauthenticated" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="API_KEY_INVALID",
+            summary="API key rejected by provider (invalid or unauthenticated)",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Verify your GEMINI_API_KEY in Google AI Studio. Ensure the key is active and "
+                "belongs to an enabled project. Then reconcile with: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if ("freetier" in msg_lower or "free tier" in msg_lower or "free_tier" in msg_lower) and (
+        "429" in msg_lower
+        or "quota" in msg_lower
+        or "resource_exhausted" in msg_lower
+        or "limit" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="FREE_TIER_LIMIT",
+            summary="Google Gemini Free Tier request quota exhausted",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Free Tier quota was exceeded. Check Google AI Studio plan limits or wait for the "
+                "daily quota reset. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if "429" in msg_lower or "rate limit" in msg_lower or "resource_exhausted" in msg_lower:
+        return FailureDiagnosis(
+            category="RATE_LIMITED",
+            summary="Provider rate limit or temporary quota threshold exceeded",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Wait a brief moment before retrying. Check provider concurrency limits and "
+                "reconcile the request before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if "404" in msg_lower or "not found" in msg_lower:
+        return FailureDiagnosis(
+            category="MODEL_NOT_FOUND",
+            summary="Configured model name not found or route is unsupported",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Update 'model' in ai-config.json to an active Gemini model "
+                "(e.g. gemini-2.5-flash, "
+                "gemini-3.8-flash, or gemini-3.5-flash-lite). Then reconcile with: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "deprecated" in msg_lower
+        or "not available" in msg_lower
+        or "model is not supported" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="MODEL_NOT_AVAILABLE",
+            summary="Model is deprecated, retired, or not available for this account tier",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "The requested model is deprecated, inaccessible or not permitted for this API "
+                "key. "
+                "Select an active supported model in ai-config.json. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "responseschema" in msg_lower
+        or "invalid schema" in msg_lower
+        or "json_schema" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="INVALID_RESPONSE_SCHEMA",
+            summary="Provider rejected responseSchema structure or types",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Ensure responseSchema in adapter matches supported provider JSON schema subset "
+                "and data types. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        isinstance(exc, ValidationError)
+        or "400" in msg_lower
+        or "invalid_argument" in msg_lower
+        or "bad request" in msg_lower
+    ):
+        reached = not isinstance(exc, ValidationError)
+        return FailureDiagnosis(
+            category="BAD_REQUEST",
+            summary="Invalid request parameters or malformed client payload",
+            reached_provider=reached,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Check request payload, schema formatting, and parameters in ai-config.json. "
+                "Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "refused" in msg_lower
+        or "safety" in msg_lower
+        or "blockreason" in msg_lower
+        or "prohibited_content" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="MODEL_REFUSAL",
+            summary="Provider content safety filters refused to generate interpretation",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Check prompt content, system instructions, and evidence text for safety "
+                "trigger words "
+                "or policy violations. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "maxoutputtokens" in msg_lower
+        or "max_tokens" in msg_lower
+        or "output was truncated" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="MAX_OUTPUT_TOKENS",
+            summary="Response exceeded maximum output token bound and was truncated",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Increase max_output_tokens in ai-config.json or decrease evidence packet size "
+                "with --split. "
+                "Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "evidence validation" in msg_lower
+        or "response_validator" in msg_lower
+        or "grounding" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="RESPONSE_VALIDATION_FAILED",
+            summary="Model generated an invalid response that failed evidence grounding",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Review evidence packet formatting and ensure prompt instructs model to reference "
+                "evidence_id properly. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if isinstance(exc, TimeoutError) or "timeout" in msg_lower or "timed out" in msg_lower:
+        return FailureDiagnosis(
+            category="NETWORK_TIMEOUT",
+            summary="Network transport socket connection or read timed out",
+            reached_provider=False,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Increase timeout_seconds in adapter configuration or inspect network latency. "
+                "Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        isinstance(exc, ssl.SSLError)
+        or "ssl" in msg_lower
+        or "certificate" in msg_lower
+        or "tls" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="TLS_ERROR",
+            summary="TLS / SSL handshake or certificate verification failed",
+            reached_provider=False,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Verify system CA certificates, local proxy settings, and ensure egress traffic "
+                "is not "
+                "intercepted by an untrusted TLS proxy. Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        isinstance(exc, (ConnectionError, socket.error, OSError))
+        or "connection reset" in msg_lower
+        or "connection refused" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="CONNECTION_ERROR",
+            summary="TCP connection could not be established or was reset by peer",
+            reached_provider=False,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Verify network connectivity, DNS resolution, and firewall egress rules for "
+                "port 443. "
+                "Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    if (
+        "500" in msg_lower
+        or "502" in msg_lower
+        or "503" in msg_lower
+        or "504" in msg_lower
+        or "internal error" in msg_lower
+        or "internal server" in msg_lower
+        or "unavailable" in msg_lower
+    ):
+        return FailureDiagnosis(
+            category="PROVIDER_SERVER_ERROR",
+            summary="Provider returned 5xx server-side error (transient failure)",
+            reached_provider=True,
+            token_usage_known=False,
+            reservation_retained=True,
+            reconciliation_required=True,
+            action_required=(
+                "Google Gemini service experienced a server-side error. Wait briefly before "
+                "retrying. "
+                "Reconcile before retrying: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+            ),
+            detail=msg,
+        )
+
+    return FailureDiagnosis(
+        category="UNKNOWN_PROVIDER_ERROR",
+        summary="Unclassified provider or unexpected transport anomaly",
+        reached_provider=False,
+        token_usage_known=False,
+        reservation_retained=True,
+        reconciliation_required=True,
+        action_required=(
+            "Inspect ai-config.json and evidence payload parameters. Reconcile before retrying: "
+            "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+        ),
+        detail=msg,
+    )

@@ -144,6 +144,8 @@ class GeminiGenerateContent:
             "temperature": 0.0,
             "candidateCount": 1,
         }
+        if clean_model.startswith("gemini-2.5"):
+            generation_config["thinkingConfig"] = {"thinkingBudget": 0}
         if self.response_schema is not None:
             generation_config["responseMimeType"] = "application/json"
             generation_config["responseSchema"] = self.response_schema
@@ -228,9 +230,14 @@ class GeminiGenerateContent:
         candidate = candidates[0]
         finish_reason = candidate.get("finishReason")
         if finish_reason in _REFUSAL_REASONS:
-            raise ProviderError("Gemini model refused the request")
+            raise ProviderError(f"Gemini model refused the request ({finish_reason})")
+        if finish_reason == "MAX_TOKENS":
+            raise ProviderError(
+                f"Gemini response is incomplete: reached maxOutputTokens ({max_output_tokens}); "
+                "output was truncated"
+            )
         if finish_reason != "STOP":
-            raise ProviderError("Gemini response is incomplete")
+            raise ProviderError(f"Gemini response is incomplete (finishReason: {finish_reason})")
 
         content = candidate.get("content")
         parts = content.get("parts") if isinstance(content, dict) else None

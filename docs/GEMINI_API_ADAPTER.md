@@ -222,3 +222,38 @@ The test suite in `tests/test_stage3_gemini_cache_and_perf.py` covers 84 explici
 22. **Prompt Injection Boundary**: Checks that untrusted strings do not leak into top-level JSON structures.
 23. **Cache Isolation**: Confirms distinct cache keys across providers and languages.
 24. **Legacy Cache Backward Compatibility**: Confirms existing OpenAI cache hits remain valid.
+
+---
+
+## 7. Stage 4 Diagnostic Enhancements & 16 Failure Categories
+
+To eliminate generic "AI response unconfirmed" ambiguities, the Gemini adapter and cost ledger include deterministic failure classification across 16 canonical categories:
+
+1. `API_KEY_MISSING`: No API key provided in environment or configuration.
+2. `API_KEY_INVALID`: Upstream HTTP 400/401/403 with `API_KEY_INVALID` status or reason.
+3. `MODEL_NOT_FOUND`: Upstream HTTP 404 indicating model does not exist or endpoint route is invalid.
+4. `MODEL_NOT_AVAILABLE`: Upstream HTTP 400/404 indicating model is deprecated, inaccessible or not permitted.
+5. `FREE_TIER_LIMIT`: Quota or free tier exhaustion (`RESOURCE_EXHAUSTED` / `QUOTA_EXCEEDED`).
+6. `RATE_LIMITED`: Transient rate limits (HTTP 429).
+7. `BAD_REQUEST`: HTTP 400 with invalid parameters or payload structure.
+8. `INVALID_RESPONSE_SCHEMA`: Model response JSON violates output schema or structural expectations.
+9. `RESPONSE_VALIDATION_FAILED`: Response content fails domain validation (e.g. invalid evidence reference).
+10. `MODEL_REFUSAL`: Content refused upstream (`SAFETY`, `RECITATION`, `BLOCKLIST`, `PROHIBITED_CONTENT`, `SPII`).
+11. `MAX_OUTPUT_TOKENS`: Generation halted due to `MAX_TOKENS` limit reaching output token ceiling.
+12. `NETWORK_TIMEOUT`: Socket timeout during connection, handshake, or response body reading.
+13. `TLS_ERROR`: SSL / TLS certificate validation or handshake failure.
+14. `CONNECTION_ERROR`: DNS resolution failure, socket refused, or network route unreachable.
+15. `PROVIDER_SERVER_ERROR`: Upstream 5xx status codes (`INTERNAL`, `UNAVAILABLE`).
+16. `UNKNOWN_PROVIDER_ERROR`: Unclassified or unrecognized provider transport anomalies.
+
+### Six Standard Diagnostic Guarantees
+For every failure, the diagnostics output answers:
+1. **Did the request reach Google?** (`network_reached`: True/False)
+2. **Did Google bill or consume tokens?** (`cost_impact`: None, confirmed, or unconfirmed pending reconciliation)
+3. **What is the exact root cause?** (Categorized reason without raw tracebacks)
+4. **Is retry safe and automatic?** (`retry_safe`: False; no automatic retries)
+5. **How can the user fix it?** (`remediation`: Concrete, actionable steps)
+6. **Zero Leakage**: All API keys, secrets, authorization headers, and raw source code lines are scrubbed before printing or persisting.
+
+### Outbound PublicHTTPS Sandbox Whitelisting
+The outbound HTTP sandbox (`src/ai_threat_lab/http_client.py`) restricts `POST` requests to verified API routes. The Gemini endpoint route `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` is explicitly whitelisted with strict regex validation, ensuring secure routing without blocking legitimate API calls.

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.39.2] - Stage 4: Gemini API Integration Repair & Diagnostics
+
+### Fixed
+- **Outbound HTTP Routing**: Resolved `PublicHTTPS` whitelist restriction blocking `generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, allowing Gemini requests to proceed securely through the sandbox.
+- **Diagnostics**: Replaced generic unconfirmed exception catching with 16 granular failure categories (`API_KEY_MISSING`, `API_KEY_INVALID`, `MODEL_NOT_FOUND`, `MODEL_NOT_AVAILABLE`, `FREE_TIER_LIMIT`, `RATE_LIMITED`, `BAD_REQUEST`, `INVALID_RESPONSE_SCHEMA`, `RESPONSE_VALIDATION_FAILED`, `MODEL_REFUSAL`, `MAX_OUTPUT_TOKENS`, `NETWORK_TIMEOUT`, `TLS_ERROR`, `CONNECTION_ERROR`, `PROVIDER_SERVER_ERROR`, `UNKNOWN_PROVIDER_ERROR`).
+- **Thinking Token Budgeting**: Set `thinkingBudget: 0` for `gemini-2.5-flash` to prevent reasoning tokens from exceeding constrained max output budgets.
+- **Secret Redaction**: Reinforced safe exception extraction guaranteeing zero credential leakage across all transport and socket failure paths.
+
+
 ## 0.40.0 — Real-project validation, AST performance optimizations, and Google Gemini adapter
 
 - Added real-world project validation across 8 diverse Python repositories (psf/requests, pallets/click, bottlepy/bottle, pypa/packaging, MatthiasLew/ai-dev-cli-tools, MatthiasLew/freelance-dev-suite, MatthiasLew/hol-guard, MatthiasLew/github-org-sync) and synthetic scale targets (docs/REAL_PROJECT_VALIDATION.md).

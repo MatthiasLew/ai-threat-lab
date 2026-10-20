@@ -79,12 +79,19 @@ class _PinnedHTTPS(http.client.HTTPSConnection):
 
 class PublicHTTPS:
     def __init__(
-        self, allowed_hosts, *, max_bytes=1024 * 1024, max_requests=110, timeout=15,
+        self,
+        allowed_hosts,
+        *,
+        max_bytes=1024 * 1024,
+        max_requests=110,
+        timeout=15,
         allow_partial_body=False,
     ):
         if (
-            type(max_bytes) is not int or not 1 <= max_bytes <= 8 * 1024 * 1024
-            or type(max_requests) is not int or not 1 <= max_requests <= 200
+            type(max_bytes) is not int
+            or not 1 <= max_bytes <= 8 * 1024 * 1024
+            or type(max_requests) is not int
+            or not 1 <= max_requests <= 200
         ):
             raise ValidationError("Invalid HTTP size or request limit")
         if type(timeout) not in (int, float) or not 0 < timeout <= 60:
@@ -124,8 +131,19 @@ class PublicHTTPS:
             r"/2010-04-01/Accounts/AC[a-fA-F0-9]{32}/Calls(?:/CA[a-fA-F0-9]{32})?\.json",
             parsed.path,
         )
+        gemini_route = parsed.hostname == "generativelanguage.googleapis.com" and bool(
+            re.fullmatch(
+                r"/v1beta/models/[A-Za-z0-9][A-Za-z0-9._-]{0,127}:generateContent",
+                parsed.path,
+            )
+        )
         if method == "POST" and (
-            ((parsed.hostname, parsed.path) not in endpoints and not call_route) or parsed.query
+            (
+                (parsed.hostname, parsed.path) not in endpoints
+                and not call_route
+                and not gemini_route
+            )
+            or parsed.query
         ):
             raise ValidationError("POST is restricted to supported provider routes")
         if method == "PUT" and not (
@@ -153,8 +171,21 @@ class PublicHTTPS:
             items = tuple((key.lower(), value) for key, value in response.getheaders())
             data, body_status = self._read_body(response)
             return HttpResponse(response.status, dict(items), data, items, body_status)
-        except (OSError, http.client.HTTPException):
-            raise ProviderError("HTTPS request failed; no automatic retry was performed") from None
+        except ssl.SSLError as exc:
+            raise ProviderError(f"HTTPS TLS error ({type(exc).__name__})") from None
+        except (TimeoutError, socket.timeout) as exc:
+            raise ProviderError(f"HTTPS request timed out ({type(exc).__name__})") from None
+        except (
+            ConnectionError,
+            ConnectionResetError,
+            ConnectionRefusedError,
+            BrokenPipeError,
+        ) as exc:
+            raise ProviderError(f"HTTPS connection error ({type(exc).__name__})") from None
+        except (OSError, http.client.HTTPException) as exc:
+            raise ProviderError(
+                f"HTTPS request failed ({type(exc).__name__}); no automatic retry was performed"
+            ) from None
         finally:
             connection.close()
 

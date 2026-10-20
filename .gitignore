@@ -31,3 +31,9 @@ coverage.xml
 # Explicit private saved-session headers for passive website review
 *.session.json
 *.paths.private.json
+
+# Local manual test runs
+runs/
+ai-config.json
+przyklad.py
+test_security.py

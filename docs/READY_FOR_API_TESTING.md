@@ -197,3 +197,13 @@ Nawet przy 100% przechodzących testach offline i poprawnej walidacji `setup-che
 3. Że wpisane w `ai-config.json` stawki `input_usd_per_million` i `output_usd_per_million` zgadzają się z aktualnym cennikiem i fakturą dostawcy.
 4. Że merytoryczna treść wygenerowanej porady AI jest wolna od błędów — walidator gwarantuje zgodność ze schematem i referencjami `evidence_id`, ale **porada AI zawsze pozostaje niezweryfikowaną interpretacją (`advisory_interpretation`)**.
 5. Że zewnętrzne kanały komunikacji (SMTP, Azure Speech/Avatar, Twilio) dostarczą wiadomość/połączenie do odbiorcy końcowego bez sprawdzenia polityk antyspamowych, uprawnień regionalnych i jakości mediów na kontrolowanym koncie testowym.
+
+### Reconciling Pending Request `6afea99f1ade4e36bc017ea6bc17b52c`
+
+If a request was interrupted or held in pending status (such as `6afea99f1ade4e36bc017ea6bc17b52c` from pre-Stage 4 testing), run:
+
+```powershell
+py -m ai_threat_lab api-reconcile 6afea99f1ade4e36bc017ea6bc17b52c --actual-usd 0 --ledger runs/costs.sqlite
+```
+
+This clears the pending reservation, sets actual billed amount to $0.00 (since the request never reached Google due to the local client route check), and allows subsequent reviews to proceed immediately.
