@@ -7,6 +7,9 @@ The intended workflow is **target → relevant checks → evidence → possible 
 
 ## Console workflow
 
+[Saved Office package review](docs/OFFICE_REVIEW.md) checks bounded XML declarations
+for macro/embedded-object markers and external relationships without opening active content.
+
 Approved fictional video scripts can use the [stock-avatar lifecycle](docs/STOCK_AVATAR.md):
 exact preview, durable job, explicit download and a new plan requiring media approval.
 

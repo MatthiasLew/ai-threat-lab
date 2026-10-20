@@ -1,4 +1,4 @@
-# Integration setup and readiness — 0.5.0
+# Integration setup and readiness
 
 These are concrete **read-only** integrations, tested with fixture responses. Live authentication, account availability and provider behavior still need controlled validation. An API key cannot guarantee a full vulnerability audit.
 
@@ -44,7 +44,14 @@ Mail domain: two DNS queries, or three with a selector. No SPF include traversal
 
 ## Remaining product work
 
-These modules do **not** implement active exploitation, password guessing, live phishing dispatch, deepfake generation, real phone calls, speech understanding, tracking-link services or a webhook backend. Training continues to use fictional/consented identities, synthetic data, exact preview approval and demo transports. Adding a model key does not implement those services. A production training integration would additionally need selected vendors, verified sender/caller identities, approved recipients, media-consent controls, event authenticity, cancellation and retention policies.
+These read-only collectors are complemented by separate, explicitly approved
+[SMTP delivery](SMTP_TRAINING.md), [stock-speech generation](SPEECH_TRAINING.md) and
+[stock-avatar job/download](STOCK_AVATAR.md) adapters for fictional training content.
+They have synthetic acceptance tests; actual account, delivery, media and billing
+acceptance remains required. They do not implement active exploitation, password
+guessing, likeness cloning, phone calls, speech understanding, tracking-link services
+or a webhook backend. See the current [delivery matrix](DELIVERY_STATUS.md) for
+implementation gaps. Adding a model key does not implement those services.
 
 Before production use, validate your actual provider account, network policy, OAuth scopes, rate limits, costs, output quality, account mismatch, expired credentials, errors and limits against resources you control.
 
@@ -54,7 +61,7 @@ References: [GitHub trees](https://docs.github.com/en/rest/git/trees), [Git blob
 
 `audit-deps` produces an offline inventory by default. Adding both `--network --share-packages` enables fixed-endpoint OSV advisory queries, optionally with a TTL cache. `audit-report` merges assessment reports to JSON or standalone HTML. Neither command uses an AI model. See [DEPENDENCIES_AND_REPORTS.md](DEPENDENCIES_AND_REPORTS.md) for formats, scope, limits and interpretation.
 
-The HTTPS client additionally permits POST only to `https://api.osv.dev/v1/querybatch`. This is a read-only database query carrying names/versions, never an installation, package publication or arbitrary target request.
+The advisory route permits POST to `https://api.osv.dev/v1/querybatch`, carrying names/versions without installing or publishing packages. Other explicit adapters use fixed model/speech POST endpoints and the bounded stock-avatar PUT route described in their guides. Ordinary assessment targets do not gain arbitrary POST/PUT capability.
 
 ## Local training sessions (0.6.0)
 

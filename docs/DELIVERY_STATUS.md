@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+[Office package review](OFFICE_REVIEW.md) adds explicit local declaration checks
+for macro/ActiveX/OLE markers and external relationships with bounded XML decompression.
+Document bodies, active payloads, PDF/legacy formats and runtime behavior remain unchecked.
+
 [Stock-avatar generation](STOCK_AVATAR.md) implements an approved fictional script
 through job submission, explicit status/download and hash-bound approval handoff.
 The fixture-tested adapter still needs real resource/media/billing acceptance;

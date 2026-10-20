@@ -13,6 +13,14 @@ def readiness():
             "caps; resource access, real media and billing need controlled acceptance.",
         ),
         (
+            "office_package_declarations",
+            "implemented",
+            "not_required",
+            "Explicit local bounded XML declaration review for macro/ActiveX/OLE markers "
+            "and external relationships. No document rendering, payload execution, URLs "
+            "followed, PDF/legacy parsing or malware verdict; generic ZIP behavior unchanged.",
+        ),
+        (
             "external_static_results",
             "implemented",
             "not_required",

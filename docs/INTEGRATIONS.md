@@ -15,6 +15,7 @@ Concrete read-only collectors are available through the explicit `audit` command
 | Gmail mailbox | Authenticated owner profile, forwarding and filter observations | External OAuth consent/refresh, required scopes/admin grants, no MFA/session audit |
 | Pinned dependencies | requirements/npm/uv/Poetry/Cargo/Composer/NuGet and Go checksum-record inventory and explicit OSV batch lookup/cache | Unsupported formats, unresolved versions, advisory coverage and runtime reachability remain gaps |
 | Combined reporting | JSON and escaped standalone HTML with provenance and triage queue | No validated severity, automatic patching or personnel scoring |
+| Saved Office package | Explicit bounded content-type/relationship XML review and existing ZIP metadata | No macro execution, embedded payload analysis, PDF/legacy formats or malware verdict |
 | Program file | Bounded size/hash plus selected PE/ELF headers and ZIP metadata/path candidates | No signature trust, disassembly, execution, malware or confirmed-vulnerability conclusions |
 | AI explanation | Concrete OpenAI Responses adapter and persistent cost controls | Available model, rates, key, evidence permission and live validation |
 | Authentication logs | Explicit normalized .auth.jsonl or review-auth-log input; bounded failure-pattern candidates | No provider log conversion, login attempts, trusted provenance or compromise confirmation |

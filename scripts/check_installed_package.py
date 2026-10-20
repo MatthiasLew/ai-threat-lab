@@ -41,7 +41,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
             "docs/ATTACHMENT_REVIEW.md",
             "docs/FILE_REPUTATION.md", "scripts/check_reputation_offline.py",
-            "docs/SARIF_IMPORT.md",
+            "docs/SARIF_IMPORT.md", "docs/OFFICE_REVIEW.md", "scripts/check_office_offline.py",
             "docs/STOCK_AVATAR.md", "examples/avatar.json", "scripts/check_avatar_offline.py",
             "docs/SPEECH_TRAINING.md", "examples/speech.json", "scripts/check_speech_offline.py",
             "docs/COMPOSER_NUGET.md",
@@ -191,6 +191,11 @@ def main() -> None:
         assert reputation_receipt == {
             "status": "passed", "synthetic_requests": 2, "live_requests": 0,
             "source_independent_summary": True, "file_bytes_uploaded": False,
+        }
+        office_receipt = json.loads(run(python, ROOT / "scripts/check_office_offline.py"))
+        assert office_receipt == {
+            "status": "passed", "live_requests": 0,
+            "source_independent_summary": True, "active_content_opened": False,
         }
         avatar_receipt = json.loads(run(python, ROOT / "scripts/check_avatar_offline.py"))
         assert avatar_receipt == {

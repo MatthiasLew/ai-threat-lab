@@ -23,6 +23,7 @@ AI Threat Lab
 15. Preview or query existing file reputation by SHA-256
 16. Import a saved SARIF report from a static analyzer
 17. Prepare, generate and review a fictional stock-avatar video
+18. Review saved Office package declarations
 0. Exit
 """
 
@@ -41,7 +42,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–17: ")
+            choice = ask("Choose 0–18: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -167,8 +168,12 @@ def run_console(run):
                 from .avatar_cli import avatar_menu
 
                 code = avatar_menu(run, ask)
+            elif choice == "18":
+                source = ask("Saved Office package: ")
+                output = ask("New assessment JSON: ")
+                code = run(["review-office", source, "--output", output])
             else:
-                print("Choose a number from 0 to 17.")
+                print("Choose a number from 0 to 18.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")

@@ -3,6 +3,7 @@
 import json
 import os
 from contextlib import ExitStack
+from dataclasses import asdict
 from pathlib import Path
 
 from .ai_costs import INSTRUCTIONS, AIConfig, compact_evidence, usd
@@ -13,6 +14,7 @@ from .evidence import brief, evidence_digest, load_evidence
 from .har_review import review_har
 from .local_history import write_new_report
 from .models import ValidationError
+from .office_review import review_office
 from .review_packets import review_packets, select_packet
 from .sarif_review import review_sarif
 from .scan_cli import advisory_lookup, assessor
@@ -22,10 +24,15 @@ from .site_review import SiteReview, canonical_url
 from .tool_plan import plan_target
 
 COMMANDS = {"brief", "ai-prepare", "plan", "inspect", "setup-check", "review-site", "review-har",
-            "review-attachments", "review-sarif"}
+            "review-attachments", "review-sarif", "review-office"}
 
 
 def add_commands(commands):
+    office = commands.add_parser(
+        "review-office", help="Inspect saved Office package declarations without opening content")
+    office.add_argument("path", type=Path)
+    office.add_argument("--output", type=Path)
+    office.add_argument("--fail-on-findings", action="store_true")
     sarif = commands.add_parser(
         "review-sarif", help="Import saved external static-analysis claims without executing tools")
     sarif.add_argument("path", type=Path)
@@ -156,6 +163,16 @@ def _preview(value, config, evidence, *, structured):
 
 
 def run_command(args):
+    if args.command == "review-office":
+        result, failures = review_office(args.path)
+        text = write_document(asdict(result))
+        if args.output:
+            write_new_report(args.output, text.encode("utf-8"))
+            print(f"Report saved: {args.output}")
+        else:
+            print(text, end="")
+        candidates = any(item.status == "candidate" for item in result.findings)
+        return 2 if failures else 1 if args.fail_on_findings and candidates else 0
     if args.command in ("review-har", "review-attachments", "review-sarif"):
         review = {"review-har": review_har, "review-attachments": review_attachments,
                   "review-sarif": review_sarif}[args.command]
