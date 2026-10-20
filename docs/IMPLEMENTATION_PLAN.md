@@ -14,7 +14,11 @@ required for the new [console journey](CONSOLE_WORKFLOW.md).
 5. Run focused tests, then `python scripts/verify.py` for the release. Preserve old report reading and suppress comparisons if observation semantics change.
 6. Update scope, acceptance fixtures and delivery documentation. Publish directly on the project's main branch and verify the six CI jobs at that exact commit.
 
-The finite acceptance checklist is [OFFLINE_RELEASE_CRITERIA.md](OFFLINE_RELEASE_CRITERIA.md). Feature expansion is paused while confirmed defects or required acceptance gaps remain.
+The finite acceptance checklist is [OFFLINE_RELEASE_CRITERIA.md](OFFLINE_RELEASE_CRITERIA.md).
+The owner authorized continued console feature implementation before account/API setup and
+direct publication of verified increments to main. Existing finite completion contracts are
+regression gates, not a declaration that broader functionality is finished. Confirmed defects
+and failed acceptance still block publication.
 
 ## Current implementation
 

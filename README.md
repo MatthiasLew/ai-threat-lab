@@ -1,10 +1,14 @@
 # AI Threat Lab
 
-Read-only security assessments, optional AI explanations with budget controls, and offline training exercises.
+Read-only security assessments, optional AI explanations with budget controls, local training
+exercises and separately approved fictional email delivery.
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
 
 ## Console workflow
+
+Fictional email plans can use [authenticated SMTP delivery](docs/SMTP_TRAINING.md)
+after exact preview confirmation and account configuration. Local rehearsals remain local.
 
 Website workflows now include [bounded same-host navigation](docs/SITE_REVIEW.md)
 and [offline browser HAR response review](docs/HAR_REVIEW.md), including saved responses

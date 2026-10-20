@@ -304,7 +304,7 @@ def exclusive_ai_output(path, ledger):
         target.parent == database.parent
         and target.name in {database.name + suffix for suffix in ("-journal", "-wal", "-shm")}
     ):
-        raise ValidationError("AI output must not alias its cost database or SQLite sidecars")
+        raise ValidationError("Output must not alias its ledger database or SQLite sidecars")
     descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     identity, success = os.fstat(descriptor), False
     try:

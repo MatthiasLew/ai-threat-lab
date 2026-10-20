@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Approved fictional email delivery, journal and cancellation](SMTP_TRAINING.md)
+
 - [Bounded multi-page passive navigation](SITE_REVIEW.md)
 - [Saved browser traffic review without request replay](HAR_REVIEW.md)
 

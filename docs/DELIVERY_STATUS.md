@@ -1,5 +1,10 @@
 # Delivery status and remaining work — 0.39.1
 
+The [SMTP adapter](SMTP_TRAINING.md) implements explicit preview-bound fictional email
+delivery, durable attempt/outcome records, duplicate blocking and cancellation.
+Account/provider acceptance remains deferred. Browser captures can also be reviewed
+offline through [HAR review](HAR_REVIEW.md), without replaying authenticated requests.
+
 The additional [passive site review](SITE_REVIEW.md) supports bounded same-host/path
 navigation through eligible HTML links and combines per-page header/HTML evidence.
 Authenticated browser/application logic, form submission and active testing remain absent.
@@ -31,7 +36,7 @@ This matrix maps the requested console workflow to its actual implementation. AP
 | Mail domain | Basic SPF/DMARC and supplied-selector DKIM observations | Complete policy evaluation and delivery validation |
 | Own mailbox | Selected authenticated Gmail forwarding/filter observations | Controlled OAuth/account validation, more providers and broader mailbox controls |
 | Signed training claims | Local HMAC journal, exact-plan/alias/key scope, freshness, replay/conflict checks, stops and separate simulation/automation/adapter aggregates | Native provider authentication/collection, participant identity/action verification, remote dispatch/stop integration, retention/rotation |
-| Email training | Exact-preview plans, local structured rehearsal, inert `.eml` export, selected-outcome report | Live transport, delivery telemetry and authenticated participant events |
+| Email training | Exact-preview plans, local rehearsal, inert `.eml` export, selected-outcome report, preview-bound authenticated SMTP adapter and durable delivery journal | Real SMTP acceptance, delivery telemetry and authenticated participant events |
 | Voice/vishing training | Fictional identity/facts, local bounded dialogue, stop/verification actions, text-script export | Telephony/speech adapters and controlled end-to-end validation |
 | Deepfake/video training | Scenario, approved preview, local selections and text storyboard | Consented media-generation integration and controlled media/delivery validation |
 | Brute force / credential stuffing | Educational scenarios plus bounded normalized and selected OpenSSH journal failure/spray/distributed/success-sequence candidates | No login attempts, arbitrary native-provider conversion, password-reuse or compromise confirmation |

@@ -17,6 +17,9 @@ from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
 from .console import run_console
 from .contracts import approval_to_document, config_from_document, read_document, write_document
+from .delivery_cli import COMMANDS as DELIVERY_COMMANDS
+from .delivery_cli import add_commands as add_delivery_commands
+from .delivery_cli import run_command as run_delivery_command
 from .installation import installation_report
 from .integration_cli import COMMANDS, add_commands, run_command
 from .models import AnalysisRequest, TargetProfile, ValidationError
@@ -55,6 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"AI Threat Lab {__version__}")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
+    add_delivery_commands(commands)
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
@@ -160,6 +164,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             raise FileExistsError("Output path already exists; choose a new file")
         if args.command in OFFLINE_COMMANDS:
             return run_offline_command(args)
+        if args.command in DELIVERY_COMMANDS:
+            return run_delivery_command(args)
         if args.command == "console":
             prefix = ["--config", str(args.config)] if args.config else []
             return run_console(lambda argv: main([*prefix, *argv], registry=registry))

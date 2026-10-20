@@ -4,6 +4,14 @@
 def readiness():
     rows = (
         (
+            "fictional_smtp_delivery",
+            "implemented",
+            "integration_validation_required",
+            "Exact preview-approved built-in fictional email template, authenticated verified "
+            "TLS, persistent attempt/outcome journal, duplicate blocking and cancellation. "
+            "SMTP account/delivery acceptance deferred; no observed participant telemetry.",
+        ),
+        (
             "saved_browser_capture",
             "implemented",
             "not_required",
@@ -132,7 +140,8 @@ def readiness():
             "local_rehearsal",
             "implementation_required",
             "Three approved text channels, inert exports and selected-outcome reports. "
-            "Live dispatch and observed participant telemetry absent.",
+            "Separate fictional SMTP email delivery is available; observed participant "
+            "telemetry and live voice/video dispatch remain absent.",
         ),
         (
             "signed_training_events",

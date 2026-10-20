@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add preview-bound fictional SMTP email delivery with verified TLS, explicit account/host
+  confirmation, durable per-recipient claims/outcomes, cancellation and no automatic retries.
+  Keep server acceptance distinct from delivery/participant telemetry; test only with fixtures.
+
 - Add offline HAR 1.2 response review with no request replay, secret-free entry aliases,
   bounded paging/body decoding, preserved header evidence and explicit malformed/body gaps.
 

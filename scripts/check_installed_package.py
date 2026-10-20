@@ -38,6 +38,7 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "docs/CONSOLE_WORKFLOW.md", "docs/CLI_INSTALLATION.md", "CHANGELOG.md",
             "examples/ai-budget.json", "examples/providers.json", "scripts/verify.py",
             "scripts/check_console_offline.py", ".ai-dev-tools.toml",
+            "scripts/check_smtp_offline.py", "examples/smtp.json", "docs/SMTP_TRAINING.md",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"
@@ -162,6 +163,10 @@ def main() -> None:
             "cached_workflows": 2, "live_requests": 0, "ai_calls": 0,
         }
         run(python, ROOT / "scripts/check_ai_offline.py")
+        smtp_receipt = json.loads(run(python, ROOT / "scripts/check_smtp_offline.py"))
+        assert smtp_receipt["status"] == "passed"
+        assert smtp_receipt["live_submissions"] == 0
+        assert smtp_receipt["unknown_outcome_preserved"]
         console_receipt = json.loads(run(python, ROOT / "scripts/check_console_offline.py"))
         assert console_receipt == {
             "status": "passed", "synthetic_ai_requests": 2, "live_requests": 0,

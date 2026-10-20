@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "host": "smtp.example.invalid",
+  "sender": "training@example.invalid",
+  "mode": "starttls",
+  "timeout": 15
+}

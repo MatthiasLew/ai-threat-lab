@@ -16,6 +16,7 @@ AI Threat Lab
 8. Browse history, compare, export or scan a local batch
 9. Review multiple pages within an approved website path
 10. Review a saved browser HAR capture without replaying requests
+11. Preview, send or stop approved fictional email delivery
 0. Exit
 """
 
@@ -34,7 +35,7 @@ def run_console(run):
     while True:
         try:
             print(MENU)
-            choice = ask("Choose 0–10: ")
+            choice = ask("Choose 0–11: ")
             if choice == "0":
                 return 0
             if choice == "1":
@@ -107,8 +108,12 @@ def run_console(run):
                 print("Reviewing the first 20 entries locally. "
                       "Captured requests are never replayed.")
                 code = run(["review-har", source, "--output", output])
+            elif choice == "11":
+                from .delivery_cli import delivery_menu
+
+                code = delivery_menu(run, ask)
             else:
-                print("Choose a number from 0 to 10.")
+                print("Choose a number from 0 to 11.")
                 continue
             if code:
                 print(f"Operation returned status {code}; review the diagnostic above.")
