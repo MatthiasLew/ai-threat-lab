@@ -83,6 +83,13 @@ def plan_target(target, *, network=False, allowed_hosts=(), max_files=50,
         requirements.append(f"Explicit --allow-host {remote_host} is required before collection.")
     tool, title, limit = TOOLS[kind]
     selected = [{"id": tool, "purpose": title, "limit": limit}]
+    if kind == "mail_message":
+        selected.append({
+            "id": "mail_attachment_structures",
+            "purpose": "Decoded attachment size/hash and selected PE/ELF/ZIP structures",
+            "limit": "First 20 discovered attachments within byte/part bounds; "
+                     "no extraction, execution, signature trust or malware detection.",
+        })
     destinations, disclosure, setup = [], [], []
     if kind == "github_repository":
         destinations = ["api.github.com"]

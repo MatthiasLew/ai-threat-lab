@@ -31,13 +31,13 @@ def test_multiple_routes_source_free_reports_and_deleted_targets(targets, tmp_pa
     monkeypatch.setattr(socket, "create_connection", deny)
     root = tmp_path / "batch"
     summary = run_batch(targets, root)
-    assert summary["target_count"] == 2 and summary["unique_findings"] == 6
+    assert summary["target_count"] == 2 and summary["unique_findings"] == 7
     assert summary["failed_runs"] == [] and summary["ai_calls"] == 0
     assert not summary["network_called"]
     report = (root / "report.json").read_text()
     assert "private_argument" not in report and "fictional-report.pdf.exe" not in report
-    assert len(json.loads(report)["findings"]) == 6
-    assert check_batch(root)["assessment_summary"]["unique_findings"] == 6
+    assert len(json.loads(report)["findings"]) == 7
+    assert check_batch(root)["assessment_summary"]["unique_findings"] == 7
     for source in targets:
         Path(source).unlink()
     assert check_batch(root)["status"] == "integrity_verified"
@@ -111,7 +111,7 @@ def test_module_failure_keeps_other_targets_and_is_not_a_clean_result(tmp_path, 
     root = tmp_path / "partial"
     summary = run_batch(targets, root, service=ScanService(selected))
     assert summary["failed_runs"] == ["run-01"]
-    assert summary["unique_findings"] == 5 and summary["status"] == "partial_with_module_failures"
+    assert summary["unique_findings"] == 6 and summary["status"] == "partial_with_module_failures"
     assert "PRIVATE" not in (root / "report.json").read_text()
     checked = check_batch(root)
     assert checked["assessment_summary"]["failed_runs"] == ["run-01"]
@@ -260,7 +260,7 @@ def test_real_cli_exit_codes_and_check_file_output(tmp_path, targets):
     root = tmp_path / "real batch"
     result = run_cli("scan-batch", *targets, "--output-dir", root, "--fail-on-findings")
     assert result.returncode == 1 and not result.stderr
-    assert json.loads(result.stdout)["unique_findings"] == 6
+    assert json.loads(result.stdout)["unique_findings"] == 7
     checked = run_cli("batch-check", root)
     assert checked.returncode == 0 and json.loads(checked.stdout)["status"] == "integrity_verified"
     saved = tmp_path / "checked.json"
@@ -300,7 +300,7 @@ def test_failed_module_exit_three_takes_precedence_over_findings(
         == 3
     )
     payload = json.loads(capsys.readouterr().out)
-    assert payload["failed_runs"] == ["run-01"] and payload["unique_findings"] == 5
+    assert payload["failed_runs"] == ["run-01"] and payload["unique_findings"] == 6
 
 
 def test_reindexed_child_cannot_change_offline_scope(tmp_path, targets):

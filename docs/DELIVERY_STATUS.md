@@ -1,5 +1,9 @@
 # Delivery status and remaining work — 0.39.1
 
+Ordinary EML scans now include the bounded decoded-attachment checks, preserving
+message evidence when an attachment fails. Engine 28 records this coverage change.
+Local setup diagnostics also validate optional SMTP/speech profiles without reading keys.
+
 [Saved test-account sessions](SAVED_SITE_SESSION.md) can now supply bounded static headers
 for scoped passive navigation. Private URLs stay separate from aliased assessment evidence.
 Automated login, browser execution and application/business-logic validation remain absent.

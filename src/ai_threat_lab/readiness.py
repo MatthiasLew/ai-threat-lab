@@ -127,7 +127,8 @@ def readiness():
             "exported_mail",
             "partial",
             "not_required",
-            "Bounded EML header, link, HTML form and attachment-metadata candidates; "
+            "Bounded EML header, link, HTML form, attachment-metadata and decoded "
+            "PE/ELF/ZIP structure observations; "
             "no link visits, payload execution, malware or authenticity validation.",
         ),
         (

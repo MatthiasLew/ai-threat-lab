@@ -172,7 +172,7 @@ def test_console_network_requires_separate_scope_and_run_approval(monkeypatch):
 def test_console_other_flows_and_invalid_selection(monkeypatch, capsys):
     calls = []
     answers(monkeypatch, ["99", "2", "saved", "3", "saved", "config", "preview",
-                          "4", "5", "", "5", "config", "6", "0"])
+                          "4", "5", "", "", "", "5", "config", "", "", "6", "0"])
     assert run_console(lambda args: calls.append(args) or 0) == 0
     assert calls == [["brief", "saved"], ["ai-prepare", "saved", "--ai-config", "config",
                      "--structured", "--split", "--output", "preview"], ["interactive"],

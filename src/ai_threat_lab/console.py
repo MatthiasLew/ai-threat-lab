@@ -80,9 +80,16 @@ def run_console(run):
             elif choice == "4":
                 code = run(["interactive"])
             elif choice == "5":
-                config = ask("AI configuration file (Enter to check installation only): ",
-                             required=False)
-                code = run(["setup-check", *(["--ai-config", config] if config else [])])
+                args = ["setup-check"]
+                for flag, label in (
+                    ("--ai-config", "AI configuration file"),
+                    ("--smtp-config", "SMTP configuration file"),
+                    ("--speech-config", "Speech configuration file"),
+                ):
+                    config = ask(f"{label} (Enter to skip): ", required=False)
+                    if config:
+                        args.extend([flag, config])
+                code = run(args)
             elif choice == "6":
                 code = run(["readiness"])
             elif choice == "7":

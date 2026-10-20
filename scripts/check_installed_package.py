@@ -670,7 +670,7 @@ def main() -> None:
         )
         assert demo["dependency_ecosystems"] == ["Go", "PyPI", "crates.io"]
         assert {p["ecosystem"] for p in scan_inventory["packages"]} == {"Go", "PyPI", "crates.io"}
-        assert demo["mail_observations"] == 5
+        assert demo["mail_observations"] == 6
         mail = json.loads(run(executable, "audit", "offline demo/synthetic-message.eml"))
         assert {f["check"] for f in mail["findings"]} == {
             "message_link_cleartext",
@@ -678,6 +678,7 @@ def main() -> None:
             "message_link_display_mismatch",
             "message_attachment_active_type",
             "message_attachment_double_extension",
+            "binary_metadata",
         }
         run(executable, "scan-check", "offline demo/mail-observations")
         assert demo["batch_targets"] == 2
@@ -1022,7 +1023,7 @@ def main() -> None:
                 expected=1,
             )
         )
-        assert batch["target_count"] == 2 and batch["unique_findings"] == 6
+        assert batch["target_count"] == 2 and batch["unique_findings"] == 7
         run(executable, "batch-check", "local batch")
         run(
             executable,

@@ -72,12 +72,15 @@ first-pass explanation needs no model or API account.
 
 ```bash
 ai-threat-lab setup-check --ai-config examples/ai-budget.json
+ai-threat-lab setup-check --smtp-config examples/smtp.json --speech-config examples/speech.json
 ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --structured --split --output preview.json
 ```
 
 Example model/prices are placeholders, usable for estimates rather than live setup.
 `setup-check` validates installation and configuration without reading credentials;
-it never declares a live service ready. The preview contains exact outgoing input,
+it never declares a live service ready. Console setup optionally accepts all three
+profiles. SMTP and speech entries distinguish unselected profiles from valid local
+configuration and describe the remaining account checks. The preview contains exact outgoing input,
 instructions, output schema, evidence hashes and configured-price reservation
 estimates. No ledger is written and no request occurs.
 

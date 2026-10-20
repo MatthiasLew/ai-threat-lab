@@ -74,7 +74,10 @@ def main_check():
         eml, attachments = root / "attachments.eml", root / "attachments.json"
         eml.write_bytes(message.as_bytes())
         run("review-attachments", eml, "--output", attachments)
+        mail_bundle = root / "mail-scan"
+        assert "zip_path_escape" in run("inspect", eml, "--output-dir", mail_bundle)
         eml.unlink()
+        assert "zip_path_escape" in run("brief", mail_bundle)
         attachment_summary = run("brief", attachments)
         assert "zip_path_escape" in attachment_summary and "PRIVATE" not in attachment_summary
         class SiteWire:
@@ -146,6 +149,21 @@ def main_check():
             "output_usd_per_million": "8", "cache_ttl_seconds": 60,
         }), encoding="utf-8")
         assert json.loads(run("setup-check", "--ai-config", config))["live_ready"] is False
+        smtp, speech = root / "smtp.json", root / "speech.json"
+        smtp.write_text(json.dumps({
+            "schema_version": 1, "host": "smtp.example.invalid",
+            "sender": "PRIVATE@example.invalid", "mode": "starttls", "timeout": 15,
+        }), encoding="utf-8")
+        speech.write_text(json.dumps({
+            "schema_version": 1, "region": "westeurope", "voice": "en-US-JennyNeural",
+            "usd_per_million_characters": "20", "max_request_usd": "0.10",
+        }), encoding="utf-8")
+        setup = run("setup-check", "--smtp-config", smtp, "--speech-config", speech)
+        assert "PRIVATE" not in setup
+        profiles = json.loads(setup)["integrations"]
+        assert [row["id"] for row in profiles] == ["smtp", "speech"]
+        assert all(row["status"] == "local_configuration_valid" for row in profiles)
+        assert all(row["live_ready"] is False for row in profiles)
         packets = json.loads(run("ai-prepare", bundle, "--ai-config", config,
                                  "--structured", "--split"))
         assert packets["packet_count"] == 1

@@ -169,6 +169,15 @@ def audit_message(path: Path) -> AssessmentResult:
         )
     content_findings, content_notices = inspect_message_content(message)
     findings.extend(content_findings)
+    from .attachment_review import inspect_message_attachments
+
+    try:
+        attachment_findings, attachment_notices = inspect_message_attachments(message)
+        findings.extend(attachment_findings)
+    except (ValidationError, ValueError, RecursionError, IndexError):
+        attachment_notices = (
+            "Attachment structure review unavailable; message evidence retained.",
+        )
     return AssessmentResult(
         str(path),
         "mail_message",
@@ -177,14 +186,14 @@ def audit_message(path: Path) -> AssessmentResult:
         (
             "Mailbox MFA, forwarding rules, permissions and account access were not checked.",
             "SPF/DKIM/DMARC DNS and cryptographic signatures were not verified.",
-            "Only bounded text links, selected HTML forms and attachment metadata "
-            "were analyzed offline; no links "
-            "were visited, attachments opened or sender reputation queried.",
+            "Bounded text links, selected HTML forms, attachment metadata and decoded "
+            "attachment structures were analyzed offline; no links were visited, "
+            "attachment files extracted/executed or sender reputation queried.",
             "Header observations alone cannot establish phishing or authenticity.",
-            "HTML/CSS rendering, redirects, URL decoding tricks, attachment content and "
-            "malware detection are outside these selected checks.",
+            "HTML/CSS rendering, redirects, URL decoding tricks, office/PDF active content "
+            "and malware detection are outside these selected checks.",
         )
-        + content_notices,
+        + content_notices + attachment_notices,
     )
 
 

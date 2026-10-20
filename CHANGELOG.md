@@ -2,6 +2,10 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Integrate bounded attachment structure checks into ordinary EML assessment and scans,
+  retaining message evidence on attachment failures. Engine 28 preserves historical bundles.
+  Extend credential-free setup checks and console setup to optional SMTP and speech profiles.
+
 - Add explicit saved-session headers to passive site review with exact host/path binding,
   UTC expiry and access-denial stop. Use aliased report targets and a separately claimed
   private URL map so authenticated paths do not enter AI evidence.

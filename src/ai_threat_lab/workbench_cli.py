@@ -53,6 +53,8 @@ def add_commands(commands):
     site.add_argument("--fail-on-findings", action="store_true")
     setup = commands.add_parser("setup-check", help="Validate local setup without inspecting keys")
     setup.add_argument("--ai-config", type=Path)
+    setup.add_argument("--smtp-config", type=Path)
+    setup.add_argument("--speech-config", type=Path)
     setup.add_argument("--output", type=Path)
     plan = commands.add_parser("plan", help="Preview prepared tools, scope and data disclosures")
     inspect = commands.add_parser(
@@ -206,7 +208,8 @@ def run_command(args):
             print(f"Private page map saved separately: {private_map}")
         return 2 if failures else 1 if args.fail_on_findings and report["findings"] else 0
     if args.command == "setup-check":
-        text = write_document(setup_check(args.ai_config))
+        text = write_document(setup_check(
+            args.ai_config, smtp_path=args.smtp_config, speech_path=args.speech_config))
     elif args.command in ("plan", "inspect"):
         options = dict(
             network=args.network, allowed_hosts=args.allow_host, max_files=args.max_files,

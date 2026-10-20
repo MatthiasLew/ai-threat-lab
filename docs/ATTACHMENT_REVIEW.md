@@ -18,6 +18,13 @@ the saved report.
 
 ## Selection and bounds
 
+Ordinary `assess`, `audit`, `scan` and `inspect` of EML also run these checks,
+reusing the parsed message and selecting the first 20 attachments. Their existing
+1 MiB source limit remains. Individual attachment failures become explicit gaps
+while message header/link evidence remains available. Dedicated `review-attachments`
+allows the larger source limit below and subsequent pages. Engine 28 marks this
+expanded ordinary scan coverage; older bundles stay readable without cross-engine deltas.
+
 The regular source file is at most 8 MiB. Traversal examines at most 100 MIME parts,
 to depth 8. Parts with attachment disposition or a filename are eligible, including
 named inline resources. Encapsulated messages are not traversed. Multipart containers

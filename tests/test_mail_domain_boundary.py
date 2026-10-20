@@ -177,7 +177,7 @@ def test_previous_engine_remains_readable_but_not_comparable(tmp_path, previous_
         tmp_path / 'current',
     )
     current = read_bundle(tmp_path / 'current')
-    assert current['manifest']['scope']['engine'] == 'read-only-pipeline-27'
+    assert current['manifest']['scope']['engine'] == 'read-only-pipeline-28'
     metadata = dict(current['manifest'])
     metadata['scope'] = {**metadata['scope'], 'engine': previous_engine}
     metadata['scope_digest'] = scope_digest(metadata['scope'])

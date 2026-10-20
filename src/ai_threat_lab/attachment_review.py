@@ -6,7 +6,7 @@ from dataclasses import asdict
 from email import policy
 from email.parser import BytesParser
 
-from .assessment import AssessmentResult
+from .assessment import AssessmentFinding, AssessmentResult
 from .audit_report import merge_reports
 from .binary_audit import inspect_binary
 from .models import ValidationError
@@ -79,13 +79,17 @@ def decoded_attachment(part):
     return raw
 
 
-def review_attachments(path, *, start=1, max_entries=20):
+def _selection(start, max_entries):
     if type(start) is not int or start < 1:
         raise ValidationError("Attachment start must be a positive integer")
     if type(max_entries) is not int or not 1 <= max_entries <= 20:
         raise ValidationError("Review between 1 and 20 attachments at a time")
+
+
+def review_message_attachments(message, *, start=1, max_entries=20):
+    """Reuse an already parsed MIME message so a normal scan needs no second file read."""
+    _selection(start, max_entries)
     try:
-        message = BytesParser(policy=policy.default).parsebytes(read_regular(path, MAX_MESSAGE))
         parts, gaps = selected_parts(message)
     except (RecursionError, ValueError, UnicodeError):
         raise ValidationError("Malformed or unsupported MIME structure") from None
@@ -96,7 +100,7 @@ def review_attachments(path, *, start=1, max_entries=20):
             raise ValidationError("Attachment start is beyond the saved message")
         result = AssessmentResult("Saved message attachments", "mail_attachments", "partial",
                                   (), (NOTICE, *gaps, "No eligible attachment parts selected."))
-        return merge_reports(json.loads(json.dumps([asdict(result)]))), 0
+        return [result], 0
     if start > len(parts):
         raise ValidationError("Attachment start is beyond the saved message")
     stop = min(start + max_entries - 1, len(parts))
@@ -119,5 +123,29 @@ def review_attachments(path, *, start=1, max_entries=20):
             failures += 1
             result = AssessmentResult(target, "mail_attachment", "not_configured", (),
                                       (*limits, str(error)))
-        results.append(asdict(result))
-    return merge_reports(json.loads(json.dumps(results))), failures
+        results.append(result)
+    return results, failures
+
+
+def inspect_message_attachments(message):
+    results, failures = review_message_attachments(message)
+    findings, missing = [], []
+    for result in results:
+        findings.extend(AssessmentFinding(
+            finding.check, finding.status, f"{result.target}: {finding.evidence}",
+            finding.recommendation,
+        ) for finding in result.findings)
+        missing.extend(result.not_checked)
+    if failures:
+        missing.append(f"Attachment sub-review failures: {failures}; other evidence retained.")
+    return tuple(findings), tuple(dict.fromkeys(missing))
+
+
+def review_attachments(path, *, start=1, max_entries=20):
+    _selection(start, max_entries)
+    try:
+        message = BytesParser(policy=policy.default).parsebytes(read_regular(path, MAX_MESSAGE))
+    except (RecursionError, ValueError, UnicodeError, IndexError):
+        raise ValidationError("Malformed or unsupported MIME structure") from None
+    results, failures = review_message_attachments(message, start=start, max_entries=max_entries)
+    return merge_reports(json.loads(json.dumps([asdict(result) for result in results]))), failures

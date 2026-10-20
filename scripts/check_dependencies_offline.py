@@ -81,7 +81,7 @@ def main():
         assert status == 0 and not err and not cached.calls
         assert json.loads(out)['ai_calls'] == 0
         saved = read_bundle(destination)
-        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-27'
+        assert saved['manifest']['scope']['engine'] == 'read-only-pipeline-28'
         assert saved['documents']['dependencies.json']['dependency_audit']['cache_hits'] == 2
 
         negative_controls = 0

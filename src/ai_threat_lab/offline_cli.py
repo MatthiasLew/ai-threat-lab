@@ -273,9 +273,19 @@ def offline_demo(output, *, now=None):
     mail_source = root / "synthetic-message.eml"
     mail_source.write_bytes(synthetic_message())
     mail = engine.run(ScanOptions(str(mail_source)), root / "mail-observations")
-    if mail["failed_modules"] or mail["unique_findings"] != 5:
+    if mail["failed_modules"] or mail["unique_findings"] != 6:
         raise ValidationError("Synthetic mail acceptance failed; demo is incomplete")
-    read_bundle(root / "mail-observations")
+    mail_bundle = read_bundle(root / "mail-observations")
+    expected_mail_checks = {
+        "message_attachment_active_type", "message_attachment_double_extension",
+        "message_link_cleartext", "message_link_display_mismatch",
+        "message_link_ip_address", "binary_metadata",
+    }
+    actual_mail_checks = {
+        finding["check"] for finding in mail_bundle["documents"]["report.json"]["findings"]
+    }
+    if actual_mail_checks != expected_mail_checks:
+        raise ValidationError("Synthetic mail acceptance failed; demo is incomplete")
     batch = run_batch(
         [str(project), str(mail_source)],
         root / "local-batch",
@@ -283,7 +293,7 @@ def offline_demo(output, *, now=None):
         service=engine,
     )
     check_batch(root / "local-batch")
-    if batch["failed_runs"] or batch["target_count"] != 2 or batch["unique_findings"] != 5:
+    if batch["failed_runs"] or batch["target_count"] != 2 or batch["unique_findings"] != 6:
         raise ValidationError("Synthetic batch acceptance failed; demo is incomplete")
     header_source = root / "response-headers.json"
     header_source.write_bytes(json_bytes(synthetic_header_capture()))

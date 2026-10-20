@@ -156,7 +156,8 @@ def test_duplicate_json_keys_rejected():
         inventory_sources("fixture", [("composer.lock", b'{"packages":[],"packages":[]}')])
 
 
-def test_engine_26_bundle_stays_readable_without_cross_engine_delta(tmp_path):
+@pytest.mark.parametrize("old_engine", [26, 27])
+def test_older_bundle_stays_readable_without_cross_engine_delta(tmp_path, old_engine):
     from ai_threat_lab.scan_bundle import compare_bundles, publish_bundle, scope_digest
 
     root = tmp_path / "source"
@@ -164,9 +165,9 @@ def test_engine_26_bundle_stays_readable_without_cross_engine_delta(tmp_path):
     (root / "requirements.txt").write_text("fixture==1.0\n")
     ScanService(assessor).run(ScanOptions(str(root)), tmp_path / "current")
     current = read_bundle(tmp_path / "current")
-    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-27"
+    assert current["manifest"]["scope"]["engine"] == "read-only-pipeline-28"
     metadata = dict(current["manifest"])
-    metadata["scope"] = {**metadata["scope"], "engine": "read-only-pipeline-26"}
+    metadata["scope"] = {**metadata["scope"], "engine": f"read-only-pipeline-{old_engine}"}
     metadata["scope_digest"] = scope_digest(metadata["scope"])
     artifacts = {name: (tmp_path / "current" / name).read_bytes() for name in metadata["files"]}
     publish_bundle(tmp_path / "old", artifacts, metadata)
