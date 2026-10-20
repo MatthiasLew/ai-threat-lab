@@ -62,20 +62,36 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
 ## 4. Konfiguracja środowiska przed testami API
 
 1. **Przygotuj plik konfiguracji AI (`ai-config.json`) bez żadnych sekretów** (obecność pola z kluczem API w pliku JSON jest odrzucana):
-   ```json
-   {
-     "schema_version": 1,
-     "model": "gpt-4.1-mini",
-     "input_usd_per_million": "0.40",
-     "output_usd_per_million": "1.60",
-     "max_input_bytes": 12000,
-     "max_output_tokens": 600,
-     "daily_budget_usd": "0.05",
-     "max_calls_per_day": 3,
-     "cache_ttl_seconds": 3600,
-     "namespace": "controlled-live-pilot"
-   }
-   ```
+   - Dla OpenAI (np. `gpt-4.1-mini`):
+     ```json
+     {
+       "schema_version": 1,
+       "model": "gpt-4.1-mini",
+       "input_usd_per_million": "0.40",
+       "output_usd_per_million": "1.60",
+       "max_input_bytes": 12000,
+       "max_output_tokens": 600,
+       "daily_budget_usd": "0.05",
+       "max_calls_per_day": 3,
+       "cache_ttl_seconds": 3600,
+       "namespace": "controlled-live-pilot"
+     }
+     ```
+   - Dla Google Gemini (np. `gemini-2.5-flash`, `gemini-3.8-flash` lub `gemini-3.5-flash-lite`):
+     ```json
+     {
+       "schema_version": 1,
+       "model": "gemini-2.5-flash",
+       "input_usd_per_million": "0.30",
+       "output_usd_per_million": "2.50",
+       "max_input_bytes": 12000,
+       "max_output_tokens": 600,
+       "daily_budget_usd": "0.05",
+       "max_calls_per_day": 3,
+       "cache_ttl_seconds": 3600,
+       "namespace": "controlled-live-pilot"
+     }
+     ```
 2. **Zweryfikuj lokalną konfigurację i instalację bez wykonywania płatnych wywołań:**
    ```bash
    ai-threat-lab doctor --installation
@@ -110,20 +126,23 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
 
 ## 6. Jak wykonać pierwszy kontrolowany test z małym budżetem
 
-1. Ustaw klucz API wyłącznie w zmiennej środowiskowej bieżącej sesji terminala:
-   - Linux / macOS:
-     ```bash
-     export OPENAI_API_KEY="sk-..."
-     ```
-   - Windows PowerShell:
-     ```powershell
-     $env:OPENAI_API_KEY = "sk-..."
-     ```
+1. Ustaw klucz API wyłącznie w zmiennej środowiskowej bieżącej sesji terminala (nigdy w pliku konfiguracyjnym ani w repozytorium):
+   - Dla OpenAI:
+     - Linux / macOS: `export OPENAI_API_KEY="sk-..."`
+     - Windows PowerShell: `$env:OPENAI_API_KEY = "sk-..."`
+   - Dla Google Gemini (klucz przekazywany wyłącznie w nagłówku HTTP `x-goog-api-key`, nigdy w adresie URL `?key=`):
+     - Linux / macOS: `export GEMINI_API_KEY="AIza..."`
+     - Windows PowerShell: `$env:GEMINI_API_KEY = "AIza..."`
 2. Upewnij się w `ai-config.json`, że `daily_budget_usd` (np. `"0.05"`) oraz `max_calls_per_day` (np. `1` lub `2`) są ustawione na minimalne wartości.
 3. Wyślij **dokładnie jeden** wcześniej przejrzany pakiet dowodowy:
-   ```bash
-   ai-threat-lab ai-review runs/pilot-scan --ai-config ai-config.json --ledger runs/costs.sqlite --packet-index 1 --send-evidence --output runs/review-packet-1.json
-   ```
+   - Z OpenAI:
+     ```bash
+     ai-threat-lab ai-review runs/pilot-scan --ai-config ai-config.json --ledger runs/costs.sqlite --provider openai --packet-index 1 --send-evidence --output runs/review-packet-1.json
+     ```
+   - Z Google Gemini:
+     ```bash
+     ai-threat-lab ai-review runs/pilot-scan --ai-config ai-config.json --ledger runs/costs.sqlite --provider gemini --packet-index 1 --send-evidence --output runs/review-packet-1.json
+     ```
 4. Zweryfikuj wygenerowany plik `runs/review-packet-1.json`:
    - `mode` musi wynosić `"advisory_interpretation"`,
    - każde `evidence_id` w `interpretation.observations` musi odpowiadać ustaleniom z pakietu,

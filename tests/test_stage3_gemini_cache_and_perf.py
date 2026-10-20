@@ -604,3 +604,144 @@ def test_gui_api_gemini_packets_and_limitations(tmp_path):
     assert "gemini" in get_capabilities()["supported_ai_providers"]
     with pytest.raises(ValidationError):
         prepare_ai_packets(out, provider="unknown")
+
+
+# --- 9. Gemini API 2026 contract: models, error diagnostics & usageMetadata ------------------
+
+
+@pytest.mark.parametrize(
+    "model,expected",
+    [
+        ("gemini-3.8-flash", "gemini-3.8-flash"),
+        ("gemini-3.5-flash-lite", "gemini-3.5-flash-lite"),
+        ("gemini-2.5-flash", "gemini-2.5-flash"),
+        ("gemini-2.5-pro", "gemini-2.5-pro"),
+        ("models/gemini-3.8-flash", "gemini-3.8-flash"),
+        ("models/gemini-3.5-flash-lite", "gemini-3.5-flash-lite"),
+    ],
+)
+def test_gemini_recommended_models_accepted(model, expected):
+    assert validate_gemini_model(model) == expected
+
+
+def test_redact_api_key_query_and_headers():
+    token = "AIzaSySecretCustomToken123456789"
+    assert redact_api_key(None) == "REDACTED"
+    assert redact_api_key(123) == "REDACTED"
+    assert "[REDACTED_API_KEY]" in redact_api_key(f"https://api.com/v1?key={token}", token)
+    assert token not in redact_api_key(f"https://api.com/v1?key={token}", token)
+    assert token not in redact_api_key(f"https://api.com/v1?foo=bar&key={token}", token)
+    assert token not in redact_api_key(f"Bearer {token}", token)
+    assert token not in redact_api_key(f"x-goog-api-key: {token}", token)
+
+
+def test_gemini_http_error_diagnostics_without_leak(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    error_body = {
+        "error": {
+            "code": 400,
+            "message": f"API key not valid: {FAKE_KEY}",
+            "status": "INVALID_ARGUMENT",
+            "details": [
+                {
+                    "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+                    "reason": "API_KEY_INVALID",
+                    "domain": "googleapis.com",
+                }
+            ],
+        }
+    }
+    wire = GeminiWire(status=400, raw=json.dumps(error_body).encode("utf-8"))
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError) as exc_info:
+        adapter.respond("gemini-3.8-flash", "instructions", "prompt", 64)
+    msg = str(exc_info.value)
+    assert "Gemini API returned HTTP 400: INVALID_ARGUMENT - API key not valid:" in msg
+    assert FAKE_KEY not in msg
+    assert "[REDACTED_API_KEY]" in msg
+
+
+def test_gemini_usage_with_cached_content_tokens(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    usage = {
+        "promptTokenCount": 200,
+        "candidatesTokenCount": 50,
+        "thoughtsTokenCount": 10,
+        "cachedContentTokenCount": 150,
+        "totalTokenCount": 260,
+    }
+    wire = GeminiWire(responder=lambda p: gemini_body("output text", usage=usage))
+    adapter = GeminiGenerateContent(wire)
+    text, inputs, outputs = adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+    assert text == "output text"
+    assert inputs == 200
+    assert outputs == 60  # candidates (50) + thoughts (10)
+
+
+@pytest.mark.parametrize(
+    "bad_usage",
+    [
+        {"promptTokenCount": 10, "cachedContentTokenCount": -1},
+        {"promptTokenCount": 10, "cachedContentTokenCount": "invalid"},
+        {"promptTokenCount": 10, "totalTokenCount": -1},
+        {"promptTokenCount": 10, "totalTokenCount": "invalid"},
+    ],
+)
+def test_gemini_invalid_usage_metadata_rejected(monkeypatch, bad_usage):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    wire = GeminiWire(responder=lambda p: gemini_body("output", usage=bad_usage))
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError, match="Gemini API returned an invalid response"):
+        adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+
+
+@pytest.mark.parametrize(
+    "finish_reason",
+    ["SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "IMAGE_SAFETY", "REFUSAL"],
+)
+def test_gemini_refusal_reasons_raise_provider_error(monkeypatch, finish_reason):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    wire = GeminiWire(responder=lambda p: gemini_body("refusal", finish=finish_reason))
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError, match="Gemini model refused the request"):
+        adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+
+
+def test_gemini_max_tokens_finish_reason_raises_incomplete(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    wire = GeminiWire(responder=lambda p: gemini_body("truncated", finish="MAX_TOKENS"))
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError, match="Gemini response is incomplete"):
+        adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+
+
+def test_gemini_prompt_feedback_block_raises_refusal(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    wire = GeminiWire(
+        responder=lambda p: gemini_body("blocked", feedback={"blockReason": "SAFETY"})
+    )
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError, match="Gemini model refused the request"):
+        adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+
+
+def test_gemini_unauthorized_code_execution_in_parts_rejected(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    wire = GeminiWire(
+        responder=lambda p: gemini_body("", parts=[{"executableCode": {"code": "print(1)"}}])
+    )
+    adapter = GeminiGenerateContent(wire)
+    with pytest.raises(ProviderError, match="unauthorized tool execution"):
+        adapter.respond("gemini-3.8-flash", "inst", "prompt", 100)
+
+
+def test_gemini_custom_response_schema_sent_in_payload(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    custom_schema = {"type": "OBJECT", "properties": {"status": {"type": "STRING"}}}
+    wire = GeminiWire(responder=lambda p: gemini_body('{"status": "ok"}'))
+    adapter = GeminiGenerateContent(wire, response_schema=custom_schema)
+    text, _, _ = adapter.respond("gemini-3.8-flash", "inst", "prompt", 50)
+    assert text == '{"status": "ok"}'
+    payload = wire.calls[0][2]
+    assert payload["generationConfig"]["responseMimeType"] == "application/json"
+    assert payload["generationConfig"]["responseSchema"] == custom_schema

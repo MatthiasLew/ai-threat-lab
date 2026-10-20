@@ -63,6 +63,9 @@ GEMINI_RESPONSE_SCHEMA = {
 
 _MODEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _GOOGLE_KEY_RE = re.compile(r"\bAIza[0-9A-Za-z_-]{20,}\b")
+_KEY_QUERY_RE = re.compile(r"([?&]key=)[^&\s'\"]+", re.IGNORECASE)
+_BEARER_RE = re.compile(r"(Bearer\s+)[A-Za-z0-9._~+/-]+", re.IGNORECASE)
+_X_GOOG_KEY_RE = re.compile(r"(x-goog-api-key[:=]\s*)[A-Za-z0-9._~+/-]+", re.IGNORECASE)
 _REFUSAL_REASONS = frozenset(
     (
         "SAFETY",
@@ -82,7 +85,8 @@ def validate_gemini_model(model: str) -> str:
     normalized = model.removeprefix("models/")
     if ".." in normalized or not _MODEL_NAME_RE.fullmatch(normalized):
         raise ValidationError(
-            "Invalid Gemini model name; use an explicit model identifier such as gemini-2.5-flash"
+            "Invalid Gemini model name; use an explicit model identifier such as "
+            "gemini-2.5-flash, gemini-3.8-flash, or gemini-3.5-flash-lite"
         )
     return normalized
 
@@ -96,6 +100,9 @@ def redact_api_key(message: str, token: str | None = None) -> str:
         cleaned = cleaned.replace(token, "[REDACTED_API_KEY]")
         cleaned = cleaned.replace(token.strip(), "[REDACTED_API_KEY]")
     cleaned = _GOOGLE_KEY_RE.sub("[REDACTED_API_KEY]", cleaned)
+    cleaned = _KEY_QUERY_RE.sub(r"\1[REDACTED_API_KEY]", cleaned)
+    cleaned = _BEARER_RE.sub(r"\1[REDACTED_API_KEY]", cleaned)
+    cleaned = _X_GOOG_KEY_RE.sub(r"\1[REDACTED_API_KEY]", cleaned)
     return cleaned
 
 
@@ -179,7 +186,24 @@ class GeminiGenerateContent:
 
         if getattr(response, "status", None) != 200:
             status = getattr(response, "status", "unknown")
-            raise ProviderError(f"Gemini API returned HTTP {status}")
+            detail_msg = ""
+            try:
+                err_data = response.document()
+                if isinstance(err_data, dict) and isinstance(err_data.get("error"), dict):
+                    err = err_data["error"]
+                    err_status = err.get("status")
+                    err_message = err.get("message")
+                    parts = []
+                    if isinstance(err_status, str) and err_status:
+                        parts.append(err_status)
+                    if isinstance(err_message, str) and err_message:
+                        parts.append(err_message)
+                    if parts:
+                        detail_msg = f": {' - '.join(parts)}"
+            except Exception:
+                pass
+            safe_detail = redact_api_key(f"Gemini API returned HTTP {status}{detail_msg}", token)
+            raise ProviderError(safe_detail)
 
         try:
             data = response.document()
@@ -235,6 +259,7 @@ class GeminiGenerateContent:
         inputs = usage.get("promptTokenCount")
         outputs = usage.get("candidatesTokenCount", 0)
         thoughts = usage.get("thoughtsTokenCount", 0)
+        cached = usage.get("cachedContentTokenCount", 0)
         if (
             type(inputs) is not int
             or inputs < 0
@@ -242,11 +267,15 @@ class GeminiGenerateContent:
             or outputs < 0
             or type(thoughts) is not int
             or thoughts < 0
+            or type(cached) is not int
+            or cached < 0
         ):
             raise ProviderError("Gemini API returned an invalid response")
 
         billed_outputs = outputs + thoughts
         total_tokens = usage.get("totalTokenCount")
+        if total_tokens is not None and (type(total_tokens) is not int or total_tokens < 0):
+            raise ProviderError("Gemini API returned an invalid response")
         if type(total_tokens) is int and total_tokens > inputs + billed_outputs:
             billed_outputs = total_tokens - inputs
 
