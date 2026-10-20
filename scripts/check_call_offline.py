@@ -99,14 +99,18 @@ def check():
                     "--allow-call-host", "api.twilio.com"]
         run("call-status", *retrieve, expected=2)
         assert json.loads(run("call-status", *retrieve, "--network"))["provider_status"] == "queued"
+        watched = json.loads(run("call-watch", *retrieve, "--network", "--max-wait-seconds", "1",
+                                 "--output-dir", root / "watch", expected=3))
+        assert watched["reason"] == "watch_timeout"
+        assert watched["stop"]["status"] == "provider_terminal"
         stopped = json.loads(run("call-stop", *retrieve, "--network",
                                  "--output-dir", root / "stop"))
-        assert stopped["status"] == "provider_terminal" and stopped["local_cancelled"]
+        assert stopped["status"] == "already_terminal" and stopped["local_cancelled"]
         again = json.loads(run("call-stop", *retrieve, "--network",
                                "--output-dir", root / "terminal"))
         assert again["status"] == "already_terminal"
         run("call-cancel", "--ledger", ledger, "--plan-digest", preview["plan_digest"])
-        assert wire.creates == wire.updates == 1 and wire.gets == 3
+        assert wire.creates == wire.updates == 1 and wire.gets == 5
     print(json.dumps({"status": "passed", "synthetic_calls": 1, "live_requests": 0,
                       "remote_stop_checked": True, "duplicate_blocked": True}))
 

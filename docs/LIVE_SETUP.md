@@ -50,7 +50,7 @@ These read-only collectors are complemented by separate, explicitly approved
 adapters for fictional training content.
 They have synthetic acceptance tests; actual account, delivery, media and billing
 acceptance remains required. They do not implement active exploitation, password
-guessing, likeness cloning, live conversation, automatic call-expiry monitoring,
+guessing, likeness cloning, live conversation, background call management,
 speech understanding, tracking-link services
 or a webhook backend. See the current [delivery matrix](DELIVERY_STATUS.md) for
 implementation gaps. Adding a model key does not implement those services.

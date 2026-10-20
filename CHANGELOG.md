@@ -2,6 +2,7 @@
 
 ## Unreleased — console integration and evidence-grounded interpretation
 
+- Add bounded foreground call monitoring with one stop attempt on expiry, local cancellation, timeout, interruption or status failure; preserve uncertain outcomes and never create another call.
 - Add one explicitly approved fictional training call with fixed speech, durable attempt blocking, exact status/remote stop, nonsecret setup diagnostics and synthetic installed acceptance.
 - Add explicit local Office package declaration review with bounded XML processing, private-field omission, shared summaries/AI previews and installed offline acceptance.
 - Add fictional stock-avatar preview, durable asynchronous submission, explicit status and

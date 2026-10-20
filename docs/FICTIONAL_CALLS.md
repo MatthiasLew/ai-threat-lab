@@ -78,6 +78,7 @@ Already-terminal calls need no update. Only a returned terminal state is recorde
 as provider confirmation. Races, errors or a still-active response remain
 `stop_unknown`; inspect the call and explicitly repeat a stop if appropriate.
 There is no automatic retry and no call creation during lookup/stop.
+The separate foreground monitor below can initiate one bounded stop operation.
 
 ```bash
 ai-threat-lab call-cancel --ledger calls.sqlite --plan-digest PLAN_SHA256
@@ -86,8 +87,8 @@ ai-threat-lab call-cancel --ledger calls.sqlite --plan-digest PLAN_SHA256
 This last command is **local only**; it cannot stop a remote call. Use `call-stop`
 for a known provider call. Interrupted local clients and provider queuing can delay
 or prevent remote cancellation. Requested time limits are account-dependent and
-are not an automatic scope-expiry guarantee. No background watcher/webhook is
-implemented. Hanging up ends playback, but verbal refusal cannot be detected
+are not a hard scope-expiry guarantee. The foreground monitor is optional; no
+background service/webhook is implemented. Hanging up ends playback, but verbal refusal cannot be detected
 because the adapter does not listen. Completed calls can be answered by voicemail
 or an IVR; these results are not participant identity or behavioral evidence.
 
@@ -100,12 +101,42 @@ Exit 0 means the selected operation succeeded within this contract, never a secu
 or human-delivery verdict. Unconfirmed submission/stop returns 3; submission or status also returns 3
 when the provider already reports failed/busy/no-answer. Invalid input returns 2. Existing files are not replaced.
 
+## Bounded foreground monitor
+
+```bash
+ai-threat-lab call-watch plan.json --call-config my-call.json --ledger calls.sqlite --receipt attempt-01/result.json --allow-call-host api.twilio.com --network --max-wait-seconds 90 --output-dir watch-01
+```
+
+This command only manages the exact already-created call. It checks status approximately
+once per five seconds, for a chosen 1–120 seconds (default 90), and independently caps
+status polls at 25. It never creates another call. It stops observing when a terminal
+state is reported. Scope expiry, a local cancellation, the watch limit, a status/journal
+error or one Ctrl-C triggers one bounded stop operation using the existing remote-stop
+contract. A terminal call requires no update. Errors that prevent a confirmed stop remain
+`stop_unknown`; the tool does not convert local cancellation into remote confirmation.
+
+The new directory contains a pending marker, the final watch result, and a `stop/`
+subdirectory if stopping was attempted. At most 27 status/stop requests are attempted
+under the loop bound (the HTTPS budget is 28). Request/DNS delays can exceed the intended
+observation period; this is a best-effort foreground control, not a provider-enforced
+absolute deadline. Closing/killing the process, a second interruption, storage failures
+or provider outages can prevent stopping. Keep the provider console available for
+reconciliation. A local `call-cancel` can be noticed by this running monitor, but does
+not itself contact the provider.
+
+Exit 0 records a naturally observed terminal state other than failed/busy/no-answer;
+it still does not prove human participation. Exit 3 indicates a failure or an automatic
+stop reason, even if that stop was confirmed. An interrupted monitor returns 130 after
+its stop attempt. Inspect `reason`, `status` and nested `stop` together. There is no
+hidden background process and no resume that re-creates a call.
+
 ## Acceptance
 
 `scripts/check_call_offline.py` exercises the installed CLI with sockets blocked:
 preview, opt-in, one synthetic creation, duplicate blocking, status, remote stop and
-terminal no-op. Unit tests cover interruption, expiry/cancellation, wrong identities,
-wrong routes, redaction and declined menu confirmations. These tests place no calls.
+terminal no-op and a bounded foreground timeout/stop. Unit tests cover interruption, expiry/cancellation, wrong identities,
+wrong routes, redaction, journal errors, independent poll limits, expiry-triggered stop
+and declined menu confirmations. These tests place no calls.
 Real caller/recipient/account/audio, duration/cancellation and billing validation is
 still required. Live conversation and authenticated participant-event collection
 remain additional implementation work.

@@ -16,9 +16,9 @@ def readiness():
             "fictional_training_call",
             "implemented",
             "integration_validation_required",
-            "One approved fixed fictional announcement, durable submission, exact call status "
-            "and explicit remote stop. No conversation, recording, verbal-refusal detection "
-            "or automatic expiry watcher; real account, audio and billing acceptance required.",
+            "One approved fixed fictional announcement, durable submission, bounded foreground "
+            "monitor and remote stop. No conversation, recording, verbal-refusal detection "
+            "or background service; real account, audio and billing acceptance required.",
         ),
         (
             "office_package_declarations",
@@ -227,7 +227,7 @@ def readiness():
             "partial",
             "implementation_required",
             "Voice script, storyboard, stock-media and fixed single-call status/stop adapters. "
-            "No live dialogue, automatic expiry watcher, likeness cloning or media distribution.",
+            "No live dialogue, background service, likeness cloning or media distribution.",
         ),
         (
             "password_attacks",

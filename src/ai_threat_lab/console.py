@@ -24,7 +24,7 @@ AI Threat Lab
 16. Import a saved SARIF report from a static analyzer
 17. Prepare, generate and review a fictional stock-avatar video
 18. Review saved Office package declarations
-19. Preview, place or stop one approved fictional training call
+19. Preview, place, monitor or stop one approved fictional training call
 0. Exit
 """
 

@@ -234,6 +234,7 @@ def test_call_profile_is_nonsecret_and_not_live_ready(tmp_path, monkeypatch):
     ("2", ["plan", "config", "approval", "ledger", HOST, "digest", "n"]),
     ("3", ["plan", "config", "ledger", "receipt", HOST, "n"]),
     ("4", ["plan", "config", "ledger", "receipt", HOST, "n"]),
+    ("6", ["plan", "config", "ledger", "receipt", HOST, "", "n"]),
 ])
 def test_declined_call_menu_confirmation_does_not_dispatch(choice, answers):
     from ai_threat_lab.call_cli import call_menu
@@ -269,3 +270,107 @@ def test_known_failed_created_call_has_failure_exit_without_retry(tmp_path, monk
     assert receipt["status"] == "accepted" and receipt["provider_status"] == "failed"
     assert DispatchJournal(tmp_path / "calls.sqlite").status(plan.digest)["attempts"][0][
         "status"] == "accepted"
+
+
+class WatchClock:
+    def __init__(self, now=None):
+        self.start, self.elapsed = now or datetime.now(timezone.utc), 0
+
+    def now(self):
+        return self.start + timedelta(seconds=self.elapsed)
+
+    def monotonic(self):
+        return self.elapsed
+
+    def sleep(self, seconds):
+        self.elapsed += seconds
+
+
+def watch_fixture(tmp_path, plan, settings, journal, receipt, wire, timer, **options):
+    from ai_threat_lab.call_watch import watch
+
+    return watch(plan, settings, journal, receipt, network=True, allowed_host=HOST,
+                 output_dir=tmp_path / "watch", client=wire, clock=timer.now,
+                 monotonic=timer.monotonic, sleep=timer.sleep, **options)
+
+
+def test_watch_terminal_state_needs_no_stop(tmp_path, monkeypatch):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    wire.state = "completed"
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, WatchClock())
+    assert result["status"] == "provider_terminal" and result["reason"] == "terminal_observed"
+    assert result["observed_states"] == ["completed"] and len(wire.calls) == 2
+    assert "stop" not in result and not journal.status(plan.digest)["cancelled"]
+
+
+@pytest.mark.parametrize("reason", ["watch_timeout", "scope_expired", "local_cancelled"])
+def test_watch_stops_on_bounded_time_expiry_or_local_cancel(tmp_path, monkeypatch, reason):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    timer = WatchClock(plan.scope.expires_at if reason == "scope_expired" else None)
+    if reason == "local_cancelled":
+        journal.cancel(plan.digest)
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, timer,
+                           max_wait_seconds=1)
+    assert result["status"] == "provider_terminal" and result["reason"] == reason
+    assert result["stop"]["provider_status"] == "canceled"
+    assert journal.status(plan.digest)["cancelled"]
+    assert len([row for row in wire.calls if row[0].endswith("/Calls.json")]) == 1
+    assert "PRIVATE" not in json.dumps(result) and "+1202555" not in json.dumps(result)
+
+
+def test_watch_network_failure_is_not_a_confirmed_stop(tmp_path, monkeypatch):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    wire.error = ProviderError("PRIVATE")
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, WatchClock())
+    assert result["status"] == "stop_unknown" and result["reason"] == "status_error"
+    assert len(wire.calls) == 3 and journal.status(plan.digest)["cancelled"]
+
+
+def test_watch_interruption_attempts_one_stop(tmp_path, monkeypatch):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    timer = WatchClock()
+
+    def interrupted(seconds):
+        raise KeyboardInterrupt
+
+    timer.sleep = interrupted
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, timer)
+    assert result["reason"] == "interrupted" and result["status"] == "provider_terminal"
+    assert len(wire.calls) == 4
+
+
+def test_watch_poll_bound_independent_of_clock_progress(tmp_path, monkeypatch):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    timer = WatchClock()
+    timer.sleep = lambda seconds: None
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, timer)
+    assert result["reason"] == "poll_limit" and result["status"] == "provider_terminal"
+    assert len(result["observed_states"]) == 25 and len(wire.calls) == 28
+
+
+def test_watch_journal_failure_is_redacted_and_never_claims_stopped(tmp_path, monkeypatch):
+    import sqlite3
+
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    original, reads = journal.status, 0
+
+    def locked(digest):
+        nonlocal reads
+        reads += 1
+        if reads > 1:
+            raise sqlite3.OperationalError("PRIVATE")
+        return original(digest)
+
+    monkeypatch.setattr(journal, "status", locked)
+    result = watch_fixture(tmp_path, plan, settings, journal, receipt, wire, WatchClock())
+    assert result["status"] == "stop_unknown" and result["reason"] == "status_error"
+    assert len(wire.calls) == 1 and "PRIVATE" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("seconds", [0, 121, True, "1"])
+def test_invalid_watch_bound_prevents_any_requests(tmp_path, monkeypatch, seconds):
+    receipt, plan, _, settings, journal, wire = submitted(tmp_path, monkeypatch)
+    with pytest.raises(ValidationError):
+        watch_fixture(tmp_path, plan, settings, journal, receipt, wire, WatchClock(),
+                      max_wait_seconds=seconds)
+    assert len(wire.calls) == 1 and not (tmp_path / "watch").exists()
