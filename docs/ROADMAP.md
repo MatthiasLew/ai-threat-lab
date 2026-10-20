@@ -1,5 +1,14 @@
 # Roadmap — current delivery and next milestones
 
+## Console integration update
+
+The [console workflow](CONSOLE_WORKFLOW.md) now connects prepared-tool plans,
+inspection, source-independent summaries, configuration checks, bounded AI evidence
+packets and advisory JSON with validated observation references. The model does
+not generate attack code or execute tools. GUI is assigned to another contributor.
+The older broader tracks below remain explicit deployment-specific extensions,
+not capabilities supplied by configuring an interpretation API.
+
 The product is console-first. API/account setup and live provider calls are deferred; GUI is a later client. The implementation history is in [CHANGELOG.md](../CHANGELOG.md). The current input-by-input status is in [DELIVERY_STATUS.md](DELIVERY_STATUS.md).
 
 ## A. Offline CLI foundation — implemented

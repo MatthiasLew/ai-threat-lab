@@ -15,6 +15,7 @@ from .analyzer import ThreatAnalyzer
 from .campaign_cli import demo_campaign, report_events
 from .campaigns import campaign_scenarios
 from .code_review import render_code_review, review_file
+from .console import run_console
 from .contracts import approval_to_document, config_from_document, read_document, write_document
 from .installation import installation_report
 from .integration_cli import COMMANDS, add_commands, run_command
@@ -33,6 +34,9 @@ from .training_cli import run_command as run_training_command
 from .training_events_cli import COMMANDS as EVENT_COMMANDS
 from .training_events_cli import add_commands as add_event_commands
 from .training_events_cli import run_command as run_event_command
+from .workbench_cli import COMMANDS as WORKBENCH_COMMANDS
+from .workbench_cli import add_commands as add_workbench_commands
+from .workbench_cli import run_command as run_workbench_command
 from .workflows import approve_campaign, example_request, prepare_campaign, simulate_campaign
 
 
@@ -54,6 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
+    commands.add_parser(
+        "console", help="Guided target, saved report, AI preview and setup workflow"
+    )
     analyze = commands.add_parser("analyze", help="Analyze a fictional scenario")
     analyze.add_argument("scenario", help="Scenario ID; see scenarios command")
     analyze.add_argument("--organization", default="Example Company")
@@ -117,6 +124,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_event_commands(commands)
     add_scan_commands(commands)
     add_offline_commands(commands)
+    add_workbench_commands(commands)
     return parser
 
 
@@ -152,6 +160,11 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             raise FileExistsError("Output path already exists; choose a new file")
         if args.command in OFFLINE_COMMANDS:
             return run_offline_command(args)
+        if args.command == "console":
+            prefix = ["--config", str(args.config)] if args.config else []
+            return run_console(lambda argv: main([*prefix, *argv], registry=registry))
+        if args.command in WORKBENCH_COMMANDS:
+            return run_workbench_command(args)
         if args.command in SCAN_COMMANDS:
             return run_scan_command(args)
         if args.command in EVENT_COMMANDS:

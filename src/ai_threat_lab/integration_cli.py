@@ -7,11 +7,13 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .ai_costs import AIConfig, BudgetedAI, CostLedger, OpenAIResponses, compact_evidence
+from .ai_review import review_result
 from .assessment import identify_target
 from .audit_report import merge_reports, render_html
 from .auth_log_review import AuthPolicy, review_auth_log_file
 from .contracts import read_document, write_document
 from .dependencies import AdvisoryCache, OSVAudit, inventory
+from .evidence import load_evidence
 from .header_review import audit_header_capture
 from .html_review import review_html_file
 from .http_client import PublicHTTPS
@@ -32,6 +34,7 @@ COMMANDS = {
     "review-ssh-journal",
     "review-kubernetes",
     "ai-explain",
+    "ai-review",
     "api-costs",
     "api-reconcile",
     "api-cache-prune",
@@ -88,6 +91,18 @@ def add_commands(commands):
     explain.add_argument(
         "--send-evidence", action="store_true", help="Permit sending reviewed evidence to OpenAI"
     )
+    review = commands.add_parser(
+        "ai-review", help="Interpret saved evidence with validated observation references"
+    )
+    review.add_argument(
+        "assessment", type=Path, help="Assessment/report JSON or scan/batch directory"
+    )
+    review.add_argument("--ai-config", type=Path, required=True)
+    review.add_argument("--ledger", type=Path, required=True)
+    review.add_argument("--dry-run", action="store_true")
+    review.add_argument("--send-evidence", action="store_true")
+    review.add_argument("--packet-index", type=int, help="1-based packet from the prepared preview")
+    review.add_argument("--group-size", type=int, default=3, help="1..20 observations per packet")
     costs = commands.add_parser(
         "api-costs", help="Show local estimated charges and unresolved reservations"
     )
@@ -130,6 +145,7 @@ def add_commands(commands):
     for command in (
         audit,
         explain,
+        review,
         costs,
         reconcile,
         prune,
@@ -252,9 +268,9 @@ def run_command(args):
             else:
                 print(content)
             return 0
-    elif args.command == "ai-explain":
+    elif args.command in ("ai-explain", "ai-review"):
         with exclusive_ai_output(args.output, args.ledger) as stream:
-            payload = explain_payload(args)
+            payload = review_payload(args) if args.command == "ai-review" else explain_payload(args)
             text = write_document(payload, None)
             if stream is not None:
                 stream.write(text)
@@ -311,7 +327,7 @@ def explain_payload(args):
     if not args.dry_run and not args.send_evidence:
         raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")
     config = AIConfig.from_document(read_document(args.ai_config))
-    document = read_document(args.assessment)
+    document = load_evidence(args.assessment)["ai_document"]
     if not isinstance(document.get("findings"), list):
         raise ValidationError("Assessment document must contain a findings array")
     compact_evidence(document, config.max_input_bytes)
@@ -330,3 +346,21 @@ def explain_payload(args):
         OpenAIResponses(PublicHTTPS(["api.openai.com"], max_requests=1)),
     )
     return ai.explain(document, dry_run=args.dry_run)
+
+
+def review_payload(args):
+    if not args.dry_run and not args.send_evidence:
+        raise ValidationError("Review the evidence and use --send-evidence, or choose --dry-run")
+    config = AIConfig.from_document(read_document(args.ai_config))
+    saved = load_evidence(args.assessment)
+    # Complete offline preflight before credential inspection or ledger creation.
+    packet_options = {"packet_index": args.packet_index, "group_size": args.group_size}
+    estimate = review_result(config, None, None, saved["report"], dry_run=True, **packet_options)
+    if args.dry_run or estimate["status"] == "skipped_no_findings":
+        return estimate
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise ProviderError("OPENAI_API_KEY is missing; no request was reserved or sent")
+    return review_result(
+        config, CostLedger(args.ledger), PublicHTTPS(["api.openai.com"], max_requests=1),
+        saved["report"], **packet_options,
+    )

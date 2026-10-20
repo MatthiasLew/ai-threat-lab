@@ -16,6 +16,10 @@ The runtime has no third-party dependencies. Default commands stay offline; `aud
 
 ## Guided mode
 
+For target planning, prepared checks, saved summaries and AI previews, run
+`ai-threat-lab console`. See [console workflow](CONSOLE_WORKFLOW.md). The older
+`interactive` command below remains dedicated to fictional risk scenarios.
+
 ```bash
 python -m ai_threat_lab interactive
 ```

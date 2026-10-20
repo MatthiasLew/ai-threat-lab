@@ -8,14 +8,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    for command in (
+    commands = [
         [sys.executable, "-m", "ruff", "check", "."],
         [sys.executable, "-m", "coverage", "run", "-m", "pytest", "-q"],
         [sys.executable, "-m", "coverage", "report"],
         [sys.executable, "-m", "build"],
         [sys.executable, "scripts/check_installed_package.py"],
-        ["git", "diff", "--check"],
-    ):
+    ]
+    if (ROOT / ".git").exists():
+        commands.append(["git", "diff", "--check"])
+    else:
+        print("Git whitespace check skipped: source archive has no Git metadata.")
+    for command in commands:
         result = subprocess.run(command, cwd=ROOT, check=False)
         if result.returncode:
             return result.returncode

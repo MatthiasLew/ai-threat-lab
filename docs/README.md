@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Complete console workflow and optional AI interpretation](CONSOLE_WORKFLOW.md)
+- [Console completion contract](CONSOLE_COMPLETION.md)
+
 - [Dependency inventory, OSV and cache acceptance](DEPENDENCIES_OFFLINE_ACCEPTANCE.md)
 
 - [Gmail settings, limits and offline acceptance](GMAIL_AUDIT.md)

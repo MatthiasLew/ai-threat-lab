@@ -1,5 +1,10 @@
 # Implementation and verification order
 
+Current console integration work follows [CONSOLE_COMPLETION.md](CONSOLE_COMPLETION.md)
+and the owner's explicit division of responsibilities: no GUI work here; no model
+generation/execution of attack code. The existing acceptance gates below remain
+required for the new [console journey](CONSOLE_WORKFLOW.md).
+
 ## Active workflow
 
 1. Use `ai-dev-cli-tools` to map the repository, plan the change and check its configured gates. Report problems in that tool as issues in `MatthiasLew/ai-dev-cli-tools`; do not create unsolicited PRs there.

@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — console integration and evidence-grounded interpretation
+
+- Add guided `console`, deterministic `plan`, `inspect` using the existing scan service,
+  source-independent `brief`, exact `ai-prepare` previews and credential-free `setup-check`.
+- Connect single assessments, internally validated combined reports and verified single/batch
+  bundles to optional interpretation. Preserve limitations and stable observation references.
+- Add `ai-review` with Responses structured output and exact supplied-reference coverage.
+  AI advice stays separate from original evidence and never executes tools or attack code.
+- Split large structured reviews losslessly into bounded, explicitly selected packets; preview
+  per-packet/aggregate reservations without a key or ledger. No automatic paid call loop.
+- Record known usage for invalid advice without caching/retrying. Preserve uncertain-outcome
+  reservations, original cost controls, output claims and legacy free-text explanation support.
+- Add console/packet/configuration/grounding regressions and socket-blocked installed acceptance.
+  Document the owner's console-only scope; GUI remains a separate contributor's responsibility.
+- Include public guides, examples and verification scripts in the source archive; verify their
+  contents while keeping them out of the runtime wheel. Skip only the Git whitespace check when
+  the release verifier runs from an unpacked source archive without Git metadata.
+
 ## 0.36.0
 
 - Close the bounded passive HTTPS collector offline contract. Preserve valid header findings when the body is oversized, incomplete or unreadable; discard partial bytes and report the body gap. Skip declared oversized bodies before download.
