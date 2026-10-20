@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Ready for controlled API testing](READY_FOR_API_TESTING.md)
+
 - [Saved website session scope and private URL maps](SAVED_SITE_SESSION.md)
 
 - [Composer and NuGet recorded dependency inventory](COMPOSER_NUGET.md)

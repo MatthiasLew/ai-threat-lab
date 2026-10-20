@@ -91,3 +91,7 @@ Finish the existing explanation/cost module against [AI_OFFLINE_ACCEPTANCE.md](A
 ## Local reports/history closure (0.33.0)
 
 Close [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md) before starting another module. This accepts existing report formats, verified single/batch history, bounded catalog and source-independent saved-report export. Central multi-user services, automatic retention, signatures/encryption and PDF remain separate product decisions rather than hidden requirements of this finite local module.
+
+## Offline CLI finalization and live API testing handoff (0.39.1)
+
+All offline audit, reporting, training, simulation, and AI evidence/budget modules are finalized and verified under blocked-socket acceptance. Diagnostics (`setup-check`, `doctor`) explicitly report `REQUIRES_LIVE_VALIDATION` for properties requiring real accounts or services. Follow [READY_FOR_API_TESTING.md](READY_FOR_API_TESTING.md) when starting controlled live integration tests.

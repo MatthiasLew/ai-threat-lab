@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased — console integration and evidence-grounded interpretation
+## 0.39.1 — Offline CLI finalization and controlled API testing readiness
+
+- Emit explicit `REQUIRES_LIVE_VALIDATION` status in `setup-check`, optional integration profiles and `doctor` diagnostics whenever a property cannot be confirmed without a live external service.
+- Enforce strict separation between `--dry-run` and `--send-evidence` in `ai-explain` and `ai-review`, and detect model refusal (`type="refusal"`) and non-object/non-array wire payloads in `OpenAIResponses`.
+- Fix cross-module pytest fixture resolution in `tests/test_ai_costs_closure.py` when running the full test suite.
+- Add the 20-scenario simulated AI response contract suite (`tests/test_ai_review.py`), independent analyzer quality benchmark (`tests/test_analyzer_quality_benchmark.py`), and `docs/READY_FOR_API_TESTING.md`.
 
 - Add bounded foreground call monitoring with one stop attempt on expiry, local cancellation, timeout, interruption or status failure; preserve uncertain outcomes and never create another call.
 - Add one explicitly approved fictional training call with fixed speech, durable attempt blocking, exact status/remote stop, nonsecret setup diagnostics and synthetic installed acceptance.

@@ -30,11 +30,13 @@ def setup_check(path=None, *, smtp_path=None, speech_path=None, avatar_path=None
         "status": "installation_inconsistent" if installation["status"] != "ready"
                   else "configuration_needed" if config is None or placeholder
                   else "local_configuration_valid",
+        "live_validation_status": "REQUIRES_LIVE_VALIDATION",
         "installation": installation, "ai_config": asdict(config) if config else None,
         "integrations": integration_profiles(smtp_path=smtp_path, speech_path=speech_path,
                                              avatar_path=avatar_path, call_path=call_path),
         "network_called": False, "credentials_inspected": False,
         "live_ready": False, "remaining_live_checks": remaining,
-        "notice": "Configuration validation is not account, model, price or service validation. "
-                  "Prepared local assessments, summaries and training do not need an AI key.",
+        "notice": "REQUIRES_LIVE_VALIDATION: Configuration validation is not account, model, "
+                  "price or service validation. Prepared local assessments, summaries and "
+                  "training do not need an AI key.",
     }

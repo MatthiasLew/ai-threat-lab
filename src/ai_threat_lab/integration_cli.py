@@ -324,6 +324,8 @@ def exclusive_ai_output(path, ledger):
 
 
 def explain_payload(args):
+    if args.dry_run and args.send_evidence:
+        raise ValidationError("Choose either --dry-run or --send-evidence, not both")
     if not args.dry_run and not args.send_evidence:
         raise ValidationError("Review the report and use --send-evidence, or choose --dry-run")
     config = AIConfig.from_document(read_document(args.ai_config))
@@ -349,6 +351,8 @@ def explain_payload(args):
 
 
 def review_payload(args):
+    if args.dry_run and args.send_evidence:
+        raise ValidationError("Choose either --dry-run or --send-evidence, not both")
     if not args.dry_run and not args.send_evidence:
         raise ValidationError("Review the evidence and use --send-evidence, or choose --dry-run")
     config = AIConfig.from_document(read_document(args.ai_config))

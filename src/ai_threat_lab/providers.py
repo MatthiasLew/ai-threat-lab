@@ -173,7 +173,9 @@ class ProviderRegistry:
                 missing.append(f"assessment:{kind}")
         return {
             "status": "ready_offline" if not missing else "missing_provider",
+            "live_validation_status": "REQUIRES_LIVE_VALIDATION",
             "missing": missing,
             "network_checked": False,
-            "notice": "Registration is not proof of API credentials or provider availability.",
+            "notice": "REQUIRES_LIVE_VALIDATION: Registration is not proof of API credentials "
+                      "or provider availability.",
         }

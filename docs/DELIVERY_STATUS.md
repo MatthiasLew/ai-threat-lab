@@ -219,3 +219,7 @@ The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) 
 ### Cache clock ordering correction (0.39.1)
 
 Expiry is rechecked after database reads, and new TTLs start after acquiring the SQLite writer lock. Independent SQL trace controls advance time during the database operation and reproduce both stale-read and shortened-TTL regressions. Invalid post-lock clocks roll back without replacing the previous cache row. Engine 26 and the existing cache schema remain unchanged.
+
+## Offline CLI finalization and API testing readiness (0.39.1)
+
+The console application (`0.39.1`, scan engine `29`) is complete across all supported offline analyzers, report/history exports, local training workflows, and preview-bound AI/integration adapters. Diagnostics (`setup-check`, `doctor`) mark unverified live properties with `REQUIRES_LIVE_VALIDATION`. See [READY_FOR_API_TESTING.md](READY_FOR_API_TESTING.md) for the live validation checklist.

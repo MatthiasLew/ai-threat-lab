@@ -570,16 +570,34 @@ class OpenAIResponses:
         if response.status != 200:
             raise ProviderError(f"AI provider returned HTTP {response.status}")
         data = response.document()
+        if not isinstance(data, dict):
+            raise ProviderError("AI provider returned an invalid response")
         if data.get("status") != "completed":
             raise ProviderError("AI response is incomplete")
         try:
-            text = "\n".join(
-                part["text"]
-                for item in data["output"]
-                if item.get("type") == "message"
-                for part in item.get("content", [])
-                if part.get("type") == "output_text"
-            )
-            return text, data["usage"]["input_tokens"], data["usage"]["output_tokens"]
-        except (KeyError, TypeError):
+            output = data["output"]
+            if not isinstance(output, list):
+                raise TypeError
+            refused = False
+            parts = []
+            for item in output:
+                if not isinstance(item, dict):
+                    raise TypeError
+                if item.get("type") == "message":
+                    content = item.get("content", [])
+                    if not isinstance(content, list):
+                        raise TypeError
+                    for part in content:
+                        if not isinstance(part, dict):
+                            raise TypeError
+                        if part.get("type") == "refusal":
+                            refused = True
+                        elif part.get("type") == "output_text":
+                            parts.append(part["text"])
+            text = "\n".join(parts)
+            inputs, outputs = data["usage"]["input_tokens"], data["usage"]["output_tokens"]
+        except (KeyError, TypeError, AttributeError):
             raise ProviderError("AI provider returned an invalid response") from None
+        if refused and not text.strip():
+            raise ProviderError("AI model refused the request")
+        return text, inputs, outputs

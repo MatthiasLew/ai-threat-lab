@@ -10,6 +10,8 @@ from decimal import localcontext
 
 import pytest
 from test_ai_costs import Provider
+from test_ai_costs import config as _config
+from test_ai_costs import evidence as _evidence
 from test_cli_process import run_cli
 from test_inventory_integration_cli import sample
 
@@ -19,7 +21,9 @@ from ai_threat_lab.cli import main
 from ai_threat_lab.models import ValidationError
 from ai_threat_lab.providers import ProviderError
 
-pytest_plugins = ["test_ai_costs"]
+globals().update(config=_config, evidence=_evidence)
+
+
 
 
 def stored(ledger):

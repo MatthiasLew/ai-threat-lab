@@ -279,6 +279,7 @@ Scores are illustrative ordinal assessments, not measured probabilities, financi
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Ready for controlled API testing](docs/READY_FOR_API_TESTING.md)
 - [Design diagrams](docs/DIAGRAMS.md)
 - [Planned user guide](docs/USER_GUIDE.md)
 
