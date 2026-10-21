@@ -346,7 +346,10 @@ def export_audit_report(
         if ai_data is None and ai_review_path is not None:
             with open(ai_review_path, "r", encoding="utf-8") as f:
                 ai_data = json.load(f)
-        raw = generate_pdf_report(saved["report"], ai_review=ai_data, lang=language)
+        proj_name = saved.get("manifest", {}).get("scope", {}).get("target") or root.name
+        raw = generate_pdf_report(
+            saved["report"], ai_review=ai_data, lang=language, project_name=proj_name
+        )
         if len(raw) > MAX_EXPORT_BYTES:
             raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
         if target_out is not None:
@@ -394,7 +397,14 @@ def export_audit_pdf(
             with open(path, "r", encoding="utf-8") as f:
                 loaded = json.load(f)
             report_dict = loaded.get("report", loaded)
-    raw = generate_pdf_report(report_dict, ai_review=ai_review, lang=language)
+    proj_hint = (
+        path.name
+        if not isinstance(run_or_report, dict)
+        else report_dict.get("project_name") or report_dict.get("target")
+    )
+    raw = generate_pdf_report(
+        report_dict, ai_review=ai_review, lang=language, project_name=proj_hint
+    )
     if len(raw) > MAX_EXPORT_BYTES:
         raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
     write_new_report(out_path, raw)

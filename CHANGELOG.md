@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.41.2] - Stage 5.2: PDF Generator Quality, Unicode Fidelity & Audit Credibility
+
+### Fixed & Enhanced
+- **High-Fidelity Unicode & Typography in PDF (`pdf_writer.py`)**:
+  - Extended Adobe Type-1 custom encoding and `/ToUnicode` CMap with complete support for Polish diacritics, dashes (em-dash `—`, en-dash `–`), typographic quotes (Polish `„` / `”`, English `“` / `”`, `‘` / `’`), bullet points (`•`), ellipsis (`…`), and symbols (`€`, `™`).
+  - Replaced silent fallback substitution of `?` with intelligent character mapping and NFKD transliteration, completely eliminating question-mark artifacts in reports.
+  - Implemented boundary-aware character wrapping for long unbroken strings (paths, URLs, stack traces), guaranteeing content never overflows beyond page margins.
+  - Standardized cross-reference (`xref`) line terminations to CR LF without trailing spaces, achieving strict PDF specification adherence and passing Git whitespace validation.
+- **Audit Credibility & Partial Scope Transparency (`pdf_report.py`)**:
+  - Fixed audit executive summaries when findings are 0 on partial scans: explicitly clarifies that 0 findings applies strictly to the inspected subset of files, warning that traversal limits were reached rather than falsely certifying the entire project.
+  - Added project identity extraction (`extract_project_identity`): resolves real directory/repository names (e.g. `Labrys`) from audit metadata and manifests instead of generic "Inspected Project" labels.
+  - Overhauled `not_checked` reporting: replaced raw Python dictionary string dumps (`{'source': ..., 'target': ...}`) with structured, human-readable limitation cards grouped by category (traversal limits, oversized files, excluded directories, unconfigured scanners, and parser errors).
+- **Target Inventory & Scope Exclusions (`local_inventory.py`)**:
+  - Expanded directory pruning during file system walks: automatically skips temporary, cache, and IDE directories (`.ai`, `.gemini`, `.antigravity`, `.cursor`, `.vscode`, `.idea`, `tmp`, `temp`, `.cache`, `htmlcov`, etc.) to prevent artificial traversal limits on scratch files.
+  - Expanded text-based inspection suffixes for multi-technology projects (`.go`, `.rs`, `.java`, `.c`, `.cpp`, `.h`, `.cs`, `.php`, `.rb`, `.sh`, `.bash`, `.sql`, `.xml`, `.ini`, `.cfg`), enabling comprehensive offline secret scanning across heterogeneous codebases.
+  - Added explicit diagnostic notices in `not_checked` explaining how to adjust coverage limits with `--max-files`.
+- **Comprehensive Acceptance Testing & Samples**:
+  - Added test suite (`tests/test_stage5_2_pdf_quality_and_scope.py`) testing text extraction via `QPdfDocument.getAllText()`, visual page rendering to image via `QPdfDocument.render()`, Polish Unicode fidelity, project identity extraction, raw dict elimination, and multi-technology secret scanning.
+  - Re-rendered official sample reports: `docs/samples/sample_audit_pl.pdf` and `docs/samples/sample_audit_en.pdf`.
+
 ## [0.41.1] - Stage 5.1: Windows Paths, Pre-Audit Validation & Interactive CLI Robustness
 
 ### Fixed

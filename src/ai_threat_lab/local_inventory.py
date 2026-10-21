@@ -12,21 +12,49 @@ from .kubernetes_review import NOTICE as KUBERNETES_NOTICE
 from .kubernetes_review import review_kubernetes_source
 from .models import ValidationError
 
-EXCLUDED = {
-    ".git",
-    ".venv",
-    "venv",
-    "node_modules",
-    "__pycache__",
-    "dist",
-    "build",
-    "site-packages",
-    ".tox",
-    ".nox",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".ruff_cache",
-}
+EXCLUDED = frozenset(
+    {
+        # Version control
+        ".git",
+        ".svn",
+        ".hg",
+        # Virtual environments & package managers
+        ".venv",
+        "venv",
+        "env",
+        ".virtualenv",
+        "node_modules",
+        "site-packages",
+        ".cargo",
+        ".rustup",
+        # Build & test caches
+        "__pycache__",
+        "dist",
+        "build",
+        ".tox",
+        ".nox",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".hypothesis",
+        ".coverage",
+        "htmlcov",
+        # Temporary directories, caches, and AI/IDE workspaces
+        ".ai",
+        ".gemini",
+        ".antigravity",
+        ".cursor",
+        ".vscode",
+        ".idea",
+        "tmp",
+        "temp",
+        ".tmp",
+        ".temp",
+        ".cache",
+        "cache",
+    }
+)
+
 TEXT_SUFFIXES = {
     ".py",
     ".js",
@@ -39,7 +67,25 @@ TEXT_SUFFIXES = {
     ".env",
     ".html",
     ".htm",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".cs",
+    ".php",
+    ".rb",
+    ".sh",
+    ".bash",
+    ".sql",
+    ".xml",
+    ".properties",
+    ".ini",
+    ".cfg",
+    ".conf",
 }
+
 SECRET_PATTERNS = (
     r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
     r"\bAKIA[0-9A-Z]{16}\b",
@@ -50,7 +96,15 @@ _COMBINED_SECRET_RE = re.compile("|".join(f"(?:{pattern})" for pattern in SECRET
 
 
 def is_excluded_dirname(name: str) -> bool:
-    return name in EXCLUDED or name.startswith(".venv") or name.endswith("-venv")
+    """Return True if directory represents a temporary, cache, build, or virtualenv directory."""
+    low = name.lower()
+    if low in EXCLUDED:
+        return True
+    if low.startswith((".venv", "venv-", "env-")) or low.endswith(("-venv", ".venv", "-env")):
+        return True
+    if low.endswith((".egg-info", ".dist-info")):
+        return True
+    return False
 
 
 def inspect_text(name: str, source: str) -> tuple[AssessmentFinding, ...]:
@@ -109,6 +163,7 @@ def local_inventory(target: str) -> AssessmentResult:
     baseline = service.assess(target)
     findings, missing = list(baseline.findings), list(baseline.not_checked)
     candidates = [path]
+    excluded_dirs: set[str] = set()
     if path.is_dir():
         import os
 
@@ -122,6 +177,8 @@ def local_inventory(target: str) -> AssessmentResult:
             if "pyvenv.cfg" in files and Path(directory) != path:
                 dirs[:] = []
                 continue
+            pruned_dirs = [d for d in dirs if is_excluded_dirname(d)]
+            excluded_dirs.update(pruned_dirs)
             dirs[:] = sorted(
                 d
                 for d in dirs
@@ -141,8 +198,18 @@ def local_inventory(target: str) -> AssessmentResult:
                     stopped = True
                     break
             if stopped or visited >= 1000:
-                missing.append("Inventory traversal stopped at the file/directory limit.")
+                missing.append(
+                    "Inventory traversal stopped at the file/directory limit "
+                    "(100 files / 1000 directories). Scope is incomplete."
+                )
                 break
+        if excluded_dirs:
+            sample_dirs = ", ".join(sorted(excluded_dirs)[:8])
+            more = f" (+{len(excluded_dirs) - 8} more)" if len(excluded_dirs) > 8 else ""
+            missing.append(
+                f"Excluded {len(excluded_dirs)} temporary/cache/environment directories: "
+                f"{sample_dirs}{more}."
+            )
         for err in walk_errors:
             err_name = Path(getattr(err, "filename", None) or target).name
             missing.append(f"Could not enumerate directory: {err_name}")

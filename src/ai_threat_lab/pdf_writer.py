@@ -2,25 +2,30 @@
 
 Features:
 - Standard A4 pages (595.28 x 841.89 points)
-- Full native Polish diacritics support (ą, ć, ę, ł, ń, ó, ś, ź, ż) via WinAnsi / Differences
-  mapping and standard Adobe glyph names + /ToUnicode CMap for search and copy-paste
+- Full native Polish diacritics support (ą, ć, ę, ł, ń, ó, ś, ź, ż, Ą, Ć, Ę, Ł, Ń, Ó, Ś, Ź, Ż)
+- Native typographic punctuation: em-dashes (—), en-dashes (–), bullets (•),
+  directional quotes („, ”, “, ”, ‘, ’), ellipsis (…), Euro (€), trademark (™)
+- /Differences encoding and /ToUnicode CMap ensuring perfect copy-paste, rendering,
+  and text extraction across all standard PDF viewers without external font downloads
 - Helvetica, Helvetica-Bold, Helvetica-Oblique, Courier, Courier-Bold typefaces
 - Colored cards, severity badges, divider rules, and highlighted code snippet boxes
-- Word-wrapping and automatic page splitting with two-pass header/footer pagination
+- Word-wrapping with long-word/path chunking and automatic page splitting
 - Zero external libraries or network dependencies
 """
 
 from __future__ import annotations
 
 import io
+import unicodedata
 from typing import Callable
 
 # A4 dimensions in points (72 points per inch)
 PAGE_WIDTH = 595.28
 PAGE_HEIGHT = 841.89
 
-# Polish Unicode codepoints mapped to custom character codes (128-255 range)
-PL_CHAR_MAP: dict[str, int] = {
+# Unicode codepoints mapped to custom single-byte character codes (128-255 range)
+UNICODE_CHAR_MAP: dict[str, int] = {
+    # Polish diacritics (uppercase & lowercase)
     "Ą": 165,
     "ą": 185,
     "Ć": 198,
@@ -39,12 +44,37 @@ PL_CHAR_MAP: dict[str, int] = {
     "ź": 159,
     "Ż": 175,
     "ż": 191,
+    # Typographic punctuation & symbols
+    "€": 128,  # Euro symbol U+20AC
+    "„": 132,  # Double low-9 quote U+201E
+    "…": 133,  # Horizontal ellipsis U+2026
+    "‘": 145,  # Left single quote U+2018
+    "’": 146,  # Right single quote / apostrophe U+2019
+    "“": 147,  # Left double quote U+201C
+    "”": 148,  # Right double quote U+201D
+    "•": 149,  # Bullet U+2022
+    "–": 150,  # En-dash U+2013
+    "—": 151,  # Em-dash U+2014
+    "™": 153,  # Trade mark U+2122
 }
+
+PL_CHAR_MAP = UNICODE_CHAR_MAP
 
 # Standard Adobe Glyph Names for Differences encoding
 ADOBE_DIFFERENCES = (
+    "128 /Euro "
+    "132 /quotedblbase "
+    "133 /ellipsis "
     "140 /Sacute "
     "143 /Zacute "
+    "145 /quoteleft "
+    "146 /quoteright "
+    "147 /quotedblleft "
+    "148 /quotedblright "
+    "149 /bullet "
+    "150 /endash "
+    "151 /emdash "
+    "153 /trademark "
     "156 /sacute "
     "159 /zacute "
     "163 /Lslash "
@@ -73,9 +103,20 @@ begincmap
 1 begincodespacerange
 <00> <FF>
 endcodespacerange
-18 beginbfrange
+28 beginbfrange
+<80> <80> <20AC>
+<84> <84> <201E>
+<85> <85> <2026>
 <8C> <8C> <015A>
 <8F> <8F> <0179>
+<91> <91> <2018>
+<92> <92> <2019>
+<93> <93> <201C>
+<94> <94> <201D>
+<95> <95> <2022>
+<96> <96> <2013>
+<97> <97> <2014>
+<99> <99> <2122>
 <9C> <9C> <015B>
 <9F> <9F> <017A>
 <A3> <A3> <0141>
@@ -98,6 +139,41 @@ CMapName currentdict /CMap defineresource pop
 end
 end"""
 
+# Safe fallback translations for Unicode symbols
+FALLBACK_CHAR_MAP: dict[str, str] = {
+    "\u00A0": " ",
+    "\u202F": " ",
+    "\u200B": "",
+    "\u200C": "",
+    "\u200D": "",
+    "→": "->",
+    "←": "<-",
+    "⇒": "=>",
+    "↔": "<->",
+    "✓": "[OK]",
+    "✔": "[OK]",
+    "✗": "[X]",
+    "✘": "[X]",
+    "★": "*",
+    "☆": "*",
+    "▶": ">",
+    "▼": "v",
+    "▲": "^",
+    "◀": "<",
+    "≥": ">=",
+    "≤": "<=",
+    "≠": "!=",
+    "≈": "~=",
+    "±": "+/-",
+    "×": "x",
+    "÷": "/",
+    "µ": "u",
+    "©": "(C)",
+    "®": "(R)",
+    "§": "§",
+    "°": "deg",
+}
+
 # Character width ratios relative to font size (Helvetica ~0.52, Courier fixed = 0.6)
 _HELVETICA_NARROW = set("ijlI!.,:;'/| ")
 _HELVETICA_WIDE = set("mwMW@%&#")
@@ -107,6 +183,14 @@ def char_width(char: str, font: str, size: float) -> float:
     """Estimate character display width in points."""
     if "Courier" in font:
         return 0.60 * size
+    if char == "—":
+        return 0.95 * size
+    if char in "–…":
+        return 0.60 * size
+    if char in "•":
+        return 0.40 * size
+    if char in "„”“”‘’":
+        return 0.35 * size
     if char in _HELVETICA_NARROW:
         return 0.28 * size
     if char in _HELVETICA_WIDE:
@@ -122,25 +206,77 @@ def string_width(text: str, font: str, size: float) -> float:
 
 
 def escape_pdf_string(text: str) -> bytes:
-    """Encode string to WinAnsi/Polish byte representation and escape PDF syntax."""
+    """Encode string to PDF byte representation and escape special syntax characters."""
     out = bytearray()
     for ch in text:
-        b = PL_CHAR_MAP.get(ch)
+        # 1. Direct extended character map
+        b = UNICODE_CHAR_MAP.get(ch)
         if b is not None:
-            # Check if byte is ( or ) or \
             if b in (ord("("), ord(")"), ord("\\")):
                 out.append(ord("\\"))
             out.append(b)
-        else:
-            try:
-                char_byte = ch.encode("latin-1")
-                for cb in char_byte:
+            continue
+
+        # 2. Known symbol fallbacks (arrows, checks, etc.)
+        fallback = FALLBACK_CHAR_MAP.get(ch)
+        if fallback is not None:
+            for sub_ch in fallback:
+                b_sub = UNICODE_CHAR_MAP.get(sub_ch)
+                if b_sub is not None:
+                    if b_sub in (ord("("), ord(")"), ord("\\")):
+                        out.append(ord("\\"))
+                    out.append(b_sub)
+                else:
+                    try:
+                        for cb in sub_ch.encode("latin-1"):
+                            if cb in (ord("("), ord(")"), ord("\\")):
+                                out.append(ord("\\"))
+                            out.append(cb)
+                    except UnicodeEncodeError:
+                        out.append(ord("?"))
+            continue
+
+        # 3. Standard Latin-1 characters
+        try:
+            char_bytes = ch.encode("latin-1")
+            for cb in char_bytes:
+                if cb in (ord("("), ord(")"), ord("\\")):
+                    out.append(ord("\\"))
+                out.append(cb)
+        except UnicodeEncodeError:
+            # 4. Transliterate decomposed unicode instead of silent '?'
+            decomposed = unicodedata.normalize("NFKD", ch)
+            ascii_sub = decomposed.encode("ascii", "ignore").decode("ascii")
+            if ascii_sub:
+                for cb in ascii_sub.encode("ascii"):
                     if cb in (ord("("), ord(")"), ord("\\")):
                         out.append(ord("\\"))
                     out.append(cb)
-            except UnicodeEncodeError:
+            else:
                 out.append(ord("?"))
+
     return bytes(out)
+
+
+def split_long_word(word: str, max_width: float, font: str, size: float) -> list[str]:
+    """Split a single word or path token so it never exceeds max_width."""
+    if string_width(word, font, size) <= max_width:
+        return [word]
+    chunks: list[str] = []
+    current_chunk: list[str] = []
+    current_w = 0.0
+    for char in word:
+        cw = char_width(char, font, size)
+        if current_chunk and current_w + cw > max_width:
+            chunks.append("".join(current_chunk))
+            current_chunk = [char]
+            current_w = cw
+        else:
+            current_chunk.append(char)
+            current_w += cw
+    if current_chunk:
+        chunks.append("".join(current_chunk))
+    return chunks
 
 
 class PDFPage:
@@ -168,7 +304,7 @@ class PDFDocument:
         self.content_width = self.width - (2 * self.margin_x)
         self.cursor_y = self.height - self.margin_top
 
-        # Font aliases
+        # Font definitions: Font Name -> Resource Tag
         self.fonts = {
             "Helvetica": "F1",
             "Helvetica-Bold": "F2",
@@ -249,7 +385,7 @@ class PDFDocument:
         """Draw a single line of text."""
         font_tag = self.fonts.get(font, "F1")
         escaped = escape_pdf_string(text_str)
-        # Construct operator using byte literals to handle 8-bit encoded Polish chars safely
+        # Construct operator using byte literals to handle 8-bit encoded characters safely
         rgb = f"{color[0]:.3f} {color[1]:.3f} {color[2]:.3f} rg"
         pos = f"BT /{font_tag} {size:.2f} Tf {x:.2f} {y:.2f} Td ("
         prefix = f"{rgb} {pos}".encode("ascii")
@@ -259,26 +395,30 @@ class PDFDocument:
     def wrap_text(
         self, text_str: str, max_width: float, font: str = "Helvetica", size: float = 10.0
     ) -> list[str]:
-        """Wrap text into lines that do not exceed max_width."""
-        lines = []
+        """Wrap text into lines that strictly do not exceed max_width."""
+        lines: list[str] = []
+        space_w = char_width(" ", font, size)
         for paragraph in text_str.split("\n"):
             words = paragraph.split(" ")
             current_line: list[str] = []
             current_width = 0.0
-            space_w = char_width(" ", font, size)
 
             for w in words:
-                ww = string_width(w, font, size)
-                if not current_line:
-                    current_line.append(w)
-                    current_width = ww
-                elif current_width + space_w + ww <= max_width:
-                    current_line.append(w)
-                    current_width += space_w + ww
-                else:
-                    lines.append(" ".join(current_line))
-                    current_line = [w]
-                    current_width = ww
+                if not w:
+                    continue
+                sub_words = split_long_word(w, max_width, font, size)
+                for sub_w in sub_words:
+                    sub_w_width = string_width(sub_w, font, size)
+                    if not current_line:
+                        current_line.append(sub_w)
+                        current_width = sub_w_width
+                    elif current_width + space_w + sub_w_width <= max_width:
+                        current_line.append(sub_w)
+                        current_width += space_w + sub_w_width
+                    else:
+                        lines.append(" ".join(current_line))
+                        current_line = [sub_w]
+                        current_width = sub_w_width
             if current_line or not paragraph:
                 lines.append(" ".join(current_line))
         return lines
@@ -293,14 +433,21 @@ class PDFDocument:
         size: float = 10.0,
         line_height: float = 14.0,
         color: tuple[float, float, float] = (0.15, 0.15, 0.15),
+        auto_page_break: bool = True,
     ) -> float:
         """Draw wrapped text block downwards from y; returns total height consumed."""
         lines = self.wrap_text(text_str, max_width, font=font, size=size)
         curr_y = y
+        total_height = 0.0
         for line in lines:
+            if auto_page_break and curr_y - line_height < self.margin_bottom:
+                self.new_page()
+                curr_y = self.height - self.margin_top
             self.text(x, curr_y, line, font=font, size=size, color=color)
             curr_y -= line_height
-        return len(lines) * line_height
+            total_height += line_height
+        self.cursor_y = curr_y
+        return total_height
 
     def badge(
         self,
@@ -381,12 +528,12 @@ class PDFDocument:
         )
 
         font_objects: dict[str, int] = {}
-        for alias, base_font in self.fonts.items():
+        for font_name, tag in self.fonts.items():
             font_def = (
-                f"<< /Type /Font /Subtype /Type1 /BaseFont /{base_font} "
+                f"<< /Type /Font /Subtype /Type1 /BaseFont /{font_name} "
                 f"/Encoding {encoding_dict} /ToUnicode {tounicode_id} 0 R >>"
             )
-            font_objects[alias] = write_obj(font_def.encode("ascii"))
+            font_objects[font_name] = write_obj(font_def.encode("ascii"))
 
         # Content streams for each page
         content_ids: list[int] = []
@@ -405,7 +552,7 @@ class PDFDocument:
         catalog_id = pages_tree_id + 1
 
         # Resources dictionary
-        font_refs = " ".join(f"/{self.fonts[f]} {font_objects[f]} 0 R" for f in self.fonts)
+        font_refs = " ".join(f"/{tag} {font_objects[name]} 0 R" for name, tag in self.fonts.items())
         resources_dict = f"<< /Font << {font_refs} >> >>"
 
         # Write Page objects
@@ -431,9 +578,9 @@ class PDFDocument:
         xref_offset = buf.tell()
         total_objs = obj_id
         buf.write(f"xref\n0 {total_objs}\n".encode("ascii"))
-        buf.write(b"0000000000 65535 f \n")
+        buf.write(b"0000000000 65535 f\r\n")
         for i in range(1, total_objs):
-            buf.write(f"{offsets[i]:010d} 00000 n \n".encode("ascii"))
+            buf.write(f"{offsets[i]:010d} 00000 n\r\n".encode("ascii"))
 
         # Trailer
         trailer_dict = (

@@ -435,6 +435,7 @@ def run_new_audit_workflow(
             rep,
             language=language,
             source_root=source_root,
+            project_name=safe_name,
         )
         pdf_path.write_bytes(pdf_bytes)
     except Exception as exc:
@@ -549,6 +550,7 @@ def run_new_audit_workflow(
                     ai_review=ai_res,
                     language=language,
                     source_root=source_root,
+                    project_name=safe_name,
                 )
                 pdf_path.write_bytes(enriched_pdf_bytes)
 
