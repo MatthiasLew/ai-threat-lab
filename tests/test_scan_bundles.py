@@ -76,7 +76,7 @@ def test_invalid_manifest_fields(bundle, change):
         ("allowed_hosts", "example.com"),
         ("allowed_hosts", [None]),
         ("max_files", True),
-        ("max_files", 101),
+        ("max_files", 10001),
         ("max_pages", 0),
         ("max_pages", True),
         ("dkim_selector", 1),

@@ -11,6 +11,7 @@ import pytest
 try:
     from PySide6.QtCore import QSize
     from PySide6.QtPdf import QPdfDocument
+
     HAS_PYSIDE6 = True
 except ImportError:
     HAS_PYSIDE6 = False
@@ -30,9 +31,7 @@ def test_pdf_writer_unicode_special_chars_no_question_marks(tmp_path: Path) -> N
     doc = PDFDocument()
     doc.new_page()
 
-    sample_text = (
-        "Zażółć gęślą jaźń — raport audytu – wersja „2.0” “final” • test & < > € …"
-    )
+    sample_text = "Zażółć gęślą jaźń — raport audytu – wersja „2.0” “final” • test & < > € …"
     doc.text(50, 750, sample_text, font="Helvetica", size=12)
 
     raw_pdf = doc.render()
@@ -118,9 +117,7 @@ def test_extract_project_identity_resolution() -> None:
 
     # From target path in assessments
     report_with_assessments = {
-        "assessments": [
-            {"target": "C:\\Users\\Praca\\fork\\MatthiasLew\\Labrys"}
-        ]
+        "assessments": [{"target": "C:\\Users\\Praca\\fork\\MatthiasLew\\Labrys"}]
     }
     assert extract_project_identity(report_with_assessments) == (
         "Labrys",
@@ -128,13 +125,7 @@ def test_extract_project_identity_resolution() -> None:
     )
 
     # From Unix path in scope
-    report_with_scope = {
-        "manifest": {
-            "scope": {
-                "target": "/home/user/projects/SecureGateway"
-            }
-        }
-    }
+    report_with_scope = {"manifest": {"scope": {"target": "/home/user/projects/SecureGateway"}}}
     assert extract_project_identity(report_with_scope) == (
         "SecureGateway",
         "/home/user/projects/SecureGateway",
@@ -315,9 +306,7 @@ def test_local_inventory_multi_technology_secret_detection(tmp_path: Path) -> No
 
     # Go file with AWS access key
     go_file = repo / "main.go"
-    go_file.write_text(
-        'package main\nconst token = "AKIAIOSFODNN7EXAMPLE"\n', encoding="utf-8"
-    )
+    go_file.write_text('package main\nconst token = "AKIAIOSFODNN7EXAMPLE"\n', encoding="utf-8")
 
     # Rust file with GitHub token
     rs_file = repo / "lib.rs"

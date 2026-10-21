@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Callable
+from urllib.parse import urlsplit
 
 from .contracts import write_document
 from .gui_api import (
@@ -36,6 +37,7 @@ from .i18n import (
 )
 from .path_utils import clean_user_path, suggest_output_dir
 from .pdf_report import generate_pdf_report
+from .scan_engine import ScanOptions
 
 
 def prompt_user(prompt: str, *, default: str = "", input_fn: Callable[[str], str] = input) -> str:
@@ -254,6 +256,118 @@ def validate_output_directory(
     return True, out_path, None
 
 
+def display_target_menu(language: str, print_fn: Callable[..., None] = print) -> None:
+    """Render the structured 9-option target selection menu."""
+    print_fn()
+    print_fn("==================================================")
+    print_fn(f"  {t('target_menu_title', language)}")
+    print_fn("==================================================")
+    print_fn(f"1. {t('target_opt_local_project', language)}")
+    print_fn(f"2. {t('target_opt_single_file', language)}")
+    print_fn(f"3. {t('target_opt_github_repo', language)}")
+    print_fn(f"4. {t('target_opt_website_https', language)}")
+    print_fn(f"5. {t('target_opt_mail_domain', language)}")
+    print_fn(f"6. {t('target_opt_mail_message', language)}")
+    print_fn(f"7. {t('target_opt_mailbox_gmail', language)}")
+    print_fn(f"8. {t('target_opt_security_logs', language)}")
+    print_fn(f"9. {t('target_opt_other_source', language)}")
+    print_fn(f"0. {t('target_opt_back', language)}")
+    print_fn()
+
+
+def select_scan_profile(
+    language: str,
+    input_fn: Callable[[str], str] = input,
+    print_fn: Callable[..., None] = print,
+) -> int:
+    """Prompt user to choose scan profile or custom file limit."""
+    pl = language == "pl"
+    print_fn()
+    print_fn(f"--- {t('profile_menu_title', language)} ---")
+    print_fn(t("profile_menu_desc", language))
+    print_fn(f"  1. {t('profile_opt_fast', language)}")
+    print_fn(f"  2. {t('profile_opt_standard', language)}")
+    print_fn(f"  3. {t('profile_opt_extended', language)}")
+    print_fn(f"  4. {t('profile_opt_custom', language)}")
+    print_fn()
+
+    choice = prompt_user(
+        t("prompt_select_profile", language), default="2", input_fn=input_fn
+    ).strip()
+    if choice == "1":
+        print_fn(t("profile_selected", language, name="Fast / Szybki" if pl else "Fast", limit=100))
+        return 100
+    elif choice == "3":
+        print_fn(
+            t(
+                "profile_selected",
+                language,
+                name="Extended / Rozszerzony" if pl else "Extended",
+                limit=5000,
+            )
+        )
+        return 5000
+    elif choice == "4":
+        raw = prompt_user(
+            t("prompt_custom_max_files", language), default="1000", input_fn=input_fn
+        ).strip()
+        try:
+            val = int(raw)
+            if 1 <= val <= 10000:
+                print_fn(
+                    t(
+                        "profile_selected",
+                        language,
+                        name="Custom / Własny" if pl else "Custom",
+                        limit=val,
+                    )
+                )
+                return val
+        except ValueError:
+            pass
+        print_fn(
+            "Niepoprawna wartość. Użyto domyślnego limitu 1 000 plików."
+            if pl
+            else "Invalid value. Defaulting to 1,000 files."
+        )
+        return 1000
+    else:
+        print_fn(
+            t(
+                "profile_selected",
+                language,
+                name="Standard / Standardowy" if pl else "Standard",
+                limit=1000,
+            )
+        )
+        return 1000
+
+
+def confirm_network_consent(
+    host: str,
+    purpose: str,
+    language: str,
+    input_fn: Callable[[str], str] = input,
+    print_fn: Callable[..., None] = print,
+) -> bool:
+    """Explicit network consent disclosure gate before any remote query."""
+    print_fn()
+    print_fn("--------------------------------------------------")
+    print_fn(f"  {t('network_consent_title', language)}")
+    print_fn("--------------------------------------------------")
+    print_fn(t("network_consent_details", language, host=host, purpose=purpose))
+    print_fn()
+    ans = prompt_user(
+        t("prompt_network_consent", language),
+        default="n",
+        input_fn=input_fn,
+    ).lower()
+    if ans not in ("t", "tak", "y", "yes"):
+        print_fn(t("network_consent_denied", language))
+        return False
+    return True
+
+
 def run_language_selection(
     input_fn: Callable[[str], str] = input, print_fn: Callable[..., None] = print
 ) -> str:
@@ -306,33 +420,260 @@ def run_new_audit_workflow(
     """Guided workflow for inspecting a target, running audit, and producing PDF report."""
     pl = language == "pl"
 
-    # Step 1: Target Path Prompt with re-prompt loop
-    target_path: Path | None = None
+    # Step 1: Target Type Selection / Direct Input
+    display_target_menu(language, print_fn=print_fn)
+
+    options: ScanOptions | None = None
+    safe_name: str = "audit_target"
+
     while True:
         try:
-            raw_target = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
-            cleaned = clean_user_path(raw_target)
-            if not cleaned or cleaned.lower() in ("q", "quit", "cancel", "anuluj"):
+            choice = prompt_user(t("target_menu_prompt", language), input_fn=input_fn)
+            cleaned_choice = clean_user_path(choice)
+            if not cleaned_choice or cleaned_choice.lower() in (
+                "0",
+                "q",
+                "quit",
+                "cancel",
+                "anuluj",
+            ):
                 print_fn(t("audit_cancelled", language))
                 return
 
-            valid, path_obj, error_msg = validate_target_path(cleaned, language=language)
-            if not valid or path_obj is None:
-                print_fn(error_msg or t("target_not_found", language, target=cleaned))
-                continue
+            # Check if user entered a menu number 1-9
+            if cleaned_choice == "1":
+                # 1. Local project directory
+                target_raw = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
+                c_target = clean_user_path(target_raw)
+                valid, p_obj, err_msg = validate_target_path(c_target, language=language)
+                if not valid or p_obj is None or not p_obj.is_dir():
+                    print_fn(
+                        err_msg
+                        or (
+                            "Wskazana ścieżka nie jest katalogiem."
+                            if pl
+                            else "Target path is not a directory."
+                        )
+                    )
+                    continue
+                max_f = select_scan_profile(language, input_fn=input_fn, print_fn=print_fn)
+                options = ScanOptions(target=str(p_obj), max_files=max_f, network=False)
+                safe_name = p_obj.name or "local_project"
+                break
 
-            target_path = path_obj
-            break
+            elif cleaned_choice == "2":
+                # 2. Single file
+                target_raw = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
+                c_target = clean_user_path(target_raw)
+                valid, p_obj, err_msg = validate_target_path(c_target, language=language)
+                if not valid or p_obj is None or not p_obj.is_file():
+                    print_fn(
+                        err_msg
+                        or (
+                            "Wskazana ścieżka nie jest plikiem."
+                            if pl
+                            else "Target path is not a file."
+                        )
+                    )
+                    continue
+                options = ScanOptions(target=str(p_obj), max_files=10, network=False)
+                safe_name = p_obj.stem or "single_file"
+                break
+
+            elif cleaned_choice == "3":
+                # 3. GitHub repository
+                repo_raw = prompt_user(t("prompt_prompt_github", language), input_fn=input_fn)
+                c_repo = clean_user_path(repo_raw)
+                if not c_repo or c_repo.lower() in ("0", "q", "quit", "cancel", "anuluj"):
+                    print_fn(t("audit_cancelled", language))
+                    return
+                if not c_repo.startswith("http"):
+                    c_repo = f"https://github.com/{c_repo.strip('/')}"
+                host = "github.com"
+                purpose = (
+                    "Pobranie drzewa kodu i plików źródłowych przez GitHub API"
+                    if pl
+                    else "Fetch repository tree and source files via GitHub API"
+                )
+                if not confirm_network_consent(
+                    host, purpose, language, input_fn=input_fn, print_fn=print_fn
+                ):
+                    return
+                max_f = select_scan_profile(language, input_fn=input_fn, print_fn=print_fn)
+                options = ScanOptions(
+                    target=c_repo, network=True, allowed_hosts=(host,), max_files=max_f
+                )
+                safe_name = c_repo.rstrip("/").split("/")[-1] or "github_repo"
+                break
+
+            elif cleaned_choice == "4":
+                # 4. HTTPS Website
+                url_raw = prompt_user(t("prompt_prompt_website", language), input_fn=input_fn)
+                c_url = clean_user_path(url_raw)
+                if not c_url or c_url.lower() in ("0", "q", "quit", "cancel", "anuluj"):
+                    print_fn(t("audit_cancelled", language))
+                    return
+                parsed = urlsplit(c_url)
+                if parsed.scheme != "https" or not parsed.hostname or parsed.fragment:
+                    print_fn(
+                        "Błąd: Wymagany jest pełny adres HTTPS bez fragmentu (#)."
+                        if pl
+                        else "Error: HTTPS URL without fragments (#) is required."
+                    )
+                    continue
+                host = parsed.hostname
+                purpose = (
+                    "Analiza nagłówków bezpieczeństwa HTTP i parametrów TLS"
+                    if pl
+                    else "Inspect HTTP security headers and TLS parameters"
+                )
+                if not confirm_network_consent(
+                    host, purpose, language, input_fn=input_fn, print_fn=print_fn
+                ):
+                    return
+                options = ScanOptions(
+                    target=c_url, network=True, allowed_hosts=(host,), max_files=50
+                )
+                safe_name = host.replace(".", "_")
+                break
+
+            elif cleaned_choice == "5":
+                # 5. Mail domain
+                dom_raw = prompt_user(t("prompt_prompt_mail_domain", language), input_fn=input_fn)
+                c_dom = clean_user_path(dom_raw).removeprefix("mail-domain:").lower()
+                if not c_dom or c_dom.lower() in ("0", "q", "quit", "cancel", "anuluj"):
+                    print_fn(t("audit_cancelled", language))
+                    return
+                dkim_raw = prompt_user(t("prompt_prompt_dkim", language), input_fn=input_fn).strip()
+                dkim_sel = dkim_raw if dkim_raw else None
+                purpose = (
+                    "Weryfikacja rekordów SPF, DMARC i kluczy DKIM przez bezpieczny DNS-over-HTTPS"
+                    if pl
+                    else "Verify SPF, DMARC, and DKIM records via DNS-over-HTTPS"
+                )
+                if not confirm_network_consent(
+                    c_dom, purpose, language, input_fn=input_fn, print_fn=print_fn
+                ):
+                    return
+                options = ScanOptions(
+                    target=f"mail-domain:{c_dom}",
+                    network=True,
+                    allowed_hosts=(c_dom,),
+                    dkim_selector=dkim_sel,
+                    max_files=50,
+                )
+                safe_name = f"mail_{c_dom.replace('.', '_')}"
+                break
+
+            elif cleaned_choice == "6":
+                # 6. Saved email message (.eml)
+                eml_raw = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
+                c_eml = clean_user_path(eml_raw)
+                valid, p_obj, err_msg = validate_target_path(c_eml, language=language)
+                if not valid or p_obj is None or not p_obj.is_file():
+                    print_fn(
+                        err_msg or ("Wskazany plik nie istnieje." if pl else "File does not exist.")
+                    )
+                    continue
+                options = ScanOptions(target=str(p_obj), network=False)
+                safe_name = p_obj.stem or "mail_message"
+                break
+
+            elif cleaned_choice == "7":
+                # 7. Gmail account
+                print_fn()
+                print_fn(t("gmail_setup_guide", language))
+                print_fn()
+                gmail_raw = prompt_user(t("prompt_prompt_gmail", language), input_fn=input_fn)
+                c_gmail = clean_user_path(gmail_raw).removeprefix("mailbox:")
+                if not c_gmail or c_gmail.lower() in ("0", "q", "quit", "cancel", "anuluj"):
+                    print_fn(t("audit_cancelled", language))
+                    return
+                if "@" not in c_gmail:
+                    print_fn(
+                        "Błąd: Podaj poprawny adres e-mail."
+                        if pl
+                        else "Error: Enter a valid email address."
+                    )
+                    continue
+                host = "gmail.googleapis.com"
+                purpose = (
+                    "Odczyt reguł przekazywania i filtrów konta Gmail"
+                    if pl
+                    else "Read Gmail account forwarding and filter rules"
+                )
+                if not confirm_network_consent(
+                    host, purpose, language, input_fn=input_fn, print_fn=print_fn
+                ):
+                    return
+                options = ScanOptions(
+                    target=f"mailbox:{c_gmail}", network=True, allowed_hosts=(host,)
+                )
+                safe_name = f"gmail_{c_gmail.split('@')[0]}"
+                break
+
+            elif cleaned_choice == "8":
+                # 8. Security log
+                log_raw = prompt_user(t("prompt_prompt_logs", language), input_fn=input_fn)
+                c_log = clean_user_path(log_raw)
+                valid, p_obj, err_msg = validate_target_path(c_log, language=language)
+                if not valid or p_obj is None or not p_obj.is_file():
+                    print_fn(
+                        err_msg
+                        or (
+                            "Wskazany plik logu nie istnieje." if pl else "Log file does not exist."
+                        )
+                    )
+                    continue
+                options = ScanOptions(target=str(p_obj), network=False)
+                safe_name = p_obj.stem or "security_log"
+                break
+
+            elif cleaned_choice == "9":
+                # 9. Other source
+                target_raw = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
+                c_target = clean_user_path(target_raw)
+                valid, p_obj, err_msg = validate_target_path(c_target, language=language)
+                if valid and p_obj is not None:
+                    options = ScanOptions(target=str(p_obj), network=False)
+                    safe_name = p_obj.name or "audit_target"
+                else:
+                    options = ScanOptions(target=c_target, network=False)
+                    safe_name = "custom_audit"
+                break
+
+            else:
+                # Direct target path/URL fallback for seamless UX and backwards compatibility
+                valid, path_obj, error_msg = validate_target_path(cleaned_choice, language=language)
+                if not valid or path_obj is None:
+                    print_fn(error_msg or t("target_not_found", language, target=cleaned_choice))
+                    continue
+                options = ScanOptions(
+                    target=str(path_obj), max_files=1000 if path_obj.is_dir() else 10, network=False
+                )
+                safe_name = path_obj.name or "audit_target"
+                break
+
         except (EOFError, KeyboardInterrupt):
             print_fn()
             print_fn(t("audit_cancelled", language))
             return
 
+    if options is None:
+        return
+
     # Step 2: Plan Audit & Display Planned Scope
     print_fn()
-    print_fn(t("planning_analysis", language, target=str(target_path)))
+    print_fn(t("planning_analysis", language, target=options.target))
     try:
-        plan = plan_audit(target_path, language=language)
+        plan = plan_audit(
+            options.target,
+            network=options.network,
+            allowed_hosts=options.allowed_hosts,
+            max_files=options.max_files,
+            dkim_selector=options.dkim_selector,
+            language=language,
+        )
     except Exception as exc:
         print_fn(f"Błąd planowania audytu: {exc}" if pl else f"Audit planning error: {exc}")
         return
@@ -343,7 +684,12 @@ def run_new_audit_workflow(
     print_fn()
     print_fn(t("planned_analyzers", language))
 
-    scope_items = describe_planned_scope(target_path, plan, language)
+    t_path = (
+        Path(options.target)
+        if not options.target.startswith(("http", "mail-domain:", "mailbox:"))
+        else Path(".")
+    )
+    scope_items = describe_planned_scope(t_path, plan, language)
     if scope_items:
         for item in scope_items:
             print_fn(f"  • {item}")
@@ -365,8 +711,7 @@ def run_new_audit_workflow(
         print_fn(t("audit_cancelled", language))
         return
 
-    # Step 4: Redesigned Output Directory Selection with informative block and confirmation loop
-    safe_name = target_path.name or "audit_target"
+    # Step 4: Output Directory Selection
     suggested_dir = suggest_output_dir(safe_name)
 
     print_fn()
@@ -390,7 +735,7 @@ def run_new_audit_workflow(
                 return
 
             valid_out, out_obj, err_out = validate_output_directory(
-                cleaned_out, target_path, language=language
+                cleaned_out, t_path, language=language
             )
             if not valid_out or out_obj is None:
                 print_fn()
@@ -399,7 +744,6 @@ def run_new_audit_workflow(
                 suggested_dir = suggest_output_dir(safe_name)
                 continue
 
-            # Confirm chosen destination
             confirm_dest = prompt_user(
                 t("destination_confirm", language), default="t" if pl else "y", input_fn=input_fn
             ).lower()
@@ -422,15 +766,22 @@ def run_new_audit_workflow(
     print_fn()
     print_fn(t("running_audit", language))
     try:
-        run_audit(target_path, out_dir, language=language)
+        run_audit(options, out_dir, language=language)
         results = get_audit_results(out_dir)
         rep = results.get("report", {})
         findings = rep.get("findings", [])
         not_checked = rep.get("not_checked", [])
 
-        # Generate default PDF report
-        pdf_path = out_dir / "audit.pdf"
-        source_root = target_path.parent if target_path.is_file() else target_path
+        # Generate default PDF reports into exports/ and out_dir/
+        exports_dir = out_dir / "exports"
+        exports_dir.mkdir(parents=True, exist_ok=True)
+        pdf_path = exports_dir / f"audit_{language}.pdf"
+        compat_pdf = out_dir / "audit.pdf"
+
+        source_root = None
+        if t_path.exists():
+            source_root = t_path.parent if t_path.is_file() else t_path
+
         pdf_bytes = generate_pdf_report(
             rep,
             language=language,
@@ -438,6 +789,7 @@ def run_new_audit_workflow(
             project_name=safe_name,
         )
         pdf_path.write_bytes(pdf_bytes)
+        compat_pdf.write_bytes(pdf_bytes)
     except Exception as exc:
         print_fn()
         print_fn(t("error_audit_failed", language, error=str(exc)))
@@ -452,7 +804,7 @@ def run_new_audit_workflow(
     print_fn(t("metric_threats_found", language, count=len(findings)))
     print_fn(t("metric_skipped_items", language, count=len(not_checked)))
     print_fn()
-    print_fn(f"{t('report_pdf_saved', language)}  {pdf_path}")
+    print_fn(f"{t('report_pdf_saved', language)}  {pdf_path} ({compat_pdf.name})")
     print_fn(f"{t('report_tech_saved', language)} {out_dir / 'report.json'}")
     print_fn()
 
@@ -485,7 +837,6 @@ def run_new_audit_workflow(
             return
 
         try:
-            # Prepare AI packets preview
             preview = prepare_ai_packets(out_dir, language=language, provider="gemini")
             est_cost = preview.get("maximum_reserved_usd", "0.003")
             packets = preview.get("packets", [])
@@ -540,11 +891,9 @@ def run_new_audit_workflow(
                     timeout=30,
                 )
 
-                # Save AI JSON
                 ai_json_path = out_dir / "gemini-review.json"
                 ai_json_path.write_text(write_document(ai_res), encoding="utf-8")
 
-                # Regenerate PDF with AI interpretation attached
                 enriched_pdf_bytes = generate_pdf_report(
                     rep,
                     ai_review=ai_res,
@@ -553,6 +902,7 @@ def run_new_audit_workflow(
                     project_name=safe_name,
                 )
                 pdf_path.write_bytes(enriched_pdf_bytes)
+                compat_pdf.write_bytes(enriched_pdf_bytes)
 
                 print_fn()
                 print_fn(

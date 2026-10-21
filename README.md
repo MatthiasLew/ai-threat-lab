@@ -44,7 +44,7 @@ from authenticated sessions without replaying requests or sharing account creden
 Prepared tools collect evidence; optional AI interprets it and explains what to
 review. It does not generate attack code or execute tools.
 
-### Interactive User Menu & PDF Reports (Stage 5 & 5.1)
+### Interactive User Menu & PDF Reports (Stage 5, 5.1, 5.2 & 5.3)
 
 Run `ai-threat-lab` with no arguments in a terminal to launch the interactive text menu:
 
@@ -55,13 +55,17 @@ ai-threat-lab menu --select-language # Force language selection prompt at launch
 ai-threat-lab menu --lang pl        # Launch menu directly in Polish (or 'en' for English)
 ```
 
-The interactive interface safely normalizes Windows file paths (e.g. copied with quotes via Windows Explorer "Copy as path"), provides pre-audit directory validation with conflict detection, informative destination confirmation blocks, and human-friendly local analyzer descriptions.
+The interactive interface provides:
+- **9-Choice Target Selection**: Local project directory, single file, GitHub repository, HTTPS website, mail domain, email message (.eml), Gmail account, security logs, or custom inputs.
+- **Scan Profiles**: Choose between **Szybki / Fast** (up to 100 files), **Standardowy / Standard** (up to 1,000 files), **Rozszerzony / Extended** (up to 5,000 files), or **Niestandardowy / Custom** (up to 10,000 files).
+- **Explicit Network Consent Gates**: Remote scans (GitHub, websites, DNS, Gmail) explicitly disclose the exact target host and request purpose before prompting for consent.
+- **Publication-Grade PDF Reports**: Dedicated cover page, project identity extraction, scope disclaimer, Audit Scope & Methodology section (with multi-technology detection), highlighted context code snippets, human-grouped limitations, and deterministic Recommended Next Steps.
+- **Windows Path Handling**: Safely normalizes Windows paths pasted with quotes from File Explorer.
 
 Or run standard commands with full PDF report export support:
 
 ```bash
-ai-threat-lab plan path/to/project
-ai-threat-lab inspect path/to/project --output-dir results/run-01 --language pl
+ai-threat-lab scan path/to/project --profile standard --output-dir results/run-01 --language pl
 ai-threat-lab report-export results/run-01 --format pdf --lang pl --output audit_report.pdf
 ai-threat-lab brief results/run-01 --language pl
 ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --language pl --structured --split --output preview.json
@@ -76,7 +80,7 @@ See [Quick Start](docs/QUICK_START.md), [the complete console workflow](docs/CON
 and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs, as well as [Gemini API Adapter](docs/GEMINI_API_ADAPTER.md), [Performance Report](docs/PERFORMANCE_REPORT.md), and [Real Project Validation](docs/REAL_PROJECT_VALIDATION.md), [PDF Reports](docs/PDF_REPORTS.md), and [i18n Architecture](docs/I18N_SYSTEM.md)
 setup and limitations. GUI remains a separate contributor's responsibility.
 
-## Project status — 0.39.1
+## Project status — 0.41.3
 
 Dependencies: [inventory, OSV and cache offline acceptance](docs/DEPENDENCIES_OFFLINE_ACCEPTANCE.md).
 

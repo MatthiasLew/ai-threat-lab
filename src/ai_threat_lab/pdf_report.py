@@ -66,8 +66,8 @@ def extract_project_identity(
 ) -> tuple[str, str]:
     """Extract display project name and full target path from report metadata."""
     if project_name:
-        clean_name = (
-            str(project_name).replace("\\", "/").rstrip("/").split("/")[-1] or str(project_name)
+        clean_name = str(project_name).replace("\\", "/").rstrip("/").split("/")[-1] or str(
+            project_name
         )
         return clean_name, str(project_name)
 
@@ -97,6 +97,43 @@ def extract_project_identity(
         return name or str(target_candidate), str(target_candidate)
 
     return "Projekt", "Nieznana lokalizacja"
+
+
+def extract_scope_details(report: dict[str, Any]) -> dict[str, Any]:
+    """Extract recognized technologies, files scanned, network state and profile limits."""
+    scope = report.get("scope") or report.get("manifest", {}).get("scope") or {}
+    not_checked = report.get("not_checked", [])
+
+    techs: list[str] = []
+    files_inspected: str | None = None
+
+    for item in not_checked:
+        txt = ""
+        if isinstance(item, dict):
+            txt = item.get("notice") or item.get("message") or ""
+        elif isinstance(item, str):
+            txt = item
+        if txt.startswith("Scope technologies:"):
+            parts = txt.split(". ")
+            tech_part = parts[0].removeprefix("Scope technologies:").strip()
+            techs = [t.strip() for t in tech_part.split(",") if t.strip()]
+            for p in parts[1:]:
+                if "Files inspected:" in p:
+                    files_inspected = p.removeprefix("Files inspected:").strip().rstrip(".")
+
+    max_files = scope.get("max_files", 100)
+    network_enabled = bool(scope.get("network", False))
+    allowed_hosts = list(scope.get("allowed_hosts", []))
+    target_kind = scope.get("target_kind", "")
+
+    return {
+        "technologies": techs if techs else ["Python", "Config"],
+        "files_inspected": files_inspected or f"<= {max_files}",
+        "max_files": max_files,
+        "network_enabled": network_enabled,
+        "allowed_hosts": allowed_hosts,
+        "target_kind": target_kind,
+    }
 
 
 def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[str, Any]]:
@@ -131,6 +168,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
     excluded_dirs: list[str] = []
     access_errors: list[str] = []
     dependency_notices: list[str] = []
+    data_flow_notices: list[str] = []
     scope_notices: list[str] = []
     other_notices: list[str] = []
 
@@ -139,6 +177,8 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
         if not n_clean:
             continue
         low = n_clean.lower()
+        if low.startswith("scope technologies:"):
+            continue
         if "traversal stopped" in low or "file/directory limit" in low:
             traversal_limits.append(n_clean)
         elif low.startswith("skipped oversized file:"):
@@ -148,6 +188,8 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
             excluded_dirs.append(n_clean)
         elif "could not enumerate directory:" in low or "permission denied" in low:
             access_errors.append(n_clean)
+        elif any(k in low for k in ("flow coverage", "data-flow", "candidate data-flow")):
+            data_flow_notices.append(n_clean)
         elif any(k in low for k in ("osv", "manifest", "package sharing", "dependency", "zależno")):
             dependency_notices.append(n_clean)
         elif any(
@@ -178,15 +220,16 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
                 "badge": "OSTRZEŻENIE" if pl else "WARNING",
                 "is_warning": True,
                 "description": (
-                    "Skanowanie struktury projektu zostało przerwane po osiągnięciu "
-                    "maksymalnego limitu (100 plików / 1000 katalogów). Część katalogów "
-                    "nie została sprawdzona. Aby poszerzyć badany zakres, dostosuj wykluczenia "
-                    "lub uruchom audyt z parametrem --max-files."
+                    "Skanowanie struktury projektu osiągnęło limit liczby plików lub katalogów. "
+                    "Część plików i katalogów nie została sprawdzona. Aby poszerzyć badany zakres, "
+                    "wybierz profil Standardowy (do 1 000 plików), Rozszerzony (do 5 000 plików) "
+                    "lub uruchom analizę z parametrem --max-files."
                     if pl
                     else (
-                        "Project tree traversal stopped at the maximum limit (100 files / 1000 "
-                        "directories). Part of the project remains uninspected. To inspect "
-                        "more files, adjust directory exclusions or re-run with --max-files."
+                        "Project tree traversal stopped at the file or directory limit. "
+                        "Part of the project remains uninspected. To inspect more files, "
+                        "select the Standard profile (up to 1,000 files), Extended profile "
+                        "(up to 5,000 files), or re-run with --max-files."
                     )
                 ),
                 "count": len(traversal_limits),
@@ -262,7 +305,34 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
             }
         )
 
-    # 5. Dependency Notices
+    # 5. Data Flow Notices (Grouped)
+    if data_flow_notices:
+        categories.append(
+            {
+                "title": (
+                    "Ograniczenie analizy przepływu danych (Data Flow)"
+                    if pl
+                    else "Data Flow Coverage Limitations"
+                ),
+                "badge": "ZAKRES" if pl else "SCOPE",
+                "is_warning": False,
+                "description": (
+                    f"Statyczna analiza przepływu danych została wykonana dla wyselekcjonowanych "
+                    f"modułów ({len(data_flow_notices)} plików). Nie obejmuje pełnej "
+                    "międzymodułowej osiągalności kodu ani wywołań w czasie wykonania (runtime)."
+                    if pl
+                    else (
+                        f"Candidate data-flow checks were applied to selected modules "
+                        f"({len(data_flow_notices)} files). Full whole-program "
+                        "inter-procedural reachability and dynamic runtime "
+                        "execution are not modeled."
+                    )
+                ),
+                "count": len(data_flow_notices),
+            }
+        )
+
+    # 6. Dependency Notices
     if dependency_notices:
         unique_dep = sorted(set(dependency_notices))
         desc_list: list[str] = []
@@ -275,7 +345,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
                     else "OSV vulnerability database: Disabled in default offline mode "
                     "(requires --share-packages network consent)"
                 )
-            elif "Root-directory supported manifests" in d:
+            elif "Root-directory supported manifests" in d or "Root-only dependency" in d:
                 desc_list.append(
                     (
                         "Inwentaryzacja zależności: Badano manifesty w katalogu "
@@ -312,7 +382,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
             }
         )
 
-    # 6. General Static Scope Boundaries
+    # 7. General Static Scope Boundaries
     if scope_notices:
         unique_scope = sorted(set(scope_notices))
         desc_list_scope: list[str] = []
@@ -357,20 +427,21 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
             }
         )
 
-    # 7. Other unique notices
+    # 8. Other unique notices (clean, no raw dicts!)
     if other_notices:
-        unique_other = sorted(set(other_notices))
-        categories.append(
-            {
-                "title": (
-                    "Pozostałe ograniczenia zakresu" if pl else "Other Scope Limitations"
-                ),
-                "badge": "INFORMACJA" if pl else "INFO",
-                "is_warning": False,
-                "description": " • " + "\n • ".join(unique_other[:5]),
-                "count": len(other_notices),
-            }
-        )
+        unique_other = list(dict.fromkeys(other_notices))
+        for item_txt in unique_other[:5]:
+            categories.append(
+                {
+                    "title": (
+                        "Pozostałe ograniczenia zakresu" if pl else "Other Scope Limitations"
+                    ),
+                    "badge": "INFORMACJA" if pl else "INFO",
+                    "is_warning": False,
+                    "description": item_txt,
+                    "count": 1,
+                }
+            )
 
     return categories
 
@@ -390,8 +461,7 @@ def validate_ai_review_binding(report: dict, ai_review: dict) -> None:
     valid_ids = {
         f.get("evidence_id") or f.get("id") or f.get("finding_id")
         for f in findings
-        if isinstance(f, dict)
-        and (f.get("evidence_id") or f.get("id") or f.get("finding_id"))
+        if isinstance(f, dict) and (f.get("evidence_id") or f.get("id") or f.get("finding_id"))
     }
 
     obs_ids = {
@@ -712,16 +782,12 @@ def generate_pdf_report(
     card_h = 55
 
     status_card_val = (
-        ("CZĘŚCIOWY" if pl else "PARTIAL")
-        if is_partial
-        else ("KOMPLETNY" if pl else "COMPLETE")
+        ("CZĘŚCIOWY" if pl else "PARTIAL") if is_partial else ("KOMPLETNY" if pl else "COMPLETE")
     )
     status_card_col = (0.75, 0.40, 0.0) if is_partial else (0.1, 0.5, 0.1)
 
     traversal_card_val = (
-        ("LIMIT" if pl else "LIMITED")
-        if is_traversal_limited
-        else ("W NORMIE" if pl else "OK")
+        ("LIMIT" if pl else "LIMITED") if is_traversal_limited else ("W NORMIE" if pl else "OK")
     )
     traversal_card_col = (0.75, 0.15, 0.15) if is_traversal_limited else COLOR_TEXT_MUTED
 
@@ -755,16 +821,108 @@ def generate_pdf_report(
         doc.text(cx + 8, cards_y - 45, val, font="Helvetica-Bold", size=15, color=col)
 
     # =========================================================================
-    # 2. DETAILED FINDINGS PAGES
+    # 2. AUDIT SCOPE & METHODOLOGY
     # =========================================================================
     doc.new_page()
 
     doc.text(
         doc.margin_x,
         doc.cursor_y,
+        t("section_audit_scope", language),
+        font="Helvetica-Bold",
+        size=14,
+        color=COLOR_PRIMARY,
+    )
+    doc.cursor_y -= 8
+    doc.line(
+        doc.margin_x,
+        doc.cursor_y,
+        doc.margin_x + doc.content_width,
+        doc.cursor_y,
+        stroke=COLOR_SECONDARY,
+        line_width=1,
+    )
+    doc.cursor_y -= 16
+
+    scope_details = extract_scope_details(report)
+    tech_str = ", ".join(scope_details["technologies"]) or (
+        "Python, Pliki konfiguracji" if pl else "Python, Config files"
+    )
+    files_str = scope_details["files_inspected"]
+    if scope_details["max_files"]:
+        files_str += f" (maks. limit: {scope_details['max_files']})"
+    net_str = (
+        ("Zezwolono na hosty: " + ", ".join(scope_details["allowed_hosts"]))
+        if scope_details["network_enabled"]
+        else (
+            "Pełna izolacja offline (brak połączeń sieciowych)"
+            if pl
+            else "Full offline isolation (no network calls)"
+        )
+    )
+    ai_mode_str = (
+        (
+            "Interpretacja doradcza AI (Google Gemini)"
+            if pl
+            else "AI Advisory Review (Google Gemini)"
+        )
+        if ai_review
+        else (
+            "Lokalna analiza deterministyczna offline"
+            if pl
+            else "Offline deterministic static rules"
+        )
+    )
+
+    scope_box_h = 75
+    doc.rect(
+        doc.margin_x,
+        doc.cursor_y - scope_box_h,
+        doc.content_width,
+        scope_box_h,
+        fill=COLOR_BG_CARD,
+        stroke=COLOR_BORDER,
+    )
+
+    s_rows = [
+        (t("field_tech_recognized", language), tech_str),
+        (t("field_files_scanned", language), files_str),
+        (t("field_network_policy", language), net_str),
+        ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
+    ]
+
+    sy = doc.cursor_y - 15
+    for slabel, sval in s_rows:
+        doc.text(
+            doc.margin_x + 12,
+            sy,
+            f"{slabel}:",
+            font="Helvetica-Bold",
+            size=8.5,
+            color=COLOR_SECONDARY,
+        )
+        doc.text(
+            doc.margin_x + 150,
+            sy,
+            sval,
+            font="Helvetica",
+            size=8.5,
+            color=COLOR_TEXT_DARK,
+        )
+        sy -= 16
+
+    doc.cursor_y -= scope_box_h + 20
+
+    # =========================================================================
+    # 3. DETAILED FINDINGS
+    # =========================================================================
+    doc.ensure_space(60)
+    doc.text(
+        doc.margin_x,
+        doc.cursor_y,
         t("section_detailed_findings", language),
         font="Helvetica-Bold",
-        size=15,
+        size=14,
         color=COLOR_PRIMARY,
     )
     doc.cursor_y -= 8
@@ -1312,6 +1470,120 @@ def generate_pdf_report(
     # =========================================================================
     # 5. RUNNING HEADER & FOOTER CALLBACKS
     # =========================================================================
+    # =========================================================================
+    # 5. RECOMMENDED NEXT STEPS
+    # =========================================================================
+    doc.ensure_space(110)
+    doc.text(
+        doc.margin_x,
+        doc.cursor_y,
+        t("section_next_steps", language),
+        font="Helvetica-Bold",
+        size=13,
+        color=COLOR_PRIMARY,
+    )
+    doc.cursor_y -= 8
+    doc.line(
+        doc.margin_x,
+        doc.cursor_y,
+        doc.margin_x + doc.content_width,
+        doc.cursor_y,
+        stroke=COLOR_SECONDARY,
+        line_width=1,
+    )
+    doc.cursor_y -= 16
+
+    next_steps: list[str] = []
+    if p1_count > 0:
+        next_steps.append(
+            (
+                "Priorytetowa mitygacja problemów P1: Zbadaj natychmiast "
+                "zidentyfikowane wywołania powłoki "
+                "lub niebezpieczne deserializacje i zastąp je bezpiecznymi API "
+                "(np. lista argumentów bez shell=True)."
+            )
+            if pl
+            else (
+                "Priority P1 mitigation: Immediately review identified shell execution "
+                "and unsafe deserialization calls, replacing them with safe APIs "
+                "(e.g. argument sequences without shell=True)."
+            )
+        )
+    elif total_findings > 0:
+        next_steps.append(
+            "Weryfikacja kontekstowa wykryć: Sprawdź zidentyfikowane fragmenty kodu i upewnij się, "
+            "że dane wejściowe podlegają odpowiedniej walidacji przed przetworzeniem."
+            if pl
+            else (
+                "Contextual finding verification: Review identified code fragments "
+                "and verify input validation before processing."
+            )
+        )
+
+    if is_traversal_limited:
+        next_steps.append(
+            (
+                "Rozszerzenie zakresu analizy: Uruchom ponowny audyt z profilem 'Rozszerzony' "
+                "(--profile extended) lub parametrem '--max-files 5000', "
+                "aby objąć pliki pominięte w wyniku limitu."
+            )
+            if pl
+            else (
+                "Expand scan scope: Re-run audit with the 'Extended' profile "
+                "(--profile extended) or '--max-files 5000' to inspect files omitted "
+                "due to traversal limits."
+            )
+        )
+
+    next_steps.append(
+        (
+            "Weryfikacja zależności z bazą OSV: Jeśli projekt korzysta z zewnętrznych "
+            "bibliotek, uruchom audyt z flagami '--network' oraz '--share-packages', "
+            "aby porównać wersje z publiczną bazą podatności."
+        )
+        if pl
+        else (
+            "OSV dependency lookup: If project uses external libraries, "
+            "run audit with '--network' and '--share-packages' "
+            "to check package versions against the public vulnerability database."
+        )
+    )
+
+    next_steps.append(
+        (
+            "Cykliczne audyty i linia bazowa: Zapisz ten raport i wykorzystaj go "
+            "jako bazę porównawczą (--baseline) przy kolejnych wydaniach oprogramowania, "
+            "aby szybko wykrywać nowe zagrożenia."
+        )
+        if pl
+        else (
+            "Continuous audit & baseline: Retain this report and use it as a reference "
+            "baseline (--baseline) in future releases to promptly detect regressions."
+        )
+    )
+
+    for s_idx, step_txt in enumerate(next_steps, 1):
+        doc.ensure_space(35)
+        doc.text(
+            doc.margin_x + 8,
+            doc.cursor_y,
+            f"{s_idx}.",
+            font="Helvetica-Bold",
+            size=9,
+            color=COLOR_PRIMARY,
+        )
+        h_step = doc.draw_text_block(
+            doc.margin_x + 24,
+            doc.cursor_y,
+            step_txt,
+            doc.content_width - 32,
+            font="Helvetica",
+            size=8.5,
+            line_height=12,
+            color=COLOR_TEXT_DARK,
+        )
+        doc.cursor_y -= h_step + 10
+
     def header_callback(page_num: int, total_pages: int, c: PDFDocument) -> None:
         if page_num > 1:
             c.text(

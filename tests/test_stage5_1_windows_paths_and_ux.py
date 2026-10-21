@@ -173,9 +173,7 @@ def test_format_target_kind_and_planned_scope(tmp_path: Path) -> None:
     assert scope_empty == []
 
 
-def test_language_selection_first_run(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_language_selection_first_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test first-run language selection screen appearance and persistence."""
     config_dir = tmp_path / "config"
     monkeypatch.setenv("AI_THREAT_LAB_CONFIG_DIR", str(config_dir))
@@ -332,11 +330,11 @@ def test_interactive_audit_reprompting_on_invalid_inputs(
 
     user_inputs = [
         r'"C:\non_existent_folder_xyz"',  # Invalid target
-        f'"{valid_target}"',             # Valid target
-        "t",                             # Confirm scan
-        f'"{collision_dir}"',            # Invalid out: already exists
-        f'"{valid_out}"',                # Valid out
-        "t",                             # Confirm destination
+        f'"{valid_target}"',  # Valid target
+        "t",  # Confirm scan
+        f'"{collision_dir}"',  # Invalid out: already exists
+        f'"{valid_out}"',  # Valid out
+        "t",  # Confirm destination
     ]
     inputs_iter = iter(user_inputs)
 
@@ -372,8 +370,8 @@ def test_run_export_workflow_with_quoted_paths(tmp_path: Path) -> None:
         printed.append(" ".join(str(a) for a in args))
 
     user_inputs = [
-        f'"{run_dir}"',   # Quoted directory
-        "1",              # PDF
+        f'"{run_dir}"',  # Quoted directory
+        "1",  # PDF
         f'"{out_file}"',  # Quoted destination
     ]
     inputs_iter = iter(user_inputs)

@@ -444,6 +444,191 @@ STRINGS: dict[str, dict[str, str]] = {
             "4. PDF reports are the default format for human readers; JSON/SARIF serve automation."
         ),
     },
+    # --- Target Selection Menu (Stage 5.3) ---
+    "target_menu_title": {
+        "pl": "WYBÓR RODZAJU CELU AUDYTU",
+        "en": "SELECT AUDIT TARGET TYPE",
+    },
+    "target_menu_prompt": {
+        "pl": "Wybierz rodzaj celu [1-9, 0 aby wrócić]: ",
+        "en": "Select target type [1-9, 0 to return]: ",
+    },
+    "target_opt_local_project": {
+        "pl": "Lokalny katalog projektu (Python, Go, Rust, Java, C/C++, JS/TS, konfiguracje)",
+        "en": "Local project directory (Python, Go, Rust, Java, C/C++, JS/TS, configs)",
+    },
+    "target_opt_single_file": {
+        "pl": "Pojedynczy plik (skrypt Python, plik źródłowy, binarka ELF/PE, archiwum ZIP)",
+        "en": "Single file (Python script, source file, ELF/PE binary, ZIP archive)",
+    },
+    "target_opt_github_repo": {
+        "pl": "Zdalne repozytorium GitHub (wymaga zgody na połączenie sieciowe)",
+        "en": "Remote GitHub repository (requires network consent)",
+    },
+    "target_opt_website_https": {
+        "pl": "Strona internetowa / serwis HTTPS (badanie nagłówków HTTP i konfiguracji TLS)",
+        "en": "Website / HTTPS service (HTTP headers and TLS inspection)",
+    },
+    "target_opt_mail_domain": {
+        "pl": "Domena pocztowa (weryfikacja rekordów SPF, DMARC, DKIM przez DNS-over-HTTPS)",
+        "en": "Mail domain (SPF, DMARC, DKIM verification via DNS-over-HTTPS)",
+    },
+    "target_opt_mail_message": {
+        "pl": (
+            "Zapisana wiadomość e-mail (.eml — bezpieczna analiza offline nagłówków i zawartości)"
+        ),
+        "en": "Saved email message (.eml — safe offline review of headers and body)",
+    },
+    "target_opt_mailbox_gmail": {
+        "pl": "Konto pocztowe Gmail (wymaga zgody sieciowej i tokena OAuth2 tylko do odczytu)",
+        "en": "Gmail mailbox account (requires network consent and read-only OAuth2 token)",
+    },
+    "target_opt_security_logs": {
+        "pl": "Dziennik zdarzeń bezpieczeństwa (logi uwierzytelniania / ssh / auth.log)",
+        "en": "Security event log (authentication / ssh / auth.log logs)",
+    },
+    "target_opt_other_source": {
+        "pl": "Inne źródło lub analiza niestandardowa",
+        "en": "Other source or custom target",
+    },
+    "target_opt_back": {
+        "pl": "Powrót do menu głównego",
+        "en": "Back to main menu",
+    },
+    # --- Scan Profiles (Stage 5.3) ---
+    "profile_menu_title": {
+        "pl": "WYBÓR PROFILU ANALIZY",
+        "en": "SELECT SCAN PROFILE",
+    },
+    "profile_menu_desc": {
+        "pl": "Wybierz limit sprawdzanych plików dostosowany do wielkości projektu:",
+        "en": "Select file limit suited to project size:",
+    },
+    "profile_opt_fast": {
+        "pl": "Szybki (Fast) — do 100 plików (błyskawiczny audyt kluczowych plików)",
+        "en": "Fast — up to 100 files (quick audit of key files)",
+    },
+    "profile_opt_standard": {
+        "pl": "Standardowy (Standard) — do 1 000 plików (zalecany dla większości repozytoriów)",
+        "en": "Standard — up to 1,000 files (recommended for most repositories)",
+    },
+    "profile_opt_extended": {
+        "pl": "Rozszerzony (Extended) — do 5 000 plików (głęboki audyt dużych projektów)",
+        "en": "Extended — up to 5,000 files (deep audit of large projects)",
+    },
+    "profile_opt_custom": {
+        "pl": "Niestandardowy (Custom) — podaj własny limit (1 - 10 000)",
+        "en": "Custom — enter custom limit (1 - 10,000)",
+    },
+    "prompt_select_profile": {
+        "pl": "Wybierz profil skanowania [1-4, domyślnie 2]: ",
+        "en": "Select scan profile [1-4, default 2]: ",
+    },
+    "prompt_custom_max_files": {
+        "pl": "Podaj maksymalną liczbę plików (1 - 10 000) [1000]: ",
+        "en": "Enter maximum file limit (1 - 10,000) [1000]: ",
+    },
+    "profile_selected": {
+        "pl": "Wybrany profil: {name} (maks. {limit} plików)",
+        "en": "Selected profile: {name} (max {limit} files)",
+    },
+    # --- Network Consent & Remote Prompts (Stage 5.3) ---
+    "prompt_prompt_github": {
+        "pl": (
+            "Podaj adres repozytorium GitHub (np. https://github.com/owner/repo lub owner/repo): "
+        ),
+        "en": "Enter GitHub repository URL (e.g. https://github.com/owner/repo or owner/repo): ",
+    },
+    "prompt_prompt_website": {
+        "pl": "Podaj adres URL serwisu HTTPS (np. https://example.com): ",
+        "en": "Enter HTTPS service URL (e.g. https://example.com): ",
+    },
+    "prompt_prompt_mail_domain": {
+        "pl": "Podaj nazwę domeny pocztowej (np. example.com): ",
+        "en": "Enter mail domain name (e.g. example.com): ",
+    },
+    "prompt_prompt_dkim": {
+        "pl": "Podaj selektor DKIM (opcjonalnie, wciśnij Enter aby pominąć): ",
+        "en": "Enter DKIM selector (optional, press Enter to skip): ",
+    },
+    "prompt_prompt_gmail": {
+        "pl": "Podaj adres konta Gmail (np. user@gmail.com): ",
+        "en": "Enter Gmail account address (e.g. user@gmail.com): ",
+    },
+    "prompt_prompt_logs": {
+        "pl": "Podaj ścieżkę do pliku logu (np. auth.log, secure): ",
+        "en": "Enter path to log file (e.g. auth.log, secure): ",
+    },
+    "network_consent_title": {
+        "pl": "ZGODA NA POŁĄCZENIE SIECIOWE",
+        "en": "NETWORK CONNECTION CONSENT",
+    },
+    "network_consent_details": {
+        "pl": (
+            "Wymagane jest nawiązanie bezpośredniego, bezpiecznego połączenia tylko do odczytu "
+            "(read-only) z hostem: {host}\nCel zapytania: {purpose}"
+        ),
+        "en": (
+            "A direct, secure read-only network connection to host: {host} is required.\n"
+            "Request purpose: {purpose}"
+        ),
+    },
+    "prompt_network_consent": {
+        "pl": "Czy wyrażasz zgodę na to połączenie sieciowe? [t/N]: ",
+        "en": "Do you consent to this network connection? [y/N]: ",
+    },
+    "network_consent_denied": {
+        "pl": "Odmówiono zgody na połączenie sieciowe. Zdalna analiza została anulowana.",
+        "en": "Network consent denied. Remote analysis cancelled.",
+    },
+    "gmail_setup_guide": {
+        "pl": (
+            "INSTRUKCJA KONFIGURACJI AUDYTU GMAIL:\n"
+            "  • Audyt Gmail bada wyłącznie ustawienia bezpieczeństwa konta "
+            "(reguły przekierowań, filtry, SPF/DKIM nadawców).\n"
+            "  • Wymagane jest poświadczenie OAuth2 z uprawnieniem tylko do odczytu: 'https://www.googleapis.com/auth/gmail.readonly'.\n"
+            "  • Skonfiguruj token w zmiennej środowiskowej GMAIL_TOKEN lub pliku tokena.\n"
+            "  • Hasła, treści prywatnych wiadomości ani tokeny nigdy nie wyciekają "
+            "do logów ani raportów AI."
+        ),
+        "en": (
+            "GMAIL AUDIT CONFIGURATION GUIDE:\n"
+            "  • Gmail audit inspects security settings only "
+            "(forwarding rules, filters, sender SPF/DKIM policies).\n"
+            "  • Requires an OAuth2 credential with restricted read-only scope: 'https://www.googleapis.com/auth/gmail.readonly'.\n"
+            "  • Configure the token via the GMAIL_TOKEN environment variable or token file.\n"
+            "  • Passwords, private messages, and tokens never leak to logs or AI reports."
+        ),
+    },
+    # --- PDF & Reporting Additions (Stage 5.3) ---
+    "section_audit_scope": {
+        "pl": "Zakres i Metodologia Audytu",
+        "en": "Audit Scope & Methodology",
+    },
+    "section_next_steps": {
+        "pl": "Zalecane Kolejne Kroki",
+        "en": "Recommended Next Steps",
+    },
+    "field_tech_recognized": {
+        "pl": "Rozpoznane technologie",
+        "en": "Recognized Technologies",
+    },
+    "field_files_scanned": {
+        "pl": "Zbadane pliki",
+        "en": "Files Inspected",
+    },
+    "field_byte_budget": {
+        "pl": "Budżet danych",
+        "en": "Data Budget",
+    },
+    "field_network_policy": {
+        "pl": "Polityka sieciowa",
+        "en": "Network Policy",
+    },
+    "field_analyzers_executed": {
+        "pl": "Uruchomione analizatory",
+        "en": "Executed Analyzers",
+    },
 }
 
 TRANSLATIONS = STRINGS

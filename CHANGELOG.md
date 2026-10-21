@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.41.3] - Stage 5.3: Expanded Interactive Audit, Scan Profiles & Professional Security Reports
+
+### Added & Enhanced
+- **Structured 9-Choice Target Selection Menu (`interactive_menu.py`)**:
+  - Replaced single-path prompt with a dedicated, human-friendly target selection menu supporting 9 specific target types:
+    1. Local project directory (Python, Go, Rust, Java, C/C++, JS/TS, configs)
+    2. Single source file, binary (PE/ELF), or archive (ZIP)
+    3. Remote GitHub repository (HTTPS API analysis)
+    4. Website / HTTPS service (TLS and security headers inspection)
+    5. Mail domain (SPF, DMARC, DKIM DNS-over-HTTPS verification)
+    6. Saved email message (.eml offline analysis)
+    7. Gmail mailbox account (read-only OAuth2 inspection)
+    8. Security event logs (authentication / SSH journals)
+    9. Custom sources & fallbacks (allowing direct path/URL input for seamless UX and automation)
+    0. Clean cancellation and return to main menu
+- **Scan Profiles & File Limit Expansion (`scan_engine.py`, `gui_api.py`, `local_inventory.py`)**:
+  - Expanded maximum audit file bounds from 100 up to 10,000 files (`1 <= max_files <= 10000`).
+  - Added structured scan profiles accessible via CLI (`--profile`), Python API (`get_scan_profiles()`, `get_scan_profile(name)`), and interactive prompts:
+    - **Szybki / Fast**: up to 100 key files (quick initial audit)
+    - **Standardowy / Standard**: up to 1,000 files (recommended for most repositories)
+    - **Rozszerzony / Extended**: up to 5,000 files (deep inspection of large codebases)
+    - **Niestandardowy / Custom**: user-defined file limit (1 - 10,000)
+  - Added deterministic file priority ordering (core sources and configurations indexed before generic assets).
+  - Scaled directory visit limits proportionally with file limits (`min(50000, max_files * 10)`).
+  - Added 64 MiB read memory protection budget.
+- **Explicit Network Connection Consent Gates**:
+  - Implemented mandatory user consent dialogs disclosing exact remote target hosts and request purposes prior to any remote network activity (GitHub API, HTTPS inspection, DNS-over-HTTPS, Gmail OAuth2).
+  - Added setup instructions and permission guidelines for Gmail OAuth2 read-only scopes (`https://www.googleapis.com/auth/gmail.readonly`).
+- **Publication-Grade PDF Security Reports (`pdf_report.py`)**:
+  - Added dedicated **Audit Scope & Methodology** section displaying recognized technologies (Python, Go, Rust, Java, C/C++, JS/TS, Shell, HTML, SQL, Config), files inspected vs limit, data budget, network policy, and analysis mode.
+  - Added **Recommended Next Steps** section providing deterministic, prioritized recommendations (addressing P1 vulnerabilities, expanding scope with profiles, OSV database verification, and baseline comparison).
+  - Grouped and humanized limitation notices: grouped candidate data-flow checks into a single concise summary with file count, simplified dependency static scope notices, and eliminated repetitive entries.
+  - Guaranteed zero raw Python dictionary representations (`{'source': ...}`) ever appear in reports.
+- **Evidentiary Bundle & Export Isolation (`scan_bundle.py`, `gui_api.py`)**:
+  - Resolved `ValidationError("Bundle has missing or unindexed artifacts")` by allowing derived export directories (`exports/`, `reports/`) and PDF reports (`audit.pdf`, `exports/*.pdf`) without invalidating SHA-256 cryptographic bundle checks.
+  - Defaulted PDF report exports to `out_dir / "exports" / f"audit_{language}.pdf"` while maintaining root `audit.pdf` for backward compatibility.
+- **Comprehensive Testing Suite**:
+  - Added `tests/test_stage5_3_interactive_audit_and_pdf.py` covering all 9 target types, network consent grants and denials, Fast/Standard/Extended profiles, multi-tech scope metrics, PDF layout sections, and bundle verification.
+
 ## [0.41.2] - Stage 5.2: PDF Generator Quality, Unicode Fidelity & Audit Credibility
 
 ### Fixed & Enhanced

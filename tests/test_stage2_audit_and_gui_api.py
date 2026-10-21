@@ -517,7 +517,7 @@ def test_gui_python_api_end_to_end_and_typed_errors(tmp_path: Path) -> None:
     assert opts.max_files == 80
 
     with pytest.raises(ValidationError):
-        create_audit_options(language="pl", max_files=200)
+        create_audit_options(language="pl", max_files=10001)
 
     with pytest.raises(ValidationError):
         create_audit_options(language="fr")

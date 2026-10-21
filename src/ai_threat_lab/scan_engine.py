@@ -45,7 +45,7 @@ class ScanOptions:
             raise ValidationError("Network, sharing and recursive settings must be booleans")
         if (
             type(self.max_files) is not int
-            or not 1 <= self.max_files <= 100
+            or not 1 <= self.max_files <= 10000
             or type(self.max_pages) is not int
             or not 1 <= self.max_pages <= 20
         ):
@@ -116,6 +116,50 @@ class ScanOptions:
             "advisory_cache": self.advisory_cache is not None,
             "recursive_dependencies": self.recursive_dependencies,
         }
+
+
+SCAN_PROFILES = {
+    "fast": {
+        "id": "fast",
+        "name_pl": "Szybki",
+        "name_en": "Fast",
+        "max_files": 100,
+        "description_pl": "Do 100 kluczowych plików (błyskawiczny audyt)",
+        "description_en": "Up to 100 key files (quick initial audit)",
+    },
+    "standard": {
+        "id": "standard",
+        "name_pl": "Standardowy",
+        "name_en": "Standard",
+        "max_files": 1000,
+        "description_pl": "Do 1 000 plików (zalecany dla większości repozytoriów)",
+        "description_en": "Up to 1,000 files (recommended for most repositories)",
+    },
+    "extended": {
+        "id": "extended",
+        "name_pl": "Rozszerzony",
+        "name_en": "Extended",
+        "max_files": 5000,
+        "description_pl": "Do 5 000 plików (głęboki audyt dużych projektów)",
+        "description_en": "Up to 5,000 files (deep audit of large projects)",
+    },
+    "custom": {
+        "id": "custom",
+        "name_pl": "Niestandardowy",
+        "name_en": "Custom",
+        "max_files": None,
+        "description_pl": "Własny limit plików (1 - 10 000)",
+        "description_en": "Custom file limit (1 - 10,000)",
+    },
+}
+
+
+def get_scan_profile(name: str) -> dict:
+    key = (name or "standard").strip().lower()
+    if key not in SCAN_PROFILES:
+        valid = ", ".join(sorted(SCAN_PROFILES.keys()))
+        raise ValidationError(f"Unknown scan profile '{name}'. Valid profiles: {valid}")
+    return dict(SCAN_PROFILES[key])
 
 
 class ScanService:

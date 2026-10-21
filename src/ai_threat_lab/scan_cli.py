@@ -78,6 +78,12 @@ def add_commands(commands):
     )
     scan.add_argument("--network", action="store_true")
     scan.add_argument("--allow-host", action="append", default=[])
+    scan.add_argument(
+        "--profile",
+        choices=("fast", "standard", "extended", "custom"),
+        default=None,
+        help="Scan budget profile: fast (100), standard (1000), extended (5000)",
+    )
     scan.add_argument("--max-files", type=int, default=50)
     scan.add_argument(
         "--recursive-dependencies",
@@ -137,13 +143,21 @@ def run_command(args):
         if args.format == "pdf":
             from .gui_api import export_audit_report
 
+            target_output = args.output
+            if target_output is None:
+                exp_dir = args.run / "exports"
+                exp_dir.mkdir(parents=True, exist_ok=True)
+                target_output = exp_dir / f"audit_{args.lang or 'en'}.pdf"
+
             content = export_audit_report(
                 args.run,
-                output=args.output,
+                output=target_output,
                 format="pdf",
                 language=args.lang or "en",
                 ai_review_path=args.ai_review,
             )
+            print(f"Report saved: {target_output}")
+            return 0
         else:
             content = export_report(args.run, format=args.format, output=args.output)
         print(
@@ -185,11 +199,18 @@ def run_command(args):
         print(write_document(check_batch(args.batch), args.output), end="")
         return 0
     if args.command == "scan":
+        effective_max_files = args.max_files
+        if getattr(args, "profile", None):
+            from .scan_engine import SCAN_PROFILES
+
+            prof = SCAN_PROFILES.get(args.profile)
+            if prof and prof.get("max_files") is not None:
+                effective_max_files = prof["max_files"]
         options = ScanOptions(
             args.target,
             args.network,
             tuple(args.allow_host),
-            args.max_files,
+            effective_max_files,
             args.dkim_selector,
             args.share_packages,
             args.max_pages,

@@ -123,7 +123,7 @@ def test_github_missing_branch(response):
         GithubAudit(QueueHTTP(response)).assess("https://github.com/o/r")
 
 
-@pytest.mark.parametrize("size", [0, 101])
+@pytest.mark.parametrize("size", [0, 10001])
 def test_github_file_limit_validation(size):
     with pytest.raises(ValidationError):
         GithubAudit(QueueHTTP(), max_files=size)

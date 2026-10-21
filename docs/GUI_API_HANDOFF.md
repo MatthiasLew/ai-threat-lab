@@ -77,13 +77,17 @@ Zwraca deterministyczną listę wszystkich analizatorów celów oraz analizator�
 ]
 ```
 
-### 3.2 Sprawdzenie możliwości i ograniczeń — `get_capabilities()`
+### 3.2 Sprawdzenie możliwości i ograniczeń — `get_capabilities()` oraz `get_scan_profiles()`
 
 ```python
 def get_capabilities() -> dict: ...
+def get_scan_profiles() -> dict: ...
+def get_scan_profile(name: str) -> dict: ...
 ```
 
-Zwraca statyczny słownik gotowości (`readiness`), wspierane języki raportowania (`supported_languages`: `["en", "pl"]`) oraz formaty eksportu (`export_formats`: `["json", "html", "sarif"]`). Nie wykonuje żadnych połączeń sieciowych ani nie odczytuje kluczy API.
+- `get_capabilities` zwraca statyczny słownik gotowości (`readiness`), wspierane języki raportowania (`supported_languages`: `["en", "pl"]`) oraz formaty eksportu (`export_formats`: `["json", "html", "sarif"]`). Nie wykonuje żadnych połączeń sieciowych ani nie odczytuje kluczy API.
+- `get_scan_profiles` zwraca słownik predefiniowanych profili skanowania (`fast` - 100 plików, `standard` - 1 000 plików, `extended` - 5 000 plików, `custom` - limit własny do 10 000 plików).
+- `get_scan_profile(name)` pobiera konfigurację wybranego profilu.
 
 ### 3.3 Konfiguracja audytu — `create_audit_options(...)` oraz `plan_audit(...)`
 
@@ -94,6 +98,7 @@ def create_audit_options(
     network: bool = False,
     allowed_hosts: tuple[str, ...] | list[str] = (),
     max_files: int = 50,
+    profile: str | None = None,
     dkim_selector: str | None = None,
     share_packages: bool = False,
     max_pages: int = 10,
@@ -108,6 +113,7 @@ def plan_audit(
     network: bool = False,
     allowed_hosts: tuple[str, ...] | list[str] = (),
     max_files: int = 50,
+    profile: str | None = None,
     recursive_dependencies: bool = False,
     share_packages: bool = False,
     dkim_selector: str | None = None,
@@ -116,8 +122,18 @@ def plan_audit(
 ) -> dict: ...
 ```
 
-- `create_audit_options` waliduje parametry wejściowe i zwraca niemutowalny obiekt `ScanOptions`.
-- `plan_audit` rozpoznaje typ celu (`target_kind`, np. `local_project`, `python_file`, `archive_file`, `github_repository`) i zwraca słownik z listą przygotowanych analizatorów (`prepared_tools`), pominiętych kontroli (`skipped_tools`) oraz jawnych ograniczeń (`not_checked`), bez wykonywania skanu.
+- `create_audit_options` waliduje parametry wejściowe i zwraca niemutowalny obiekt `ScanOptions`. Obsługuje parametr `profile` (`"fast"`, `"standard"`, `"extended"`, `"custom"`) oraz limit `max_files` od 1 do 10 000 plików.
+- Obsługuje 9 rodzajów celów:
+  1. `local_project` — lokalny katalog projektu (Python, Go, Rust, Java, C/C++, JS/TS, konfiguracje)
+  2. `python_source` / `program_file` — pojedynczy plik źródłowy, binarka ELF/PE lub archiwum ZIP
+  3. `github_repository` — zdalne repozytorium GitHub (`https://github.com/owner/repo`; wymaga `--network` i zgody na `github.com`)
+  4. `website` — serwis WWW HTTPS (nagłówki i TLS; wymaga `--network` i zgody na host docelowy)
+  5. `mail_domain` — weryfikacja rekordów SPF, DMARC, DKIM przez DoH (wymaga `--network` i zgody na domenę)
+  6. `mail_message` — plik wiadomości e-mail (`.eml`; analiza offline)
+  7. `mailbox_account` — konto Gmail (`mailbox:user@gmail.com`; wymaga `--network`, zgody na `gmail.googleapis.com` i tokena OAuth2)
+  8. `authentication_log` / `ssh_journal` — dzienniki zdarzeń logowania i SSH
+  9. Inne źródła niestandardowe
+- `plan_audit` rozpoznaje typ celu (`target_kind`), przygotowane analizatory (`prepared_tools`), pominięte kontrole (`skipped_tools`) oraz jawne ograniczenia (`not_checked`), bez wykonywania skanu.
 
 ### 3.4 Uruchomienie audytu — `run_audit(...)`
 

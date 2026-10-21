@@ -179,7 +179,8 @@ def audit_target(args):
         "authentication_log",
         "ssh_journal",
     ):
-        return local_inventory(args.target)
+        max_files = getattr(args, "max_files", 100)
+        return local_inventory(args.target, max_files=max_files)
     if not args.network:
         raise ValidationError(
             "Remote audit requires --network and --allow-host for an approved target"

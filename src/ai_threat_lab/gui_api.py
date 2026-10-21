@@ -117,6 +117,7 @@ def create_audit_options(
     network: bool = False,
     allowed_hosts: tuple[str, ...] | list[str] = (),
     max_files: int = 50,
+    profile: str | None = None,
     dkim_selector: str | None = None,
     share_packages: bool = False,
     max_pages: int = 10,
@@ -127,6 +128,12 @@ def create_audit_options(
     """Validate and construct immutable ScanOptions for a target audit."""
     validate_report_language(language)
     cache_path = Path(advisory_cache) if advisory_cache is not None else None
+    if profile is not None:
+        from .scan_engine import get_scan_profile
+
+        prof = get_scan_profile(profile)
+        if prof.get("max_files") is not None:
+            max_files = prof["max_files"]
     return ScanOptions(
         target=str(target),
         network=network,
@@ -146,6 +153,7 @@ def plan_audit(
     network: bool = False,
     allowed_hosts: tuple[str, ...] | list[str] = (),
     max_files: int = 50,
+    profile: str | None = None,
     recursive_dependencies: bool = False,
     share_packages: bool = False,
     dkim_selector: str | None = None,
@@ -154,6 +162,12 @@ def plan_audit(
 ) -> dict:
     """Preview prepared analyzers, scope, and disclosures for a target without running checks."""
     validate_report_language(language)
+    if profile is not None:
+        from .scan_engine import get_scan_profile
+
+        prof = get_scan_profile(profile)
+        if prof.get("max_files") is not None:
+            max_files = prof["max_files"]
     plan = plan_target(
         str(target),
         network=network,
@@ -165,7 +179,23 @@ def plan_audit(
         max_pages=max_pages,
     )
     plan["report_language"] = language
+    if profile is not None:
+        plan["profile"] = profile
     return plan
+
+
+def get_scan_profiles() -> dict:
+    """Return dictionary of available scan profiles and their limits."""
+    from .scan_engine import SCAN_PROFILES
+
+    return dict(SCAN_PROFILES)
+
+
+def get_scan_profile(name: str) -> dict:
+    """Return configuration dictionary for a named scan profile."""
+    from .scan_engine import get_scan_profile as _get_profile
+
+    return _get_profile(name)
 
 
 def run_audit(
@@ -337,7 +367,9 @@ def export_audit_report(
         and root.exists()
         and target_out.resolve().is_relative_to(root.resolve())
     ):
-        raise ValidationError("Export must stay outside the saved run")
+        exports_dir = (root / "exports").resolve()
+        if not target_out.resolve().is_relative_to(exports_dir):
+            raise ValidationError("Export must stay outside the saved run")
     if format == "pdf":
         saved = load_saved_run(root)
         from .pdf_report import generate_pdf_report

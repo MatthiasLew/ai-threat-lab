@@ -37,6 +37,7 @@ from .gui_api import (
     get_audit_results,
     get_audit_status,
     get_capabilities,
+    get_scan_profiles,
     list_analyzers,
     plan_audit,
     prepare_ai_packets,
@@ -54,7 +55,7 @@ from .path_utils import clean_user_path
 from .pdf_report import generate_pdf_report
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report
-from .scan_engine import ScanOptions, ScanService
+from .scan_engine import SCAN_PROFILES, ScanOptions, ScanService, get_scan_profile
 
 __all__ = [
     "__version__",
@@ -65,6 +66,9 @@ __all__ = [
     "classify_ai_failure",
     "ScanOptions",
     "ScanService",
+    "SCAN_PROFILES",
+    "get_scan_profiles",
+    "get_scan_profile",
     "DetailedFinding",
     "describe_finding",
     "detailed_findings",

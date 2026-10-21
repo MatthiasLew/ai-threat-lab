@@ -200,7 +200,7 @@ def test_empty_inventory_and_nonproject_targets(tmp_path):
         {"network": 1},
         {"share_packages": 1},
         {"max_files": True},
-        {"max_files": 101},
+        {"max_files": 10001},
         {"max_pages": 0},
         {"max_pages": 21},
         {"allowed_hosts": "example.com"},

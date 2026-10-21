@@ -194,13 +194,17 @@ def audit_message(path: Path) -> AssessmentResult:
             "HTML/CSS rendering, redirects, URL decoding tricks, office/PDF active content "
             "and malware detection are outside these selected checks.",
         )
-        + content_notices + attachment_notices,
+        + content_notices
+        + attachment_notices,
     )
 
 
 class AssessmentService:
-    def __init__(self, adapters: dict[str, TargetAdapter] | None = None) -> None:
+    def __init__(
+        self, adapters: dict[str, TargetAdapter] | None = None, *, max_files: int = 100
+    ) -> None:
         self.adapters = dict(adapters or {})
+        self.max_files = max_files
         self._raw_cache: dict[Path, bytes] | None = None
 
     def assess(self, target: str) -> AssessmentResult:
@@ -264,7 +268,7 @@ class AssessmentService:
                             break
                         candidate = Path(directory) / filename
                         if candidate.suffix == ".py" and not candidate.is_symlink():
-                            if len(paths) < 100:
+                            if len(paths) < self.max_files:
                                 paths.append(candidate)
                             else:
                                 omitted += 1
@@ -333,7 +337,9 @@ class AssessmentService:
             if not paths:
                 missing.append("No Python source files were found.")
             if omitted:
-                missing.append(f"The 100-file limit excluded {omitted} additional Python files.")
+                missing.append(
+                    f"The {self.max_files}-file limit excluded {omitted} additional Python files."
+                )
             return AssessmentResult(target, kind, "partial", tuple(findings), tuple(missing))
         checks = {
             "mailbox_account": "Mailbox settings need a scoped, authenticated provider adapter.",

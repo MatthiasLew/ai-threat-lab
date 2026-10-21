@@ -152,7 +152,7 @@ def validate_manifest(value):
         or not isinstance(scope["allowed_hosts"], list)
         or any(not isinstance(h, str) or not h for h in scope["allowed_hosts"])
         or type(scope["max_files"]) is not int
-        or not 1 <= scope["max_files"] <= 100
+        or not 1 <= scope["max_files"] <= 10000
         or type(scope["max_pages"]) is not int
         or not 1 <= scope["max_pages"] <= 20
         or (scope["dkim_selector"] is not None and not isinstance(scope["dkim_selector"], str))
@@ -254,6 +254,13 @@ def read_bundle(folder: Path) -> dict:
     found = set()
     with os.scandir(folder) as entries:
         for entry in entries:
+            if entry.is_dir() and entry.name in ("exports", "reports"):
+                continue
+            if entry.is_file() and (
+                entry.name.endswith(".pdf")
+                or entry.name in ("costs.sqlite", "costs.sqlite-wal", "costs.sqlite-shm")
+            ):
+                continue
             if entry.name not in expected:
                 raise ValidationError("Bundle has missing or unindexed artifacts")
             found.add(entry.name)
