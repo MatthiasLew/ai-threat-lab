@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.41.1] - Stage 5.1: Windows Paths, Pre-Audit Validation & Interactive CLI Robustness
+
+### Fixed
+- **Windows Path Handling & Normalization (`clean_user_path`, `path_utils.py`)**:
+  - Fixed critical `OSError [WinError 123]` when paths are pasted with double or single quotes (standard Windows Explorer "Copy as path" behavior or shell paste prefixes like `& "..."` or `@"..."`).
+  - Implemented safe, non-destructive normalization that strips matching outermost quotes without calling dangerous shell expansions or corrupting internal paths or UNC prefixes.
+- **Pre-Audit Validation & Conflict Avoidance**:
+  - Added target path validation with in-place re-prompt loop (handling non-existent paths, syntax errors, and permissions without unhandled tracebacks).
+  - Added strict destination directory validation: guarantees destination does not already exist (protecting scan bundle integrity), is not identical to the target, and is not nested within the target directory.
+  - Added `suggest_output_dir` which auto-increments proposed output directory suffixes (`reports/name`, `reports/name_1`, etc.) when existing folders are present.
+- **Analyzer Scope Display**:
+  - Fixed empty analyzer list in audit plan preview caused by reading `analyzers` instead of `tools` from `plan_audit`.
+  - Added `describe_planned_scope` providing friendly, human-understandable analyzer descriptions in Polish and English for code analysis (subprocess, shell=True, eval), secrets detection, and dependency inventory, or a clear warning if no analyzers match the target.
+- **First-Run Language Screen & CLI Flags**:
+  - Formatted first-run language selection screen cleanly with bilingual banner.
+  - Automatically loads saved language preference on subsequent runs without re-prompting.
+  - Added `--select-language` and `--lang pl|en` CLI flags to `menu` subcommand and updated Settings workflow (`Ustawienia → Zmień język`).
+- **Resilient Exception Handling**:
+  - Enclosed interactive audit and export workflows in user-friendly error handlers, ensuring invalid inputs or OS errors display clean actionable messages and return gracefully to the main menu without dumping raw tracebacks.
+
 ## [0.41.0] - Stage 5: Multilingual UX, Interactive CLI Menu & Professional PDF Reports
 
 ### Added

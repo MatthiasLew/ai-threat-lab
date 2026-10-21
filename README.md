@@ -44,14 +44,18 @@ from authenticated sessions without replaying requests or sharing account creden
 Prepared tools collect evidence; optional AI interprets it and explains what to
 review. It does not generate attack code or execute tools.
 
-### Interactive User Menu & PDF Reports (Stage 5)
+### Interactive User Menu & PDF Reports (Stage 5 & 5.1)
 
 Run `ai-threat-lab` with no arguments in a terminal to launch the interactive text menu:
 
 ```bash
-ai-threat-lab          # Launches guided terminal workflow with language selection (PL/EN)
-ai-threat-lab menu     # Explicit command to open interactive menu
+ai-threat-lab                       # Guided terminal workflow; auto-loads saved language preference
+ai-threat-lab menu                  # Explicit command to open interactive menu
+ai-threat-lab menu --select-language # Force language selection prompt at launch
+ai-threat-lab menu --lang pl        # Launch menu directly in Polish (or 'en' for English)
 ```
+
+The interactive interface safely normalizes Windows file paths (e.g. copied with quotes via Windows Explorer "Copy as path"), provides pre-audit directory validation with conflict detection, informative destination confirmation blocks, and human-friendly local analyzer descriptions.
 
 Or run standard commands with full PDF report export support:
 

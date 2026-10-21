@@ -50,6 +50,7 @@ from .i18n import (
     t,
 )
 from .models import AnalysisRequest, AnalysisResult, TargetProfile, ValidationError
+from .path_utils import clean_user_path
 from .pdf_report import generate_pdf_report
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report
@@ -89,6 +90,7 @@ __all__ = [
     "export_audit_report",
     "get_audit_history",
     "generate_pdf_report",
+    "clean_user_path",
     "extract_code_snippet",
     "CodeSnippet",
     "get_active_language",

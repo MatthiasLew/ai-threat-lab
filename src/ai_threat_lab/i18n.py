@@ -59,6 +59,14 @@ STRINGS: dict[str, dict[str, str]] = {
         "pl": "Wybierz język / Choose language:",
         "en": "Choose language / Wybierz język:",
     },
+    "choose_language_banner": {
+        "pl": "  AI THREAT LAB — WYBÓR JĘZYKA / LANGUAGE SELECTION",
+        "en": "  AI THREAT LAB — LANGUAGE SELECTION / WYBÓR JĘZYKA",
+    },
+    "choose_language_prompt": {
+        "pl": "Wybierz język / Select language [1/2]: ",
+        "en": "Select language / Wybierz język [1/2]: ",
+    },
     "select_option": {
         "pl": "Wybierz opcję",
         "en": "Select option",
@@ -96,6 +104,32 @@ STRINGS: dict[str, dict[str, str]] = {
     "prompt_target_path": {
         "pl": "Podaj ścieżkę do pliku, katalogu projektu lub repozytorium: ",
         "en": "Enter path to file, project directory, or repository: ",
+    },
+    "destination_screen_title": {
+        "pl": "LOKALIZACJA RAPORTU I WYNIKÓW AUDYTU",
+        "en": "AUDIT RESULTS AND REPORT DESTINATION",
+    },
+    "destination_screen_desc": {
+        "pl": (
+            "W wybranym katalogu zostaną zapisane:\n"
+            "  • Raport wykonawczy w formacie PDF (dla ludzi)\n"
+            "  • Pełny raport techniczny w formacie JSON (dla narzędzi i audytorów)\n"
+            "  • Zabezpieczony pakiet dowodowy audytu"
+        ),
+        "en": (
+            "The selected directory will store:\n"
+            "  • Executive PDF report (for human readers)\n"
+            "  • Full technical report in JSON format (for tooling and auditors)\n"
+            "  • Protected evidentiary audit bundle"
+        ),
+    },
+    "destination_screen_prompt": {
+        "pl": "Podaj ścieżkę do katalogu wynikowego [{default}]: ",
+        "en": "Enter path for output directory [{default}]: ",
+    },
+    "destination_confirm": {
+        "pl": "Czy zatwierdzasz tę lokalizację? [T/n]: ",
+        "en": "Confirm this destination directory? [Y/n]: ",
     },
     "prompt_output_dir": {
         "pl": "Katalog na wyniki audytu [reports/{default_name}]: ",
@@ -141,6 +175,60 @@ STRINGS: dict[str, dict[str, str]] = {
     "planned_analyzers": {
         "pl": "Dostępne analizatory lokalne:",
         "en": "Available local analyzers:",
+    },
+    "no_analyzers_found": {
+        "pl": "Nie znaleziono analizatorów odpowiednich dla tego celu.",
+        "en": "No analyzers available for this target.",
+    },
+    "error_target_empty": {
+        "pl": "Błąd: Ścieżka celu nie może być pusta.",
+        "en": "Error: Target path cannot be empty.",
+    },
+    "error_path_syntax": {
+        "pl": "Błąd: Niepoprawna składnia ścieżki: {error}",
+        "en": "Error: Invalid path syntax: {error}",
+    },
+    "error_path_access": {
+        "pl": "Błąd: Brak dostępu do ścieżki: {error}",
+        "en": "Error: Cannot access path: {error}",
+    },
+    "error_output_empty": {
+        "pl": "Błąd: Ścieżka katalogu wynikowego nie może być pusta.",
+        "en": "Error: Output directory path cannot be empty.",
+    },
+    "error_output_exists": {
+        "pl": (
+            "Błąd: Katalog '{path}' już istnieje.\n"
+            "AI Threat Lab wymaga nowego, pustego katalogu, aby zagwarantować integralność dowodów."
+        ),
+        "en": (
+            "Error: Directory '{path}' already exists.\n"
+            "AI Threat Lab requires a new, empty directory to guarantee evidentiary integrity."
+        ),
+    },
+    "error_output_same_as_target": {
+        "pl": "Błąd: Katalog wynikowy nie może być tożsamy ze skanowanym celem.",
+        "en": "Error: Output directory cannot be the same as the target being audited.",
+    },
+    "error_output_inside_target": {
+        "pl": "Błąd: Katalog wynikowy nie może znajdować się wewnątrz skanowanego projektu.",
+        "en": "Error: Output directory cannot be located inside the audited project directory.",
+    },
+    "error_output_parent_not_writable": {
+        "pl": "Błąd: Brak uprawnień do zapisu w katalogu nadrzędnym: {dir}",
+        "en": "Error: Parent directory is not writable: {dir}",
+    },
+    "error_audit_failed": {
+        "pl": "Błąd podczas wykonywania audytu: {error}",
+        "en": "Error while running audit: {error}",
+    },
+    "audit_cancelled": {
+        "pl": "Anulowano audyt.",
+        "en": "Audit cancelled.",
+    },
+    "action_cancelled": {
+        "pl": "Operacja anulowana przez użytkownika.",
+        "en": "Operation cancelled by user.",
     },
     "running_audit": {
         "pl": "Trwa analiza bezpieczeństwa offline...",

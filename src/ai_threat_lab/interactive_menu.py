@@ -3,6 +3,8 @@
 Provides a clean, human-friendly interface in Polish or English for:
 - Language selection and persistent preference management
 - Starting a new audit with plan preview, scan execution, and automatic PDF report generation
+- Safe Windows path input handling (including paths pasted with quotes from Explorer)
+- Robust pre-audit target and destination validation
 - Optional explicit consent workflow for Google Gemini advisory interpretation
 - Browsing previous audit results
 - Exporting reports to PDF, HTML, JSON, and SARIF
@@ -30,7 +32,9 @@ from .i18n import (
     save_language_preference,
     set_active_language,
     t,
+    validate_language,
 )
+from .path_utils import clean_user_path, suggest_output_dir
 from .pdf_report import generate_pdf_report
 
 
@@ -43,25 +47,233 @@ def prompt_user(prompt: str, *, default: str = "", input_fn: Callable[[str], str
         raise
 
 
+def format_target_kind(kind: str, language: str) -> str:
+    """Format technical target_kind into a friendly localized label."""
+    pl = language == "pl"
+    labels: dict[str, str] = {
+        "local_project": "Katalog projektu lokalnego" if pl else "Local project directory",
+        "python_source": "Plik źródłowy Python" if pl else "Python source file",
+        "program_file": "Plik binarny / archiwum" if pl else "Binary file / archive",
+        "mail_message": "Wiadomość e-mail (EML)" if pl else "Email message (EML)",
+        "html_document": "Dokument HTML" if pl else "HTML document",
+        "authentication_log": "Dziennik zdarzeń logowania" if pl else "Authentication log",
+        "ssh_journal": "Dziennik OpenSSH" if pl else "OpenSSH journal",
+        "github_repository": "Repozytorium GitHub" if pl else "GitHub repository",
+        "website": "Strona WWW (HTTPS)" if pl else "Website (HTTPS)",
+        "mail_domain": "Domena pocztowa" if pl else "Mail domain",
+        "mailbox_account": "Konto pocztowe Gmail" if pl else "Gmail mailbox account",
+    }
+    return labels.get(kind, kind)
+
+
+def describe_planned_scope(target_path: Path, plan: dict, language: str) -> list[str]:
+    """Construct human-readable list of analyzers and planned scope items."""
+    pl = language == "pl"
+    tools = plan.get("tools") or plan.get("analyzers") or []
+    target_kind = plan.get("target_kind", "")
+
+    if not tools:
+        return []
+
+    if target_kind == "local_project":
+        return [
+            (
+                "Analizator statyczny kodu Python (wykrywanie niebezpiecznych wywołań "
+                "subprocess, shell=True, eval, pickle, podatności wstrzykiwania)"
+                if pl
+                else (
+                    "Python static code analysis (detection of subprocess, shell=True, "
+                    "eval, pickle, and command injection vulnerabilities)"
+                )
+            ),
+            (
+                (
+                    "Skaner sekretów i poświadczeń (wykrywanie kluczy API, tokenów, "
+                    "haseł i certyfikatów)"
+                )
+                if pl
+                else (
+                    "Secrets and credentials scanner (detection of API keys, tokens, "
+                    "passwords, and certificates)"
+                )
+            ),
+            (
+                "Inwentaryzacja zależności i konfiguracji (analiza wymagań i manifestów projektu)"
+                if pl
+                else (
+                    "Dependency and configuration inventory (analysis of project requirements "
+                    "and manifests)"
+                )
+            ),
+        ]
+
+    tool_descriptions: dict[str, dict[str, str]] = {
+        "python_review": {
+            "pl": "Analiza statyczna składni i przepływu danych w kodzie Python",
+            "en": "Static syntax and candidate data-flow analysis in Python source",
+        },
+        "binary_archive_review": {
+            "pl": "Strukturalna analiza nagłówków PE/ELF oraz archiwów ZIP",
+            "en": "Structural review of PE/ELF headers and ZIP archive metadata",
+        },
+        "saved_mail_review": {
+            "pl": "Analiza nagłówków wiadomości EML, linków i formularzy",
+            "en": "Review of saved EML headers, links, and forms",
+        },
+        "mail_attachment_structures": {
+            "pl": "Analiza metadanych i struktury załączników pocztowych",
+            "en": "Review of mail attachment structures and metadata",
+        },
+        "saved_html_review": {
+            "pl": "Analiza formularzy i zasobów w zapisanych plikach HTML",
+            "en": "Review of forms and embedded resources in saved HTML files",
+        },
+        "authentication_patterns": {
+            "pl": "Analiza znormalizowanych wzorców zdarzeń logowania",
+            "en": "Analysis of normalized saved login-event patterns",
+        },
+        "openssh_journal_review": {
+            "pl": "Analiza wybranych zdarzeń dziennika OpenSSH",
+            "en": "Review of selected saved single-host OpenSSH journal events",
+        },
+        "github_snapshot": {
+            "pl": "Pobieranie i analiza migawki repozytorium GitHub oraz zależności",
+            "en": "Pinned snapshot analysis of GitHub repository files and dependencies",
+        },
+        "passive_https": {
+            "pl": "Pasywna analiza nagłówków i zawartości HTTPS pojedynczej strony",
+            "en": "Passive analysis of HTTPS headers and single-page HTML",
+        },
+        "mail_dns": {
+            "pl": "Weryfikacja rekordów SPF, DMARC i DKIM domeny pocztowej",
+            "en": "Verification of mail domain SPF, DMARC, and DKIM DNS records",
+        },
+        "gmail_settings": {
+            "pl": "Przegląd reguł przekazywania i filtrów konta pocztowego Gmail",
+            "en": "Review of Gmail account forwarding and filter settings",
+        },
+        "dependency_inventory": {
+            "pl": "Inwentaryzacja dokładnych wersji zależności w manifestach projektu",
+            "en": "Inventory of exact dependency versions from manifest files",
+        },
+        "osv_advisories": {
+            "pl": "Weryfikacja znanych podatności pakietów w bazie OSV",
+            "en": "Verification of known package advisories via OSV database",
+        },
+        "verified_report_bundle": {
+            "pl": "Generowanie zweryfikowanego pakietu raportu i integralności dowodowej",
+            "en": "Generation of verified report bundle with evidentiary integrity",
+        },
+    }
+
+    scope_items: list[str] = []
+    for item in tools:
+        tool_id = item.get("id") or item.get("name") or ""
+        desc_entry = tool_descriptions.get(tool_id)
+        if desc_entry:
+            scope_items.append(desc_entry.get("pl" if pl else "en", tool_id))
+        else:
+            purpose = item.get("purpose") or item.get("description") or tool_id
+            scope_items.append(purpose)
+
+    return scope_items
+
+
+def validate_target_path(
+    raw: str | None, language: str = "en"
+) -> tuple[bool, Path | None, str | None]:
+    """Validate user input target path. Returns (is_valid, resolved_path, error_message)."""
+    cleaned = clean_user_path(raw)
+    if not cleaned:
+        return False, None, t("error_target_empty", language)
+    try:
+        target_path = Path(cleaned)
+    except Exception as exc:
+        return False, None, t("error_path_syntax", language, error=str(exc))
+
+    try:
+        exists = target_path.exists()
+    except OSError as exc:
+        return False, None, t("error_path_access", language, error=str(exc))
+
+    if not exists:
+        return False, None, t("target_not_found", language, target=cleaned)
+
+    return True, target_path, None
+
+
+def validate_output_directory(
+    raw: str | None,
+    target_path: Path,
+    language: str = "en",
+) -> tuple[bool, Path | None, str | None]:
+    """Validate user output directory. Returns (is_valid, resolved_path, error_message)."""
+    cleaned = clean_user_path(raw)
+    if not cleaned:
+        return False, None, t("error_output_empty", language)
+
+    try:
+        out_path = Path(cleaned)
+        # Attempt path resolution to detect malformed path syntax (e.g. WinError 123)
+        resolved_out = out_path.resolve()
+    except OSError as exc:
+        return False, None, t("error_path_syntax", language, error=str(exc))
+    except Exception as exc:
+        return False, None, t("error_path_syntax", language, error=str(exc))
+
+    try:
+        resolved_target = target_path.resolve()
+        if resolved_out == resolved_target:
+            return False, None, t("error_output_same_as_target", language)
+        if resolved_target.is_dir():
+            try:
+                resolved_out.relative_to(resolved_target)
+                return False, None, t("error_output_inside_target", language)
+            except ValueError:
+                pass
+    except Exception:
+        pass
+
+    try:
+        if out_path.exists() or resolved_out.exists():
+            return False, None, t("error_output_exists", language, path=cleaned)
+    except OSError as exc:
+        return False, None, t("error_path_access", language, error=str(exc))
+
+    # Check parent writability
+    try:
+        parent = resolved_out.parent
+        check_dir = parent
+        while not check_dir.exists() and check_dir.parent != check_dir:
+            check_dir = check_dir.parent
+        if check_dir.exists() and not os.access(check_dir, os.W_OK):
+            return False, None, t("error_output_parent_not_writable", language, dir=str(check_dir))
+    except Exception:
+        pass
+
+    return True, out_path, None
+
+
 def run_language_selection(
     input_fn: Callable[[str], str] = input, print_fn: Callable[..., None] = print
 ) -> str:
     """Prompt user to select interface language and persist choice."""
     print_fn()
-    print_fn(t("app_title"))
-    print_fn(t("choose_language_title"))
-    print_fn("1. Polski")
-    print_fn("2. English")
+    print_fn("==================================================")
+    print_fn("  AI THREAT LAB — WYBÓR JĘZYKA / LANGUAGE SELECTION")
+    print_fn("==================================================")
+    print_fn("1. Polski (Polish)")
+    print_fn("2. English (Angielski)")
     print_fn()
 
     while True:
         try:
-            choice = prompt_user(f"{t('select_option')} [1/2]: ", input_fn=input_fn)
-            if choice in ("1", "pl", "PL", "polski"):
+            choice = prompt_user("Wybierz język / Select language [1/2]: ", input_fn=input_fn)
+            if choice in ("1", "pl", "PL", "polski", "Polish"):
                 save_language_preference("pl")
                 print_fn(t("language_changed", "pl", language="Polski"))
                 return "pl"
-            if choice in ("2", "en", "EN", "english"):
+            if choice in ("2", "en", "EN", "english", "English"):
                 save_language_preference("en")
                 print_fn(t("language_changed", "en", language="English"))
                 return "en"
@@ -93,65 +305,144 @@ def run_new_audit_workflow(
 ) -> None:
     """Guided workflow for inspecting a target, running audit, and producing PDF report."""
     pl = language == "pl"
-    raw_target = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
-    if not raw_target:
-        print_fn("Anulowano: Nie podano celu." if pl else "Cancelled: No target specified.")
-        return
 
-    target_path = Path(raw_target)
-    if not target_path.exists():
-        print_fn(t("target_not_found", language, target=raw_target))
-        return
+    # Step 1: Target Path Prompt with re-prompt loop
+    target_path: Path | None = None
+    while True:
+        try:
+            raw_target = prompt_user(t("prompt_target_path", language), input_fn=input_fn)
+            cleaned = clean_user_path(raw_target)
+            if not cleaned or cleaned.lower() in ("q", "quit", "cancel", "anuluj"):
+                print_fn(t("audit_cancelled", language))
+                return
 
-    # Plan audit
+            valid, path_obj, error_msg = validate_target_path(cleaned, language=language)
+            if not valid or path_obj is None:
+                print_fn(error_msg or t("target_not_found", language, target=cleaned))
+                continue
+
+            target_path = path_obj
+            break
+        except (EOFError, KeyboardInterrupt):
+            print_fn()
+            print_fn(t("audit_cancelled", language))
+            return
+
+    # Step 2: Plan Audit & Display Planned Scope
     print_fn()
     print_fn(t("planning_analysis", language, target=str(target_path)))
-    plan = plan_audit(target_path)
-
-    print_fn(t("target_kind_label", language, kind=plan.get("target_kind", "unknown")))
-    print_fn(t("planned_analyzers", language))
-    for an in plan.get("analyzers", []):
-        desc = an.get("description", an.get("name"))
-        print_fn(f"  • {an.get('name')}: {desc}")
-
-    # Confirm scan
-    confirm = prompt_user(
-        t("prompt_confirm_scan", language), default="t" if pl else "y", input_fn=input_fn
-    ).lower()
-    if confirm not in ("t", "tak", "y", "yes"):
-        print_fn("Anulowano audyt." if pl else "Audit cancelled.")
+    try:
+        plan = plan_audit(target_path, language=language)
+    except Exception as exc:
+        print_fn(f"Błąd planowania audytu: {exc}" if pl else f"Audit planning error: {exc}")
         return
 
-    # Setup output directory
-    safe_name = target_path.name or "audit-target"
-    default_out = f"reports/{safe_name}"
-    out_dir_str = prompt_user(
-        t("prompt_output_dir", language, default_name=safe_name),
-        default=default_out,
-        input_fn=input_fn,
-    )
-    out_dir = Path(out_dir_str)
+    raw_kind = plan.get("target_kind", "unknown")
+    kind_display = format_target_kind(raw_kind, language)
+    print_fn(t("target_kind_label", language, kind=kind_display))
+    print_fn()
+    print_fn(t("planned_analyzers", language))
 
-    # Execute audit
+    scope_items = describe_planned_scope(target_path, plan, language)
+    if scope_items:
+        for item in scope_items:
+            print_fn(f"  • {item}")
+    else:
+        print_fn(f"  {t('no_analyzers_found', language)}")
+
+    print_fn()
+
+    # Step 3: Confirm Scan Plan
+    try:
+        confirm = prompt_user(
+            t("prompt_confirm_scan", language), default="t" if pl else "y", input_fn=input_fn
+        ).lower()
+        if confirm not in ("t", "tak", "y", "yes"):
+            print_fn(t("audit_cancelled", language))
+            return
+    except (EOFError, KeyboardInterrupt):
+        print_fn()
+        print_fn(t("audit_cancelled", language))
+        return
+
+    # Step 4: Redesigned Output Directory Selection with informative block and confirmation loop
+    safe_name = target_path.name or "audit_target"
+    suggested_dir = suggest_output_dir(safe_name)
+
+    print_fn()
+    print_fn("==================================================")
+    print_fn(f"  {t('destination_screen_title', language)}")
+    print_fn("==================================================")
+    print_fn(t("destination_screen_desc", language))
+    print_fn()
+
+    out_dir: Path | None = None
+    while True:
+        try:
+            raw_out = prompt_user(
+                t("destination_screen_prompt", language, default=suggested_dir),
+                default=suggested_dir,
+                input_fn=input_fn,
+            )
+            cleaned_out = clean_user_path(raw_out)
+            if not cleaned_out or cleaned_out.lower() in ("q", "quit", "cancel", "anuluj"):
+                print_fn(t("audit_cancelled", language))
+                return
+
+            valid_out, out_obj, err_out = validate_output_directory(
+                cleaned_out, target_path, language=language
+            )
+            if not valid_out or out_obj is None:
+                print_fn()
+                print_fn(err_out)
+                print_fn()
+                suggested_dir = suggest_output_dir(safe_name)
+                continue
+
+            # Confirm chosen destination
+            confirm_dest = prompt_user(
+                t("destination_confirm", language), default="t" if pl else "y", input_fn=input_fn
+            ).lower()
+            if confirm_dest not in ("t", "tak", "y", "yes"):
+                print_fn(
+                    "Podaj inną ścieżkę do katalogu wynikowego:"
+                    if pl
+                    else "Enter a different output directory path:"
+                )
+                continue
+
+            out_dir = out_obj
+            break
+        except (EOFError, KeyboardInterrupt):
+            print_fn()
+            print_fn(t("audit_cancelled", language))
+            return
+
+    # Step 5: Execute Audit safely
     print_fn()
     print_fn(t("running_audit", language))
-    run_audit(target_path, out_dir, language=language)
+    try:
+        run_audit(target_path, out_dir, language=language)
+        results = get_audit_results(out_dir)
+        rep = results.get("report", {})
+        findings = rep.get("findings", [])
+        not_checked = rep.get("not_checked", [])
 
-    results = get_audit_results(out_dir)
-    rep = results.get("report", {})
-    findings = rep.get("findings", [])
-    not_checked = rep.get("not_checked", [])
+        # Generate default PDF report
+        pdf_path = out_dir / "audit.pdf"
+        source_root = target_path.parent if target_path.is_file() else target_path
+        pdf_bytes = generate_pdf_report(
+            rep,
+            language=language,
+            source_root=source_root,
+        )
+        pdf_path.write_bytes(pdf_bytes)
+    except Exception as exc:
+        print_fn()
+        print_fn(t("error_audit_failed", language, error=str(exc)))
+        return
 
-    # Generate default PDF report
-    pdf_path = out_dir / "audit.pdf"
-    pdf_bytes = generate_pdf_report(
-        rep,
-        language=language,
-        source_root=target_path.parent if target_path.is_file() else target_path,
-    )
-    pdf_path.write_bytes(pdf_bytes)
-
-    # Print clean human summary
+    # Step 6: Print clean human summary
     print_fn()
     print_fn("==================================================")
     print_fn(f"  {t('audit_completed', language)}")
@@ -168,8 +459,14 @@ def run_new_audit_workflow(
         print_fn(t("no_findings_clean", language))
         return
 
-    # Optional AI enrichment prompt
-    ai_choice = prompt_user(t("prompt_ai_enrich", language), default="n", input_fn=input_fn).lower()
+    # Step 7: Optional AI enrichment prompt
+    try:
+        ai_choice = prompt_user(
+            t("prompt_ai_enrich", language), default="n", input_fn=input_fn
+        ).lower()
+    except (EOFError, KeyboardInterrupt):
+        return
+
     if ai_choice in ("t", "tak", "y", "yes"):
         if not os.environ.get("GEMINI_API_KEY"):
             print_fn()
@@ -186,31 +483,34 @@ def run_new_audit_workflow(
             )
             return
 
-        # Prepare AI packets preview
-        preview = prepare_ai_packets(out_dir, language=language, provider="gemini")
-        est_cost = preview.get("maximum_reserved_usd", "0.003")
-        packets = preview.get("packets", [])
-        total_tokens = sum(p.get("input_token_planning_bound", 0) for p in packets)
+        try:
+            # Prepare AI packets preview
+            preview = prepare_ai_packets(out_dir, language=language, provider="gemini")
+            est_cost = preview.get("maximum_reserved_usd", "0.003")
+            packets = preview.get("packets", [])
+            total_tokens = sum(p.get("input_token_planning_bound", 0) for p in packets)
 
-        print_fn()
-        print_fn(
-            f"Preflight AI: Przygotowano {len(packets)} pakiet(ów) dowodowych bez żadnych sekretów."
-            if pl
-            else f"AI Preflight: Prepared {len(packets)} secret-scrubbed evidence packet(s)."
-        )
-        ai_confirm = prompt_user(
-            t("prompt_ai_confirm_cost", language, cost_usd=est_cost, tokens=total_tokens),
-            default="n",
-            input_fn=input_fn,
-        ).lower()
-
-        if ai_confirm in ("t", "tak", "y", "yes"):
+            print_fn()
             print_fn(
-                "Generowanie interpretacji doradczej Gemini..."
+                (
+                    f"Preflight AI: Przygotowano {len(packets)} pakiet(ów) "
+                    "dowodowych bez żadnych sekretów."
+                )
                 if pl
-                else "Generating Gemini advisory review..."
+                else f"AI Preflight: Prepared {len(packets)} secret-scrubbed evidence packet(s)."
             )
-            try:
+            ai_confirm = prompt_user(
+                t("prompt_ai_confirm_cost", language, cost_usd=est_cost, tokens=total_tokens),
+                default="n",
+                input_fn=input_fn,
+            ).lower()
+
+            if ai_confirm in ("t", "tak", "y", "yes"):
+                print_fn(
+                    "Generowanie interpretacji doradczej Gemini..."
+                    if pl
+                    else "Generating Gemini advisory review..."
+                )
                 from .ai_costs import AIConfig, CostLedger
                 from .gemini_adapter import GEMINI_HOST, gemini_review_result
                 from .http_client import PublicHTTPS
@@ -248,7 +548,7 @@ def run_new_audit_workflow(
                     rep,
                     ai_review=ai_res,
                     language=language,
-                    source_root=target_path.parent if target_path.is_file() else target_path,
+                    source_root=source_root,
                 )
                 pdf_path.write_bytes(enriched_pdf_bytes)
 
@@ -259,16 +559,16 @@ def run_new_audit_workflow(
                     else "PDF report successfully enriched with Gemini interpretation:"
                 )
                 print_fn(f"  {pdf_path}")
-            except Exception as exc:
-                print_fn()
-                print_fn(
-                    f"Błąd podczas wywołania API: {exc}" if pl else f"Error during API call: {exc}"
-                )
-                print_fn(
-                    "Raport lokalny PDF bez AI został zachowany."
-                    if pl
-                    else "Local offline PDF report was preserved."
-                )
+        except Exception as exc:
+            print_fn()
+            print_fn(
+                f"Błąd podczas wywołania API: {exc}" if pl else f"Error during API call: {exc}"
+            )
+            print_fn(
+                "Raport lokalny PDF bez AI został zachowany."
+                if pl
+                else "Local offline PDF report was preserved."
+            )
 
 
 def run_export_workflow(
@@ -284,12 +584,17 @@ def run_export_workflow(
         else "Enter path to saved audit directory: ",
         input_fn=input_fn,
     )
-    if not raw_run:
+    cleaned_run = clean_user_path(raw_run)
+    if not cleaned_run or cleaned_run.lower() in ("q", "quit", "cancel", "anuluj"):
         return
 
-    run_path = Path(raw_run)
-    if not run_path.is_dir():
-        print_fn("Błąd: Katalog nie istnieje." if pl else "Error: Directory does not exist.")
+    try:
+        run_path = Path(cleaned_run)
+        if not run_path.is_dir():
+            print_fn("Błąd: Katalog nie istnieje." if pl else "Error: Directory does not exist.")
+            return
+    except Exception as exc:
+        print_fn(f"Błąd ścieżki: {exc}" if pl else f"Path error: {exc}")
         return
 
     print_fn("Dostępne formaty:" if pl else "Available formats:")
@@ -313,13 +618,14 @@ def run_export_workflow(
     fmt = fmt_map.get(fmt_choice, "pdf")
 
     default_out = f"export_{run_path.name}.{fmt}"
-    out_file = prompt_user(
+    out_file_raw = prompt_user(
         f"Ścieżka do pliku wyjściowego [{default_out}]: "
         if pl
         else f"Output file path [{default_out}]: ",
         default=default_out,
         input_fn=input_fn,
     )
+    out_file = clean_user_path(out_file_raw)
 
     try:
         export_audit_report(run_path, output=out_file, format=fmt, language=language)
@@ -366,14 +672,22 @@ def run_interactive_entrypoint(
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
     registry=None,
+    force_language_selection: bool = False,
+    override_language: str | None = None,
 ) -> int:
-    """Main interactive text menu entrypoint when launched without arguments."""
-    saved_lang = load_language_preference()
-    if saved_lang is None:
+    """Main interactive text menu entrypoint when launched without arguments or via menu."""
+    if override_language:
+        lang = validate_language(override_language)
+        set_active_language(lang)
+    elif force_language_selection:
         lang = run_language_selection(input_fn=input_fn, print_fn=print_fn)
     else:
-        lang = saved_lang
-        set_active_language(lang)
+        saved_lang = load_language_preference()
+        if saved_lang is None:
+            lang = run_language_selection(input_fn=input_fn, print_fn=print_fn)
+        else:
+            lang = saved_lang
+            set_active_language(lang)
 
     while True:
         try:

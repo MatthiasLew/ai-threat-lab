@@ -89,8 +89,18 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("scenarios", help="List available scenarios")
     commands.add_parser("controls", help="List defense IDs and descriptions")
     commands.add_parser("interactive", help="Guided analysis with console prompts")
-    commands.add_parser(
+    menu_cmd = commands.add_parser(
         "menu", help="Interactive text menu with language selection and guided audit"
+    )
+    menu_cmd.add_argument(
+        "--select-language",
+        action="store_true",
+        help="Force language selection screen at launch",
+    )
+    menu_cmd.add_argument(
+        "--lang",
+        choices=("pl", "en"),
+        help="Override language for the interactive session",
     )
     commands.add_parser(
         "console", help="Guided target, saved report, AI preview and setup workflow"
@@ -213,7 +223,11 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
         if args.command == "menu":
             from .interactive_menu import run_interactive_entrypoint
 
-            return run_interactive_entrypoint(registry=registry)
+            return run_interactive_entrypoint(
+                registry=registry,
+                force_language_selection=getattr(args, "select_language", False),
+                override_language=getattr(args, "lang", None),
+            )
         if args.command == "console":
             prefix = ["--config", str(args.config)] if args.config else []
             return run_console(lambda argv: main([*prefix, *argv], registry=registry))
