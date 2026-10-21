@@ -66,7 +66,9 @@ def extract_project_identity(
 ) -> tuple[str, str]:
     """Extract display project name and full target path from report metadata."""
     if project_name:
-        clean_name = Path(project_name).name or project_name
+        clean_name = (
+            str(project_name).replace("\\", "/").rstrip("/").split("/")[-1] or str(project_name)
+        )
         return clean_name, str(project_name)
 
     target_candidate = (
@@ -90,9 +92,9 @@ def extract_project_identity(
             target_candidate = limits[0].get("target")
 
     if target_candidate:
-        p = Path(str(target_candidate))
-        name = p.name or str(target_candidate)
-        return name, str(target_candidate)
+        normalized = str(target_candidate).replace("\\", "/").rstrip("/")
+        name = normalized.split("/")[-1] if "/" in normalized else normalized
+        return name or str(target_candidate), str(target_candidate)
 
     return "Projekt", "Nieznana lokalizacja"
 
