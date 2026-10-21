@@ -6,8 +6,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSize
-from PySide6.QtPdf import QPdfDocument
+import pytest
+
+try:
+    from PySide6.QtCore import QSize
+    from PySide6.QtPdf import QPdfDocument
+    HAS_PYSIDE6 = True
+except ImportError:
+    HAS_PYSIDE6 = False
 
 from ai_threat_lab.local_inventory import local_inventory
 from ai_threat_lab.pdf_report import (
@@ -31,29 +37,35 @@ def test_pdf_writer_unicode_special_chars_no_question_marks(tmp_path: Path) -> N
 
     raw_pdf = doc.render()
     assert b"%PDF-1.4" in raw_pdf
+    assert b"/ToUnicode" in raw_pdf
+    assert b"/Differences" in raw_pdf
 
-    pdf_file = tmp_path / "unicode_test.pdf"
-    pdf_file.write_bytes(raw_pdf)
+    # Ensure unmapped question mark fallback was not used
+    assert b"?" not in raw_pdf
 
-    # Open with QtPdf to verify text extraction and ToUnicode CMap
-    qdoc = QPdfDocument()
-    load_status = qdoc.load(str(pdf_file))
-    assert load_status == QPdfDocument.Error.None_
+    if HAS_PYSIDE6:
+        pdf_file = tmp_path / "unicode_test.pdf"
+        pdf_file.write_bytes(raw_pdf)
 
-    page_text = qdoc.getAllText(0).text()
+        # Open with QtPdf to verify text extraction and ToUnicode CMap
+        qdoc = QPdfDocument()
+        load_status = qdoc.load(str(pdf_file))
+        assert load_status == QPdfDocument.Error.None_
 
-    # None of the Polish characters or em/en-dashes should be turned into '?'
-    assert "?" not in page_text
-    assert "Zażółć" in page_text
-    assert "gęślą" in page_text
-    assert "jaźń" in page_text
-    assert "—" in page_text  # em-dash
-    assert "–" in page_text  # en-dash
-    assert "•" in page_text  # bullet
-    assert "„" in page_text  # Polish opening quote
-    assert "”" in page_text  # Polish closing quote
+        page_text = qdoc.getAllText(0).text()
+
+        assert "?" not in page_text
+        assert "Zażółć" in page_text
+        assert "gęślą" in page_text
+        assert "jaźń" in page_text
+        assert "—" in page_text  # em-dash
+        assert "–" in page_text  # en-dash
+        assert "•" in page_text  # bullet
+        assert "„" in page_text  # Polish opening quote
+        assert "”" in page_text  # Polish closing quote
 
 
+@pytest.mark.skipif(not HAS_PYSIDE6, reason="PySide6 QtPdf required for raster page rendering")
 def test_pdf_writer_page_rendering_to_image(tmp_path: Path) -> None:
     """Verify that the generated PDF pages can be visually rendered by QtPdf without error."""
     doc = PDFDocument()
@@ -210,25 +222,28 @@ def test_partial_audit_with_zero_findings_warning_in_pdf(tmp_path: Path) -> None
     }
 
     pdf_bytes_pl = generate_pdf_report(mock_report, lang="pl", project_name="Labrys")
-    pdf_file = tmp_path / "partial_labrys.pdf"
-    pdf_file.write_bytes(pdf_bytes_pl)
+    assert b"%PDF-1.4" in pdf_bytes_pl
+    assert b"Labrys" in pdf_bytes_pl
+    assert b"LIMIT" in pdf_bytes_pl
+    assert b"{'source':" not in pdf_bytes_pl
 
-    qdoc = QPdfDocument()
-    assert qdoc.load(str(pdf_file)) == QPdfDocument.Error.None_
+    if HAS_PYSIDE6:
+        pdf_file = tmp_path / "partial_labrys.pdf"
+        pdf_file.write_bytes(pdf_bytes_pl)
 
-    full_text = ""
-    for i in range(qdoc.pageCount()):
-        full_text += qdoc.getAllText(i).text() + "\n"
+        qdoc = QPdfDocument()
+        assert qdoc.load(str(pdf_file)) == QPdfDocument.Error.None_
 
-    # Check project name appears
-    assert "Labrys" in full_text
-    # Check that it warns about partial audit and scope, NOT claiming 100% clean
-    assert "CZĘŚCIOWY" in full_text
-    assert "LIMIT" in full_text
-    assert "wyłącznie zbadanego fragmentu kodu" in full_text
-    assert "nie stanowi gwarancji bezpieczeństwa" in full_text
-    # Ensure no raw dicts
-    assert "{'source':" not in full_text
+        full_text = ""
+        for i in range(qdoc.pageCount()):
+            full_text += qdoc.getAllText(i).text() + "\n"
+
+        assert "Labrys" in full_text
+        assert "CZĘŚCIOWY" in full_text
+        assert "LIMIT" in full_text
+        assert "wyłącznie zbadanego fragmentu kodu" in full_text
+        assert "nie stanowi gwarancji bezpieczeństwa" in full_text
+        assert "{'source':" not in full_text
 
 
 def test_full_clean_audit_displays_clean_status(tmp_path: Path) -> None:
@@ -253,16 +268,21 @@ def test_full_clean_audit_displays_clean_status(tmp_path: Path) -> None:
     }
 
     pdf_bytes_pl = generate_pdf_report(mock_report, lang="pl", project_name="CleanProject")
-    pdf_file = tmp_path / "clean_project.pdf"
-    pdf_file.write_bytes(pdf_bytes_pl)
+    assert b"%PDF-1.4" in pdf_bytes_pl
+    assert b"CleanProject" in pdf_bytes_pl
+    assert b"W NORMIE" in pdf_bytes_pl
 
-    qdoc = QPdfDocument()
-    assert qdoc.load(str(pdf_file)) == QPdfDocument.Error.None_
+    if HAS_PYSIDE6:
+        pdf_file = tmp_path / "clean_project.pdf"
+        pdf_file.write_bytes(pdf_bytes_pl)
 
-    full_text = qdoc.getAllText(0).text()
-    assert "CleanProject" in full_text
-    assert "nie wykryto znanych wzorców podatności" in full_text
-    assert "W NORMIE" in full_text
+        qdoc = QPdfDocument()
+        assert qdoc.load(str(pdf_file)) == QPdfDocument.Error.None_
+
+        full_text = qdoc.getAllText(0).text()
+        assert "CleanProject" in full_text
+        assert "nie wykryto znanych wzorców podatności" in full_text
+        assert "W NORMIE" in full_text
 
 
 def test_local_inventory_excludes_temporary_and_cache_dirs(tmp_path: Path) -> None:
