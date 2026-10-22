@@ -51,8 +51,10 @@ def _strip_target_prefix(text: str, target: str) -> str:
 
 def validate_combined(value):
     """Rebuild all derived fields from validated source claims, including IDs/counts."""
-    fields(value, {"schema_version", "status", "assessments", "summary", "findings",
-                   "not_checked", "notice"})
+    fields(
+        value,
+        {"schema_version", "status", "assessments", "summary", "findings", "not_checked", "notice"},
+    )
     if type(value["schema_version"]) is not int or value["schema_version"] != 1:
         raise ValidationError("Unsupported combined evidence version")
     rows = value["assessments"]
@@ -69,14 +71,19 @@ def validate_combined(value):
             raise ValidationError("Invalid assessment source sequence")
         if type(row["finding_count"]) is not int or row["finding_count"] < 0:
             raise ValidationError("Invalid assessment finding count")
-        sources.append({k: row[k] for k in ("target", "target_kind", "status")}
-                       | {"findings": [], "not_checked": []})
+        sources.append(
+            {k: row[k] for k in ("target", "target_kind", "status")}
+            | {"findings": [], "not_checked": []}
+        )
     for finding in value["findings"]:
         fields(finding, CORE_FINDING | {"id", "target", "triage_priority", "sources"})
         refs = finding["sources"]
-        if (not isinstance(refs, list) or not refs
-                or any(type(i) is not int or not 1 <= i <= len(sources) for i in refs)
-                or len(set(refs)) != len(refs)):
+        if (
+            not isinstance(refs, list)
+            or not refs
+            or any(type(i) is not int or not 1 <= i <= len(sources) for i in refs)
+            or len(set(refs)) != len(refs)
+        ):
             raise ValidationError("Invalid finding source references")
         for ref in refs:
             if finding["target"] != sources[ref - 1]["target"]:
@@ -87,8 +94,11 @@ def validate_combined(value):
     for limitation in value["not_checked"]:
         fields(limitation, {"source", "target", "notice"})
         ref = limitation["source"]
-        if (type(ref) is not int or not 1 <= ref <= len(sources)
-                or limitation["target"] != sources[ref - 1]["target"]):
+        if (
+            type(ref) is not int
+            or not 1 <= ref <= len(sources)
+            or limitation["target"] != sources[ref - 1]["target"]
+        ):
             raise ValidationError("Invalid limitation source")
         sources[ref - 1]["not_checked"].append(limitation["notice"])
     rebuilt = merge_reports(sources)
@@ -112,9 +122,13 @@ def load_evidence(path):
     if path.is_dir():
         with report_read_budget(128 * 1024 * 1024):
             saved = load_saved_run(path)
-        return {"report": saved["report"], "origin": "verified_" + saved["kind"],
-                "failed_components": saved["failed_components"],
-                "ai_document": interpretation_evidence(saved["report"])}
+        return {
+            "report": saved["report"],
+            "origin": "verified_" + saved["kind"],
+            "manifest": saved.get("manifest"),
+            "failed_components": saved["failed_components"],
+            "ai_document": interpretation_evidence(saved["report"]),
+        }
     value = document(read_regular(path, MAX_EVIDENCE_BYTES))
     if "assessments" in value:
         report = validate_combined(value)
@@ -126,46 +140,61 @@ def load_evidence(path):
             "target": value.get("target", "(target not supplied)"),
             "target_kind": value.get("target_kind", "unspecified"),
             "status": value.get("status", "partial"),
-            "findings": value["findings"], "not_checked": value.get("not_checked", []),
+            "findings": value["findings"],
+            "not_checked": value.get("not_checked", []),
         }
         report = merge_reports([projection])
         origin = "unverified_assessment"
-    return {"report": report, "origin": origin, "failed_components": [],
-            "ai_document": value if origin == "unverified_assessment"
-            else interpretation_evidence(report)}
+    return {
+        "report": report,
+        "origin": origin,
+        "failed_components": [],
+        "ai_document": value
+        if origin == "unverified_assessment"
+        else interpretation_evidence(report),
+    }
 
 
 def interpretation_evidence(report):
     """Remove target fields, retain stable references and all limitations.
 
-Evidence strings may still contain sensitive details. This is minimization,
-not an anonymizer; the user must review the exact outgoing preview.
-"""
+    Evidence strings may still contain sensitive details. This is minimization,
+    not an anonymizer; the user must review the exact outgoing preview.
+    """
     targets = list(dict.fromkeys(row["target"] for row in report["assessments"]))
     aliases = {target: f"T{index:03d}" for index, target in enumerate(targets, 1)}
     findings = []
     for row in report["findings"]:
         cleaned_evidence = _strip_target_prefix(row["evidence"], row["target"])
-        findings.append({k: row[k] for k in CORE_FINDING} | {
-            "evidence_id": row["id"],
-            "evidence": f'[{aliases[row["target"]]}] {cleaned_evidence}',
-        })
+        findings.append(
+            {k: row[k] for k in CORE_FINDING}
+            | {
+                "evidence_id": row["id"],
+                "evidence": f"[{aliases[row['target']]}] {cleaned_evidence}",
+            }
+        )
     normalized_notices = []
     for row in report["not_checked"]:
         cleaned_notice = _strip_target_prefix(row["notice"], row["target"])
         flow_match = _FLOW_COVERAGE_NOTICE_RE.match(cleaned_notice)
         if flow_match:
             cleaned_notice = flow_match.group(1)
-        normalized_notices.append(f'[{aliases[row["target"]]}] {cleaned_notice}')
+        normalized_notices.append(f"[{aliases[row['target']]}] {cleaned_notice}")
     limitations = list(dict.fromkeys(normalized_notices))
-    return {"target_kind": "saved_assessment_evidence", "status": "partial",
-            "findings": findings, "not_checked": limitations}
+    return {
+        "target_kind": "saved_assessment_evidence",
+        "status": "partial",
+        "findings": findings,
+        "not_checked": limitations,
+    }
 
 
 def evidence_digest(value):
-    return hashlib.sha256(json.dumps(
-        value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False
-    ).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(
+            value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 def brief(value, *, language: str = "en"):
@@ -175,15 +204,13 @@ def brief(value, *, language: str = "en"):
     pl = language == "pl"
     report = value["report"]
     header = (
-        "AI Threat Lab — podsumowanie audytu offline"
-        if pl
-        else "AI Threat Lab — review summary"
+        "AI Threat Lab — podsumowanie audytu offline" if pl else "AI Threat Lab — review summary"
     )
     lines = [
         header,
         "",
-        f'Evidence: {value["origin"]}',
-        f'Observations to review: {report["summary"]["unique_findings"]}',
+        f"Evidence: {value['origin']}",
+        f"Observations to review: {report['summary']['unique_findings']}",
         "Priorities order review; they do not prove severity or exploitability.",
         "",
     ]
@@ -195,15 +222,15 @@ def brief(value, *, language: str = "en"):
         if detail.line_number is not None:
             loc = f"{loc}:{detail.line_number}"
         lines += [
-            f'{row["triage_priority"]} | {row["check"]} | {row["status"]} '
-            f'({detail.threat_category})',
-            f'Where: {row["target"]}',
+            f"{row['triage_priority']} | {row['check']} | {row['status']} "
+            f"({detail.threat_category})",
+            f"Where: {row['target']}",
             f"Location: {loc}",
-            f'Observation: {row["evidence"]}',
-            f'Co wykryto? (What was detected?): {detail.what_was_detected}',
+            f"Observation: {row['evidence']}",
+            f"Co wykryto? (What was detected?): {detail.what_was_detected}",
             f"Dlaczego jest to potencjalnie niebezpieczne? (Why dangerous?): {detail.mechanism}",
             f"Do czego może doprowadzić? (Potential consequences?): {detail.consequences}",
-            f'Jak to naprawić? / Review: {row["recommendation"]}',
+            f"Jak to naprawić? / Review: {row['recommendation']}",
         ]
         if detail.code_example:
             example_one_line = " | ".join(
@@ -216,7 +243,7 @@ def brief(value, *, language: str = "en"):
         lines += [
             f"Jak sprawdzić poprawkę? (Verification): {detail.verification_steps}",
             f"Czego analizator nie ustalił? (Limitations): {detail.analysis_limitations}",
-            f'Reference: {row["id"]}',
+            f"Reference: {row['id']}",
             "",
         ]
     if not report["findings"]:
@@ -226,7 +253,7 @@ def brief(value, *, language: str = "en"):
             "",
         ]
     lines.append("Not checked / limitations:")
-    lines.extend(f'- {row["target"]}: {row["notice"]}' for row in report["not_checked"])
+    lines.extend(f"- {row['target']}: {row['notice']}" for row in report["not_checked"])
     lines += ["", report["notice"], "No model or target was contacted to create this summary."]
     # Do not allow terminal control characters from saved evidence to affect the terminal.
     text = "\n".join(lines) + "\n"

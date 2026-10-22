@@ -38,8 +38,18 @@ def write_new(path, value):
         os.fsync(stream.fileno())
 
 
-def submit(plan, approval, config, journal, expected_preview, *, allowed_host,
-           output_dir, client, clock=None):
+def submit(
+    plan,
+    approval,
+    config,
+    journal,
+    expected_preview,
+    *,
+    allowed_host,
+    output_dir,
+    client,
+    clock=None,
+):
     clock = clock or (lambda: datetime.now(timezone.utc))
     prepared = preview(plan, approval, config, now=clock())
     if prepared["preview_sha256"] != expected_preview or allowed_host != config.resource_host:
@@ -49,9 +59,15 @@ def submit(plan, approval, config, journal, expected_preview, *, allowed_host,
     destination.mkdir(exist_ok=False)
     attempt = journal.claim(plan.digest, ASSET, config.digest)
     receipt = {
-        "schema_version": 1, "mode": "avatar_job_attempt", "plan_digest": plan.digest,
-        "configuration_sha256": config.digest, "preview_sha256": expected_preview,
-        "job_id": attempt, "host": config.resource_host, "status": "pending", "notice": NOTICE,
+        "schema_version": 1,
+        "mode": "avatar_job_attempt",
+        "plan_digest": plan.digest,
+        "configuration_sha256": config.digest,
+        "preview_sha256": expected_preview,
+        "job_id": attempt,
+        "host": config.resource_host,
+        "status": "pending",
+        "notice": NOTICE,
     }
     submitted, outcome = False, "unknown"
     try:
@@ -61,7 +77,8 @@ def submit(plan, approval, config, journal, expected_preview, *, allowed_host,
             raise ValidationError("Avatar generation cancelled before submission")
         submitted = True
         response = client.request(
-            prepared["endpoint"], method="PUT",
+            prepared["endpoint"],
+            method="PUT",
             headers={"Ocp-Apim-Subscription-Key": key, "Content-Type": "application/json"},
             body=encoded(prepared["request"]),
         )
@@ -85,9 +102,12 @@ def bound_attempt(journal, plan_digest, config):
     state = journal.status(plan_digest)
     expected = delivery_key(plan_digest, ASSET)
     matches = [item for item in state["attempts"] if item["key"] == expected]
-    if (len(matches) != 1 or matches[0]["recipient_sha256"] != sha(ASSET.encode())
-            or matches[0]["configuration_sha256"] != config.digest
-            or matches[0]["status"] == "rejected"):
+    if (
+        len(matches) != 1
+        or matches[0]["recipient_sha256"] != sha(ASSET.encode())
+        or matches[0]["configuration_sha256"] != config.digest
+        or matches[0]["status"] == "rejected"
+    ):
         raise ValidationError("No submitted avatar attempt matches this plan and configuration")
     return state, matches[0]
 
@@ -97,14 +117,19 @@ def fetch_job(journal, plan_digest, config, *, network, allowed_host, client):
         raise ValidationError("Avatar status requires explicit network and exact provider host")
     state, attempt = bound_attempt(journal, plan_digest, config)
     key = credential()
-    response = client.request(config.endpoint(plan_digest),
-                              headers={"Ocp-Apim-Subscription-Key": key})
+    response = client.request(
+        config.endpoint(plan_digest), headers={"Ocp-Apim-Subscription-Key": key}
+    )
     base = {
-        "schema_version": 1, "mode": "avatar_job_status", "plan_digest": plan_digest,
-        "configuration_sha256": config.digest, "job_id": attempt["key"],
-        "local_submission_status": attempt["status"], "local_cancelled": state["cancelled"],
+        "schema_version": 1,
+        "mode": "avatar_job_status",
+        "plan_digest": plan_digest,
+        "configuration_sha256": config.digest,
+        "job_id": attempt["key"],
+        "local_submission_status": attempt["status"],
+        "local_cancelled": state["cancelled"],
         "notice": NOTICE + " Local cancellation cannot recall a submitted job. "
-                  "A missing job does not authorize a repeated submission.",
+        "A missing job does not authorize a repeated submission.",
     }
     if response.status == 404:
         return {**base, "provider_status": "not_found"}, None
@@ -119,30 +144,49 @@ def fetch_job(journal, plan_digest, config, *, network, allowed_host, client):
 
 
 def status(journal, plan_digest, config, *, network, allowed_host, client):
-    receipt, _ = fetch_job(journal, plan_digest, config, network=network,
-                           allowed_host=allowed_host, client=client)
+    receipt, _ = fetch_job(
+        journal, plan_digest, config, network=network, allowed_host=allowed_host, client=client
+    )
     return receipt
 
 
-def download(journal, plan_digest, config, *, network, allowed_host, allowed_asset_host,
-             output_dir, client, asset_client):
-    if (network is not True or allowed_host != config.resource_host
-            or not isinstance(allowed_asset_host, str)
-            or not re.fullmatch(r"[a-z0-9]{3,24}\.blob\.core\.windows\.net", allowed_asset_host)):
+def download(
+    journal,
+    plan_digest,
+    config,
+    *,
+    network,
+    allowed_host,
+    allowed_asset_host,
+    output_dir,
+    client,
+    asset_client,
+):
+    if (
+        network is not True
+        or allowed_host != config.resource_host
+        or not isinstance(allowed_asset_host, str)
+        or not re.fullmatch(r"[a-z0-9]{3,24}\.blob\.core\.windows\.net", allowed_asset_host)
+    ):
         raise ValidationError("Confirm the exact provider and reported asset hosts")
     _, attempt = bound_attempt(journal, plan_digest, config)
     credential()  # Local preflight before claiming output; fetch revalidates before dispatch.
     destination = Path(output_dir)
     destination.mkdir(exist_ok=False)
     receipt = {
-        "schema_version": 1, "mode": "avatar_download", "plan_digest": plan_digest,
-        "configuration_sha256": config.digest, "job_id": attempt["key"],
-        "status": "pending", "notice": NOTICE,
+        "schema_version": 1,
+        "mode": "avatar_download",
+        "plan_digest": plan_digest,
+        "configuration_sha256": config.digest,
+        "job_id": attempt["key"],
+        "status": "pending",
+        "notice": NOTICE,
     }
     write_new(destination / "attempt.json", receipt)
     try:
         current, document = fetch_job(
-            journal, plan_digest, config, network=network, allowed_host=allowed_host, client=client)
+            journal, plan_digest, config, network=network, allowed_host=allowed_host, client=client
+        )
         receipt["provider_status"] = current["provider_status"]
         if current["provider_status"] != "Succeeded":
             receipt["status"] = "not_ready"
@@ -157,8 +201,12 @@ def download(journal, plan_digest, config, *, network, allowed_host, allowed_ass
                 stream.write(response.body)
                 stream.flush()
                 os.fsync(stream.fileno())
-            receipt.update(status="downloaded", file="avatar.mp4", video=metadata,
-                           provider_duration_ms=current["provider_duration_ms"])
+            receipt.update(
+                status="downloaded",
+                file="avatar.mp4",
+                video=metadata,
+                provider_duration_ms=current["provider_duration_ms"],
+            )
     except (ProviderError, OSError, ValidationError):
         receipt["status"] = "failed"
         receipt["notice"] += (
@@ -179,22 +227,40 @@ def attach_asset(plan, approval, config, download_dir, *, now=None):
     root = Path(download_dir)
     receipt = read_document(root / "result.json")
     expected = {
-        "schema_version", "mode", "plan_digest", "configuration_sha256", "job_id", "status",
-        "notice", "provider_status", "file", "video", "provider_duration_ms",
+        "schema_version",
+        "mode",
+        "plan_digest",
+        "configuration_sha256",
+        "job_id",
+        "status",
+        "notice",
+        "provider_status",
+        "file",
+        "video",
+        "provider_duration_ms",
     }
-    if (not isinstance(receipt, dict) or set(receipt) != expected
-            or type(receipt["schema_version"]) is not int or receipt["schema_version"] != 1
-            or receipt["mode"] != "avatar_download" or receipt["status"] != "downloaded"
-            or receipt["provider_status"] != "Succeeded"
-            or receipt["plan_digest"] != plan.digest
-            or receipt["configuration_sha256"] != config.digest
-            or receipt["job_id"] != delivery_key(plan.digest, ASSET)
-            or receipt["file"] != "avatar.mp4"):
+    if (
+        not isinstance(receipt, dict)
+        or set(receipt) != expected
+        or type(receipt["schema_version"]) is not int
+        or receipt["schema_version"] != 1
+        or receipt["mode"] != "avatar_download"
+        or receipt["status"] != "downloaded"
+        or receipt["provider_status"] != "Succeeded"
+        or receipt["plan_digest"] != plan.digest
+        or receipt["configuration_sha256"] != config.digest
+        or receipt["job_id"] != delivery_key(plan.digest, ASSET)
+        or receipt["file"] != "avatar.mp4"
+    ):
         raise ValidationError("Downloaded avatar receipt does not match the approved plan")
     path = root / "avatar.mp4"
     observed = video_metadata(read_regular(path, MAX_VIDEO))
     if receipt["video"] != observed:
         raise ValidationError("Downloaded avatar bytes no longer match the saved receipt")
     # This creates a new digest and intentionally does not carry approval forward.
-    return replace(plan, content=replace(
-        plan.content, media_reference=path.resolve().as_uri(), media_sha256=observed["sha256"]))
+    return replace(
+        plan,
+        content=replace(
+            plan.content, media_reference=path.resolve().as_uri(), media_sha256=observed["sha256"]
+        ),
+    )

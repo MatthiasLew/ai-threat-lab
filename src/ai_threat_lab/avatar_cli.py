@@ -16,8 +16,14 @@ from .http_client import PublicHTTPS
 from .integration_cli import exclusive_ai_output
 from .models import ValidationError
 
-COMMANDS = {"avatar-preview", "avatar-submit", "avatar-status", "avatar-download",
-            "avatar-cancel", "avatar-attach"}
+COMMANDS = {
+    "avatar-preview",
+    "avatar-submit",
+    "avatar-status",
+    "avatar-download",
+    "avatar-cancel",
+    "avatar-attach",
+}
 
 
 def add_commands(commands):
@@ -73,42 +79,68 @@ def run_command(args):
         approval = approval_from_document(read_document(args.approval))
         prepared = preview(plan, approval, config)
         if args.command in ("avatar-preview", "avatar-attach"):
-            value = prepared if args.command == "avatar-preview" else plan_to_document(
-                attach_asset(plan, approval, config, args.download_dir))
+            value = (
+                prepared
+                if args.command == "avatar-preview"
+                else plan_to_document(attach_asset(plan, approval, config, args.download_dir))
+            )
             text = write_document(value, args.output)
-            print(f"Saved: {args.output}" if args.output else text,
-                  end="\n" if args.output else "")
+            print(f"Saved: {args.output}" if args.output else text, end="\n" if args.output else "")
             if args.command == "avatar-attach":
                 print("Review the actual video, then approve this new plan digest before use.")
             return 0
-        if (prepared["preview_sha256"] != args.preview_sha256
-                or args.allow_avatar_host != config.resource_host):
+        if (
+            prepared["preview_sha256"] != args.preview_sha256
+            or args.allow_avatar_host != config.resource_host
+        ):
             raise ValidationError("Avatar preview or provider host does not match")
     if args.command in ("avatar-submit", "avatar-download"):
         destination = args.output_dir.resolve()
-        if (args.output_dir.exists() or args.output_dir.is_symlink()
-                or args.ledger.resolve().is_relative_to(destination)):
+        if (
+            args.output_dir.exists()
+            or args.output_dir.is_symlink()
+            or args.ledger.resolve().is_relative_to(destination)
+        ):
             raise ValidationError("Use a new output directory and a journal outside it")
     journal = DispatchJournal(args.ledger, create=args.command == "avatar-submit")
     client = PublicHTTPS([config.resource_host], max_bytes=1024 * 1024, max_requests=1, timeout=60)
     if args.command == "avatar-submit":
-        result = submit(plan, approval, config, journal, args.preview_sha256,
-                        allowed_host=args.allow_avatar_host,
-                        output_dir=args.output_dir, client=client)
+        result = submit(
+            plan,
+            approval,
+            config,
+            journal,
+            args.preview_sha256,
+            allowed_host=args.allow_avatar_host,
+            output_dir=args.output_dir,
+            client=client,
+        )
         code = 0 if result["status"] == "accepted" else 3
     elif args.command == "avatar-download":
         result = download(
-            journal, args.plan_digest, config, network=args.network,
-            allowed_host=args.allow_avatar_host, allowed_asset_host=args.allow_asset_host,
-            output_dir=args.output_dir, client=client,
-            asset_client=PublicHTTPS([args.allow_asset_host], max_bytes=MAX_VIDEO,
-                                     max_requests=1, timeout=60),
+            journal,
+            args.plan_digest,
+            config,
+            network=args.network,
+            allowed_host=args.allow_avatar_host,
+            allowed_asset_host=args.allow_asset_host,
+            output_dir=args.output_dir,
+            client=client,
+            asset_client=PublicHTTPS(
+                [args.allow_asset_host], max_bytes=MAX_VIDEO, max_requests=1, timeout=60
+            ),
         )
         code = 0 if result["status"] == "downloaded" else 3
     else:
         with exclusive_ai_output(args.output, args.ledger) as stream:
-            result = status(journal, args.plan_digest, config, network=args.network,
-                            allowed_host=args.allow_avatar_host, client=client)
+            result = status(
+                journal,
+                args.plan_digest,
+                config,
+                network=args.network,
+                allowed_host=args.allow_avatar_host,
+                client=client,
+            )
             text = write_document(result)
             if stream is not None:
                 stream.write(text)
@@ -121,22 +153,33 @@ def run_command(args):
 
 
 def avatar_menu(run, ask):
-    print("1. Prepare an exact stock-avatar preview\n2. Submit the approved script\n"
-          "3. Check an existing job\n4. Download a completed asset\n"
-          "5. Attach downloaded media to a new plan for approval\n"
-          "6. Block future submissions locally\n0. Return")
+    print(
+        "1. Prepare an exact stock-avatar preview\n2. Submit the approved script\n"
+        "3. Check an existing job\n4. Download a completed asset\n"
+        "5. Attach downloaded media to a new plan for approval\n"
+        "6. Block future submissions locally\n0. Return"
+    )
     choice = ask("Choose 0–6: ")
     if choice == "0":
         return 0
     if choice not in ("1", "2", "3", "4", "5", "6"):
         print("Choose a number from 0 to 6.")
         return 0
-    names = {"1": "avatar-preview", "2": "avatar-submit", "3": "avatar-status",
-             "4": "avatar-download", "5": "avatar-attach", "6": "avatar-cancel"}
+    names = {
+        "1": "avatar-preview",
+        "2": "avatar-submit",
+        "3": "avatar-status",
+        "4": "avatar-download",
+        "5": "avatar-attach",
+        "6": "avatar-cancel",
+    }
     arguments = [names[choice]]
     if choice in ("1", "2", "5"):
-        arguments += [ask("Original approved video plan JSON: "),
-                      "--approval", ask("Approval JSON: ")]
+        arguments += [
+            ask("Original approved video plan JSON: "),
+            "--approval",
+            ask("Approval JSON: "),
+        ]
     if choice != "6":
         arguments += ["--avatar-config", ask("Avatar configuration JSON (no key): ")]
     if choice in ("2", "3", "4", "6"):

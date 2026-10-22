@@ -54,19 +54,28 @@ def run_command(args):
     value = preview(plan, approval, config)
     if args.command == "speech-preview":
         text = write_document(value, args.output)
-        print(f"Preview saved: {args.output}" if args.output else text,
-              end="\n" if args.output else "")
+        print(
+            f"Preview saved: {args.output}" if args.output else text,
+            end="\n" if args.output else "",
+        )
         return 0
-    if (value["preview_sha256"] != args.preview_sha256
-            or args.allow_speech_host != config.host):
+    if value["preview_sha256"] != args.preview_sha256 or args.allow_speech_host != config.host:
         raise ValidationError("Speech preview or provider host does not match")
     destination = args.output_dir.resolve()
-    if (args.output_dir.exists() or args.output_dir.is_symlink()
-            or args.ledger.resolve().is_relative_to(destination)):
+    if (
+        args.output_dir.exists()
+        or args.output_dir.is_symlink()
+        or args.ledger.resolve().is_relative_to(destination)
+    ):
         raise ValidationError("Use a new output directory and a journal outside that directory")
     journal = DispatchJournal(args.ledger, create=True)
     result = generate(
-        plan, approval, config, journal, args.preview_sha256, allowed_host=config.host,
+        plan,
+        approval,
+        config,
+        journal,
+        args.preview_sha256,
+        allowed_host=config.host,
         output_dir=args.output_dir,
         client=PublicHTTPS([config.host], max_bytes=MAX_AUDIO, max_requests=1, timeout=60),
     )
@@ -87,25 +96,52 @@ Fictional stock-voice asset preparation
     if choice == "0":
         return 0
     if choice in ("1", "2"):
-        command = ["speech-preview" if choice == "1" else "speech-generate",
-                   ask("Approved voice plan JSON: "), "--approval", ask("Approval JSON: "),
-                   "--speech-config", ask("Speech configuration JSON (no secrets): ")]
+        command = [
+            "speech-preview" if choice == "1" else "speech-generate",
+            ask("Approved voice plan JSON: "),
+            "--approval",
+            ask("Approval JSON: "),
+            "--speech-config",
+            ask("Speech configuration JSON (no secrets): "),
+        ]
         if choice == "1":
             return run([*command, "--output", ask("New speech preview JSON: ")])
         digest, host = ask("Reviewed preview_sha256: "), ask("Reviewed speech provider host: ")
         journal, output = ask("Generation journal SQLite path: "), ask("New audio directory: ")
-        print("This sends the approved script to the speech provider and may incur a charge. "
-              "It creates local audio only; it does not place calls or send audio.")
+        print(
+            "This sends the approved script to the speech provider and may incur a charge. "
+            "It creates local audio only; it does not place calls or send audio."
+        )
         if ask("Generate this exact stock-voice asset? [y/N]: ", required=False).lower() != "y":
             return 0
-        return run([*command, "--preview-sha256", digest, "--allow-speech-host", host,
-                    "--ledger", journal, "--output-dir", output, "--send-script"])
+        return run(
+            [
+                *command,
+                "--preview-sha256",
+                digest,
+                "--allow-speech-host",
+                host,
+                "--ledger",
+                journal,
+                "--output-dir",
+                output,
+                "--send-script",
+            ]
+        )
     if choice in ("3", "4"):
         journal, digest = ask("Generation journal SQLite path: "), ask("Exact plan digest: ")
-        if choice == "4" and ask(
-            "Block later generation for this plan? [y/N]: ", required=False
-        ).lower() != "y":
+        if (
+            choice == "4"
+            and ask("Block later generation for this plan? [y/N]: ", required=False).lower() != "y"
+        ):
             return 0
-        return run(["speech-status" if choice == "3" else "speech-cancel",
-                    "--ledger", journal, "--plan-digest", digest])
+        return run(
+            [
+                "speech-status" if choice == "3" else "speech-cancel",
+                "--ledger",
+                journal,
+                "--plan-digest",
+                digest,
+            ]
+        )
     raise ValidationError("Choose a speech operation from 0 to 4")

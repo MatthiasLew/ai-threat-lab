@@ -281,9 +281,12 @@ def get_audit_results(
     html_report = render_html(report, language=language)
     summary_dict = dict(report["summary"])
     summary_dict.setdefault("finding_count", summary_dict.get("unique_findings", len(details)))
+    manifest_data = loaded.get("manifest")
     return {
         "schema_version": 1,
         "origin": loaded["origin"],
+        "manifest": manifest_data,
+        "scope": manifest_data.get("scope", {}) if manifest_data else {},
         "language": language,
         "failed_components": loaded["failed_components"],
         "report": report,
@@ -378,14 +381,26 @@ def export_audit_report(
         if ai_data is None and ai_review_path is not None:
             with open(ai_review_path, "r", encoding="utf-8") as f:
                 ai_data = json.load(f)
-        proj_name = saved.get("manifest", {}).get("scope", {}).get("target") or root.name
+        manifest = saved.get("manifest")
+        scope = manifest.get("scope") if manifest else None
+        proj_name = (scope.get("target") if scope else None) or root.name
+        is_in_exports = (
+            target_out is not None
+            and root.exists()
+            and target_out.resolve().is_relative_to((root / "exports").resolve())
+        )
         raw = generate_pdf_report(
-            saved["report"], ai_review=ai_data, lang=language, project_name=proj_name
+            saved["report"],
+            ai_review=ai_data,
+            lang=language,
+            project_name=proj_name,
+            manifest=manifest,
+            scope=scope,
         )
         if len(raw) > MAX_EXPORT_BYTES:
             raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
         if target_out is not None:
-            write_new_report(target_out, raw)
+            write_new_report(target_out, raw, overwrite=is_in_exports)
         return str(target_out) if target_out is not None else f"<PDF binary data: {len(raw)} bytes>"
     if format == "sarif":
         saved = load_saved_run(root)
@@ -393,7 +408,10 @@ def export_audit_report(
         if len(raw) > MAX_EXPORT_BYTES:
             raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
         if target_out is not None:
-            write_new_report(target_out, raw)
+            is_in_exports = root.exists() and target_out.resolve().is_relative_to(
+                (root / "exports").resolve()
+            )
+            write_new_report(target_out, raw, overwrite=is_in_exports)
         return raw.decode("utf-8")
     if format == "html" and language != "en":
         saved = load_saved_run(root)
@@ -401,7 +419,10 @@ def export_audit_report(
         if len(raw) > MAX_EXPORT_BYTES:
             raise ValidationError("Saved report export exceeds its 8 MiB byte limit")
         if target_out is not None:
-            write_new_report(target_out, raw)
+            is_in_exports = root.exists() and target_out.resolve().is_relative_to(
+                (root / "exports").resolve()
+            )
+            write_new_report(target_out, raw, overwrite=is_in_exports)
         return raw.decode("utf-8")
     return export_saved_report(root, format=format, output=target_out)
 

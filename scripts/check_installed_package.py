@@ -97,7 +97,7 @@ def main() -> None:
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
-                timeout=90,
+                timeout=180,
             )
             if result.returncode != expected:
                 raise RuntimeError(

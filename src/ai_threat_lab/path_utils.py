@@ -1,4 +1,4 @@
-"""Path normalization and validation utilities for AI Threat Lab.
+r"""Path normalization and validation utilities for AI Threat Lab.
 
 Provides safe handling of user-supplied filesystem paths across Windows, macOS,
 and Linux. Specifically resolves issues with paths copied with quotes from file
@@ -8,11 +8,14 @@ terminal drag-and-drops without shell injection or unintentional path corruption
 
 from __future__ import annotations
 
+import datetime
+import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 def clean_user_path(raw: str | None) -> str:
-    """Normalize and sanitize user-supplied filesystem path strings.
+    r"""Normalize and sanitize user-supplied filesystem path strings.
 
     Safe for Windows, Linux, and macOS. Specifically addresses paths copied from
     file managers (like Windows Explorer "Copy as path"), terminal shells, or drag-and-drop
@@ -26,7 +29,7 @@ def clean_user_path(raw: str | None) -> str:
     - Strips any remaining whitespace inside stripped quotes.
     - Removes dangerous control characters (such as NUL bytes).
     - Preserves internal quotes, directory separators (forward and backslashes),
-      spaces in path components, and UNC path prefixes (\\\\server\\share).
+      spaces in path components, and UNC path prefixes (\\server\share).
     - Never invokes shell expansion, environment variable substitution, or network calls.
     """
     if raw is None:
@@ -57,6 +60,68 @@ def clean_user_path(raw: str | None) -> str:
             changed = True
 
     return val
+
+
+def get_safe_target_display_name(target: str | Path) -> str:
+    """Return a human-readable, unmodified target name (preserving dots for domains)."""
+    t_str = str(target).strip()
+    if not t_str:
+        return "audit_target"
+    if t_str.startswith(("http://", "https://")):
+        parsed = urlsplit(t_str)
+        return parsed.hostname or t_str
+    if t_str.startswith("mail-domain:"):
+        return t_str.removeprefix("mail-domain:")
+    if t_str.startswith("mailbox:"):
+        return t_str.removeprefix("mailbox:")
+    # Local path or GitHub repo
+    cleaned = clean_user_path(t_str).replace("\\", "/").rstrip("/")
+    if cleaned.endswith(".git"):
+        cleaned = cleaned[:-4]
+    if "/" in cleaned:
+        return cleaned.split("/")[-1] or cleaned
+    return cleaned
+
+
+def generate_audit_subfolder_name(
+    target: str | Path,
+    language: str = "en",
+    dt: datetime.datetime | None = None,
+) -> str:
+    """Generate a safe, unique audit subfolder name formatted as Audyt_<name>_<date>_<time>.
+
+    Preserves dots in domain names, removes Windows/POSIX forbidden characters (<>:"/\\|?*).
+    """
+    prefix = "Audyt" if language == "pl" else "Audit"
+    raw_name = get_safe_target_display_name(target)
+    # Remove characters forbidden in Windows / POSIX directory names: < > : " / \ | ? *
+    safe_name = re.sub(r'[<>:"/\\|?*]+', "_", raw_name).strip(" ._")
+    if not safe_name:
+        safe_name = "target"
+
+    now = dt or datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d_%H%M")
+    return f"{prefix}_{safe_name}_{timestamp}"
+
+
+def get_unique_audit_directory(
+    base_dir: Path | str,
+    target: str | Path,
+    language: str = "en",
+    dt: datetime.datetime | None = None,
+) -> Path:
+    """Generate an available, non-existing subfolder path with collision avoidance."""
+    parent = Path(base_dir).resolve()
+    subfolder = generate_audit_subfolder_name(target, language=language, dt=dt)
+    candidate = parent / subfolder
+    if not candidate.exists():
+        return candidate
+    idx = 1
+    while True:
+        candidate = parent / f"{subfolder}_{idx}"
+        if not candidate.exists():
+            return candidate
+        idx += 1
 
 
 def suggest_output_dir(safe_name: str, base_dir: str = "reports") -> str:

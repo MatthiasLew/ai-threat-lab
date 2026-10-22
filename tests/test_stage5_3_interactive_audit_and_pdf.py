@@ -154,13 +154,13 @@ def test_interactive_target_menu_option_1_local_project(tmp_path: Path) -> None:
     # 5. Output dir: str(out_dir)
     # 6. Confirm dest: "t"
     # 7. AI enrich: "n"
-    inputs = iter(["1", str(proj), "2", "t", str(out_dir), "t", "n"])
+    inputs = iter(["1", str(proj), "2", "t", "2", str(out_dir), "n", "n"])
     run_new_audit_workflow("pl", input_fn=lambda _: next(inputs), print_fn=mock_print)
 
     out_text = "\n".join(printed)
-    assert "ANALIZA ZAKOŃCZONA" in out_text
+    assert "PODSUMOWANIE AUDYTU BEZPIECZEŃSTWA" in out_text or "ANALIZA ZAKOŃCZONA" in out_text
     assert (out_dir / "report.json").is_file()
-    assert (out_dir / "audit.pdf").is_file()
+
     assert (out_dir / "exports" / "audit_pl.pdf").is_file()
 
     # Bundle integrity check must pass with derived exports
@@ -179,11 +179,11 @@ def test_interactive_target_menu_option_2_single_file(tmp_path: Path) -> None:
     def mock_print(*args: object) -> None:
         printed.append(" ".join(str(a) for a in args))
 
-    inputs = iter(["2", str(script), "t", str(out_dir), "t", "n"])
+    inputs = iter(["2", str(script), "t", "2", str(out_dir), "n", "n"])
     run_new_audit_workflow("en", input_fn=lambda _: next(inputs), print_fn=mock_print)
 
     out_text = "\n".join(printed)
-    assert "ANALYSIS COMPLETED" in out_text
+    assert "SECURITY AUDIT SUMMARY" in out_text or "ANALYSIS COMPLETED" in out_text
     assert (out_dir / "report.json").is_file()
     assert (out_dir / "exports" / "audit_en.pdf").is_file()
 

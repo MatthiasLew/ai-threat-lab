@@ -373,8 +373,12 @@ class AdvisoryCache:
 
     @staticmethod
     def identifiers(value):
-        if not isinstance(value, (list, tuple)) or len(value) > 1000 or any(
-            not isinstance(item, str) or not re.fullmatch(ADVISORY_ID, item) for item in value
+        if (
+            not isinstance(value, (list, tuple))
+            or len(value) > 1000
+            or any(
+                not isinstance(item, str) or not re.fullmatch(ADVISORY_ID, item) for item in value
+            )
         ):
             raise ValidationError("Invalid advisory cache identities or entry limit exceeded")
         return sorted(set(value))
@@ -386,13 +390,15 @@ class AdvisoryCache:
             row = db.execute(
                 "SELECT expires, CASE WHEN typeof(response)='text' "
                 "AND length(CAST(response AS BLOB))<=262144 THEN response ELSE NULL END "
-                "FROM advisories WHERE key=?", (self.key(package),)
+                "FROM advisories WHERE key=?",
+                (self.key(package),),
             ).fetchone()
         if row is None:
             return None
         expiry = row[0]
         if (
-            type(expiry) not in (int, float) or not 0 <= expiry <= 10**12 + 86400
+            type(expiry) not in (int, float)
+            or not 0 <= expiry <= 10**12 + 86400
             or not math.isfinite(expiry)
         ):
             raise ValidationError("Invalid advisory cache expiry; no clean conclusion")

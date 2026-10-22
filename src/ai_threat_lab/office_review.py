@@ -59,8 +59,12 @@ def _inspect_office(raw):
         zip_findings, zip_limits = zip_metadata(raw)
     except ArchiveFormatError as error:
         raise ValidationError(str(error)) from None
-    findings = [AssessmentFinding(item.check, item.status, "ZIP header pass: " + item.evidence,
-                                  item.recommendation) for item in zip_findings]
+    findings = [
+        AssessmentFinding(
+            item.check, item.status, "ZIP header pass: " + item.evidence, item.recommendation
+        )
+        for item in zip_findings
+    ]
     gaps = [NOTICE, *("ZIP header pass: " + item for item in zip_limits)]
     failures = 0
     # Existing metadata evidence remains accurate for its pass; the explicit XML pass below

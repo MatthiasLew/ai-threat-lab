@@ -60,7 +60,10 @@ def run_command(args):
             value = preview(raw)
         else:
             result, failed = review(
-                raw, expected_sha256=args.sha256, network=args.network, share_hash=args.share_hash,
+                raw,
+                expected_sha256=args.sha256,
+                network=args.network,
+                share_hash=args.share_hash,
                 allowed_host=args.allow_host,
                 client=PublicHTTPS([HOST], max_bytes=1024 * 1024, max_requests=1),
             )
@@ -75,8 +78,10 @@ def run_command(args):
 
 
 def reputation_menu(run, ask):
-    print("1. Preview the local file hash and disclosure\n"
-          "2. Query existing reputation for a reviewed hash\n0. Return")
+    print(
+        "1. Preview the local file hash and disclosure\n"
+        "2. Query existing reputation for a reviewed hash\n0. Return"
+    )
     choice = ask("Choose 0–2: ")
     if choice == "0":
         return 0
@@ -87,10 +92,24 @@ def reputation_menu(run, ask):
     if choice == "1":
         return run(["reputation-preview", source, "--output", output])
     digest = ask("Reviewed SHA-256: ")
-    print("This sends the hash and API credential to www.virustotal.com. "
-          "A hash can identify a private file; account quota and terms apply. "
-          "File bytes are not uploaded.")
+    print(
+        "This sends the hash and API credential to www.virustotal.com. "
+        "A hash can identify a private file; account quota and terms apply. "
+        "File bytes are not uploaded."
+    )
     if ask("Share this exact hash? [y/N]: ", required=False).lower() != "y":
         return 0
-    return run(["review-reputation", source, "--output", output, "--sha256", digest,
-                "--network", "--share-hash", "--allow-host", HOST])
+    return run(
+        [
+            "review-reputation",
+            source,
+            "--output",
+            output,
+            "--sha256",
+            digest,
+            "--network",
+            "--share-hash",
+            "--allow-host",
+            HOST,
+        ]
+    )

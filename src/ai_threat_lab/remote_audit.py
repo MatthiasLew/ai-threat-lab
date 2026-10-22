@@ -35,9 +35,14 @@ class WebsiteAudit:
         kind = identify_target(target)
         parsed = urlsplit(target)
         if (
-            kind != "website" or parsed.scheme != "https" or parsed.port not in (None, 443)
-            or parsed.fragment or not target.isascii() or len(target) > 4096
-            or "\\" in target or any(ord(c) <= 32 or ord(c) == 127 for c in target)
+            kind != "website"
+            or parsed.scheme != "https"
+            or parsed.port not in (None, 443)
+            or parsed.fragment
+            or not target.isascii()
+            or len(target) > 4096
+            or "\\" in target
+            or any(ord(c) <= 32 or ord(c) == 127 for c in target)
         ):
             raise ValidationError(
                 "Use bounded ASCII HTTPS on port 443 without fragments or ambiguous characters"
@@ -347,7 +352,7 @@ def dns_txt(value):
                     raise ProviderError("Invalid or unsupported DNS TXT response")
                 char = value[position]
                 if char in "0123456789":
-                    digits = value[position:position + 3]
+                    digits = value[position : position + 3]
                     if len(digits) != 3 or any(d not in "0123456789" for d in digits):
                         raise ProviderError("Invalid or unsupported DNS TXT response")
                     number = int(digits)
@@ -393,9 +398,11 @@ class MailDomainAudit:
         if "Question" in data:
             question = data["Question"]
             if (
-                not isinstance(question, list) or len(question) != 1
+                not isinstance(question, list)
+                or len(question) != 1
                 or not isinstance(question[0], dict)
-                or type(question[0].get("type")) is not int or question[0]["type"] != 16
+                or type(question[0].get("type")) is not int
+                or question[0]["type"] != 16
                 or not isinstance(question[0].get("name"), str)
                 or question[0]["name"].removesuffix(".").lower() != name.lower()
             ):
@@ -407,7 +414,8 @@ class MailDomainAudit:
         for answer in answers:
             if (
                 not isinstance(answer, dict)
-                or type(answer.get("type")) is not int or not 1 <= answer["type"] <= 65535
+                or type(answer.get("type")) is not int
+                or not 1 <= answer["type"] <= 65535
                 or not isinstance(answer.get("name"), str)
                 or len(answer["name"].removesuffix(".")) > 253
                 or not re.fullmatch(
@@ -469,10 +477,13 @@ class MailDomainAudit:
                     break
                 policy[match[1]] = match[2].strip()
             if invalid or policy.get("p") not in ("none", "quarantine", "reject"):
-                findings.append(finding(
-                    "invalid_dmarc", "DMARC has ambiguous or unsupported policy tags",
-                    "Validate the complete DMARC record before relying on enforcement.",
-                ))
+                findings.append(
+                    finding(
+                        "invalid_dmarc",
+                        "DMARC has ambiguous or unsupported policy tags",
+                        "Validate the complete DMARC record before relying on enforcement.",
+                    )
+                )
             elif policy["p"] == "none":
                 findings.append(
                     finding(
@@ -519,9 +530,10 @@ class GmailAudit:
         headers = {"Authorization": "Bearer " + token}
         profile = get_document(self.client, base + "/profile", headers)
         identity = profile.get("emailAddress")
-        if not isinstance(identity, str) or identity.casefold() != target.removeprefix(
-            "mailbox:"
-        ).casefold():
+        if (
+            not isinstance(identity, str)
+            or identity.casefold() != target.removeprefix("mailbox:").casefold()
+        ):
             raise ProviderError("Authenticated Gmail account does not match the requested mailbox")
         forwarding = get_document(self.client, base + "/settings/autoForwarding", headers)
         if type(forwarding.get("enabled")) is not bool:
@@ -529,7 +541,8 @@ class GmailAudit:
         filters = get_document(self.client, base + "/settings/filters", headers)
         rules = filters.get("filter", [])
         if (
-            not isinstance(rules, list) or len(rules) > 1000
+            not isinstance(rules, list)
+            or len(rules) > 1000
             or filters.get("nextPageToken") not in (None, "")
         ):
             raise ProviderError("Gmail filter response is incomplete or exceeds the audit limit")
@@ -539,7 +552,8 @@ class GmailAudit:
                 raise ProviderError("Invalid Gmail filter action metadata")
             destination = rule.get("action", {}).get("forward", "")
             if (
-                not isinstance(destination, str) or len(destination) > 1024
+                not isinstance(destination, str)
+                or len(destination) > 1024
                 or any(not 33 <= ord(char) <= 126 for char in destination)
             ):
                 raise ProviderError("Invalid Gmail filter forwarding metadata")

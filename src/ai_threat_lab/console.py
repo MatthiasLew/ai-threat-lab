@@ -51,7 +51,7 @@ def run_console(run):
                 plan = plan_target(target)
                 print("Prepared checks:")
                 for tool in plan["tools"]:
-                    print(f'  {tool["purpose"]}\n  Limits: {tool["limit"]}')
+                    print(f"  {tool['purpose']}\n  Limits: {tool['limit']}")
                 for disclosure in plan["data_disclosure"]:
                     print("Data disclosure: " + disclosure)
                 for requirement in plan["setup_requirements"]:
@@ -59,8 +59,12 @@ def run_console(run):
                 arguments = ["inspect", target]
                 if plan["network_destinations"]:
                     print("Network destinations: " + ", ".join(plan["network_destinations"]))
-                    if ask("Allow these read-only network requests? [y/N]: ",
-                           required=False).lower() != "y":
+                    if (
+                        ask(
+                            "Allow these read-only network requests? [y/N]: ", required=False
+                        ).lower()
+                        != "y"
+                    ):
                         print("Collection cancelled. No network request was made.")
                         continue
                     arguments += ["--network", "--allow-host", plan["approval_host"]]
@@ -76,12 +80,24 @@ def run_console(run):
                 evidence = ask("Saved assessment/report file or scan/batch directory: ")
                 config = ask("AI configuration file (model, prices and limits; no key): ")
                 output = ask("New preview JSON file: ")
-                code = run(["ai-prepare", evidence, "--ai-config", config,
-                            "--structured", "--split", "--output", output])
+                code = run(
+                    [
+                        "ai-prepare",
+                        evidence,
+                        "--ai-config",
+                        config,
+                        "--structured",
+                        "--split",
+                        "--output",
+                        output,
+                    ]
+                )
                 if code == 0:
-                    print("Preview saved. No key was read and no API call was made. "
-                          "Use ai-review only after reviewing the preview "
-                          "and configuring an account.")
+                    print(
+                        "Preview saved. No key was read and no API call was made. "
+                        "Use ai-review only after reviewing the preview "
+                        "and configuring an account."
+                    )
             elif choice == "4":
                 code = run(["interactive"])
             elif choice == "5":
@@ -111,19 +127,32 @@ def run_console(run):
                 target = canonical_url(ask("Start HTTPS URL (no query or credentials): "))
                 prefix = ask("Approved path prefix ending in /: ")
                 output = ask("New combined JSON report: ")
-                print("Up to 10 GET requests, depth 2, within this host and path. "
-                      "No cookies, login, forms or redirects. "
-                      "GET can have effects on incorrectly designed applications.")
+                print(
+                    "Up to 10 GET requests, depth 2, within this host and path. "
+                    "No cookies, login, forms or redirects. "
+                    "GET can have effects on incorrectly designed applications."
+                )
                 if ask("Allow these requests? [y/N]: ", required=False).lower() != "y":
                     continue
-                code = run(["review-site", target, "--network", "--allow-host",
-                            urlsplit(target).hostname, "--path-prefix", prefix,
-                            "--output", output])
+                code = run(
+                    [
+                        "review-site",
+                        target,
+                        "--network",
+                        "--allow-host",
+                        urlsplit(target).hostname,
+                        "--path-prefix",
+                        prefix,
+                        "--output",
+                        output,
+                    ]
+                )
             elif choice == "10":
                 source = ask("Saved HAR 1.2 file: ")
                 output = ask("New combined JSON report: ")
-                print("Reviewing the first 20 entries locally. "
-                      "Captured requests are never replayed.")
+                print(
+                    "Reviewing the first 20 entries locally. Captured requests are never replayed."
+                )
                 code = run(["review-har", source, "--output", output])
             elif choice == "11":
                 from .delivery_cli import delivery_menu
@@ -148,14 +177,29 @@ def run_console(run):
                 session = ask("Private saved-session JSON file: ")
                 output = ask("New combined JSON report: ")
                 private_map = ask("New private page-map JSON (keep local): ")
-                print("Up to 10 GET requests with the supplied credentials, restricted to "
-                      "this exact host/path. Use an approved test account; no forms or redirects.")
+                print(
+                    "Up to 10 GET requests with the supplied credentials, restricted to "
+                    "this exact host/path. Use an approved test account; no forms or redirects."
+                )
                 if ask("Allow these session requests? [y/N]: ", required=False).lower() != "y":
                     continue
-                code = run(["review-site", target, "--network", "--allow-host",
-                            urlsplit(target).hostname, "--path-prefix", prefix,
-                            "--session-file", session, "--output", output,
-                            "--private-path-map", private_map])
+                code = run(
+                    [
+                        "review-site",
+                        target,
+                        "--network",
+                        "--allow-host",
+                        urlsplit(target).hostname,
+                        "--path-prefix",
+                        prefix,
+                        "--session-file",
+                        session,
+                        "--output",
+                        output,
+                        "--private-path-map",
+                        private_map,
+                    ]
+                )
             elif choice == "15":
                 from .reputation_cli import reputation_menu
 
@@ -163,8 +207,10 @@ def run_console(run):
             elif choice == "16":
                 source = ask("Saved SARIF 2.1.0 file: ")
                 output = ask("New combined JSON report: ")
-                print("Importing the first 200 results locally. "
-                      "Messages and source locations may contain private data.")
+                print(
+                    "Importing the first 200 results locally. "
+                    "Messages and source locations may contain private data."
+                )
                 code = run(["review-sarif", source, "--output", output])
             elif choice == "17":
                 from .avatar_cli import avatar_menu

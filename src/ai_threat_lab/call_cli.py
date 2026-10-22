@@ -77,34 +77,85 @@ def run_command(args):
         receipt = read_document(args.receipt)
     if args.command in ("call-submit", "call-stop", "call-watch"):
         destination = args.output_dir.resolve()
-        if (args.output_dir.exists() or args.output_dir.is_symlink()
-                or args.ledger.resolve().is_relative_to(destination)):
+        if (
+            args.output_dir.exists()
+            or args.output_dir.is_symlink()
+            or args.ledger.resolve().is_relative_to(destination)
+        ):
             raise ValidationError("Use a new output directory with the journal outside it")
     journal = DispatchJournal(args.ledger, create=args.command == "call-submit")
-    client = PublicHTTPS([HOST], max_bytes=1024 * 1024,
-                         max_requests=28 if args.command == "call-watch" else
-                         2 if args.command == "call-stop" else 1, timeout=15)
+    client = PublicHTTPS(
+        [HOST],
+        max_bytes=1024 * 1024,
+        max_requests=28
+        if args.command == "call-watch"
+        else 2
+        if args.command == "call-stop"
+        else 1,
+        timeout=15,
+    )
     if args.command == "call-submit":
-        result = submit(plan, approval, config, journal, args.preview_sha256,
-                        allowed_host=args.allow_call_host,
-                        output_dir=args.output_dir, client=client)
-        code = 0 if (result["status"] == "accepted"
-                     and result["provider_status"] not in ("failed", "busy", "no-answer")) else 3
+        result = submit(
+            plan,
+            approval,
+            config,
+            journal,
+            args.preview_sha256,
+            allowed_host=args.allow_call_host,
+            output_dir=args.output_dir,
+            client=client,
+        )
+        code = (
+            0
+            if (
+                result["status"] == "accepted"
+                and result["provider_status"] not in ("failed", "busy", "no-answer")
+            )
+            else 3
+        )
     elif args.command == "call-watch":
-        result = watch(plan, config, journal, receipt, network=args.network,
-                       allowed_host=args.allow_call_host, output_dir=args.output_dir,
-                       max_wait_seconds=args.max_wait_seconds, client=client)
-        code = (130 if result["reason"] == "interrupted" else
-                0 if result["reason"] == "terminal_observed" and
-                result["observed_states"][-1] not in ("failed", "busy", "no-answer") else 3)
+        result = watch(
+            plan,
+            config,
+            journal,
+            receipt,
+            network=args.network,
+            allowed_host=args.allow_call_host,
+            output_dir=args.output_dir,
+            max_wait_seconds=args.max_wait_seconds,
+            client=client,
+        )
+        code = (
+            130
+            if result["reason"] == "interrupted"
+            else 0
+            if result["reason"] == "terminal_observed"
+            and result["observed_states"][-1] not in ("failed", "busy", "no-answer")
+            else 3
+        )
     elif args.command == "call-stop":
-        result = stop(plan, config, journal, receipt, network=args.network,
-                      allowed_host=args.allow_call_host, output_dir=args.output_dir, client=client)
+        result = stop(
+            plan,
+            config,
+            journal,
+            receipt,
+            network=args.network,
+            allowed_host=args.allow_call_host,
+            output_dir=args.output_dir,
+            client=client,
+        )
         code = 0 if result["status"] in ("already_terminal", "provider_terminal") else 3
     else:
         with exclusive_ai_output(args.output, args.ledger) as stream:
-            result = status(plan, config, journal, receipt, network=args.network,
-                            allowed_host=args.allow_call_host, client=client)
+            result = status(
+                plan,
+                config,
+                journal,
+                receipt,
+                network=args.network,
+                allowed_host=args.allow_call_host,
+                client=client,
+            )
             text = write_document(result)
             if stream is not None:
                 stream.write(text)
@@ -117,22 +168,33 @@ def run_command(args):
 
 
 def call_menu(run, ask):
-    print("1. Preview one fictional training call\n2. Submit the approved call\n"
-          "3. Check a known call\n4. Stop a known call remotely\n"
-          "5. Block future submissions locally (does not stop a remote call)\n"
-          "6. Monitor a known call with a bounded automatic stop attempt\n0. Return")
+    print(
+        "1. Preview one fictional training call\n2. Submit the approved call\n"
+        "3. Check a known call\n4. Stop a known call remotely\n"
+        "5. Block future submissions locally (does not stop a remote call)\n"
+        "6. Monitor a known call with a bounded automatic stop attempt\n0. Return"
+    )
     choice = ask("Choose 0–6: ")
     if choice == "0":
         return 0
     if choice not in ("1", "2", "3", "4", "5", "6"):
         print("Choose a number from 0 to 6.")
         return 0
-    commands = {"1": "call-preview", "2": "call-submit", "3": "call-status",
-                "4": "call-stop", "5": "call-cancel", "6": "call-watch"}
+    commands = {
+        "1": "call-preview",
+        "2": "call-submit",
+        "3": "call-status",
+        "4": "call-stop",
+        "5": "call-cancel",
+        "6": "call-watch",
+    }
     arguments = [commands[choice]]
     if choice != "5":
-        arguments += [ask("Original approved voice plan JSON: "),
-                      "--call-config", ask("Call configuration JSON (no token): ")]
+        arguments += [
+            ask("Original approved voice plan JSON: "),
+            "--call-config",
+            ask("Call configuration JSON (no token): "),
+        ]
     if choice in ("1", "2"):
         arguments += ["--approval", ask("Approval JSON: ")]
     if choice != "1":
@@ -153,9 +215,13 @@ def call_menu(run, ask):
         if choice == "6":
             seconds = ask("Watch limit in seconds, 1–120 (Enter for 90): ", required=False) or "90"
             arguments += ["--max-wait-seconds", seconds]
-        operation = ("Look up this call" if choice == "3" else
-                     "Monitor and stop this call if needed" if choice == "6" else
-                     "Request remote stop of this call")
+        operation = (
+            "Look up this call"
+            if choice == "3"
+            else "Monitor and stop this call if needed"
+            if choice == "6"
+            else "Request remote stop of this call"
+        )
         if ask(f"{operation}? [y/N]: ", required=False).lower() != "y":
             return 0
         arguments += ["--network"]

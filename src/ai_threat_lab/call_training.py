@@ -16,8 +16,9 @@ from .training_lab import validate_approval
 
 HOST = "api.twilio.com"
 ASSET = "fictional_training_call"
-STATES = frozenset(("queued", "ringing", "in-progress", "completed", "busy", "failed",
-                    "no-answer", "canceled"))
+STATES = frozenset(
+    ("queued", "ringing", "in-progress", "completed", "busy", "failed", "no-answer", "canceled")
+)
 TERMINAL = STATES - {"queued", "ringing", "in-progress"}
 NOTICE = (
     "One explicitly approved fictional training announcement. Hang up to end playback. "
@@ -67,10 +68,19 @@ class CallConfig:
 
     @classmethod
     def from_document(cls, value):
-        keys = {"schema_version", "account_sid", "caller", "usd_per_minute",
-                "max_request_estimate_usd"}
-        if (not isinstance(value, dict) or set(value) != keys
-                or type(value.get("schema_version")) is not int or value["schema_version"] != 1):
+        keys = {
+            "schema_version",
+            "account_sid",
+            "caller",
+            "usd_per_minute",
+            "max_request_estimate_usd",
+        }
+        if (
+            not isinstance(value, dict)
+            or set(value) != keys
+            or type(value.get("schema_version")) is not int
+            or value["schema_version"] != 1
+        ):
             raise ValidationError("Invalid fictional-call configuration")
         return cls(**{key: item for key, item in value.items() if key != "schema_version"})
 
@@ -86,10 +96,14 @@ class CallConfig:
 def preview(plan, approval, config, *, now=None):
     current = now or datetime.now(timezone.utc)
     validate_approval(plan, approval, current)
-    if (plan.channel != "voice" or plan.scenario_id != "voice_training"
-            or not plan.scope.identity_reference.startswith("fictional:")
-            or len(plan.recipients) != 1 or plan.approved_facts
-            or len(plan.content.body) > 600):
+    if (
+        plan.channel != "voice"
+        or plan.scenario_id != "voice_training"
+        or not plan.scope.identity_reference.startswith("fictional:")
+        or len(plan.recipients) != 1
+        or plan.approved_facts
+        or len(plan.content.body) > 600
+    ):
         raise ValidationError("Calls require one recipient and the fixed fictional voice script")
     scenario = next(row for row in campaign_scenarios() if row.id == "voice_training")
     expected = TemplateContentProvider().prepare(scenario, (), plan.scope.identity_reference)
@@ -103,19 +117,35 @@ def preview(plan, approval, config, *, now=None):
     estimate = money(config.usd_per_minute)
     if estimate > money(config.max_request_estimate_usd):
         raise ValidationError("Call preview exceeds the configured planning estimate limit")
-    twiml = ('<Response><Say voice="woman" language="en-US" loop="1">' +
-             escape(PREAMBLE + plan.content.body) + '</Say><Hangup/></Response>')
-    form = {"To": target, "From": config.caller, "Twiml": twiml,
-            "Record": "false", "Transcribe": "false", "Timeout": "15", "TimeLimit": "60"}
+    twiml = (
+        '<Response><Say voice="woman" language="en-US" loop="1">'
+        + escape(PREAMBLE + plan.content.body)
+        + "</Say><Hangup/></Response>"
+    )
+    form = {
+        "To": target,
+        "From": config.caller,
+        "Twiml": twiml,
+        "Record": "false",
+        "Transcribe": "false",
+        "Timeout": "15",
+        "TimeLimit": "60",
+    }
     result = {
-        "schema_version": 1, "plan_digest": plan.digest,
-        "configuration_sha256": config.digest, "endpoint": config.endpoint(), "method": "POST",
-        "request": form, "request_sha256": sha(urlencode(form).encode("ascii")),
-        "estimated_usd": usd(estimate), "network_called": False, "notice": NOTICE,
+        "schema_version": 1,
+        "plan_digest": plan.digest,
+        "configuration_sha256": config.digest,
+        "endpoint": config.endpoint(),
+        "method": "POST",
+        "request": form,
+        "request_sha256": sha(urlencode(form).encode("ascii")),
+        "estimated_usd": usd(estimate),
+        "network_called": False,
+        "notice": NOTICE,
         "scope_expires_at": plan.scope.expires_at.isoformat(),
         "queue_notice": "Scope is checked before submission. Provider queuing and interrupted "
-                        "clients can delay or prevent remote cancellation; monitor the known call. "
-                        "The requested duration is not a guarantee of scope-expiry enforcement.",
+        "clients can delay or prevent remote cancellation; monitor the known call. "
+        "The requested duration is not a guarantee of scope-expiry enforcement.",
     }
     result["preview_sha256"] = sha(encoded(result))
     return result
@@ -124,18 +154,24 @@ def preview(plan, approval, config, *, now=None):
 def validate_call(document, config, recipient_hash, *, expected_sid=None):
     try:
         call_sid = sid(document["sid"], "CA")
-        if (document["account_sid"] != config.account_sid
-                or document["from"] != config.caller
-                or sha(phone(document["to"]).encode()) != recipient_hash
-                or (expected_sid is not None and call_sid != expected_sid)
-                or document["status"] not in STATES
-                or document.get("direction") != "outbound-api"):
+        if (
+            document["account_sid"] != config.account_sid
+            or document["from"] != config.caller
+            or sha(phone(document["to"]).encode()) != recipient_hash
+            or (expected_sid is not None and call_sid != expected_sid)
+            or document["status"] not in STATES
+            or document.get("direction") != "outbound-api"
+        ):
             raise ValueError
         duration = document.get("duration")
-        if duration not in (None, "") and (not isinstance(duration, str)
-                                     or not re.fullmatch(r"[0-9]{1,7}", duration)):
+        if duration not in (None, "") and (
+            not isinstance(duration, str) or not re.fullmatch(r"[0-9]{1,7}", duration)
+        ):
             raise ValueError
-        return {"call_sid": call_sid, "provider_status": document["status"],
-                "provider_duration_seconds": int(duration) if duration not in (None, "") else None}
+        return {
+            "call_sid": call_sid,
+            "provider_status": document["status"],
+            "provider_duration_seconds": int(duration) if duration not in (None, "") else None,
+        }
     except (KeyError, TypeError, ValueError, ValidationError):
         raise ProviderError("Call identity, destination or status mismatch") from None

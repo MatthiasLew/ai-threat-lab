@@ -34,6 +34,86 @@ COLOR_BORDER = (0.85, 0.88, 0.92)  # Border gray #D9E0EB
 COLOR_BG_CARD = (0.97, 0.98, 0.99)  # Card background #F7F9FC
 COLOR_BG_ALT = (0.94, 0.96, 0.98)  # Alternate background #F0F4FA
 
+NOTICE_TRANSLATIONS_PL: dict[str, str] = {
+    "Only one HTTPS response was checked; redirects are not followed.": (
+        "Zbadano wyłącznie pojedynczą odpowiedź HTTPS; "
+        "przekierowania (redirects) nie były śledzone."
+    ),
+    (
+        "Declared integrity values, CSS URLs, DOM mutations and "
+        "browser URL normalization are unverified."
+    ): (
+        "Zadeklarowane wartości integrity, adresy URL w stylach CSS, "
+        "dynamiczne mutacje DOM oraz normalizacja URL w przeglądarce nie były weryfikowane."
+    ),
+    (
+        "Static HTML subset only; no rendering, JavaScript, requests, "
+        "form submission, CSP/browser enforcement, authentication, "
+        "CSRF, reachability or exploitability validation."
+    ): (
+        "Pasywna analiza statycznego podzbioru HTML; brak renderowania w przeglądarce, "
+        "wykonywania JavaScriptu, wysyłania formularzy, weryfikacji uwierzytelniania, "
+        "CSRF ani sprawdzania osiągalności podatności."
+    ),
+    "Adapter supplied only a header mapping; duplicate fields may be missing.": (
+        "Adapter dostarczył uproszczone mapowanie nagłówków; "
+        "zduplikowane pola mogły zostać pominięte."
+    ),
+    "Response is not unambiguously declared text/html; body unchecked.": (
+        "Odpowiedź nie została jednoznacznie zadeklarowana jako text/html; "
+        "treść nie była sprawdzana."
+    ),
+    "HTML body exceeded the size limit; body unchecked.": (
+        "Rozmiar treści HTML przekroczył dopuszczalny limit (256 KiB); treść nie była sprawdzana."
+    ),
+    "HTML body read incomplete or failed; body unchecked.": (
+        "Odczyt treści HTML był niekompletny lub nie powiódł się; treść nie była sprawdzana."
+    ),
+    "HTML finding limit reached; additional candidates omitted.": (
+        "Osiągnięto limit wykryć HTML; dodatkowi kandydaci zostali pominięci."
+    ),
+    "Non-200 response body unchecked.": (
+        "Odpowiedź ze statusem innym niż 200 OK; treść nie była sprawdzana."
+    ),
+    "Plaintext remainder unchecked as markup.": (
+        "Pozostała część dokumentu w formacie plaintext pominięta jako znaczniki."
+    ),
+    "Template, foreign and noscript subtrees unchecked.": (
+        "Poddrzewa znaczników template, foreign (SVG/MathML) oraz noscript nie były sprawdzane."
+    ),
+    "Duplicate attributes leave the affected element unchecked.": (
+        "Zduplikowane atrybuty spowodowały pominięcie danego elementu."
+    ),
+    "Nested forms unchecked; HTML tree repair was not simulated.": (
+        "Zagnieżdżone formularze pominięte; naprawa drzewa HTML nie była symulowana."
+    ),
+    "Explicit form-owner associations unchecked; form-dependent candidates omitted.": (
+        "Jawne powiązania form-owner pominięte; "
+        "kandydaci zależni od formularza nie byli sprawdzani."
+    ),
+    "Fieldset and submitter-override form effects unchecked.": (
+        "Elementy fieldset oraz nadpisania submitter-override nie były sprawdzane."
+    ),
+    "Non-JavaScript script types unchecked.": (
+        "Skrypty o typach innych niż JavaScript nie były sprawdzane."
+    ),
+    "Srcset and srcdoc contents unchecked.": (
+        "Zawartość atrybutów srcset i srcdoc nie była sprawdzana."
+    ),
+    "Target collector failed; no security conclusion is available.": (
+        "Kolektor celu uległ awarii; brak wniosków dotyczących bezpieczeństwa."
+    ),
+    (
+        "Passive single main-page inspection; multi-page crawling, authentication, "
+        "forms, and dynamic JS execution were not performed."
+    ): (
+        "Pasywna analiza pojedynczej strony głównej; indeksowanie wielostronicowe, "
+        "formularze, uwierzytelnianie oraz dynamiczne wykonywanie kodu JavaScript "
+        "nie były wykonywane."
+    ),
+}
+
+
 # Severity Badge Colors (Background, Text, Border)
 BADGE_COLORS: dict[
     str, tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]
@@ -62,21 +142,29 @@ BADGE_COLORS: dict[
 
 
 def extract_project_identity(
-    report: dict[str, Any], project_name: str | None = None
+    report: dict[str, Any],
+    project_name: str | None = None,
+    manifest: dict[str, Any] | None = None,
+    scope: dict[str, Any] | None = None,
 ) -> tuple[str, str]:
-    """Extract display project name and full target path from report metadata."""
-    if project_name:
-        clean_name = str(project_name).replace("\\", "/").rstrip("/").split("/")[-1] or str(
-            project_name
-        )
-        return clean_name, str(project_name)
+    """Extract display project name and full target path from report metadata.
 
-    target_candidate = (
-        report.get("project_name")
-        or report.get("target")
-        or report.get("scope", {}).get("target")
-        or report.get("manifest", {}).get("scope", {}).get("target")
-    )
+    Preserves dots in domain names (e.g. archeolabrys.pl) without mangling into underscores.
+    """
+    from .path_utils import get_safe_target_display_name
+
+    target_candidate = None
+    if scope:
+        target_candidate = scope.get("target")
+    if not target_candidate and manifest:
+        target_candidate = manifest.get("scope", {}).get("target")
+    if not target_candidate:
+        target_candidate = (
+            report.get("target")
+            or report.get("project_name")
+            or report.get("scope", {}).get("target")
+            or report.get("manifest", {}).get("scope", {}).get("target")
+        )
     if not target_candidate:
         assessments = report.get("assessments", [])
         if (
@@ -85,24 +173,69 @@ def extract_project_identity(
             and isinstance(assessments[0], dict)
         ):
             target_candidate = assessments[0].get("target")
-
     if not target_candidate:
         limits = report.get("not_checked", [])
         if limits and isinstance(limits, (list, tuple)) and isinstance(limits[0], dict):
             target_candidate = limits[0].get("target")
 
+    if not target_candidate and project_name:
+        target_candidate = str(project_name)
+
     if target_candidate:
-        normalized = str(target_candidate).replace("\\", "/").rstrip("/")
-        name = normalized.split("/")[-1] if "/" in normalized else normalized
-        return name or str(target_candidate), str(target_candidate)
+        target_str = str(target_candidate)
+        # If target is an HTTP/HTTPS URL, preserve domain as display name
+        display_name = get_safe_target_display_name(target_str)
+        return display_name, target_str
+
+    if project_name:
+        p_str = str(project_name)
+        display_name = get_safe_target_display_name(p_str)
+        return display_name, p_str
 
     return "Projekt", "Nieznana lokalizacja"
 
 
-def extract_scope_details(report: dict[str, Any]) -> dict[str, Any]:
+def extract_scope_details(
+    report: dict[str, Any],
+    manifest: dict[str, Any] | None = None,
+    scope_arg: dict[str, Any] | None = None,
+    language: str = "en",
+) -> dict[str, Any]:
     """Extract recognized technologies, files scanned, network state and profile limits."""
-    scope = report.get("scope") or report.get("manifest", {}).get("scope") or {}
+    pl = language == "pl"
+    scope = scope_arg or report.get("scope") or report.get("manifest", {}).get("scope")
+    if not scope and manifest:
+        scope = manifest.get("scope", {})
+    if not scope:
+        scope = {}
+
     not_checked = report.get("not_checked", [])
+    assessments = report.get("assessments", [])
+    primary_assessment = (
+        assessments[0]
+        if (
+            assessments
+            and isinstance(assessments, (list, tuple))
+            and isinstance(assessments[0], dict)
+        )
+        else {}
+    )
+
+    target = scope.get("target") or report.get("target") or primary_assessment.get("target") or ""
+    target_kind = scope.get("target_kind") or primary_assessment.get("target_kind") or ""
+
+    # Infer target kind from target string if still unknown
+    if not target_kind:
+        if str(target).startswith(("http://", "https://")):
+            target_kind = "website"
+        elif str(target).startswith("mail-domain:"):
+            target_kind = "mail_domain"
+        elif str(target).startswith("mailbox:"):
+            target_kind = "mailbox_account"
+        elif str(target).endswith(".eml"):
+            target_kind = "eml_message"
+        else:
+            target_kind = "local_project"
 
     techs: list[str] = []
     files_inspected: str | None = None
@@ -121,11 +254,72 @@ def extract_scope_details(report: dict[str, Any]) -> dict[str, Any]:
                 if "Files inspected:" in p:
                     files_inspected = p.removeprefix("Files inspected:").strip().rstrip(".")
 
-    max_files = scope.get("max_files", 100)
     network_enabled = bool(scope.get("network", False))
     allowed_hosts = list(scope.get("allowed_hosts", []))
-    target_kind = scope.get("target_kind", "")
 
+    if target_kind == "website":
+        from urllib.parse import urlsplit
+
+        host = urlsplit(str(target)).hostname or str(target)
+        if not allowed_hosts:
+            allowed_hosts = [host]
+        network_enabled = True
+        return {
+            "technologies": ["HTML", "HTTPS", "TLS"],
+            "files_inspected": "1 pobrana strona HTTPS (odpowiedź GET)"
+            if pl
+            else "1 fetched HTTPS web page (GET response)",
+            "max_files": None,
+            "network_enabled": True,
+            "allowed_hosts": allowed_hosts,
+            "target_kind": "website",
+            "target": target,
+        }
+
+    if target_kind == "mail_domain":
+        domain = str(target).removeprefix("mail-domain:")
+        if not allowed_hosts:
+            allowed_hosts = [domain]
+        network_enabled = True
+        return {
+            "technologies": ["DNS", "SPF", "DKIM", "DMARC"],
+            "files_inspected": "Publiczne rekordy DNS domeny"
+            if pl
+            else "Public domain DNS records",
+            "max_files": None,
+            "network_enabled": True,
+            "allowed_hosts": allowed_hosts,
+            "target_kind": "mail_domain",
+            "target": target,
+        }
+
+    if target_kind == "eml_message":
+        return {
+            "technologies": ["Email (RFC 5322)", "MIME", "HTML"],
+            "files_inspected": "1 plik wiadomości e-mail (.eml)"
+            if pl
+            else "1 email message file (.eml)",
+            "max_files": 1,
+            "network_enabled": False,
+            "allowed_hosts": [],
+            "target_kind": "eml_message",
+            "target": target,
+        }
+
+    if target_kind == "mailbox_account":
+        return {
+            "technologies": ["Gmail API", "OAuth"],
+            "files_inspected": "Reguły filtrów i przekazywania poczty"
+            if pl
+            else "Mailbox filters & forwarding rules",
+            "max_files": None,
+            "network_enabled": True,
+            "allowed_hosts": ["gmail.googleapis.com"],
+            "target_kind": "mailbox_account",
+            "target": target,
+        }
+
+    max_files = scope.get("max_files", 100)
     return {
         "technologies": techs if techs else ["Python", "Config"],
         "files_inspected": files_inspected or f"<= {max_files}",
@@ -133,6 +327,7 @@ def extract_scope_details(report: dict[str, Any]) -> dict[str, Any]:
         "network_enabled": network_enabled,
         "allowed_hosts": allowed_hosts,
         "target_kind": target_kind,
+        "target": target,
     }
 
 
@@ -163,6 +358,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
         else:
             raw_notices.append(str(item))
 
+    website_notices: list[str] = []
     traversal_limits: list[str] = []
     oversized_files: list[str] = []
     excluded_dirs: list[str] = []
@@ -179,7 +375,20 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
         low = n_clean.lower()
         if low.startswith("scope technologies:"):
             continue
-        if "traversal stopped" in low or "file/directory limit" in low:
+        if any(
+            k in low
+            for k in (
+                "https response",
+                "html subset",
+                "integrity values",
+                "header mapping",
+                "unambiguously declared text/html",
+                "html finding limit",
+                "duplicate attributes",
+            )
+        ):
+            website_notices.append(n_clean)
+        elif "traversal stopped" in low or "file/directory limit" in low:
             traversal_limits.append(n_clean)
         elif low.startswith("skipped oversized file:"):
             filename = n_clean.split(":", 1)[1].strip()
@@ -207,6 +416,27 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
             other_notices.append(n_clean)
 
     categories: list[dict[str, Any]] = []
+
+    # 0. Website Inspection Methodology & Limitations
+    if website_notices:
+        unique_web = list(dict.fromkeys(website_notices))
+        desc_web: list[str] = []
+        for w in unique_web:
+            translated = NOTICE_TRANSLATIONS_PL.get(w, w) if pl else w
+            desc_web.append(translated)
+        categories.append(
+            {
+                "title": (
+                    "Metodyka i granice badania witryny WWW"
+                    if pl
+                    else "Website Inspection Methodology & Scope"
+                ),
+                "badge": "ZAKRES" if pl else "SCOPE",
+                "is_warning": False,
+                "description": " • " + "\n • ".join(desc_web),
+                "count": len(website_notices),
+            }
+        )
 
     # 1. Traversal Limits (Critical warning)
     if traversal_limits:
@@ -431,6 +661,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
     if other_notices:
         unique_other = list(dict.fromkeys(other_notices))
         for item_txt in unique_other[:5]:
+            translated_item = NOTICE_TRANSLATIONS_PL.get(item_txt, item_txt) if pl else item_txt
             categories.append(
                 {
                     "title": (
@@ -438,7 +669,7 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
                     ),
                     "badge": "INFORMACJA" if pl else "INFO",
                     "is_warning": False,
-                    "description": item_txt,
+                    "description": translated_item,
                     "count": 1,
                 }
             )
@@ -490,6 +721,8 @@ def generate_pdf_report(
     lang: str | None = None,
     source_root: Path | str | None = None,
     project_name: str | None = None,
+    manifest: dict[str, Any] | None = None,
+    scope: dict[str, Any] | None = None,
 ) -> bytes:
     """Generate a complete, publication-grade security audit report PDF.
 
@@ -506,7 +739,13 @@ def generate_pdf_report(
     pl = language == "pl"
 
     # Extract accurate project name and full target path
-    display_project, target_path_str = extract_project_identity(report, project_name)
+    display_project, target_path_str = extract_project_identity(
+        report, project_name=project_name, manifest=manifest, scope=scope
+    )
+    scope_details = extract_scope_details(
+        report, manifest=manifest, scope_arg=scope, language=language
+    )
+    target_kind = scope_details.get("target_kind", "local_project")
 
     findings = detailed_findings(report, language=language)
     not_checked = report.get("not_checked", [])
@@ -605,9 +844,59 @@ def generate_pdf_report(
     )
 
     status_label = "CZĘŚCIOWY (PARTIAL)" if is_partial else status.upper()
+    if target_kind == "website":
+        scope_label = (
+            "Pasywna analiza strony WWW (HTTPS/HTML)"
+            if pl
+            else "Passive Website Analysis (HTTPS/HTML)"
+        )
+        net_label = (
+            f"Wymagane — połączenie HTTPS ({scope_details['allowed_hosts'][0]})"
+            if scope_details["allowed_hosts"]
+            else "Wymagane — połączenie HTTPS"
+        )
+        if not pl:
+            net_label = (
+                f"Required — HTTPS connection ({scope_details['allowed_hosts'][0]})"
+                if scope_details["allowed_hosts"]
+                else "Required — HTTPS connection"
+            )
+    elif target_kind == "mail_domain":
+        scope_label = (
+            "Weryfikacja rekordów uwierzytelniania domeny pocztowej"
+            if pl
+            else "Mail Domain Authentication Records"
+        )
+        host_str = (
+            scope_details["allowed_hosts"][0] if scope_details["allowed_hosts"] else display_project
+        )
+        net_label = (
+            f"Zapytania DoH (DNS-over-HTTPS) dla {host_str}"
+            if pl
+            else f"DoH (DNS-over-HTTPS) for {host_str}"
+        )
+    elif target_kind == "eml_message":
+        scope_label = (
+            "Lokalna analiza struktury wiadomości e-mail (.eml)"
+            if pl
+            else "Local Email Message Structure (.eml)"
+        )
+        net_label = (
+            "Pełna izolacja offline (brak połączeń)"
+            if pl
+            else "Full offline isolation (no network calls)"
+        )
+    else:
+        scope_label = "Statyczna analiza offline" if pl else "Offline static analysis"
+        net_label = (
+            ("Zezwolono na hosty: " + ", ".join(scope_details["allowed_hosts"]))
+            if scope_details["network_enabled"]
+            else ("Pełna izolacja offline" if pl else "Full offline isolation")
+        )
+
     meta_rows = [
-        ("Projekt" if pl else "Project", display_project),
-        ("Ścieżka celu" if pl else "Target Path", target_path_str),
+        ("Projekt / Cel" if pl else "Project / Target", display_project),
+        ("Adres celu" if pl else "Target Address", target_path_str),
         ("Data analizy" if pl else "Audit Date", date_str),
         ("Status przebiegu" if pl else "Audit Status", status_label),
         (
@@ -618,7 +907,11 @@ def generate_pdf_report(
         ),
         (
             "Zakres analizy" if pl else "Analysis Scope",
-            "Statyczna analiza offline" if pl else "Offline static analysis",
+            scope_label,
+        ),
+        (
+            "Połączenie sieciowe" if pl else "Network Connection",
+            net_label,
         ),
     ]
 
@@ -803,9 +1096,31 @@ def generate_pdf_report(
             status_card_col,
         ),
         (
-            "LIMIT PLIKÓW" if pl else "FILE LIMIT",
-            traversal_card_val,
-            traversal_card_col,
+            ("METODA BADANIA" if pl else "METHOD")
+            if target_kind == "website"
+            else (
+                ("REKORDY DNS" if pl else "DNS RECORDS")
+                if target_kind == "mail_domain"
+                else (
+                    ("PLIK POCZTY" if pl else "MESSAGE FILE")
+                    if target_kind == "eml_message"
+                    else ("LIMIT PLIKÓW" if pl else "FILE LIMIT")
+                )
+            ),
+            (
+                "HTTPS"
+                if target_kind == "website"
+                else (
+                    "DOH"
+                    if target_kind == "mail_domain"
+                    else (
+                        ("1 PLIK" if pl else "1 FILE")
+                        if target_kind == "eml_message"
+                        else traversal_card_val
+                    )
+                )
+            ),
+            ((0.1, 0.4, 0.7) if target_kind in ("website", "mail_domain") else traversal_card_col),
         ),
         (
             "OGRANICZENIA ZAKRESU" if pl else "SCOPE BOUNDS",
@@ -844,22 +1159,6 @@ def generate_pdf_report(
     )
     doc.cursor_y -= 16
 
-    scope_details = extract_scope_details(report)
-    tech_str = ", ".join(scope_details["technologies"]) or (
-        "Python, Pliki konfiguracji" if pl else "Python, Config files"
-    )
-    files_str = scope_details["files_inspected"]
-    if scope_details["max_files"]:
-        files_str += f" (maks. limit: {scope_details['max_files']})"
-    net_str = (
-        ("Zezwolono na hosty: " + ", ".join(scope_details["allowed_hosts"]))
-        if scope_details["network_enabled"]
-        else (
-            "Pełna izolacja offline (brak połączeń sieciowych)"
-            if pl
-            else "Full offline isolation (no network calls)"
-        )
-    )
     ai_mode_str = (
         (
             "Interpretacja doradcza AI (Google Gemini)"
@@ -874,7 +1173,100 @@ def generate_pdf_report(
         )
     )
 
-    scope_box_h = 75
+    if target_kind == "website":
+        s_rows = [
+            ("Adres HTTPS" if pl else "HTTPS URL", target_path_str),
+            ("Faktyczny host" if pl else "Target Host", display_project),
+            (
+                "Połączenie sieciowe" if pl else "Network Connection",
+                f"Bezpieczne zapytanie HTTPS ({display_project}:443)"
+                if pl
+                else f"Secure HTTPS query ({display_project}:443)",
+            ),
+            (
+                "Metoda badania" if pl else "Inspection Method",
+                "Pasywna analiza nagłówków HTTP, parametrów TLS i struktury HTML"
+                if pl
+                else "Passive inspection of HTTP headers, TLS parameters, and HTML structure",
+            ),
+            (
+                "Zakres zasobów" if pl else "Inspected Resources",
+                "Pojedyncza strona główna (GET 200, bez przekierowań i bez uruchamiania JS)"
+                if pl
+                else "Single main page (GET 200, no redirects, no JavaScript execution)",
+            ),
+            ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
+        ]
+    elif target_kind == "mail_domain":
+        s_rows = [
+            ("Badana domena" if pl else "Inspected Domain", display_project),
+            (
+                "Połączenie sieciowe" if pl else "Network Connection",
+                f"Zapytania DoH (DNS-over-HTTPS) dla {display_project}"
+                if pl
+                else f"DoH (DNS-over-HTTPS) queries for {display_project}",
+            ),
+            (
+                "Metoda badania" if pl else "Inspection Method",
+                "Weryfikacja rekordów SPF, DMARC i kluczy DKIM w publicznym DNS"
+                if pl
+                else "Public DNS SPF, DMARC, and DKIM verification",
+            ),
+            (
+                "Zakres rekordów" if pl else "Inspected Records",
+                "Rekordy TXT dla SPF i DMARC, publikacja selektora DKIM"
+                if pl
+                else "TXT records for SPF/DMARC, DKIM selector publication",
+            ),
+            ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
+        ]
+    elif target_kind == "eml_message":
+        s_rows = [
+            ("Plik wiadomości" if pl else "Message File", display_project),
+            (
+                "Połączenie sieciowe" if pl else "Network Connection",
+                "Pełna izolacja offline (brak połączeń)"
+                if pl
+                else "Full offline isolation (no network calls)",
+            ),
+            (
+                "Metoda badania" if pl else "Inspection Method",
+                "Pasywna analiza nagłówków RFC 5322, struktury MIME i odnośników"
+                if pl
+                else "Passive inspection of RFC 5322 headers, MIME structure, and URLs",
+            ),
+            (
+                "Zakres badania" if pl else "Inspected Scope",
+                "Pojedynczy plik wiadomości e-mail (.eml)"
+                if pl
+                else "Single email message file (.eml)",
+            ),
+            ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
+        ]
+    else:
+        tech_str = ", ".join(scope_details["technologies"]) or (
+            "Python, Pliki konfiguracji" if pl else "Python, Config files"
+        )
+        files_str = scope_details["files_inspected"]
+        if scope_details.get("max_files"):
+            files_str += f" (maks. limit: {scope_details['max_files']})"
+        net_str = (
+            ("Zezwolono na hosty: " + ", ".join(scope_details["allowed_hosts"]))
+            if scope_details["network_enabled"]
+            else (
+                "Pełna izolacja offline (brak połączeń sieciowych)"
+                if pl
+                else "Full offline isolation (no network calls)"
+            )
+        )
+        s_rows = [
+            (t("field_tech_recognized", language), tech_str),
+            (t("field_files_scanned", language), files_str),
+            (t("field_network_policy", language), net_str),
+            ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
+        ]
+
+    scope_box_h = 20 + len(s_rows) * 16
     doc.rect(
         doc.margin_x,
         doc.cursor_y - scope_box_h,
@@ -883,13 +1275,6 @@ def generate_pdf_report(
         fill=COLOR_BG_CARD,
         stroke=COLOR_BORDER,
     )
-
-    s_rows = [
-        (t("field_tech_recognized", language), tech_str),
-        (t("field_files_scanned", language), files_str),
-        (t("field_network_policy", language), net_str),
-        ("Tryb analizy" if pl else "Analysis Mode", ai_mode_str),
-    ]
 
     sy = doc.cursor_y - 15
     for slabel, sval in s_rows:
@@ -1127,6 +1512,70 @@ def generate_pdf_report(
                     )
                     code_y -= 14.0
 
+                doc.cursor_y -= box_h + 8
+            elif target_kind == "website" and finding.line_number is not None:
+                tag_preview = ""
+                if "<script" in finding.evidence:
+                    import re
+
+                    m = re.search(r"(<script[^>]*>)", finding.evidence)
+                    if m:
+                        tag_preview = m.group(1) + "</script>"
+                if not tag_preview:
+                    tag_preview = (
+                        f'<script src="..."></script> (linia {finding.line_number})'
+                        if pl
+                        else f'<script src="..."></script> (line {finding.line_number})'
+                    )
+
+                box_h = 42.0
+                doc.rect(
+                    doc.margin_x,
+                    doc.cursor_y - box_h + 10,
+                    doc.content_width,
+                    box_h,
+                    fill=(0.97, 0.98, 0.99),
+                    stroke=COLOR_BORDER,
+                )
+                doc.rect(
+                    doc.margin_x + 1,
+                    doc.cursor_y - 12,
+                    doc.content_width - 2,
+                    15.0,
+                    fill=(0.99, 0.95, 0.88),
+                )
+                doc.text(
+                    doc.margin_x + 8,
+                    doc.cursor_y - 1,
+                    f"> {finding.line_number:4d} | ",
+                    font="Courier-Bold",
+                    size=8,
+                    color=(0.7, 0.2, 0.1),
+                )
+                doc.text(
+                    doc.margin_x + 65,
+                    doc.cursor_y - 1,
+                    tag_preview,
+                    font="Courier-Bold",
+                    size=8,
+                    color=(0.6, 0.1, 0.1),
+                )
+                doc.text(
+                    doc.margin_x + 8,
+                    doc.cursor_y - 18,
+                    (
+                        "Źródło: Pobrana odpowiedź HTTPS (GET 200)  |  "
+                        "Brak atrybutu integrity (Subresource Integrity)"
+                    )
+                    if pl
+                    else (
+                        "Source: Fetched HTTPS response (GET 200)  |  "
+                        "Missing integrity attribute (Subresource Integrity)"
+                    ),
+                    font="Helvetica",
+                    size=7.5,
+                    color=COLOR_TEXT_MUTED,
+                )
                 doc.cursor_y -= box_h + 8
             else:
                 notice = t("source_code_unavailable", language)
@@ -1494,60 +1943,154 @@ def generate_pdf_report(
     doc.cursor_y -= 16
 
     next_steps: list[str] = []
-    if p1_count > 0:
+    if target_kind == "website":
+        if any(f.rule_code == "html_external_script_without_integrity" for f in findings):
+            next_steps.append(
+                (
+                    "Konfiguracja Subresource Integrity (SRI) lub CSP: Dodaj "
+                    "atrybuty integrity i crossorigin "
+                    "do zewnętrznych bibliotek statycznych (np. CDN). "
+                    "Dla dynamicznych skryptów analitycznych "
+                    "wdroż restrykcyjną dyrektywę script-src "
+                    "w nagłówku Content-Security-Policy (CSP)."
+                )
+                if pl
+                else (
+                    "Configure Subresource Integrity (SRI) or CSP: Add "
+                    "integrity and crossorigin attributes "
+                    "to static CDN libraries. For dynamic third-party scripts, "
+                    "enforce strict script-src "
+                    "directives within Content-Security-Policy (CSP) headers."
+                )
+            )
         next_steps.append(
             (
-                "Priorytetowa mitygacja problemów P1: Zbadaj natychmiast "
-                "zidentyfikowane wywołania powłoki "
-                "lub niebezpieczne deserializacje i zastąp je bezpiecznymi API "
-                "(np. lista argumentów bez shell=True)."
+                "Weryfikacja nagłówków bezpieczeństwa HTTP: Upewnij się, "
+                "że serwer produkcyjny zwraca "
+                "rekomendowane nagłówki ochronne: HSTS, "
+                "Content-Security-Policy, X-Frame-Options i X-Content-Type-Options."
             )
             if pl
             else (
-                "Priority P1 mitigation: Immediately review identified shell execution "
-                "and unsafe deserialization calls, replacing them with safe APIs "
-                "(e.g. argument sequences without shell=True)."
+                "Verify HTTP security headers: Ensure production "
+                "servers deliver recommended defense headers: "
+                "HSTS, Content-Security-Policy, X-Frame-Options, and X-Content-Type-Options."
             )
         )
-    elif total_findings > 0:
-        next_steps.append(
-            "Weryfikacja kontekstowa wykryć: Sprawdź zidentyfikowane fragmenty kodu i upewnij się, "
-            "że dane wejściowe podlegają odpowiedniej walidacji przed przetworzeniem."
-            if pl
-            else (
-                "Contextual finding verification: Review identified code fragments "
-                "and verify input validation before processing."
-            )
-        )
-
-    if is_traversal_limited:
         next_steps.append(
             (
-                "Rozszerzenie zakresu analizy: Uruchom ponowny audyt z profilem 'Rozszerzony' "
-                "(--profile extended) lub parametrem '--max-files 5000', "
-                "aby objąć pliki pominięte w wyniku limitu."
+                "Cykliczne audyty integralności zasobów: Regularnie "
+                "monitoruj zmiany w skryptach dostawców zewnętrznych "
+                "oraz kontroluj domeny ładujące kod "
+                "w przeglądarce użytkownika."
             )
             if pl
             else (
-                "Expand scan scope: Re-run audit with the 'Extended' profile "
-                "(--profile extended) or '--max-files 5000' to inspect files omitted "
-                "due to traversal limits."
+                "Periodic resource integrity reviews: Regularly audit "
+                "external dependencies and maintain "
+                "strict governance over domains executing code in user browsers."
             )
         )
+    elif target_kind == "mail_domain":
+        next_steps.append(
+            (
+                "Weryfikacja polityki DMARC: Wdróż rygorystyczną "
+                "politykę 'p=reject' lub 'p=quarantine' "
+                "oraz skonfiguruj raportowanie rua/ruf, "
+                "aby zapobiec podszywaniu się pod domenę (spoofing)."
+            )
+            if pl
+            else (
+                "DMARC enforcement: Deploy strict 'p=reject' or "
+                "'p=quarantine' policies and configure "
+                "rua/ruf reporting to prevent domain spoofing."
+            )
+        )
+        next_steps.append(
+            (
+                "Weryfikacja rekordów SPF i DKIM: Upewnij się, "
+                "że wszystkie autoryzowane serwery wysyłające "
+                "są uwzględnione w rekordzie SPF oraz że klucze DKIM podlegają regularnej rotacji."
+            )
+            if pl
+            else (
+                "Verify SPF and DKIM configuration: Ensure all "
+                "authorized sending servers are declared "
+                "in SPF and DKIM cryptographic keys undergo regular rotation."
+            )
+        )
+    elif target_kind == "eml_message":
+        next_steps.append(
+            (
+                "Weryfikacja autentyczności nadawcy na serwerze "
+                "pocztowym: Wyniki lokalnej analizy sygnałów "
+                "nie zastępują weryfikacji nagłówków "
+                "Authentication-Results (SPF/DKIM/DMARC) przez MTA."
+            )
+            if pl
+            else (
+                "Verify sender authenticity at mail server: "
+                "Local heuristic signal inspection does not substitute "
+                "for authoritative Authentication-Results "
+                "headers (SPF/DKIM/DMARC) verified by the MTA."
+            )
+        )
+    else:
+        if p1_count > 0:
+            next_steps.append(
+                (
+                    "Priorytetowa mitygacja problemów P1: Zbadaj natychmiast "
+                    "zidentyfikowane wywołania powłoki "
+                    "lub niebezpieczne deserializacje i zastąp je bezpiecznymi API "
+                    "(np. lista argumentów bez shell=True)."
+                )
+                if pl
+                else (
+                    "Priority P1 mitigation: Immediately review identified shell execution "
+                    "and unsafe deserialization calls, replacing them with safe APIs "
+                    "(e.g. argument sequences without shell=True)."
+                )
+            )
+        elif total_findings > 0:
+            next_steps.append(
+                "Weryfikacja kontekstowa wykryć: Sprawdź "
+                "zidentyfikowane fragmenty kodu i upewnij się, "
+                "że dane wejściowe podlegają odpowiedniej walidacji przed przetworzeniem."
+                if pl
+                else (
+                    "Contextual finding verification: Review identified code fragments "
+                    "and verify input validation before processing."
+                )
+            )
 
-    next_steps.append(
-        (
-            "Weryfikacja zależności z bazą OSV: Jeśli projekt korzysta z zewnętrznych "
-            "bibliotek, uruchom audyt z flagami '--network' oraz '--share-packages', "
-            "aby porównać wersje z publiczną bazą podatności."
+        if is_traversal_limited:
+            next_steps.append(
+                (
+                    "Rozszerzenie zakresu analizy: Uruchom ponowny audyt z profilem 'Rozszerzony' "
+                    "(--profile extended) lub parametrem '--max-files 5000', "
+                    "aby objąć pliki pominięte w wyniku limitu."
+                )
+                if pl
+                else (
+                    "Expand scan scope: Re-run audit with the 'Extended' profile "
+                    "(--profile extended) or '--max-files 5000' to inspect files omitted "
+                    "due to traversal limits."
+                )
+            )
+
+        next_steps.append(
+            (
+                "Weryfikacja zależności z bazą OSV: Jeśli projekt korzysta z zewnętrznych "
+                "bibliotek, uruchom audyt z flagami '--network' oraz '--share-packages', "
+                "aby porównać wersje z publiczną bazą podatności."
+            )
+            if pl
+            else (
+                "OSV dependency lookup: If project uses external libraries, "
+                "run audit with '--network' and '--share-packages' "
+                "to check package versions against the public vulnerability database."
+            )
         )
-        if pl
-        else (
-            "OSV dependency lookup: If project uses external libraries, "
-            "run audit with '--network' and '--share-packages' "
-            "to check package versions against the public vulnerability database."
-        )
-    )
 
     next_steps.append(
         (

@@ -74,14 +74,26 @@ def review_entry(entry, index):
             # HAR text is already decoded by the exporter. Do not decompress any data.
             # A compressed Content-Encoding conservatively suppresses HTML checks.
             html_findings, html_missing = inspect_html_response(
-                body, headers, document_url=request["url"])
-        return AssessmentResult(target, "har_response", "partial",
-                                (*findings, *html_findings),
-                                (NOTICE, *missing, *html_missing)), False
+                body, headers, document_url=request["url"]
+            )
+        return AssessmentResult(
+            target,
+            "har_response",
+            "partial",
+            (*findings, *html_findings),
+            (NOTICE, *missing, *html_missing),
+        ), False
     except (ValidationError, UnicodeError, ValueError):
-        return AssessmentResult(target, "har_response", "not_configured", (), (
-            NOTICE, "Malformed or unsupported HAR entry; values omitted.",
-        )), True
+        return AssessmentResult(
+            target,
+            "har_response",
+            "not_configured",
+            (),
+            (
+                NOTICE,
+                "Malformed or unsupported HAR entry; values omitted.",
+            ),
+        ), True
 
 
 def review_har(path, *, start=1, max_entries=20):
@@ -104,9 +116,14 @@ def review_har(path, *, start=1, max_entries=20):
         result, failed = review_entry(entries[index - 1], index)
         failures += failed
         result = AssessmentResult(
-            result.target, result.target_kind, result.status, result.findings,
-            (*result.not_checked,
-             f"Selected HAR entries {start}..{stop} of {len(entries)}; other entries unchecked."),
+            result.target,
+            result.target_kind,
+            result.status,
+            result.findings,
+            (
+                *result.not_checked,
+                f"Selected HAR entries {start}..{stop} of {len(entries)}; other entries unchecked.",
+            ),
         )
         results.append(asdict(result))
     return merge_reports(json.loads(json.dumps(results))), failures

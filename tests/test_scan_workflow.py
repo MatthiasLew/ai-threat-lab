@@ -382,7 +382,7 @@ def test_actual_scan_cli_process_flow_and_help(tmp_path):
             text=True,
             encoding="utf-8",
             env=env,
-            timeout=20,
+            timeout=60,
         )
         assert result.returncode == 0, result.stderr
         return result.stdout

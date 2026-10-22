@@ -532,8 +532,7 @@ class BudgetedAI:
                     self.response_validator(cached)
                 except Exception:
                     raise ProviderError(
-                        "Cached AI interpretation failed evidence validation; "
-                        "no automatic retry."
+                        "Cached AI interpretation failed evidence validation; no automatic retry."
                     ) from None
             return {"status": "cached", "request_id": identifier, "text": cached}
         try:
@@ -608,9 +607,7 @@ class BudgetedAI:
                 token_usage_known=True,
                 reservation_retained=False,
                 reconciliation_required=False,
-                action_required=(
-                    "Review model instructions or prompt to ensure exact references."
-                ),
+                action_required=("Review model instructions or prompt to ensure exact references."),
                 detail="Supplied observations not addressed exactly once or unknown evidence_id",
             )
             err_msg = (
@@ -701,6 +698,7 @@ class OpenAIResponses:
         if refused and not text.strip():
             raise ProviderError("AI model refused the request")
         return text, inputs, outputs
+
 
 @dataclass(frozen=True)
 class FailureDiagnosis:
@@ -905,11 +903,7 @@ def classify_ai_failure(exc: BaseException) -> FailureDiagnosis:
             detail=msg,
         )
 
-    if (
-        "responseschema" in msg_lower
-        or "invalid schema" in msg_lower
-        or "json_schema" in msg_lower
-    ):
+    if "responseschema" in msg_lower or "invalid schema" in msg_lower or "json_schema" in msg_lower:
         return FailureDiagnosis(
             category="INVALID_RESPONSE_SCHEMA",
             summary="Provider rejected responseSchema structure or types",

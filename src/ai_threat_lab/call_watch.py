@@ -12,8 +12,21 @@ from .models import ValidationError
 from .providers import ProviderError
 
 
-def watch(plan, config, journal, receipt, *, network, allowed_host, output_dir, client,
-          max_wait_seconds=90, clock=None, monotonic=None, sleep=None):
+def watch(
+    plan,
+    config,
+    journal,
+    receipt,
+    *,
+    network,
+    allowed_host,
+    output_dir,
+    client,
+    max_wait_seconds=90,
+    clock=None,
+    monotonic=None,
+    sleep=None,
+):
     if network is not True or allowed_host != HOST:
         raise ValidationError("Call watch requires explicit network and exact provider host")
     if type(max_wait_seconds) is not int or not 1 <= max_wait_seconds <= 120:
@@ -24,10 +37,17 @@ def watch(plan, config, journal, receipt, *, network, allowed_host, output_dir, 
     destination = Path(output_dir)
     destination.mkdir(exist_ok=False)
     started = monotonic()
-    result = {"schema_version": 1, "mode": "call_watch", "plan_digest": plan.digest,
-              "configuration_sha256": config.digest, "call_sid": call_sid,
-              "status": "pending", "max_wait_seconds": max_wait_seconds,
-              "observed_states": [], "notice": NOTICE}
+    result = {
+        "schema_version": 1,
+        "mode": "call_watch",
+        "plan_digest": plan.digest,
+        "configuration_sha256": config.digest,
+        "call_sid": call_sid,
+        "status": "pending",
+        "max_wait_seconds": max_wait_seconds,
+        "observed_states": [],
+        "notice": NOTICE,
+    }
     write_new(destination / "attempt.json", result)
     reason = "poll_limit"
     try:
@@ -44,8 +64,9 @@ def watch(plan, config, journal, receipt, *, network, allowed_host, output_dir, 
             if journal.status(plan.digest)["cancelled"]:
                 reason = "local_cancelled"
                 break
-            observed = status(plan, config, journal, receipt, network=True,
-                              allowed_host=HOST, client=client)
+            observed = status(
+                plan, config, journal, receipt, network=True, allowed_host=HOST, client=client
+            )
             result["observed_states"].append(observed["provider_status"])
             if observed["provider_status"] in TERMINAL:
                 result["status"] = "provider_terminal"
@@ -53,8 +74,10 @@ def watch(plan, config, journal, receipt, *, network, allowed_host, output_dir, 
                 break
             refreshed = clock()
             _utc(refreshed, "watch time")
-            remaining = min(max_wait_seconds - (monotonic() - started),
-                            (plan.scope.expires_at - refreshed).total_seconds())
+            remaining = min(
+                max_wait_seconds - (monotonic() - started),
+                (plan.scope.expires_at - refreshed).total_seconds(),
+            )
             if remaining > 0:
                 sleep(min(5, remaining))
     except KeyboardInterrupt:
@@ -63,11 +86,22 @@ def watch(plan, config, journal, receipt, *, network, allowed_host, output_dir, 
         reason = "status_error"
     if result["status"] != "provider_terminal":
         try:
-            stopped = stop(plan, config, journal, receipt, network=True, allowed_host=HOST,
-                           output_dir=destination / "stop", client=client)
+            stopped = stop(
+                plan,
+                config,
+                journal,
+                receipt,
+                network=True,
+                allowed_host=HOST,
+                output_dir=destination / "stop",
+                client=client,
+            )
             result["stop"] = stopped
-            result["status"] = ("provider_terminal" if stopped["status"] in
-                                ("provider_terminal", "already_terminal") else "stop_unknown")
+            result["status"] = (
+                "provider_terminal"
+                if stopped["status"] in ("provider_terminal", "already_terminal")
+                else "stop_unknown"
+            )
         except (ProviderError, ValidationError, OSError, sqlite3.Error):
             result["status"] = "stop_unknown"
     result["reason"] = reason

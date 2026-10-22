@@ -324,8 +324,7 @@ _RULE_CATALOG: dict[str, dict[str, str | None]] = {
         "category": "tls_verification",
         "title_en": "Unverified SSL/TLS context helper (ssl._create_unverified_context)",
         "title_pl": (
-            "Utworzenie nieweryfikowanego kontekstu SSL/TLS "
-            "(ssl._create_unverified_context)"
+            "Utworzenie nieweryfikowanego kontekstu SSL/TLS (ssl._create_unverified_context)"
         ),
         "mechanism_en": (
             "ssl._create_unverified_context() constructs an SSLContext with certificate "
@@ -900,8 +899,7 @@ _RULE_CATALOG: dict[str, dict[str, str | None]] = {
         "category": "ci_cd_configuration",
         "title_en": "GitHub Actions workflow grants write-all GITHUB_TOKEN permissions",
         "title_pl": (
-            "Workflow GitHub Actions nadaje pełne uprawnienia zapisu "
-            "(permissions: write-all)"
+            "Workflow GitHub Actions nadaje pełne uprawnienia zapisu (permissions: write-all)"
         ),
         "mechanism_en": (
             "`permissions: write-all` grants the workflow's GITHUB_TOKEN write access to "
@@ -929,19 +927,16 @@ _RULE_CATALOG: dict[str, dict[str, str | None]] = {
             "(np. `contents: read`) i ponownie uruchom `ai-threat-lab inspect`."
         ),
         "limits_en": (
-            "Line-level workflow check; repository default token "
-            "settings are not queried."
+            "Line-level workflow check; repository default token settings are not queried."
         ),
         "limits_pl": (
-            "Kontrola linii pliku workflow bez odpytywania ustawień "
-            "organizacji/repozytorium."
+            "Kontrola linii pliku workflow bez odpytywania ustawień organizacji/repozytorium."
         ),
     },
     "workflow_mutable_action": {
         "category": "ci_cd_configuration",
         "title_en": (
-            "GitHub Actions step uses a mutable branch/tag reference "
-            "instead of a commit SHA"
+            "GitHub Actions step uses a mutable branch/tag reference instead of a commit SHA"
         ),
         "title_pl": "Krok GitHub Actions używa zmiennego tagu/gałęzi zamiast pełnego SHA commita",
         "mechanism_en": (
@@ -1063,41 +1058,292 @@ def _fallback_metadata(check: str, evidence: str, recommendation: str, language:
                 "evaluation."
             ),
         }
-    if check.startswith(("html_", "message_html_")):
+    if check == "html_external_script_without_integrity":
         return {
-            "category": "html_form_resource",
+            "category": "html_external_script",
             "title": (
-                f"Niebezpieczna deklaracja formularza lub zasobu HTML ({check})"
+                "Zewnętrzny skrypt JavaScript bez atrybutu integralności (SRI)"
                 if pl
-                else f"Insecure HTML form or external resource declaration ({check})"
+                else "External JavaScript script without Subresource Integrity (SRI)"
             ),
             "mechanism": (
-                "Analizowany dokument HTML zawiera formularz hasła przesyłany metodą "
-                "GET/HTTP/cross-origin "
-                "lub ładuje aktywne zasoby zewnętrzne bez zabezpieczeń transportu/integralności."
+                (
+                    "Dokument HTML ładuje zewnętrzny skrypt JavaScript z innej "
+                    "domeny (cross-origin) bez atrybutu `integrity`. Mechanizm "
+                    "Subresource Integrity (SRI) pozwala przeglądarce zweryfikować "
+                    "kryptograficzny skrót pobranego pliku przed jego wykonaniem, "
+                    "gwarantując, że zasób nie został podmieniony ani "
+                    "zmodyfikowany na zewnętrznym serwerze CDN bądź w tranzycie."
+                )
                 if pl
-                else "The HTML document declares a password form using GET/HTTP/cross-origin "
-                "submission or loads active external resources without transport/SRI protection."
+                else (
+                    "The HTML document loads an external JavaScript script from "
+                    "a third-party origin without an `integrity` attribute. "
+                    "Subresource Integrity (SRI) allows browsers to verify a "
+                    "cryptographic digest of fetched files before execution, "
+                    "ensuring the resource has not been altered on a third-party "
+                    "CDN or in transit."
+                )
             ),
             "consequences": (
-                "Ryzyko ujawnienia poświadczeń w adresie URL / niezabezpieczonym kanale lub "
-                "wykonania zmodyfikowanego skryptu zewnętrznego."
+                (
+                    "W przypadku kompromitacji zewnętrznego dostawcy CDN napastnik "
+                    "mógłby wstrzyknąć złośliwy kod wykonywany w kontekście "
+                    "użytkowników witryny. Ryzyko zależy od stopnia zaufania do "
+                    "zewnętrznego dostawcy oraz wdrożonej polityki CSP. Wykrycie "
+                    "nie oznacza ataku ani złośliwości skryptu — wskazuje na brak "
+                    "kryptograficznej ochrony zasobu przed modyfikacją."
+                )
                 if pl
-                else "Potential exposure of credentials in URLs/cleartext transit or execution "
-                "of unvalidated external script content."
+                else (
+                    "If the third-party CDN or provider is compromised, an attacker "
+                    "could inject malicious code executed within site visitors' origin "
+                    "context. Actual risk depends on trust in the provider and CSP. "
+                    "This observation does not indicate an attack or malicious content — "
+                    "it identifies the lack of cryptographic tamper-resistance."
+                )
             ),
             "verify": (
-                'Popraw atrybuty formularza (method="post", HTTPS) lub dodaj integrity/crossorigin '
-                "do skryptu zewnętrznego i ponownie uruchom kontrolę."
+                (
+                    "W przypadku skryptów statycznych (biblioteki JS) dodaj atrybuty "
+                    '`integrity="sha384-..." crossorigin="anonymous"`. '
+                    "Dla dynamicznych skryptów analitycznych lub tag managerów, które "
+                    "uniemożliwiają stałe SRI, rozważ hosting lokalny na własnym "
+                    "serwerze, restrykcyjną dyrektywę `script-src` w nagłówku "
+                    "Content-Security-Policy (CSP) lub formalną weryfikację dostawcy."
+                )
                 if pl
-                else "Update form attributes (POST over HTTPS) or add Subresource Integrity (SRI) "
-                "attributes, then re-run the check."
+                else (
+                    'For static third-party libraries, add `integrity="sha384-..." '
+                    'crossorigin="anonymous"`. For dynamic scripts or analytics tags '
+                    "where static SRI is impractical, consider self-hosting, enforcing "
+                    "strict `script-src` in Content-Security-Policy (CSP), or auditing "
+                    "vendor trust."
+                )
             ),
             "limits": (
-                "Pasywne parsowanie zapisanego HTML bez uruchamiania przeglądarki i JavaScriptu."
+                (
+                    "Pasywna analiza statyczna HTML; nie ocenia skryptów dołączanych "
+                    "dynamicznie przez kod JS w czasie wykonywania ani reputacji CDN."
+                )
                 if pl
-                else "Passive parsing of saved HTML without browser rendering or "
-                "JavaScript execution."
+                else (
+                    "Passive static HTML analysis; does not inspect dynamic runtime script "
+                    "injection or assess CDN domain reputation."
+                )
+            ),
+        }
+    if check == "html_password_form_get":
+        return {
+            "category": "html_credential_transport",
+            "title": (
+                "Formularz hasła przesyłany metodą GET"
+                if pl
+                else "Password form submitted via GET method"
+            ),
+            "mechanism": (
+                (
+                    "Formularz zawiera pole hasła, lecz deklaruje metodę GET. "
+                    "Powoduje to przekazywanie poświadczeń w parametrach adresu URL."
+                )
+                if pl
+                else (
+                    "The form contains a password input but declares method GET, "
+                    "appending credentials to the URL query string."
+                )
+            ),
+            "consequences": (
+                (
+                    "Poświadczenia mogą wyciekać do historii przeglądarki, "
+                    "logów serwera proxy i nagłówków Referer."
+                )
+                if pl
+                else (
+                    "Credentials may leak into browser history, web server access "
+                    "logs, proxy caches, and Referer headers."
+                )
+            ),
+            "verify": (
+                (
+                    'Zmień metodę formularza na `method="post"` i upewnij się, '
+                    "że przesyłanie odbywa się przez HTTPS."
+                )
+                if pl
+                else 'Update the form declaration to `method="post"` over secure HTTPS.'
+            ),
+            "limits": (
+                "Statyczna analiza deklaracji formularza w dokumencie HTML."
+                if pl
+                else "Static HTML form declaration inspection without submitting data."
+            ),
+        }
+    if check == "html_password_form_http":
+        return {
+            "category": "html_credential_transport",
+            "title": (
+                "Formularz hasła przesyłany przez nieszyfrowany protokół HTTP"
+                if pl
+                else "Password form submitted over unencrypted HTTP"
+            ),
+            "mechanism": (
+                "Formularz hasła przesyła dane na adres HTTP pozbawiony szyfrowania TLS."
+                if pl
+                else (
+                    "The password form submits credentials to an unencrypted cleartext "
+                    "HTTP destination."
+                )
+            ),
+            "consequences": (
+                (
+                    "Poświadczenia logowania są przesyłane otwartym tekstem i mogą "
+                    "zostać przechwycone przez podsłuch w sieci."
+                )
+                if pl
+                else (
+                    "Credentials travel in plaintext across the network, vulnerable "
+                    "to eavesdropping and on-path interception."
+                )
+            ),
+            "verify": (
+                (
+                    "Skonfiguruj przesyłanie formularza wyłącznie na zweryfikowany "
+                    "adres HTTPS docelowego serwera."
+                )
+                if pl
+                else "Configure form action exclusively to authenticated HTTPS endpoints."
+            ),
+            "limits": (
+                "Pasywne parsowanie znacznika form w pliku HTML."
+                if pl
+                else "Passive parsing of form action attributes in static HTML."
+            ),
+        }
+    if check == "html_password_form_cross_origin":
+        return {
+            "category": "html_credential_transport",
+            "title": (
+                "Formularz hasła przesyłany do innego pochodzenia (Cross-Origin)"
+                if pl
+                else "Password form submitted to a different origin (Cross-Origin)"
+            ),
+            "mechanism": (
+                (
+                    "Formularz hasła przesyła poświadczenia do innej domeny "
+                    "lub portu niż bieżący dokument."
+                )
+                if pl
+                else (
+                    "The password form submits credentials to a different origin "
+                    "than the hosting document."
+                )
+            ),
+            "consequences": (
+                (
+                    "Ryzyko przekazania poświadczeń zewnętrznemu podmiotowi "
+                    "w przypadku nieautoryzowanych modyfikacji."
+                )
+                if pl
+                else (
+                    "Risk of sending credentials to external entities if page markup is modified."
+                )
+            ),
+            "verify": (
+                (
+                    "Zweryfikuj odbiorcę formularza i upewnij się, "
+                    "że przesyłanie cross-origin jest zamierzone i bezpieczne."
+                )
+                if pl
+                else (
+                    "Verify the credential recipient origin and ensure cross-origin "
+                    "submission is intended and secured."
+                )
+            ),
+            "limits": (
+                ("Porównanie schematu, hosta i portu adresu docelowego z adresem dokumentu.")
+                if pl
+                else ("Comparison of destination scheme, host, and port against document origin.")
+            ),
+        }
+    if check == "html_mixed_active_content":
+        return {
+            "category": "html_mixed_content",
+            "title": (
+                "Mieszana zawartość aktywna (zasób HTTP na stronie HTTPS)"
+                if pl
+                else "Mixed active content (HTTP resource inside HTTPS document)"
+            ),
+            "mechanism": (
+                (
+                    "Bezpieczny dokument HTTPS odwołuje się do aktywnego zasobu "
+                    "(skrypt, ramka) przez nieszyfrowany protokół HTTP."
+                )
+                if pl
+                else (
+                    "A secure HTTPS document references active resources "
+                    "(scripts, iframes) via unencrypted HTTP."
+                )
+            ),
+            "consequences": (
+                (
+                    "Zasób zostanie zablokowany przez przeglądarkę, co może zaburzyć "
+                    "działanie strony; brak blokady grozi wstrzyknięciem kodu."
+                )
+                if pl
+                else (
+                    "Modern browsers block active mixed content, breaking features; "
+                    "unblocked resources allow on-path injection."
+                )
+            ),
+            "verify": (
+                "Zmień adres zasobu na HTTPS lub hostuj go lokalnie."
+                if pl
+                else "Update resource URL to HTTPS or host it locally."
+            ),
+            "limits": (
+                ("Pasywna statyczna analiza znaczników HTML bez wykonywania zapytań sieciowych.")
+                if pl
+                else "Passive static HTML markup inspection without issuing network requests."
+            ),
+        }
+    if check.startswith(("html_", "message_html_")):
+        return {
+            "category": "html_general_resource",
+            "title": (
+                f"Obserwacja elementu HTML ({check})"
+                if pl
+                else f"HTML element observation ({check})"
+            ),
+            "mechanism": (
+                (f"Analizator wykrył wzorzec strukturalny w dokumencie HTML dla reguły `{check}`.")
+                if pl
+                else f"The analyzer identified an HTML structural pattern for check `{check}`."
+            ),
+            "consequences": (
+                (
+                    "Wymaga przeglądu kontekstowego pod kątem bezpieczeństwa "
+                    "transportu i integralności."
+                )
+                if pl
+                else (
+                    "Requires contextual review regarding transport security "
+                    "and resource integrity."
+                )
+            ),
+            "verify": (
+                (
+                    "Przejrzyj zidentyfikowany element HTML i upewnij się, "
+                    "że zasoby są zabezpieczone."
+                )
+                if pl
+                else "Inspect the identified HTML element and verify resource security."
+            ),
+            "limits": (
+                ("Pasywne parsowanie zapisanego HTML bez uruchamiania przeglądarki i JavaScriptu.")
+                if pl
+                else (
+                    "Passive parsing of saved HTML without browser rendering "
+                    "or JavaScript execution."
+                )
             ),
         }
     if (
@@ -1142,12 +1388,14 @@ def _fallback_metadata(check: str, evidence: str, recommendation: str, language:
                 "application logic."
             ),
         }
-    if check.startswith((
-        "message_",
-        "reported_authentication",
-        "authentication_header",
-        "different_reply_to",
-    )):
+    if check.startswith(
+        (
+            "message_",
+            "reported_authentication",
+            "authentication_header",
+            "different_reply_to",
+        )
+    ):
         return {
             "category": "email_content_attachment",
             "title": (
@@ -1349,7 +1597,12 @@ def describe_finding(
         priority = PRIORITIES.get(rule_code, "P3")
         file_path, line_number, line_range = _extract_location(resolved_target, evidence)
     elif isinstance(finding, dict):
-        rule_code = str(finding.get("check") or finding.get("rule_id") or "unspecified")
+        rule_code = str(
+            finding.get("check")
+            or finding.get("rule_id")
+            or finding.get("rule_code")
+            or "unspecified"
+        )
         status = str(finding.get("status", "candidate"))
         resolved_target = str(finding.get("target") or target or "(unspecified target)")
         evidence = str(finding.get("evidence", ""))

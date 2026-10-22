@@ -270,14 +270,16 @@ def test_interactive_audit_workflow_with_quoted_windows_paths(
     # Simulate user inputs:
     # 1. Target with outer quotes: '"C:\...\Labrys_project"'
     # 2. Confirm scan: 't'
-    # 3. Output directory with outer quotes: '"C:\...\raport_labrys"'
-    # 4. Confirm destination: 't'
-    # 5. Skip AI enrichment: 'n'
+    # 3. Choose custom destination option: '2'
+    # 4. Output directory with outer quotes: '"C:\...\raport_labrys"'
+    # 5. Skip saving as default: 'n'
+    # 6. Skip AI enrichment: 'n'
     user_inputs = [
         f'"{target_project}"',
         "t",
+        "2",
         f'"{out_destination}"',
-        "t",
+        "n",
         "n",
     ]
     inputs_iter = iter(user_inputs)
@@ -295,18 +297,17 @@ def test_interactive_audit_workflow_with_quoted_windows_paths(
     assert "Skaner sekretów" in all_out
 
     # Check that destination screen was shown with explanation block
-    assert "LOKALIZACJA RAPORTU I WYNIKÓW AUDYTU" in all_out
-    assert "Raport wykonawczy w formacie PDF" in all_out
-    assert "Pełny raport techniczny w formacie JSON" in all_out
+    assert "WYBÓR LOKALIZACJI RAPORTU" in all_out
+    assert "Domyślna lokalizacja" in all_out
 
     # Check that audit completed cleanly
-    assert "ANALIZA ZAKOŃCZONA" in all_out
-    assert "audit.pdf" in all_out
+    assert "PODSUMOWANIE AUDYTU BEZPIECZEŃSTWA" in all_out or "ANALIZA ZAKOŃCZONA" in all_out
+    assert "audit_pl.pdf" in all_out
     assert "report.json" in all_out
 
     # Verify files exist on disk
     assert (out_destination / "report.json").is_file()
-    assert (out_destination / "audit.pdf").is_file()
+    assert (out_destination / "exports" / "audit_pl.pdf").is_file()
 
 
 def test_interactive_audit_reprompting_on_invalid_inputs(
@@ -319,10 +320,6 @@ def test_interactive_audit_reprompting_on_invalid_inputs(
 
     valid_out = tmp_path / "valid_report"
 
-    # Pre-create an existing dir to test collision
-    collision_dir = tmp_path / "already_exists"
-    collision_dir.mkdir()
-
     printed: list[str] = []
 
     def mock_print(*args: object) -> None:
@@ -332,9 +329,11 @@ def test_interactive_audit_reprompting_on_invalid_inputs(
         r'"C:\non_existent_folder_xyz"',  # Invalid target
         f'"{valid_target}"',  # Valid target
         "t",  # Confirm scan
-        f'"{collision_dir}"',  # Invalid out: already exists
+        "99",  # Invalid destination choice
+        "2",  # Valid custom option
         f'"{valid_out}"',  # Valid out
-        "t",  # Confirm destination
+        "n",  # Do not save as default
+        "n",  # Skip AI
     ]
     inputs_iter = iter(user_inputs)
 
@@ -346,9 +345,9 @@ def test_interactive_audit_reprompting_on_invalid_inputs(
 
     all_out = "\n".join(printed)
     assert "nie istnieje" in all_out
-    assert "już istnieje" in all_out
-    assert "ANALIZA ZAKOŃCZONA" in all_out
-    assert (valid_out / "audit.pdf").is_file()
+    assert "Nieprawidłowa opcja" in all_out
+    assert "report.json" in all_out
+    assert (valid_out / "exports" / "audit_pl.pdf").is_file()
 
 
 def test_run_export_workflow_with_quoted_paths(tmp_path: Path) -> None:

@@ -22,15 +22,22 @@ NOTICE = (
 
 def canonical_url(value):
     if (
-        not isinstance(value, str) or not value or len(value) > 4096
-        or not value.isascii() or re.search(r"[\x00-\x20\x7f\\%]", value)
+        not isinstance(value, str)
+        or not value
+        or len(value) > 4096
+        or not value.isascii()
+        or re.search(r"[\x00-\x20\x7f\\%]", value)
     ):
         raise ValidationError("Use an ASCII HTTPS URL without encoded or ambiguous characters")
     try:
         url = urlsplit(value)
         if (
-            url.scheme != "https" or not url.hostname or url.username or url.password
-            or url.port not in (None, 443) or url.query
+            url.scheme != "https"
+            or not url.hostname
+            or url.username
+            or url.password
+            or url.port not in (None, 443)
+            or url.query
             or any(part in (".", "..") for part in url.path.split("/"))
             or "//" in url.path
             or not re.fullmatch(r"[A-Za-z0-9.-]+", url.hostname)
@@ -153,19 +160,36 @@ class SiteReview:
                     for candidate in candidates[:room]:
                         seen.add(candidate)
                         queue.append((candidate, depth + 1))
-                documents.append(asdict(AssessmentResult(
-                    label, "website", "partial", assessment.findings,
-                    (*assessment.not_checked, *limits, self.notice),
-                )))
+                documents.append(
+                    asdict(
+                        AssessmentResult(
+                            label,
+                            "website",
+                            "partial",
+                            assessment.findings,
+                            (*assessment.not_checked, *limits, self.notice),
+                        )
+                    )
+                )
             except (ProviderError, ValidationError):
                 failures += 1
                 code = getattr(self.client, "failure_code", None)
                 reason = self.session_failures.get(code) if isinstance(code, str) else None
-                documents.append(asdict(AssessmentResult(
-                    label, "website", "not_configured", (),
-                    ("Page collection failed; no security conclusion for this page.",
-                     *((reason,) if reason else ()), self.notice),
-                )))
+                documents.append(
+                    asdict(
+                        AssessmentResult(
+                            label,
+                            "website",
+                            "not_configured",
+                            (),
+                            (
+                                "Page collection failed; no security conclusion for this page.",
+                                *((reason,) if reason else ()),
+                                self.notice,
+                            ),
+                        )
+                    )
+                )
         # Normalize tuples through the existing contract's JSON representation.
         import json
 

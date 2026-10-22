@@ -14,7 +14,7 @@ from ai_threat_lab.providers import ProviderConfig, ProviderError, ProviderRegis
 from ai_threat_lab.speech_training import SpeechConfig, audio_metadata, generate, preview
 from ai_threat_lab.workflows import approve_campaign, example_request, prepare_campaign
 
-EXPIRES = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+EXPIRES = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
 
 
 def approved(facts=()):

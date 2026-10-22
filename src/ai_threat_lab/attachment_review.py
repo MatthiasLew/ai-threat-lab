@@ -98,8 +98,13 @@ def review_message_attachments(message, *, start=1, max_entries=20):
     if not parts:
         if start != 1:
             raise ValidationError("Attachment start is beyond the saved message")
-        result = AssessmentResult("Saved message attachments", "mail_attachments", "partial",
-                                  (), (NOTICE, *gaps, "No eligible attachment parts selected."))
+        result = AssessmentResult(
+            "Saved message attachments",
+            "mail_attachments",
+            "partial",
+            (),
+            (NOTICE, *gaps, "No eligible attachment parts selected."),
+        )
         return [result], 0
     if start > len(parts):
         raise ValidationError("Attachment start is beyond the saved message")
@@ -108,21 +113,30 @@ def review_message_attachments(message, *, start=1, max_entries=20):
     for index in range(start, stop + 1):
         part_index, part = parts[index - 1]
         target = f"Attachment {index:04d} (MIME part {part_index:04d})"
-        limits = (NOTICE, *gaps,
-                  f"Selected attachments {start}..{stop} of {len(parts)} discovered; "
-                  "other attachments unchecked.")
+        limits = (
+            NOTICE,
+            *gaps,
+            f"Selected attachments {start}..{stop} of {len(parts)} discovered; "
+            "other attachments unchecked.",
+        )
         try:
             raw = decoded_attachment(part)
             if total + len(raw) > MAX_TOTAL:
                 raise ValidationError("Total decoded attachment review exceeds 4 MiB.")
             total += len(raw)
             inspected = inspect_binary(raw, target)
-            result = AssessmentResult(target, "mail_attachment", "partial",
-                                      inspected.findings, (*limits, *inspected.not_checked))
+            result = AssessmentResult(
+                target,
+                "mail_attachment",
+                "partial",
+                inspected.findings,
+                (*limits, *inspected.not_checked),
+            )
         except ValidationError as error:
             failures += 1
-            result = AssessmentResult(target, "mail_attachment", "not_configured", (),
-                                      (*limits, str(error)))
+            result = AssessmentResult(
+                target, "mail_attachment", "not_configured", (), (*limits, str(error))
+            )
         results.append(result)
     return results, failures
 
@@ -131,10 +145,15 @@ def inspect_message_attachments(message):
     results, failures = review_message_attachments(message)
     findings, missing = [], []
     for result in results:
-        findings.extend(AssessmentFinding(
-            finding.check, finding.status, f"{result.target}: {finding.evidence}",
-            finding.recommendation,
-        ) for finding in result.findings)
+        findings.extend(
+            AssessmentFinding(
+                finding.check,
+                finding.status,
+                f"{result.target}: {finding.evidence}",
+                finding.recommendation,
+            )
+            for finding in result.findings
+        )
         missing.extend(result.not_checked)
     if failures:
         missing.append(f"Attachment sub-review failures: {failures}; other evidence retained.")

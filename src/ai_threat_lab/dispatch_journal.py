@@ -60,16 +60,19 @@ class DispatchJournal:
         try:
             db.execute("PRAGMA trusted_schema=OFF")
             if not initializing:
-                if (db.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID
-                        or db.execute("PRAGMA user_version").fetchone()[0] != 1):
+                if (
+                    db.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID
+                    or db.execute("PRAGMA user_version").fetchone()[0] != 1
+                ):
                     raise ValidationError("Not a supported dispatch journal")
                 expected = {
                     "attempts": ["key", "plan", "recipient", "configuration", "status", "updated"],
                     "cancelled": ["plan"],
                 }
-                tables = {row[0] for row in db.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                )}
+                tables = {
+                    row[0]
+                    for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                }
                 if tables != set(expected):
                     raise ValidationError("Unexpected dispatch journal schema")
                 for table, columns in expected.items():
@@ -101,9 +104,10 @@ class DispatchJournal:
                 raise ValidationError("Delivery was already attempted; inspect the journal")
             if db.execute("SELECT count(*) FROM attempts").fetchone()[0] >= 10000:
                 raise ValidationError("Dispatch journal attempt limit reached")
-            db.execute("INSERT INTO attempts VALUES (?, ?, ?, ?, 'pending', ?)",
-                       (key, plan, recipient_hash, configuration,
-                        datetime.now(timezone.utc).isoformat()))
+            db.execute(
+                "INSERT INTO attempts VALUES (?, ?, ?, ?, 'pending', ?)",
+                (key, plan, recipient_hash, configuration, datetime.now(timezone.utc).isoformat()),
+            )
         return key
 
     def outcome(self, key, status):
@@ -133,7 +137,8 @@ class DispatchJournal:
             cancelled = bool(db.execute("SELECT 1 FROM cancelled WHERE plan=?", (plan,)).fetchone())
             rows = db.execute(
                 "SELECT key,recipient,configuration,status,updated FROM attempts "
-                "WHERE plan=? ORDER BY key LIMIT 10001", (plan,)
+                "WHERE plan=? ORDER BY key LIMIT 10001",
+                (plan,),
             ).fetchall()
         if len(rows) > 10000:
             raise ValidationError("Dispatch result limit exceeded")
@@ -146,11 +151,21 @@ class DispatchJournal:
                 raise ValidationError("Dispatch journal contains an invalid outcome")
             timestamp(row[4], "dispatch update time")
         return {
-            "schema_version": 1, "plan_digest": plan, "cancelled": cancelled,
-            "attempts": [dict(zip(("key", "recipient_sha256", "configuration_sha256",
-                                   "status", "updated_at"), row, strict=True)) for row in rows],
+            "schema_version": 1,
+            "plan_digest": plan,
+            "cancelled": cancelled,
+            "attempts": [
+                dict(
+                    zip(
+                        ("key", "recipient_sha256", "configuration_sha256", "status", "updated_at"),
+                        row,
+                        strict=True,
+                    )
+                )
+                for row in rows
+            ],
             "notice": "Accepted means server acceptance, not delivery or participant action. "
-                      "Pending/unknown attempts must not be retried automatically. "
-                      "Cancellation blocks later claims; it cannot recall an in-flight message. "
-                      "Hashes minimize stored data but do not anonymize known addresses.",
+            "Pending/unknown attempts must not be retried automatically. "
+            "Cancellation blocks later claims; it cannot recall an in-flight message. "
+            "Hashes minimize stored data but do not anonymize known addresses.",
         }

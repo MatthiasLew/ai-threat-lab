@@ -28,14 +28,21 @@ from .gui_api import (
 )
 from .i18n import (
     get_active_language,
+    get_default_reports_dir,
     get_user_config_file,
     load_language_preference,
     save_language_preference,
+    save_reports_directory_preference,
     set_active_language,
     t,
     validate_language,
 )
-from .path_utils import clean_user_path, suggest_output_dir
+from .path_utils import (
+    clean_user_path,
+    get_safe_target_display_name,
+    get_unique_audit_directory,
+    suggest_output_dir,  # noqa: F401
+)
 from .pdf_report import generate_pdf_report
 from .scan_engine import ScanOptions
 
@@ -206,46 +213,65 @@ def validate_target_path(
 
 def validate_output_directory(
     raw: str | None,
-    target_path: Path,
+    target_path: Path | None = None,
     language: str = "en",
+    *,
+    target_kind: str = "local_project",
+    allow_existing: bool = False,
 ) -> tuple[bool, Path | None, str | None]:
-    """Validate user output directory. Returns (is_valid, resolved_path, error_message)."""
+    """Validate user output directory or base directory.
+    Returns (is_valid, resolved_path, error_message).
+    """
     cleaned = clean_user_path(raw)
     if not cleaned:
         return False, None, t("error_output_empty", language)
 
     try:
         out_path = Path(cleaned)
-        # Attempt path resolution to detect malformed path syntax (e.g. WinError 123)
         resolved_out = out_path.resolve()
     except OSError as exc:
         return False, None, t("error_path_syntax", language, error=str(exc))
     except Exception as exc:
         return False, None, t("error_path_syntax", language, error=str(exc))
 
-    try:
-        resolved_target = target_path.resolve()
-        if resolved_out == resolved_target:
-            return False, None, t("error_output_same_as_target", language)
-        if resolved_target.is_dir():
-            try:
-                resolved_out.relative_to(resolved_target)
-                return False, None, t("error_output_inside_target", language)
-            except ValueError:
-                pass
-    except Exception:
-        pass
+    # Reject symlinks and junctions for security
+    if out_path.is_symlink() or getattr(out_path, "is_junction", lambda: False)():
+        return (
+            False,
+            None,
+            (
+                "Błąd: Ścieżka docelowa nie może być dowiązaniem symbolicznym ani junction."
+                if language == "pl"
+                else "Error: Destination path cannot be a symbolic link or directory junction."
+            ),
+        )
 
-    try:
-        if out_path.exists() or resolved_out.exists():
-            return False, None, t("error_output_exists", language, path=cleaned)
-    except OSError as exc:
-        return False, None, t("error_path_access", language, error=str(exc))
+    # CRITICAL: Only perform "inside target" check for local project audits!
+    # For website, github, mail, target is NOT a local filesystem path.
+    if target_kind == "local_project" and target_path is not None:
+        try:
+            resolved_target = target_path.resolve()
+            if resolved_out == resolved_target:
+                return False, None, t("error_output_same_as_target", language)
+            if resolved_target.is_dir():
+                try:
+                    if resolved_out.is_relative_to(resolved_target):
+                        return False, None, t("error_output_inside_target", language)
+                except (ValueError, AttributeError):
+                    pass
+        except Exception:
+            pass
+
+    if not allow_existing:
+        try:
+            if out_path.exists() or resolved_out.exists():
+                return False, None, t("error_output_exists", language, path=cleaned)
+        except OSError as exc:
+            return False, None, t("error_path_access", language, error=str(exc))
 
     # Check parent writability
     try:
-        parent = resolved_out.parent
-        check_dir = parent
+        check_dir = resolved_out if resolved_out.is_dir() else resolved_out.parent
         while not check_dir.exists() and check_dir.parent != check_dir:
             check_dir = check_dir.parent
         if check_dir.exists() and not os.access(check_dir, os.W_OK):
@@ -253,7 +279,7 @@ def validate_output_directory(
     except Exception:
         pass
 
-    return True, out_path, None
+    return True, resolved_out, None
 
 
 def display_target_menu(language: str, print_fn: Callable[..., None] = print) -> None:
@@ -424,7 +450,6 @@ def run_new_audit_workflow(
     display_target_menu(language, print_fn=print_fn)
 
     options: ScanOptions | None = None
-    safe_name: str = "audit_target"
 
     while True:
         try:
@@ -458,7 +483,7 @@ def run_new_audit_workflow(
                     continue
                 max_f = select_scan_profile(language, input_fn=input_fn, print_fn=print_fn)
                 options = ScanOptions(target=str(p_obj), max_files=max_f, network=False)
-                safe_name = p_obj.name or "local_project"
+
                 break
 
             elif cleaned_choice == "2":
@@ -477,7 +502,7 @@ def run_new_audit_workflow(
                     )
                     continue
                 options = ScanOptions(target=str(p_obj), max_files=10, network=False)
-                safe_name = p_obj.stem or "single_file"
+
                 break
 
             elif cleaned_choice == "3":
@@ -503,7 +528,7 @@ def run_new_audit_workflow(
                 options = ScanOptions(
                     target=c_repo, network=True, allowed_hosts=(host,), max_files=max_f
                 )
-                safe_name = c_repo.rstrip("/").split("/")[-1] or "github_repo"
+
                 break
 
             elif cleaned_choice == "4":
@@ -534,7 +559,7 @@ def run_new_audit_workflow(
                 options = ScanOptions(
                     target=c_url, network=True, allowed_hosts=(host,), max_files=50
                 )
-                safe_name = host.replace(".", "_")
+
                 break
 
             elif cleaned_choice == "5":
@@ -562,7 +587,7 @@ def run_new_audit_workflow(
                     dkim_selector=dkim_sel,
                     max_files=50,
                 )
-                safe_name = f"mail_{c_dom.replace('.', '_')}"
+
                 break
 
             elif cleaned_choice == "6":
@@ -576,7 +601,7 @@ def run_new_audit_workflow(
                     )
                     continue
                 options = ScanOptions(target=str(p_obj), network=False)
-                safe_name = p_obj.stem or "mail_message"
+
                 break
 
             elif cleaned_choice == "7":
@@ -609,7 +634,7 @@ def run_new_audit_workflow(
                 options = ScanOptions(
                     target=f"mailbox:{c_gmail}", network=True, allowed_hosts=(host,)
                 )
-                safe_name = f"gmail_{c_gmail.split('@')[0]}"
+
                 break
 
             elif cleaned_choice == "8":
@@ -626,7 +651,7 @@ def run_new_audit_workflow(
                     )
                     continue
                 options = ScanOptions(target=str(p_obj), network=False)
-                safe_name = p_obj.stem or "security_log"
+
                 break
 
             elif cleaned_choice == "9":
@@ -636,10 +661,10 @@ def run_new_audit_workflow(
                 valid, p_obj, err_msg = validate_target_path(c_target, language=language)
                 if valid and p_obj is not None:
                     options = ScanOptions(target=str(p_obj), network=False)
-                    safe_name = p_obj.name or "audit_target"
+
                 else:
                     options = ScanOptions(target=c_target, network=False)
-                    safe_name = "custom_audit"
+
                 break
 
             else:
@@ -651,7 +676,7 @@ def run_new_audit_workflow(
                 options = ScanOptions(
                     target=str(path_obj), max_files=1000 if path_obj.is_dir() else 10, network=False
                 )
-                safe_name = path_obj.name or "audit_target"
+
                 break
 
         except (EOFError, KeyboardInterrupt):
@@ -711,52 +736,140 @@ def run_new_audit_workflow(
         print_fn(t("audit_cancelled", language))
         return
 
-    # Step 4: Output Directory Selection
-    suggested_dir = suggest_output_dir(safe_name)
+    # Step 4: Output Directory Selection (Stage 5.4 Redesign)
+    default_base = get_default_reports_dir()
+    display_target_name = get_safe_target_display_name(options.target)
 
     print_fn()
     print_fn("==================================================")
     print_fn(f"  {t('destination_screen_title', language)}")
     print_fn("==================================================")
+    print_fn()
     print_fn(t("destination_screen_desc", language))
+    print_fn()
+    print_fn(f"1. {t('destination_opt_default', language)}")
+    print_fn(f"2. {t('destination_opt_custom', language)}")
+    print_fn(f"0. {t('destination_opt_back', language)}")
+    print_fn()
+    print_fn(t("destination_default_label", language, path=str(default_base)))
     print_fn()
 
     out_dir: Path | None = None
     while True:
         try:
-            raw_out = prompt_user(
-                t("destination_screen_prompt", language, default=suggested_dir),
-                default=suggested_dir,
-                input_fn=input_fn,
+            choice_dest = (
+                prompt_user(
+                    "Wybierz opcję [1]: " if pl else "Select option [1]: ",
+                    default="1",
+                    input_fn=input_fn,
+                )
+                .strip()
+                .lower()
             )
-            cleaned_out = clean_user_path(raw_out)
-            if not cleaned_out or cleaned_out.lower() in ("q", "quit", "cancel", "anuluj"):
+
+            if choice_dest in ("0", "w", "wróć", "wroc", "back", "q", "quit", "cancel", "anuluj"):
                 print_fn(t("audit_cancelled", language))
                 return
 
-            valid_out, out_obj, err_out = validate_output_directory(
-                cleaned_out, t_path, language=language
-            )
-            if not valid_out or out_obj is None:
+            if choice_dest == "1":
+                try:
+                    default_base.mkdir(parents=True, exist_ok=True)
+                except OSError as exc:
+                    print_fn(
+                        f"Błąd tworzenia katalogu domyślnego: {exc}"
+                        if pl
+                        else f"Error creating default directory: {exc}"
+                    )
+                    continue
+                out_dir = get_unique_audit_directory(
+                    default_base, options.target, language=language
+                )
                 print_fn()
-                print_fn(err_out)
-                print_fn()
-                suggested_dir = suggest_output_dir(safe_name)
-                continue
+                print_fn(t("destination_chosen_label", language, path=str(out_dir)))
+                break
 
-            confirm_dest = prompt_user(
-                t("destination_confirm", language), default="t" if pl else "y", input_fn=input_fn
-            ).lower()
-            if confirm_dest not in ("t", "tak", "y", "yes"):
+            elif choice_dest == "2":
+                raw_custom = prompt_user(
+                    t("destination_custom_prompt", language),
+                    input_fn=input_fn,
+                )
+                cleaned_custom = clean_user_path(raw_custom)
+                if not cleaned_custom or cleaned_custom.lower() in (
+                    "0",
+                    "q",
+                    "quit",
+                    "cancel",
+                    "anuluj",
+                    "w",
+                    "wróć",
+                ):
+                    print_fn(t("audit_cancelled", language))
+                    return
+
+                valid_custom, resolved_p, err_c = validate_output_directory(
+                    cleaned_custom,
+                    t_path if raw_kind == "local_project" else None,
+                    language=language,
+                    target_kind=raw_kind,
+                    allow_existing=True,
+                )
+                if not valid_custom or resolved_p is None:
+                    print_fn()
+                    print_fn(err_c)
+                    print_fn()
+                    continue
+
+                if resolved_p.exists() and resolved_p.is_dir():
+                    out_dir = get_unique_audit_directory(
+                        resolved_p, options.target, language=language
+                    )
+                else:
+                    parent_p = resolved_p.parent
+                    if not parent_p.exists():
+                        confirm_create = (
+                            prompt_user(
+                                t(
+                                    "destination_confirm_create_parent",
+                                    language,
+                                    parent=str(parent_p),
+                                ),
+                                default="t" if pl else "y",
+                                input_fn=input_fn,
+                            )
+                            .strip()
+                            .lower()
+                        )
+                        if confirm_create not in ("t", "tak", "y", "yes"):
+                            print_fn("Podaj inną ścieżkę:" if pl else "Enter a different path:")
+                            continue
+                    out_dir = resolved_p
+
+                ask_save = (
+                    prompt_user(
+                        t("destination_save_preferred_prompt", language),
+                        default="n",
+                        input_fn=input_fn,
+                    )
+                    .strip()
+                    .lower()
+                )
+                if ask_save in ("t", "tak", "y", "yes"):
+                    pref_target = resolved_p if resolved_p.is_dir() else resolved_p.parent
+                    save_reports_directory_preference(pref_target)
+                    print_fn(t("destination_saved_preferred", language, path=str(pref_target)))
+
+                print_fn()
+                print_fn(t("destination_chosen_label", language, path=str(out_dir)))
+                break
+
+            else:
                 print_fn(
-                    "Podaj inną ścieżkę do katalogu wynikowego:"
+                    "Nieprawidłowa opcja. Wybierz 1, 2 lub 0."
                     if pl
-                    else "Enter a different output directory path:"
+                    else "Invalid option. Choose 1, 2, or 0."
                 )
                 continue
 
-            out_dir = out_obj
-            break
         except (EOFError, KeyboardInterrupt):
             print_fn()
             print_fn(t("audit_cancelled", language))
@@ -772,44 +885,106 @@ def run_new_audit_workflow(
         findings = rep.get("findings", [])
         not_checked = rep.get("not_checked", [])
 
-        # Generate default PDF reports into exports/ and out_dir/
+        # Generate canonical PDF report strictly into exports/ (no duplicate audit.pdf in out_dir)
         exports_dir = out_dir / "exports"
         exports_dir.mkdir(parents=True, exist_ok=True)
         pdf_path = exports_dir / f"audit_{language}.pdf"
-        compat_pdf = out_dir / "audit.pdf"
 
         source_root = None
         if t_path.exists():
             source_root = t_path.parent if t_path.is_file() else t_path
 
+        manifest_data = results.get("manifest")
+        scope_data = results.get("scope") or (manifest_data.get("scope") if manifest_data else None)
+
         pdf_bytes = generate_pdf_report(
             rep,
             language=language,
             source_root=source_root,
-            project_name=safe_name,
+            project_name=display_target_name,
+            manifest=manifest_data,
+            scope=scope_data,
         )
         pdf_path.write_bytes(pdf_bytes)
-        compat_pdf.write_bytes(pdf_bytes)
     except Exception as exc:
         print_fn()
         print_fn(t("error_audit_failed", language, error=str(exc)))
         return
 
-    # Step 6: Print clean human summary
+    # Step 6: Print clean human summary (Stage 5.4 Redesign)
     print_fn()
     print_fn("==================================================")
-    print_fn(f"  {t('audit_completed', language)}")
+    print_fn(f"  {t('summary_screen_title', language)}")
     print_fn("==================================================")
-    print_fn(t("metric_project", language, project=safe_name))
-    print_fn(t("metric_threats_found", language, count=len(findings)))
-    print_fn(t("metric_skipped_items", language, count=len(not_checked)))
     print_fn()
-    print_fn(f"{t('report_pdf_saved', language)}  {pdf_path} ({compat_pdf.name})")
-    print_fn(f"{t('report_tech_saved', language)} {out_dir / 'report.json'}")
+    print_fn(f"{t('summary_metric_target', language)} {options.target}")
+    print_fn(f"{t('summary_metric_type', language)} {kind_display}")
+    net_txt = (
+        ("Tak" if pl else "Yes")
+        if options.network
+        else ("Nie (pełna izolacja offline)" if pl else "No (full offline isolation)")
+    )
+    print_fn(f"{t('summary_metric_network', language)} {net_txt}")
+
+    if raw_kind == "website":
+        scope_text = (
+            "Analiza pasywna pojedynczej strony głównej"
+            if pl
+            else "Passive inspection of single main page"
+        )
+    elif raw_kind == "mail_domain":
+        scope_text = (
+            "Weryfikacja publicznych rekordów DNS (SPF, DMARC, DKIM)"
+            if pl
+            else "Public DNS records verification (SPF, DMARC, DKIM)"
+        )
+    elif raw_kind == "eml_message":
+        scope_text = (
+            "Lokalna analiza nagłówków i zawartości pliku wiadomości"
+            if pl
+            else "Local analysis of headers and message content"
+        )
+    else:
+        scope_text = (
+            f"Statyczna analiza kodu (maks. {options.max_files} plików)"
+            if pl
+            else f"Static code analysis (max {options.max_files} files)"
+        )
+    print_fn(f"{t('summary_metric_scope', language)} {scope_text}")
     print_fn()
 
+    p_priorities = [f.get("triage_priority", "P3") for f in findings if isinstance(f, dict)]
+    highest_p = (
+        "P1"
+        if "P1" in p_priorities
+        else (
+            "P2"
+            if "P2" in p_priorities
+            else (
+                "P3"
+                if "P3" in p_priorities
+                else ("P4" if p_priorities else ("Brak" if pl else "None"))
+            )
+        )
+    )
+
+    print_fn(f"{t('summary_metric_findings', language)} {len(findings)}")
+    print_fn(f"{t('summary_metric_max_priority', language)} {highest_p}")
+    print_fn(f"{t('summary_metric_limitations', language)} {len(not_checked)}")
+    print_fn()
+    print_fn("Pliki raportu:" if pl else "Report files:")
+    print_fn(f"  • {('Raport PDF:' if pl else 'PDF report:')} {pdf_path}")
+    print_fn()
+    print_fn(f"  • {('Raport JSON:' if pl else 'JSON report:')} {out_dir / 'report.json'}")
+
+    print_fn()
+
+    if rep.get("status") == "partial" or len(not_checked) > 0:
+        p_reason = "analiza objęła ograniczony zakres" if pl else "analysis covered a bounded scope"
+        print_fn(t("summary_partial_warning", language, reason=p_reason))
+        print_fn()
+
     if len(findings) == 0:
-        print_fn(t("no_findings_clean", language))
         return
 
     # Step 7: Optional AI enrichment prompt
@@ -899,10 +1074,9 @@ def run_new_audit_workflow(
                     ai_review=ai_res,
                     language=language,
                     source_root=source_root,
-                    project_name=safe_name,
+                    project_name=display_target_name,
                 )
                 pdf_path.write_bytes(enriched_pdf_bytes)
-                compat_pdf.write_bytes(enriched_pdf_bytes)
 
                 print_fn()
                 print_fn(
@@ -910,7 +1084,7 @@ def run_new_audit_workflow(
                     if pl
                     else "PDF report successfully enriched with Gemini interpretation:"
                 )
-                print_fn(f"  {pdf_path}")
+                print_fn(f"  • {('Raport PDF:' if pl else 'PDF report:')} {pdf_path}")
         except Exception as exc:
             print_fn()
             print_fn(

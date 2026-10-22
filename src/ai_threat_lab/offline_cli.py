@@ -277,9 +277,12 @@ def offline_demo(output, *, now=None):
         raise ValidationError("Synthetic mail acceptance failed; demo is incomplete")
     mail_bundle = read_bundle(root / "mail-observations")
     expected_mail_checks = {
-        "message_attachment_active_type", "message_attachment_double_extension",
-        "message_link_cleartext", "message_link_display_mismatch",
-        "message_link_ip_address", "binary_metadata",
+        "message_attachment_active_type",
+        "message_attachment_double_extension",
+        "message_link_cleartext",
+        "message_link_display_mismatch",
+        "message_link_ip_address",
+        "binary_metadata",
     }
     actual_mail_checks = {
         finding["check"] for finding in mail_bundle["documents"]["report.json"]["findings"]

@@ -276,24 +276,24 @@ def render_inspection_summary(
         "AI Threat Lab — kompletny audyt celu (offline)"
         if pl
         else "AI Threat Lab — target inspection overview",
-        f'Target: {plan["target"]}',
-        f'Recognized target kind: {plan["target_kind"]}',
+        f"Target: {plan['target']}",
+        f"Recognized target kind: {plan['target_kind']}",
         "",
         "Available / prepared analyzers:",
     ]
     for tool in plan["tools"]:
-        lines.append(f'- {tool["id"]}: {tool["purpose"]} (Limit: {tool["limit"]})')
+        lines.append(f"- {tool['id']}: {tool['purpose']} (Limit: {tool['limit']})")
     lines.extend(["", "Executed and skipped checks:"])
     for module_id, info in result["modules"].items():
-        lines.append(f'- {module_id}: {info["status"]} — {info["notice"]}')
+        lines.append(f"- {module_id}: {info['status']} — {info['notice']}")
     lines.extend(
         [
             "",
             brief(evidence, language=language).rstrip("\n"),
             "",
             f"Saved run: {output_dir}",
-            f'Final JSON report: {Path(output_dir) / "report.json"}',
-            f'Final HTML report: {Path(output_dir) / "report.html"}',
+            f"Final JSON report: {Path(output_dir) / 'report.json'}",
+            f"Final HTML report: {Path(output_dir) / 'report.html'}",
         ]
     )
     text = "\n".join(lines) + "\n"
@@ -339,9 +339,7 @@ def run_command(args):
             raise ValidationError("Site navigation requires --network and exact --allow-host")
         if args.output and (args.output.exists() or args.output.is_symlink()):
             raise ValidationError("Output already exists")
-        client = PublicHTTPS(
-            [host], max_bytes=256 * 1024, max_requests=20, allow_partial_body=True
-        )
+        client = PublicHTTPS([host], max_bytes=256 * 1024, max_requests=20, allow_partial_body=True)
         session_file = getattr(args, "session_file", None)
         private_map = getattr(args, "private_path_map", None)
         if private_map is not None and (

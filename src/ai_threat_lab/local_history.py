@@ -2,6 +2,7 @@
 
 import html
 import os
+import uuid
 from pathlib import Path
 
 from .audit_report import render_html
@@ -74,6 +75,7 @@ def load_saved_run(path):
     comparison = documents.get("comparison.json")
     return {
         "kind": "scan",
+        "manifest": manifest,
         "report": documents["report.json"],
         "run_id": manifest["run_id"],
         "created_at": manifest["created_at"],
@@ -222,7 +224,22 @@ def export_report(path, *, format="json", output=None):
     return raw.decode("utf-8")
 
 
-def write_new_report(output, raw):
+def write_new_report(output, raw, *, overwrite: bool = False):
+    out_p = Path(output)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    if overwrite and out_p.exists():
+        temp_path = out_p.parent / f".tmp_{out_p.name}_{uuid.uuid4().hex}"
+        try:
+            temp_path.write_bytes(raw)
+            os.replace(temp_path, out_p)
+            return
+        except BaseException:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
+            raise
     descriptor = os.open(output, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     identity = os.fstat(descriptor)
     success = False

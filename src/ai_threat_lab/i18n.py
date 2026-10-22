@@ -106,8 +106,94 @@ STRINGS: dict[str, dict[str, str]] = {
         "en": "Enter path to file, project directory, or repository: ",
     },
     "destination_screen_title": {
-        "pl": "LOKALIZACJA RAPORTU I WYNIKÓW AUDYTU",
-        "en": "AUDIT RESULTS AND REPORT DESTINATION",
+        "pl": "WYBÓR LOKALIZACJI RAPORTU",
+        "en": "REPORT DESTINATION SELECTION",
+    },
+    "destination_opt_default": {
+        "pl": "Domyślna lokalizacja (Zalecane)",
+        "en": "Default location (Recommended)",
+    },
+    "destination_opt_custom": {
+        "pl": "Wybierz własną lokalizację",
+        "en": "Choose custom location",
+    },
+    "destination_opt_back": {
+        "pl": "Wróć do menu głównego",
+        "en": "Back to main menu",
+    },
+    "destination_default_label": {
+        "pl": "   Zapisz w: {path}\n   (program utworzy wewnątrz unikalny dedykowany podfolder)",
+        "en": "   Save in: {path}\n   (a dedicated unique subfolder will be created inside)",
+    },
+    "destination_chosen_label": {
+        "pl": "Wybrana ścieżka zapisu: {path}",
+        "en": "Selected destination path: {path}",
+    },
+    "destination_custom_prompt": {
+        "pl": "Wskaż folder zapisu raportu (np. Pulpit lub folder projektu): ",
+        "en": "Enter destination folder for report (e.g. Desktop or project folder): ",
+    },
+    "destination_confirm_create_parent": {
+        "pl": "Katalog nadrzędny '{parent}' nie istnieje. Czy go utworzyć? [T/n]: ",
+        "en": "Parent directory '{parent}' does not exist. Create it? [Y/n]: ",
+    },
+    "destination_save_preferred_prompt": {
+        "pl": "Czy zapamiętać ten folder jako domyślny na przyszłość? [t/N]: ",
+        "en": "Remember this folder as preferred default for future audits? [y/N]: ",
+    },
+    "destination_saved_preferred": {
+        "pl": "Zapisano preferencję domyślnego folderu: {path}",
+        "en": "Saved preferred default directory preference: {path}",
+    },
+    "summary_screen_title": {
+        "pl": "PODSUMOWANIE AUDYTU BEZPIECZEŃSTWA",
+        "en": "SECURITY AUDIT SUMMARY",
+    },
+    "summary_metric_target": {
+        "pl": "Cel:",
+        "en": "Target:",
+    },
+    "summary_metric_type": {
+        "pl": "Rodzaj celu:",
+        "en": "Target kind:",
+    },
+    "summary_metric_network": {
+        "pl": "Dostęp sieciowy:",
+        "en": "Network access:",
+    },
+    "summary_metric_scope": {
+        "pl": "Zakres badania:",
+        "en": "Audit scope:",
+    },
+    "summary_metric_findings": {
+        "pl": "Wykrycia:",
+        "en": "Findings:",
+    },
+    "summary_metric_max_priority": {
+        "pl": "Najwyższy priorytet:",
+        "en": "Highest priority:",
+    },
+    "summary_metric_limitations": {
+        "pl": "Ograniczenia:",
+        "en": "Limitations:",
+    },
+    "summary_metric_pdf_report": {
+        "pl": "• Raport PDF: exports/audit_{lang}.pdf (gotowy do otwarcia)",
+        "en": "• PDF report: exports/audit_{lang}.pdf (ready to open)",
+    },
+    "summary_metric_json_report": {
+        "pl": "• Raport JSON: report.json (dane techniczne)",
+        "en": "• JSON report: report.json (technical data)",
+    },
+    "summary_partial_warning": {
+        "pl": (
+            "Uwaga: Audyt został oznaczony jako częściowy (przyczyna: {reason}). "
+            "Szczegóły w sekcji ograniczeń raportu."
+        ),
+        "en": (
+            "Notice: Audit status is partial (reason: {reason}). "
+            "Check report limitations section for details."
+        ),
     },
     "destination_screen_desc": {
         "pl": (
@@ -746,3 +832,54 @@ def t(key: str, lang: str | None = None, **kwargs: Any) -> str:
 def get_all_translation_keys() -> tuple[str, ...]:
     """Return all defined translation keys."""
     return tuple(sorted(STRINGS.keys()))
+
+
+def get_default_reports_dir() -> Path:
+    """Return default reports base folder: OS Documents / 'AI Threat Lab' / 'Reports'."""
+    pref = load_reports_directory_preference()
+    if pref is not None:
+        return pref
+    # Windows: %USERPROFILE%/Documents/AI Threat Lab/Reports
+    # Linux/Mac: ~/Documents/AI Threat Lab/Reports
+    docs = Path.home() / "Documents"
+    if not docs.exists():
+        # Fallback to home if Documents doesn't exist
+        docs = Path.home()
+    return docs / "AI Threat Lab" / "Reports"
+
+
+def load_reports_directory_preference() -> Path | None:
+    """Load user's saved preferred reports directory from config file if valid."""
+    cfg_file = get_user_config_file()
+    if not cfg_file.is_file():
+        return None
+    try:
+        data = json.loads(cfg_file.read_text(encoding="utf-8"))
+        rep = data.get("reports_dir")
+        if rep and isinstance(rep, str):
+            p = Path(rep).resolve()
+            if not p.is_symlink():
+                return p
+    except Exception:
+        pass
+    return None
+
+
+def save_reports_directory_preference(reports_dir: Path | str) -> bool:
+    """Save user's preferred reports directory to config file."""
+    cfg_file = get_user_config_file()
+    data: dict[str, str] = {}
+    if cfg_file.is_file():
+        try:
+            data = json.loads(cfg_file.read_text(encoding="utf-8"))
+        except Exception:
+            data = {}
+    data["reports_dir"] = str(Path(reports_dir).resolve())
+    try:
+        cfg_file.parent.mkdir(parents=True, exist_ok=True)
+        tmp = cfg_file.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        tmp.replace(cfg_file)
+        return True
+    except OSError:
+        return False

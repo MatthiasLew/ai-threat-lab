@@ -48,28 +48,47 @@ class ScopedSession:
         if value["host"] != host or value["path_prefix"] != path_prefix:
             raise ValidationError("Saved session must match the exact approved host and path")
         scope = canonical_url(f"https://{host}{path_prefix}")
-        if (urlsplit(scope).path != path_prefix or not path_prefix.endswith("/")
-                or not urlsplit(url).path.startswith(path_prefix)):
+        if (
+            urlsplit(scope).path != path_prefix
+            or not path_prefix.endswith("/")
+            or not urlsplit(url).path.startswith(path_prefix)
+        ):
             raise ValidationError("Saved session requires a matching absolute directory path")
         try:
             expires = datetime.fromisoformat(value["expires_at"])
-            if (expires.tzinfo is None or expires.utcoffset() != timedelta(0)
-                    or not current < expires <= current + timedelta(hours=24)):
+            if (
+                expires.tzinfo is None
+                or expires.utcoffset() != timedelta(0)
+                or not current < expires <= current + timedelta(hours=24)
+            ):
                 raise ValueError
         except (ValueError, TypeError, OverflowError):
             raise ValidationError("Saved session expiry must be UTC and within 24 hours") from None
         headers = value["headers"]
-        if (not isinstance(headers, dict) or not headers
-                or not set(headers) <= {"Authorization", "Cookie"}):
+        if (
+            not isinstance(headers, dict)
+            or not headers
+            or not set(headers) <= {"Authorization", "Cookie"}
+        ):
             raise ValidationError("Saved session accepts only Authorization and Cookie headers")
-        if any(not isinstance(item, str) or not 1 <= len(item) <= 8192 or not item.isascii()
-               or re.search(r"[\x00-\x1f\x7f]", item)
-               for item in headers.values()):
+        if any(
+            not isinstance(item, str)
+            or not 1 <= len(item) <= 8192
+            or not item.isascii()
+            or re.search(r"[\x00-\x1f\x7f]", item)
+            for item in headers.values()
+        ):
             raise ValidationError("Saved-session header values are invalid; values omitted")
         if any(not item.strip() for item in headers.values()):
             raise ValidationError("Saved-session headers must not be blank")
-        return cls(client, host=host, path_prefix=path_prefix, headers=headers,
-                   expires_at=expires, clock=clock)
+        return cls(
+            client,
+            host=host,
+            path_prefix=path_prefix,
+            headers=headers,
+            expires_at=expires,
+            clock=clock,
+        )
 
     def request(self, target):
         url = canonical_url(target)
@@ -77,8 +96,7 @@ class ScopedSession:
             self.failure_code = "denied"
         elif self.clock() >= self.expires_at:
             self.failure_code = "expired"
-        elif (urlsplit(url).hostname != self.host
-                or not urlsplit(url).path.startswith(self.prefix)):
+        elif urlsplit(url).hostname != self.host or not urlsplit(url).path.startswith(self.prefix):
             self.failure_code = "scope"
         else:
             self.failure_code = None

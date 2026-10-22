@@ -141,11 +141,11 @@ end"""
 
 # Safe fallback translations for Unicode symbols
 FALLBACK_CHAR_MAP: dict[str, str] = {
-    "\u00A0": " ",
-    "\u202F": " ",
-    "\u200B": "",
-    "\u200C": "",
-    "\u200D": "",
+    "\u00a0": " ",
+    "\u202f": " ",
+    "\u200b": "",
+    "\u200c": "",
+    "\u200d": "",
     "→": "->",
     "←": "<-",
     "⇒": "=>",

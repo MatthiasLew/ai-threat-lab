@@ -9,11 +9,14 @@ def release_version(value, *, composer=False):
     if not isinstance(value, str) or len(value) > 128:
         return False
     prefix = "v?" if composer else ""
-    return bool(re.fullmatch(
-        prefix + r"[0-9]+(?:\.[0-9]+){1,3}"
-        r"(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
-        r"(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?", value
-    )) and not (composer and re.search(r"(?:^|[.-])dev(?:$|[.+-])", value, re.I))
+    return bool(
+        re.fullmatch(
+            prefix + r"[0-9]+(?:\.[0-9]+){1,3}"
+            r"(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
+            r"(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?",
+            value,
+        )
+    ) and not (composer and re.search(r"(?:^|[.-])dev(?:$|[.+-])", value, re.I))
 
 
 def parse_composer(document, origin, add, note):
@@ -45,8 +48,10 @@ def parse_composer(document, origin, add, note):
 
 
 def parse_nuget(document, origin, add, note):
-    if not isinstance(document, dict) or type(document.get("version")) is not int or (
-        document["version"] not in (1, 2)
+    if (
+        not isinstance(document, dict)
+        or type(document.get("version")) is not int
+        or (document["version"] not in (1, 2))
     ):
         raise ValidationError("Only NuGet lock versions 1 and 2 are supported")
     frameworks = document.get("dependencies")

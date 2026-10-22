@@ -25,11 +25,16 @@ Local training — fictional text only, no delivery, calls or generated media
         return 0
     if choice == "1":
         scenario = ask("Scenario (email_training/voice_training/video_training): ")
-        return run(["campaign-example", scenario,
-                    "--output", ask("New request JSON file: ")])
+        return run(["campaign-example", scenario, "--output", ask("New request JSON file: ")])
     if choice == "2":
-        return run(["campaign-prepare", ask("Request JSON file: "),
-                    "--output", ask("New preview JSON file: ")])
+        return run(
+            [
+                "campaign-prepare",
+                ask("Request JSON file: "),
+                "--output",
+                ask("New preview JSON file: "),
+            ]
+        )
     if choice == "3":
         path = ask("Preview JSON file: ")
         plan = plan_from_document(read_document(Path(path)))
@@ -48,20 +53,52 @@ Local training — fictional text only, no delivery, calls or generated media
         if approval.lower() != "y":
             print("No approval was recorded.")
             return 0
-        return run(["campaign-approve", path, "--reviewer", ask("Reviewer identifier: "),
-                    "--output", ask("New approval JSON file: ")])
+        return run(
+            [
+                "campaign-approve",
+                path,
+                "--reviewer",
+                ask("Reviewer identifier: "),
+                "--output",
+                ask("New approval JSON file: "),
+            ]
+        )
     if choice == "4":
-        return run(["training-start", ask("Preview JSON file: "),
-                    "--approval", ask("Approval JSON file: "),
-                    "--participant-id", ask("Opaque participant alias (no personal data): "),
-                    "--ledger", ask("Training SQLite file: "),
-                    "--output", ask("New session JSON file: ")])
+        return run(
+            [
+                "training-start",
+                ask("Preview JSON file: "),
+                "--approval",
+                ask("Approval JSON file: "),
+                "--participant-id",
+                ask("Opaque participant alias (no personal data): "),
+                "--ledger",
+                ask("Training SQLite file: "),
+                "--output",
+                ask("New session JSON file: "),
+            ]
+        )
     if choice == "5":
-        return run(["training-run", ask("Session ID from the saved session: "),
-                    "--ledger", ask("Training SQLite file: ")])
+        return run(
+            [
+                "training-run",
+                ask("Session ID from the saved session: "),
+                "--ledger",
+                ask("Training SQLite file: "),
+            ]
+        )
     if choice == "6":
-        return run(["training-report", "--ledger", ask("Training SQLite file: "),
-                    "--format", "html", "--output", ask("New HTML report: ")])
+        return run(
+            [
+                "training-report",
+                "--ledger",
+                ask("Training SQLite file: "),
+                "--format",
+                "html",
+                "--output",
+                ask("New HTML report: "),
+            ]
+        )
     if choice == "7":
         digest, ledger = ask("Exact plan digest to cancel: "), ask("Training SQLite file: ")
         if ask("Permanently cancel this local plan? [y/N]: ", required=False).lower() != "y":
@@ -69,9 +106,16 @@ Local training — fictional text only, no delivery, calls or generated media
             return 0
         return run(["training-cancel", "--plan-digest", digest, "--ledger", ledger])
     if choice == "8":
-        return run(["exercise-export", ask("Preview JSON file: "),
-                    "--approval", ask("Approval JSON file: "),
-                    "--output-dir", ask("New inert asset directory: ")])
+        return run(
+            [
+                "exercise-export",
+                ask("Preview JSON file: "),
+                "--approval",
+                ask("Approval JSON file: "),
+                "--output-dir",
+                ask("New inert asset directory: "),
+            ]
+        )
     raise ValidationError("Choose a training operation from 0 to 8")
 
 
@@ -92,11 +136,20 @@ Saved results and batches — local operations only
     if choice == "1":
         return run(["history-list", ask("History root directory: ")])
     if choice == "2":
-        return run(["scan-compare", ask("Previous scan directory: "),
-                    ask("Current scan directory: ")])
+        return run(
+            ["scan-compare", ask("Previous scan directory: "), ask("Current scan directory: ")]
+        )
     if choice == "3":
-        return run(["report-export", ask("Saved single/batch directory: "),
-                    "--format", "html", "--output", ask("New HTML report: ")])
+        return run(
+            [
+                "report-export",
+                ask("Saved single/batch directory: "),
+                "--format",
+                "html",
+                "--output",
+                ask("New HTML report: "),
+            ]
+        )
     if choice == "4":
         targets = []
         for index in range(1, 11):

@@ -79,10 +79,12 @@ def finding(result, run, driver, index):
     message = text(result["message"]["text"], 2000)
     level, kind = result.get("level", "not_reported"), result.get("kind", "not_reported")
     baseline = result.get("baselineState", "not_reported")
-    if (level not in ("none", "note", "warning", "error", "not_reported")
-            or kind not in ("notApplicable", "pass", "fail", "review", "open",
-                            "informational", "not_reported")
-            or baseline not in ("new", "unchanged", "updated", "absent", "not_reported")):
+    if (
+        level not in ("none", "note", "warning", "error", "not_reported")
+        or kind
+        not in ("notApplicable", "pass", "fail", "review", "open", "informational", "not_reported")
+        or baseline not in ("new", "unchanged", "updated", "absent", "not_reported")
+    ):
         raise ValidationError("Unsupported SARIF result classification")
     suppressions = array(result.get("suppressions", []), 20)
     states = []
@@ -94,7 +96,8 @@ def finding(result, run, driver, index):
     locations = array(result.get("locations", []), 100)
     selected = [location(item, run) for item in locations[:3]]
     return AssessmentFinding(
-        "external_sarif_result", "unverified",
+        "external_sarif_result",
+        "unverified",
         f"Result {index}; rule={rule}; reported_level={level}; reported_kind={kind}; "
         f"baseline={baseline}; suppression_statuses={','.join(states) or 'none reported'}; "
         f"locations={'; '.join(selected) or 'not reported'}; "
@@ -151,12 +154,16 @@ def review_sarif(path, *, start=1, max_entries=200):
             try:
                 failed, invocation_present = invocation_failed(run)
                 broken |= failed
-                gaps.append(f"Producer={tool}; invocation outcome supplied={invocation_present}; "
-                            f"producer failure reported={failed}. Outcomes are unverified.")
+                gaps.append(
+                    f"Producer={tool}; invocation outcome supplied={invocation_present}; "
+                    f"producer failure reported={failed}. Outcomes are unverified."
+                )
             except (ValidationError, KeyError, TypeError, AttributeError):
                 broken = True
-                gaps.append(f"Producer={tool}; malformed invocation metadata; "
-                            "retained results do not establish scanner completion.")
+                gaps.append(
+                    f"Producer={tool}; malformed invocation metadata; "
+                    "retained results do not establish scanner completion."
+                )
             if run.get("externalPropertyFileReferences"):
                 broken = True
                 gaps.append("External property references were not loaded; evidence is incomplete.")
@@ -170,18 +177,26 @@ def review_sarif(path, *, start=1, max_entries=200):
                 except (ValidationError, KeyError, TypeError, AttributeError):
                     malformed += 1
             broken |= bool(malformed)
-            gaps.append(f"Results outside selected global page: {omitted}; "
-                        f"selected unsupported results: {malformed}.")
+            gaps.append(
+                f"Results outside selected global page: {omitted}; "
+                f"selected unsupported results: {malformed}."
+            )
         except (ValidationError, KeyError, TypeError, AttributeError):
             broken = True
             gaps.append("Run metadata/results are unavailable or unsupported; no clean conclusion.")
         if broken:
             failures += 1
-        reports.append(asdict(AssessmentResult(
-            f"SARIF run {run_index:04d}", "external_static_analysis",
-            "partial" if findings or not broken else "not_configured",
-            tuple(findings), tuple(gaps),
-        )))
+        reports.append(
+            asdict(
+                AssessmentResult(
+                    f"SARIF run {run_index:04d}",
+                    "external_static_analysis",
+                    "partial" if findings or not broken else "not_configured",
+                    tuple(findings),
+                    tuple(gaps),
+                )
+            )
+        )
     if start > max(1, offset):
         raise ValidationError("SARIF start is beyond the available results")
     return merge_reports(json.loads(json.dumps(reports))), failures

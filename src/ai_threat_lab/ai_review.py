@@ -320,9 +320,7 @@ def build_multilingual_ai_packet(
             "raw_report_bytes": raw_report_bytes,
             "minimized_input_bytes": input_bytes,
             "bytes_saved": max(0, raw_report_bytes - input_bytes),
-            "reduction_ratio": round(
-                max(0.0, 1.0 - (input_bytes / raw_report_bytes)), 4
-            )
+            "reduction_ratio": round(max(0.0, 1.0 - (input_bytes / raw_report_bytes)), 4)
             if raw_report_bytes > 0
             else 0.0,
             "raw_limitation_count": len(snapshot.get("not_checked", [])),

@@ -45,13 +45,21 @@ from .gui_api import (
 )
 from .i18n import (
     get_active_language,
+    get_default_reports_dir,
     load_language_preference,
+    load_reports_directory_preference,
     save_language_preference,
+    save_reports_directory_preference,
     set_active_language,
     t,
 )
 from .models import AnalysisRequest, AnalysisResult, TargetProfile, ValidationError
-from .path_utils import clean_user_path
+from .path_utils import (
+    clean_user_path,
+    generate_audit_subfolder_name,
+    get_safe_target_display_name,
+    get_unique_audit_directory,
+)
 from .pdf_report import generate_pdf_report
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report
@@ -95,6 +103,12 @@ __all__ = [
     "get_audit_history",
     "generate_pdf_report",
     "clean_user_path",
+    "generate_audit_subfolder_name",
+    "get_safe_target_display_name",
+    "get_unique_audit_directory",
+    "get_default_reports_dir",
+    "load_reports_directory_preference",
+    "save_reports_directory_preference",
     "extract_code_snippet",
     "CodeSnippet",
     "get_active_language",

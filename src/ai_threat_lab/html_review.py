@@ -296,19 +296,28 @@ def inspect_html(source, *, document_url=None):
     findings = []
     seen = set()
 
-    def add(check, line):
+    def add(check, line, detail=None):
         if (check, line) in seen:
             return
         seen.add((check, line))
         if len(findings) >= MAX_FINDINGS:
             notices.add("HTML finding limit reached; additional candidates omitted.")
             return
+        if detail:
+            evidence_str = (
+                f"HTML line {line}: {detail} lacks integrity attribute. "
+                "Runtime behavior and applicability unverified."
+            )
+        else:
+            evidence_str = (
+                f"HTML line {line}: selected authoring pattern; values omitted. "
+                "Runtime behavior and applicability unverified."
+            )
         findings.append(
             AssessmentFinding(
                 check,
                 "candidate",
-                f"HTML line {line}: selected authoring pattern; values omitted. "
-                "Runtime behavior and applicability unverified.",
+                evidence_str,
                 ACTIONS[check],
             )
         )
@@ -339,7 +348,15 @@ def inspect_html(source, *, document_url=None):
         if document.scheme.lower() == "https" and url.scheme.lower() == "http":
             add("html_mixed_active_content", line)
         if script and origin(document) != origin(url) and not integrity:
-            add("html_external_script_without_integrity", line)
+            clean_host = url.hostname or ""
+            clean_port = f":{url.port}" if url.port and url.port not in (80, 443) else ""
+            clean_path = url.path or "/"
+            clean_url = f"{url.scheme}://{clean_host}{clean_port}{clean_path}"
+            add(
+                "html_external_script_without_integrity",
+                line,
+                detail=f'<script src="{clean_url}">',
+            )
     return tuple(findings), (
         NOTICE,
         *sorted(notices),
