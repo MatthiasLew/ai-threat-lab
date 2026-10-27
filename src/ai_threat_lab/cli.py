@@ -81,6 +81,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"AI Threat Lab {__version__}")
     parser.add_argument("--config", type=Path, help="Provider selection JSON; no credentials")
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("agent", help="Noninteractive security evidence and local MCP tools")
     add_delivery_commands(commands)
     add_speech_commands(commands)
     add_reputation_commands(commands)
@@ -195,6 +196,11 @@ def _interactive(analyzer: ThreatAnalyzer) -> AnalysisRequest:
 
 
 def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = None) -> int:
+    agent_argv = list(sys.argv[1:] if argv is None else argv)
+    if agent_argv and agent_argv[0] == "agent":
+        from .agent_cli import main as agent_main
+
+        return agent_main(agent_argv[1:])
     if argv is None and len(sys.argv) <= 1:
         if sys.stdin.isatty() and sys.stdout.isatty():
             from .interactive_menu import run_interactive_entrypoint

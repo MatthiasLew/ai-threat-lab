@@ -148,3 +148,16 @@ See LIVE_SETUP.md for network constraints and API_COSTS.md for accounting/privac
 ## Python pattern engine (0.12.0)
 
 `code_review` parses bounded source with `ast` and emits nine source-free candidate rule families. Standalone review, local inventory and immutable GitHub collection reuse it. Import aliases and selected literal arguments are recognized; no dependencies are imported, source is executed or data flow is resolved. Scan engine 6 separates its observation scope from earlier bundles. See [CODE_REVIEW.md](CODE_REVIEW.md) for exact loader/hash/TLS semantics.
+
+
+## Agent evidence adapters
+
+`agent_service` reuses `ScanService`, `read_bundle`, `compare_bundles` and
+`DetailedFinding` for compact versioned results. `agent_cli` and `agent_mcp` share
+strict schemas in `agent_protocol` and execute fixed workers with a 60-second
+operation deadline. `agent_fs` creates bounded private snapshots with opened-handle
+checks; original target strings are restored before existing bundle publication.
+The MCP root is fixed at startup; no shell, model, network or communication operation
+is exposed. Saved reads verify complete bundles before projecting selective views.
+See [Agent integration](AGENT_INTEGRATION.md) for the architecture review and
+[Agent Mode](AGENT_MODE.md) for the contract, concurrency limits and measurements.

@@ -49,6 +49,8 @@ def check_distribution_archives(wheel: Path, sdist: Path, version: str) -> None:
             "docs/SAVED_SITE_SESSION.md",
             "docs/QUICK_START.md",
             "docs/GUI_API_HANDOFF.md",
+            "docs/AGENT_MODE.md", "docs/MCP_SERVER.md", "docs/AGENT_INTEGRATION.md",
+            "scripts/check_agent_offline.py", "scripts/benchmark_agent_mode.py",
         ):
             member = archive.extractfile(prefix + relative)
             assert member is not None, f"Source archive is missing {relative}"
@@ -1067,7 +1069,9 @@ def main() -> None:
             "extra pack",
         )
         assert (work / "extra pack" / "manifest.json").is_file()
-        print("Clean installed wheel: audit, costs, training and complete scan bundles passed.")
+        runpy.run_path(ROOT / "scripts/check_agent_offline.py")["check_agent"](
+            run, executable, work, env)
+        print("Clean installed wheel: audit, costs, training, bundles and Agent CLI/MCP passed.")
 
 
 if __name__ == "__main__":

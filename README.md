@@ -5,6 +5,15 @@ exercises and separately approved fictional email delivery.
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can power a separate GUI; optional provider adapters have offline tests.
 
+## Agent CLI and local MCP
+
+`ai-threat-lab agent` exposes compact, noninteractive security evidence for coding agents.
+`ai-threat-lab agent mcp serve --root /absolute/approved/project` serves the same
+operations over local STDIO. It reuses the existing analyzers and verified bundles,
+works offline and expands one finding only on request. Scans create local artifacts.
+See [Agent Mode](docs/AGENT_MODE.md), [MCP setup](docs/MCP_SERVER.md) and
+[AI Dev workflow](docs/AGENT_INTEGRATION.md) for bounds, permissions and examples.
+
 ## Console workflow
 
 [One approved fictional call](docs/FICTIONAL_CALLS.md) supports exact preview, durable

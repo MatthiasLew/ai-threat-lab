@@ -2,6 +2,11 @@
 
 ## 0.41.4 — unreleased
 
+- Add offline Agent CLI and local MCP 2025-06-18 over shared verified scan services.
+- Add bounded snapshots, strict/paged evidence views, deterministic details and exact comparisons.
+- Add installed CLI/MCP acceptance, adversarial tests and a reproducible byte benchmark.
+- Document optional AI Dev integration and client registration without package dependencies.
+
 - Fix PDF credential redaction before truncation; omit source context for secret findings.
 - Confine explicitly requested source context, bound reads and label current context honestly; saved exports do not reopen source paths.
 - Bind PDF AI attachments to validated advisory schema and exact evidence digest, with explicit partial coverage.
