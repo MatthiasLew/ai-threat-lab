@@ -67,6 +67,11 @@ class Server:
         valid_id = type(identifier) is int or (
             isinstance(identifier, str) and len(identifier) <= 100
         )
+        if isinstance(identifier, str):
+            try:
+                identifier.encode("utf-8")
+            except UnicodeError:
+                valid_id = False
         if (
             not isinstance(value, dict)
             or value.get("jsonrpc") != "2.0"

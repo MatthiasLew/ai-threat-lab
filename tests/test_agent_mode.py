@@ -296,6 +296,8 @@ def test_mcp_protocol_rejects_invalid_requests(tmp_path):
     server = Server(tmp_path, runner=perform)
     assert server.dispatch([])["error"]["code"] == -32600
     assert server.dispatch({"jsonrpc": "2.0", "id": True, "method": "ping"})["error"]
+    invalid_id = server.dispatch({"jsonrpc": "2.0", "id": "\ud800", "method": "ping"})
+    assert invalid_id["id"] is None and invalid_id["error"]["code"] == -32600
     assert server.dispatch(request("initialize"))["error"]["code"] == -32602
     assert server.dispatch(request("ping"))["result"] == {}
     initialize(server)
