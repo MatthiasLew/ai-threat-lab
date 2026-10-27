@@ -20,3 +20,5 @@ Historical milestone documents are regression contracts, not a claim of full pro
 Use `ai-threat-lab --version` for the installed version and `COMMAND --help` for the
 exact argument contract. Keys belong outside source control. No account, live
 provider acceptance or release publication follows from passing local tests.
+
+Agent interfaces: [CLI contract](AGENT_MODE.md), [local MCP](MCP_SERVER.md), [AI Dev workflow](AGENT_INTEGRATION.md).
