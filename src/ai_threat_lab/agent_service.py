@@ -73,7 +73,7 @@ def bounded(value):
 class AgentService:
     def __init__(self, root):
         root = Path(root).absolute()
-        self.root = agent_fs.scoped_path(root, str(root))
+        self.root = agent_fs.scoped_path(root, str(root)).resolve(strict=True)
         if not self.root.is_dir():
             raise ValidationError("Approved root must be a directory")
 

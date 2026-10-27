@@ -20,6 +20,7 @@ def benchmark():
         project.mkdir()
         (project / "example.py").write_text("eval(input())\n" * 30, encoding="utf-8")
         service = AgentService(root)
+        root = service.root
         scan = service.call("scan", {"target": "project"})
         run = scan["run"]
         full = get_audit_results(root / run)

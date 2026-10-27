@@ -69,10 +69,12 @@ def _windows_handle(path, directory):
         buf = ctypes.create_unicode_buffer(32768)
         length = final(handle, buf, len(buf), 0)
         actual = buf.value.removeprefix("\\\\?\\")
+        if actual.startswith("UNC\\"):
+            actual = "\\\\" + actual[4:]
         if (
             not length
             or length >= len(buf)
-            or os.path.normcase(actual) != os.path.normcase(str(path))
+            or os.path.normcase(actual) != os.path.normcase(str(path.resolve(strict=True)))
             or linked(path)
         ):
             raise ValidationError("Opened object differs from approved path")

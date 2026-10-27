@@ -425,3 +425,26 @@ def test_benchmark_decision_parity():
     result = runpy.run_path(str(source))["benchmark"]()
     assert all(result["decision_parity"].values())
     assert result["bytes"]["agent_summary"] < result["bytes"]["raw_report_json"]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows short-path identity")
+def test_windows_short_alias_matches_opened_handle(tmp_path):
+    import ctypes
+    from ctypes import wintypes
+
+    folder = tmp_path / "project with a long directory name"
+    folder.mkdir()
+    source = folder / "example.py"
+    source.write_text("eval(input())\n", encoding="utf-8")
+    function = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+    function.argtypes = (wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD)
+    function.restype = wintypes.DWORD
+    buffer = ctypes.create_unicode_buffer(32768)
+    assert function(str(folder), buffer, len(buffer))
+    alias = Path(buffer.value)
+    with agent_fs.pinned_directory(alias):
+        assert agent_fs.read_scoped(alias / "example.py").startswith(b"eval")
+    service = AgentService(alias)
+    assert service.root == folder.resolve()
+    result = service.call("scan", {"target": "example.py"})
+    assert result["summary"]["findings"] == 1
