@@ -85,8 +85,7 @@ def validate_gemini_model(model: str) -> str:
     normalized = model.removeprefix("models/")
     if ".." in normalized or not _MODEL_NAME_RE.fullmatch(normalized):
         raise ValidationError(
-            "Invalid Gemini model name; use an explicit model identifier such as "
-            "gemini-2.5-flash, gemini-3.8-flash, or gemini-3.5-flash-lite"
+            "Invalid Gemini model name; use an explicit provider model identifier"
         )
     return normalized
 
@@ -336,6 +335,7 @@ def gemini_review_result(
     group_size: int = 3,
     language: str = "en",
     timeout: int = 30,
+    expected_evidence_sha256: str | None = None,
 ) -> dict:
     """Execute or dry-run a grounded Gemini advisory review for a selected evidence packet."""
     validate_report_language(language)
@@ -347,6 +347,10 @@ def gemini_review_result(
         packet_index=packet_index,
         group_size=group_size,
     )
+    prepared_digest = evidence_digest(
+        json.loads(compact_evidence(selected, config.max_input_bytes)))
+    if expected_evidence_sha256 is not None and expected_evidence_sha256 != prepared_digest:
+        raise ValidationError("Evidence changed after preview; no API request was sent")
     adapter = GeminiGenerateContent(
         client,
         response_schema=GEMINI_RESPONSE_SCHEMA,

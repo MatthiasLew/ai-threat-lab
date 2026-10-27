@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.41.4 — unreleased
+
+- Fix PDF credential redaction before truncation; omit source context for secret findings.
+- Confine explicitly requested source context, bound reads and label current context honestly; saved exports do not reopen source paths.
+- Bind PDF AI attachments to validated advisory schema and exact evidence digest, with explicit partial coverage.
+- Reuse one reviewed Gemini configuration/packet and a shared menu budget journal.
+- Correct setup commands and version identity; replace unsubstantiated benchmark narratives with reproducible evaluation protocols.
+- Remove stale generated sample PDFs; retain a reproducible offline sample generator.
+
+Earlier stage headings record development milestones; they are not evidence of published package releases.
+
 ## [0.41.3] - Stage 5.3: Expanded Interactive Audit, Scan Profiles & Professional Security Reports
 
 ### Added & Enhanced

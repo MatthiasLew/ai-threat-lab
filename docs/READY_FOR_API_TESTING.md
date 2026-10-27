@@ -1,6 +1,6 @@
 # Gotowość do kontrolowanych testów integracyjnych API (`READY_FOR_API_TESTING`)
 
-Ten dokument opisuje granicę pomiędzy pełnym trybem lokalnym/offline a opcjonalnymi adapterami sieciowymi i AI w aplikacji **AI Threat Lab (`0.39.1`)**, a także procedurę bezpiecznego przejścia do pierwszych kontrolowanych testów z rzeczywistymi usługami zewnętrznymi.
+Ten dokument opisuje granicę pomiędzy pełnym trybem lokalnym/offline a opcjonalnymi adapterami sieciowymi i AI w aplikacji **AI Threat Lab (`0.41.4`)**, a także procedurę bezpiecznego przejścia do pierwszych kontrolowanych testów z rzeczywistymi usługami zewnętrznymi.
 
 > **Ważne:** Zaliczenie pełnego zestawu testów offline (mocki, deterministyczne fixture'y HTTP, zablokowane gniazda sieciowe) potwierdza poprawność lokalnej architektury, parserów, walidacji schematów, budżetowania oraz CLI. **Nie stanowi natomiast dowodu**, że zewnętrzne konto, uprawnienia OAuth, cennik dostawcy lub produkcyjny endpoint API działają w środowisku docelowym. Wszelkie właściwości wymagające weryfikacji z rzeczywistą usługą są jawnie oznaczane w diagnostyce jako `REQUIRES_LIVE_VALIDATION`.
 
@@ -42,9 +42,9 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
 | Audyt DNS domeny pocztowej (`audit`, `scan`) | Brak (używa Cloudflare DoH) | Brak | `--network --allow-host <domena>` |
 | Pasywny audyt ustawień Gmail (`audit`, `scan`) | `GMAIL_ACCESS_TOKEN` | Brak | `--network --allow-host gmail.googleapis.com` |
 | Zapytania o podatności OSV (`audit-deps`, `scan`) | Brak | Brak | `--network --share-packages` |
-| Reputacja skrótu pliku VirusTotal (`file-reputation`) | `VT_API_KEY` | Brak | `--network --share-hash` |
-| Dostarczenie fikcyjnego e-maila szkoleniowego SMTP (`smtp-send`) | `AI_THREAT_SMTP_PASSWORD` | `--smtp-config smtp.json` | `--allow-smtp-host <host> --send-mail` |
-| Synteza głosu stockowego Azure (`speech-synthesize`) | `AI_THREAT_SPEECH_KEY` | `--speech-config speech.json` | `--allow-speech-host <host> --synthesize` |
+| Reputacja skrótu pliku VirusTotal (`reputation-preview`, `review-reputation`) | `VIRUSTOTAL_API_KEY` | Brak | `--network --share-hash --allow-host www.virustotal.com --sha256 <reviewed-hash>` |
+| Dostarczenie fikcyjnego e-maila szkoleniowego SMTP (`smtp-send`) | `AI_THREAT_SMTP_PASSWORD` | `--smtp-config smtp.json` | `--allow-smtp-host <host> --send-approved` |
+| Synteza głosu stockowego Azure (`speech-generate`) | `AI_THREAT_SPEECH_KEY` | `--speech-config speech.json` | `--allow-speech-host <host> --send-script` |
 | Wideo ze stockowym awatarem Azure (`avatar-submit`, `avatar-status`, `avatar-download`) | `AI_THREAT_AVATAR_KEY` | `--avatar-config avatar.json` | `--allow-avatar-host <host> --send-script` / `--network` |
 | Fikcyjne połączenie szkoleniowe Twilio (`call-submit`, `call-status`, `call-stop`, `call-watch`) | `TWILIO_AUTH_TOKEN` | `--call-config call.json` | `--allow-call-host api.twilio.com --send-call` / `--network` |
 
@@ -55,11 +55,13 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
 - **`offline`**: Domyślny tryb wszystkich komend lokalnych. Żadne połączenie sieciowe nie jest nawiązywane, a zmienne środowiskowe z kluczami API nie są odczytywane.
 - **`mock`**: Tryb wykorzystywany w testach jednostkowych, integracyjnych i akceptacyjnych (`pytest`, `scripts/check_ai_offline.py`, `scripts/check_installed_package.py`), w którym adaptery używają deterministycznych transportów testowych przy zablokowanych gniazdach systemowych (`socket`).
 - **`dry-run`**: Tryb jawnego przeliczenia granic tokenów, minimalizacji dowodów i estymacji kosztu (`ai-explain --dry-run`, `ai-review --dry-run`) oraz podglądu payloadu (`ai-prepare`, `*-preview`). Nie wymaga klucza API i nie wysyła żądań HTTP. Jednoczesne podanie `--dry-run` i `--send-evidence` jest odrzucane z kodem wyjścia `2`.
-- **`live`**: Tryb uruchamiany wyłącznie po jawnym podaniu flagi zgody (`--send-evidence`, `--network --allow-host ...`, `--send-mail`, `--synthesize`, `--send-script`, `--send-call`) oraz skonfigurowaniu poświadczeń poza repozytorium.
+- **`live`**: Tryb uruchamiany wyłącznie po jawnym podaniu flagi zgody (`--send-evidence`, `--network --allow-host ...`, `--send-approved`, `--send-script`, `--send-call`) oraz skonfigurowaniu poświadczeń poza repozytorium.
 
 ---
 
 ## 4. Konfiguracja środowiska przed testami API
+
+Przykładowe modele i kwoty poniżej nie są aktualnym cennikiem ani potwierdzeniem dostępności. Przed wysyłką wpisz model i stawki zweryfikowane na swoim koncie.
 
 1. **Przygotuj plik konfiguracji AI (`ai-config.json`) bez żadnych sekretów** (obecność pola z kluczem API w pliku JSON jest odrzucana):
    - Dla OpenAI (np. `gpt-4.1-mini`):
@@ -77,7 +79,7 @@ Bez kluczy API, kont zewnętrznych i dostępu do Internetu w pełni działają:
        "namespace": "controlled-live-pilot"
      }
      ```
-   - Dla Google Gemini (np. `gemini-2.5-flash`, `gemini-3.8-flash` lub `gemini-3.5-flash-lite`):
+   - Dla Google Gemini (wybierz model dostępny na swoim koncie):
      ```json
      {
        "schema_version": 1,
@@ -198,16 +200,6 @@ Nawet przy 100% przechodzących testach offline i poprawnej walidacji `setup-che
 4. Że merytoryczna treść wygenerowanej porady AI jest wolna od błędów — walidator gwarantuje zgodność ze schematem i referencjami `evidence_id`, ale **porada AI zawsze pozostaje niezweryfikowaną interpretacją (`advisory_interpretation`)**.
 5. Że zewnętrzne kanały komunikacji (SMTP, Azure Speech/Avatar, Twilio) dostarczą wiadomość/połączenie do odbiorcy końcowego bez sprawdzenia polityk antyspamowych, uprawnień regionalnych i jakości mediów na kontrolowanym koncie testowym.
 
-### Reconciling Pending Request `6afea99f1ade4e36bc017ea6bc17b52c`
-
-If a request was interrupted or held in pending status (such as `6afea99f1ade4e36bc017ea6bc17b52c` from pre-Stage 4 testing), run:
-
-```powershell
-py -m ai_threat_lab api-reconcile 6afea99f1ade4e36bc017ea6bc17b52c --actual-usd 0 --ledger runs/costs.sqlite
-```
-
-This clears the pending reservation, sets actual billed amount to $0.00 (since the request never reached Google due to the local client route check), and allows subsequent reviews to proceed immediately.
-
 ### Zarządzanie limitem czasu (`--timeout`) i diagnostyka `NETWORK_TIMEOUT`
 
 Wszystkie komendy AI (`ai-review`, `ai-explain`) oraz klient `PublicHTTPS` obsługują zakres `--timeout` od 1 do 120 sekund (domyślnie 30s):
@@ -215,7 +207,7 @@ Wszystkie komendy AI (`ai-review`, `ai-explain`) oraz klient `PublicHTTPS` obsł
 - **Wartości dozwolone**: od 1 do 120 sekund (np. `--timeout 30`, `--timeout 60`, `--timeout 90`, `--timeout 120`).
 - **Walidacja lokalna**: Wartości poza zakresem (np. `--timeout 121` lub `--timeout 0`) są odrzucane natychmiast błędem `ValidationError` przed zainicjowaniem bazy `runs/costs.sqlite`, dzięki czemu nie tworzą żadnych niepotrzebnych rezerwacji.
 - **Rzeczywiste zachowanie timeout**: Limit `--timeout` jest timeoutem na poziomie operacji gniazda TCP/TLS (połączenie z przypiętym adresem IP, handshake TLS, wysyłanie bajtów żądania, odczyt odpowiedzi), a nie sztywnym czasem całkowitej transakcji.
-- **Postępowanie w przypadku timeoutu**: Gdy serwer Google nie odpowie w zadanym czasie, proces zgłasza błąd z kategorią `[NETWORK_TIMEOUT]`. Rezerwacja pozostaje w stanie niepotwierdzonym (`unconfirmed`), a użytkownik może ją bezpłatnie uzgodnić poleceniem:
+- **Postępowanie w przypadku timeoutu**: Gdy serwer Google nie odpowie w zadanym czasie, proces zgłasza błąd z kategorią `[NETWORK_TIMEOUT]`. Rezerwacja pozostaje w stanie niepotwierdzonym (`unconfirmed`), uzgodnij ją dopiero po sprawdzeniu rozliczenia u dostawcy. Poniższe zero jest poprawne wyłącznie po potwierdzeniu braku opłaty:
   ```powershell
   py -m ai_threat_lab api-reconcile <REQUEST_ID> --actual-usd 0 --ledger runs/costs.sqlite
   ```

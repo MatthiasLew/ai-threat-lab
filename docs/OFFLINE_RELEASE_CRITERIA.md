@@ -1,4 +1,4 @@
-# Offline CLI release criteria — 0.39.1
+# Offline CLI release criteria — 0.41.4 source
 
 This is the finite acceptance scope for the existing offline CLI. It supersedes open-ended feature expansion as the current engineering priority. Passing it accepts this scoped delivery; it does not complete the original product or establish real-provider readiness. API credentials/live validation and GUI implementation remain deferred.
 

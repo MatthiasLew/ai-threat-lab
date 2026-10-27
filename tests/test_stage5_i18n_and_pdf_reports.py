@@ -148,7 +148,7 @@ def test_code_snippet_extraction_and_highlighting(tmp_path):
     assert snippet is not None
     assert isinstance(snippet, CodeSnippet)
     assert snippet.target_line == 5
-    assert snippet.status == "exact"
+    assert snippet.status == "unverified_current"
 
     # Lines 3, 4, 5, 6 should be present
     line_nums = [item.line_number for item in snippet.lines]
@@ -350,7 +350,7 @@ def test_generate_pdf_report_with_findings(vulnerable_audit_report):
     assert b"/Differences" in pdf_bytes
 
 
-def test_generate_pdf_report_with_gemini_advisory(vulnerable_audit_report):
+def test_generate_pdf_report_rejects_legacy_ungrounded_advisory(vulnerable_audit_report):
     """Verify attaching Google Gemini AI advisory interpretation to the PDF report."""
     ai_review = {
         "provider": "gemini",
@@ -368,9 +368,8 @@ def test_generate_pdf_report_with_gemini_advisory(vulnerable_audit_report):
         },
     }
 
-    pdf_bytes = generate_pdf_report(vulnerable_audit_report, ai_review=ai_review, lang="pl")
-    assert pdf_bytes.startswith(b"%PDF-1.4\n")
-    assert len(pdf_bytes) > 9000
+    with pytest.raises(ValidationError):
+        generate_pdf_report(vulnerable_audit_report, ai_review=ai_review, lang="pl")
 
 
 def test_generate_pdf_report_rejects_tampered_ai_review(vulnerable_audit_report):

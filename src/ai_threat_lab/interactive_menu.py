@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import urlsplit
 
-from .contracts import write_document
+from .contracts import read_document, write_document
 from .gui_api import (
     export_audit_report,
     get_audit_results,
@@ -37,6 +37,7 @@ from .i18n import (
     t,
     validate_language,
 )
+from .models import ValidationError
 from .path_utils import (
     clean_user_path,
     get_safe_target_display_name,
@@ -1001,30 +1002,62 @@ def run_new_audit_workflow(
             print_fn(
                 "Uwaga: Zmienna środowiskowa GEMINI_API_KEY nie jest ustawiona w bieżącej sesji.\n"
                 'Ustaw ją przed wywołaniem API: $env:GEMINI_API_KEY="AIza..."\n'
-                "Raport lokalny PDF i JSON pozostają kompletne i w pełni bezpieczne."
+                "Lokalne raporty PDF i JSON są dostępne bez interpretacji AI."
                 if pl
                 else (
                     "Notice: GEMINI_API_KEY environment variable is not set in this session.\n"
                     'Set it before invoking API: export GEMINI_API_KEY="AIza..."\n'
-                    "Your local PDF and JSON reports remain complete and fully verified offline."
+                    "Your local PDF and JSON reports are available without AI interpretation."
                 )
             )
             return
 
         try:
-            preview = prepare_ai_packets(out_dir, language=language, provider="gemini")
-            est_cost = preview.get("maximum_reserved_usd", "0.003")
-            packets = preview.get("packets", [])
-            total_tokens = sum(p.get("input_token_planning_bound", 0) for p in packets)
+            from .ai_costs import AIConfig, CostLedger
+            from .gemini_adapter import GEMINI_HOST, gemini_review_result
+            from .http_client import PublicHTTPS
 
+            config_path = prompt_user(
+                "Plik konfiguracji AI (model, ceny, limity): " if pl else
+                "AI configuration file (model, prices, limits): ", input_fn=input_fn)
+            cfg = AIConfig.from_document(read_document(Path(clean_user_path(config_path))))
+            preview = prepare_ai_packets(out_dir, config=cfg, language=language, provider="gemini")
+            packets = preview.get("packets", [])
+            if not packets or not any(p["finding_count"] for p in packets):
+                print_fn("Brak obserwacji do interpretacji." if pl else "No findings to interpret.")
+                return
+            packet_index = 1
+            if len(packets) > 1:
+                print_fn(
+                    f"AI: {len(packets)} pakietów. Wyślemy tylko wybrany pakiet." if pl else
+                    f"AI: {len(packets)} packets. Only the selected packet will be sent."
+                )
+                try:
+                    packet_index = int(prompt_user(
+                        "Numer pakietu: " if pl else "Packet number: ", input_fn=input_fn))
+                except ValueError:
+                    raise ValidationError("Choose an integer packet number") from None
+                if not 1 <= packet_index <= len(packets):
+                    raise ValidationError("Packet number is outside the prepared range")
+            selected = packets[packet_index - 1]
+            est_cost = selected["reserved_usd"]
+            total_tokens = selected["input_token_planning_bound"]
+            # Show the exact minimized input; it may still contain sensitive evidence.
+            print_fn(write_document(selected))
+            ledger_path = get_user_config_file().parent / "ai-costs.sqlite"
+            print_fn(f"Model: {cfg.model}; USD/1M input={cfg.input_usd_per_million}, "
+                     f"output={cfg.output_usd_per_million}; "
+                     f"daily budget={cfg.daily_budget_usd}; calls/day={cfg.max_calls_per_day}")
+            print_fn(f"Shared local budget journal: {ledger_path}")
             print_fn()
             print_fn(
                 (
                     f"Preflight AI: Przygotowano {len(packets)} pakiet(ów) "
-                    "dowodowych bez żadnych sekretów."
+                    "dowodowych. Przejrzyj wybrany pakiet przed udostępnieniem."
                 )
                 if pl
-                else f"AI Preflight: Prepared {len(packets)} secret-scrubbed evidence packet(s)."
+                else (f"AI Preflight: Prepared {len(packets)} evidence packet(s); "
+                      "review the selected input before sharing.")
             )
             ai_confirm = prompt_user(
                 t("prompt_ai_confirm_cost", language, cost_usd=est_cost, tokens=total_tokens),
@@ -1038,22 +1071,8 @@ def run_new_audit_workflow(
                     if pl
                     else "Generating Gemini advisory review..."
                 )
-                from .ai_costs import AIConfig, CostLedger
-                from .gemini_adapter import GEMINI_HOST, gemini_review_result
-                from .http_client import PublicHTTPS
-
-                cfg = AIConfig(
-                    model="gemini-2.5-flash",
-                    input_usd_per_million="0.30",
-                    output_usd_per_million="2.50",
-                    max_input_bytes=12000,
-                    max_output_tokens=600,
-                    daily_budget_usd="0.10",
-                    max_calls_per_day=5,
-                    cache_ttl_seconds=3600,
-                    namespace="interactive-menu",
-                )
-                ledger = CostLedger(out_dir / "costs.sqlite")
+                ledger_path.parent.mkdir(parents=True, exist_ok=True)
+                ledger = CostLedger(ledger_path)
                 client = PublicHTTPS([GEMINI_HOST], timeout=30, max_requests=1)
 
                 ai_res = gemini_review_result(
@@ -1061,9 +1080,10 @@ def run_new_audit_workflow(
                     ledger,
                     client,
                     rep,
-                    packet_index=1,
+                    packet_index=packet_index,
                     language=language,
                     timeout=30,
+                    expected_evidence_sha256=selected["evidence_sha256"],
                 )
 
                 ai_json_path = out_dir / "gemini-review.json"

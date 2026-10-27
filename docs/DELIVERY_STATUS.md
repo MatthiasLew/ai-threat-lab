@@ -1,4 +1,9 @@
-# Delivery status and remaining work — 0.39.1
+# Delivery status and remaining work — 0.41.4 source
+
+The current maintenance update fixes PDF source/redaction and AI evidence binding,
+and aligns Gemini menu consent with configuration and shared accounting.
+The sections below retain the implementation history and explicit remaining limits.
+See [Testing](TESTING.md) for the current verification procedure.
 
 [Fictional call delivery](FICTIONAL_CALLS.md) adds one fixed approved announcement,
 provider status, bounded foreground monitoring and remote stop. Real call/account/billing
@@ -35,7 +40,7 @@ coverage from earlier scans; package provenance and reachability remain unverifi
 
 The [stock-speech adapter](SPEECH_TRAINING.md) adds preview-bound generation of local
 fictional WAV assets with cost estimates and durable attempt records. Actual resource,
-audio-quality and billing acceptance remains deferred; no telephony is implemented.
+audio-quality and billing acceptance remains deferred; the separate fixed-call adapter has its own acceptance requirements.
 
 The [attachment review](ATTACHMENT_REVIEW.md) adds bounded in-memory MIME decoding
 and shared PE/ELF/ZIP structural observations, with indexed reports usable by AI.
@@ -222,4 +227,4 @@ Expiry is rechecked after database reads, and new TTLs start after acquiring the
 
 ## Offline CLI finalization and API testing readiness (0.39.1)
 
-The console application (`0.39.1`, scan engine `29`) is complete across all supported offline analyzers, report/history exports, local training workflows, and preview-bound AI/integration adapters. Diagnostics (`setup-check`, `doctor`) mark unverified live properties with `REQUIRES_LIVE_VALIDATION`. See [READY_FOR_API_TESTING.md](READY_FOR_API_TESTING.md) for the live validation checklist.
+The 0.39.1 milestone covered the documented bounded offline analyzers, report/history exports, local training workflows, and preview-bound AI/integration adapters. It was not proof that every original product feature was complete. Diagnostics (`setup-check`, `doctor`) mark unverified live properties with `REQUIRES_LIVE_VALIDATION`. See [READY_FOR_API_TESTING.md](READY_FOR_API_TESTING.md) for the live validation checklist.

@@ -39,10 +39,10 @@ python -m pip install -e ".[dev]"
 python scripts/verify.py
 ```
 
-Transfer the resulting `dist/ai_threat_lab-0.39.1-py3-none-any.whl` to the destination. Install using that destination's venv interpreter:
+Transfer the resulting `dist/ai_threat_lab-0.41.4-py3-none-any.whl` to the destination. Install using that destination's venv interpreter:
 
 ```bash
-python -m pip install --no-index --no-deps /path/to/ai_threat_lab-0.39.1-py3-none-any.whl
+python -m pip install --no-index --no-deps /path/to/ai_threat_lab-0.41.4-py3-none-any.whl
 python -m ai_threat_lab doctor --installation
 ```
 

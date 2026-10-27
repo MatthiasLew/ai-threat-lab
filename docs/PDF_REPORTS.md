@@ -1,6 +1,6 @@
 # Professional PDF Audit Reports
 
-AI Threat Lab generates publication-grade, self-contained PDF audit reports designed specifically for software engineers, security leads, and project stakeholders.
+AI Threat Lab generates self-contained PDF audit reports designed specifically for software engineers, security leads, and project stakeholders.
 
 ## 1. Design & Audience Goals
 
@@ -28,9 +28,9 @@ Standard PDF Type-1 base fonts (such as Helvetica and Courier) do not provide Po
 
 AI Threat Lab resolves this with zero font downloads and zero external dependencies:
 1. **Custom Encoding Vector (`/Differences`)**: Maps all 18 Polish diacritics (`ą`, `ć`, `ę`, `ł`, `ń`, `ó`, `ś`, `ź`, `ż`, `Ą`, `Ć`, `Ę`, `Ł`, `Ń`, `Ó`, `Ś`, `Ź`, `Ż`), typographic dashes (em-dash `—`, en-dash `–`), typographic quotes (Polish `„` / `”`, English `“` / `”`, `‘` / `’`), bullets (`•`), ellipsis (`…`), and symbols (`€`, `™`) into standard Adobe Type-1 glyph indices.
-2. **`/ToUnicode` CMap**: Embeds a complete reverse lookup mapping table so that text can be searched, copied, and selected in Adobe Acrobat, Chrome, Firefox, Safari, and macOS Preview with 100% fidelity.
+2. **`/ToUnicode` CMap**: Embeds a complete reverse lookup mapping table so that text can be searched, copied, and selected in Adobe Acrobat, Chrome, Firefox, Safari, and macOS Preview using embedded character mappings; check the intended viewer before distribution.
 3. **No Silent `?` Degradation**: Unmapped characters undergo NFKD transliteration and safe fallbacks, preventing corrupted question-mark artifacts in generated documents.
-4. **Intelligent Text & Path Wrapping**: Long unbroken file paths, URLs, and exception messages are wrapped with character-level boundary splits, guaranteeing text never overflows page margins.
+4. **Intelligent Text & Path Wrapping**: Long unbroken file paths, URLs, and exception messages are wrapped with character-level boundary splits, to keep typical report text within page margins.
 
 ## 4. Report Structure & Credibility
 
@@ -51,7 +51,7 @@ For each candidate observation:
 - **Header**: Threat index, finding title, and colored priority badge (Red for P1, Orange for P2, Blue for P3, Gray for P4).
 - **Metadata**: Confirmation status (`Kandydat` / `Candidate`), location (`file:line`).
 - **Mechanism & Consequences**: Technical explanation of how the pattern operates.
-- **Code Snippet**: Source code context lines with line numbering, secret scrubbing (`[REDACTED_SECRET]`), and marker (`>`) on the affected line.
+- **Code context**: Saved exports do not reopen source files. A caller may explicitly supply an approved source root; any displayed context is labeled current and unverified against the scan snapshot. Secret findings omit context. Known credential patterns are redacted before shortening lines; this is not a universal anonymizer.
 - **Remediation**: Concrete code recommendations.
 - **Verification**: How to confirm the fix works.
 
@@ -93,3 +93,19 @@ export_audit_pdf("runs/scan-001", "audit_report.pdf", language="pl")
 # In-memory raw bytes generation
 pdf_bytes = generate_pdf_report(report_dict, ai_review=ai_review_dict, language="en")
 ```
+
+## Evidence and privacy contract
+
+AI attachments must use the structured advisory schema and the exact evidence packet
+digest; unknown/duplicate references and mismatched digests are rejected. The PDF
+states interpreted/total finding counts. Consistency does not prove authorship or
+correctness of AI advice. Unbound legacy JSON is rejected rather than silently trusted.
+
+Old generated sample PDFs have been removed. Generate current synthetic examples:
+
+```bash
+python scripts/generate_sample_pdfs.py --output-dir reports/samples
+```
+
+Use a new output directory. The script scans inert text without executing it or
+contacting a provider. It does not fabricate security conclusions or AI responses.

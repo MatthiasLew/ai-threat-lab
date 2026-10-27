@@ -210,8 +210,8 @@ def readiness():
             "implementation_required",
             "Three approved text channels, inert exports and selected-outcome reports. "
             "Separate fictional SMTP email delivery is available; observed participant "
-            "telemetry and live voice/video dispatch remain absent. Stock media generation "
-            "has separate preview-bound adapters.",
+            "telemetry and video distribution remain absent. Fixed calls and stock media "
+            "generation have separate preview-bound adapters.",
         ),
         (
             "signed_training_events",

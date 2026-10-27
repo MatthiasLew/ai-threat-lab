@@ -3,7 +3,7 @@
 Read-only security assessments, optional AI explanations with budget controls, local training
 exercises and separately approved fictional email delivery.
 
-The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can later power a GUI and optional provider integrations.
+The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can power a separate GUI; optional provider adapters have offline tests.
 
 ## Console workflow
 
@@ -59,7 +59,7 @@ The interactive interface provides:
 - **9-Choice Target Selection**: Local project directory, single file, GitHub repository, HTTPS website, mail domain, email message (.eml), Gmail account, security logs, or custom inputs.
 - **Scan Profiles**: Choose between **Szybki / Fast** (up to 100 files), **Standardowy / Standard** (up to 1,000 files), **Rozszerzony / Extended** (up to 5,000 files), or **Niestandardowy / Custom** (up to 10,000 files).
 - **Explicit Network Consent Gates**: Remote scans (GitHub, websites, DNS, Gmail) explicitly disclose the exact target host and request purpose before prompting for consent.
-- **Publication-Grade PDF Reports**: Dedicated cover page, project identity extraction, scope disclaimer, Audit Scope & Methodology section (with multi-technology detection), highlighted context code snippets, human-grouped limitations, and deterministic Recommended Next Steps.
+- **PDF Reports**: Dedicated cover page, project identity extraction, scope disclaimer, Audit Scope & Methodology section (with multi-technology detection), explicitly labeled current-source context when requested, human-grouped limitations, and deterministic Recommended Next Steps.
 - **Windows Path Handling**: Safely normalizes Windows paths pasted with quotes from File Explorer.
 
 Or run standard commands with full PDF report export support:
@@ -78,9 +78,9 @@ These commands need no AI account. Saved single/batch results can feed optional
 reference-validated AI advice after explicit sharing and budget configuration.
 See [Quick Start](docs/QUICK_START.md), [the complete console workflow](docs/CONSOLE_WORKFLOW.md),
 and [GUI API Handoff](docs/GUI_API_HANDOFF.md) for packets, estimates, structured Python APIs, as well as [Gemini API Adapter](docs/GEMINI_API_ADAPTER.md), [Performance Report](docs/PERFORMANCE_REPORT.md), and [Real Project Validation](docs/REAL_PROJECT_VALIDATION.md), [PDF Reports](docs/PDF_REPORTS.md), and [i18n Architecture](docs/I18N_SYSTEM.md)
-setup and limitations. GUI remains a separate contributor's responsibility.
+for setup and limitations. GUI remains a separate contributor's responsibility.
 
-## Project status — 0.41.3
+## Current source version — 0.41.4 (unreleased)
 
 Dependencies: [inventory, OSV and cache offline acceptance](docs/DEPENDENCIES_OFFLINE_ACCEPTANCE.md).
 
@@ -324,3 +324,15 @@ Selected saved OpenSSH journal exports now work through `review-ssh-journal` and
 The AI explanation/cost module is **offline complete within its [acceptance contract](docs/AI_OFFLINE_ACCEPTANCE.md)**: reservations, budget limits, cache cleanup, unknown outcomes, reconciliation and output safety are fixture-tested. Actual model/account/prices and live billing/output validation remain deferred. See [API_COSTS.md](docs/API_COSTS.md).
 
 Reports and local history are **offline complete within the [reporting acceptance contract](docs/REPORTS_OFFLINE_ACCEPTANCE.md)**. Use `history-list HISTORY_ROOT` for a verified JSON/HTML catalog and `report-export SAVED_RUN --format html --output NEW_FILE` to export saved single/batch evidence without rescanning. See [local history](docs/LOCAL_REPORT_HISTORY.md).
+
+### Report and AI boundaries
+
+Saved PDF exports do not reopen source paths from report contents. Explicitly supplied
+local context is confined to the chosen root, redacted for known credential patterns
+and labeled as current, not a verified scan snapshot. Secret findings omit context.
+AI attachments require a valid advisory schema and matching evidence digest.
+
+The menu asks for an explicit AI configuration and packet selection before showing
+the outgoing evidence and cost. It reuses that configuration for the call and shares
+a local budget journal across audits. This is not a provider-enforced account cap.
+See [documentation](docs/README.md) for current guides and validation boundaries.

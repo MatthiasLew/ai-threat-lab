@@ -42,6 +42,7 @@ from .local_history import MAX_EXPORT_BYTES, history_list, load_saved_run, write
 from .local_history import export_report as export_saved_report
 from .models import ValidationError
 from .readiness import readiness
+from .report_io import read_regular
 from .sarif import SCHEMA_URI as SARIF_SCHEMA_URI
 from .scan_bundle import encoded
 from .scan_cli import advisory_lookup, assessor
@@ -379,8 +380,7 @@ def export_audit_report(
 
         ai_data = ai_review
         if ai_data is None and ai_review_path is not None:
-            with open(ai_review_path, "r", encoding="utf-8") as f:
-                ai_data = json.load(f)
+            ai_data = json.loads(read_regular(ai_review_path, 256 * 1024))
         manifest = saved.get("manifest")
         scope = manifest.get("scope") if manifest else None
         proj_name = (scope.get("target") if scope else None) or root.name
@@ -447,8 +447,7 @@ def export_audit_pdf(
             saved = load_saved_run(path)
             report_dict = saved["report"]
         else:
-            with open(path, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
+            loaded = json.loads(read_regular(path, MAX_EXPORT_BYTES))
             report_dict = loaded.get("report", loaded)
     proj_hint = (
         path.name

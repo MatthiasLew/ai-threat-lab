@@ -16,10 +16,14 @@ Generates beautifully structured, printable A4 PDF audit reports with:
 from __future__ import annotations
 
 import datetime
+import json
 from pathlib import Path
 from typing import Any
 
+from .ai_costs import compact_evidence
+from .ai_review import validate_review
 from .code_snippet import extract_code_snippet
+from .evidence import evidence_digest, interpretation_evidence
 from .finding_details import detailed_findings, validate_report_language
 from .i18n import t
 from .models import ValidationError
@@ -679,38 +683,26 @@ def parse_not_checked_items(not_checked: list[Any], language: str) -> list[dict[
 
 def validate_ai_review_binding(report: dict, ai_review: dict) -> None:
     """Verify that an AI review strictly corresponds to the provided technical audit report."""
-    if not isinstance(ai_review, dict):
-        raise ValidationError("AI review must be a dictionary")
-    interp = ai_review.get("interpretation")
-    if not isinstance(interp, dict):
-        raise ValidationError("AI review has no valid interpretation object")
-    observations = interp.get("observations")
-    if not isinstance(observations, list):
-        raise ValidationError("AI review has no observations array")
-
-    findings = report.get("findings", [])
-    valid_ids = {
-        f.get("evidence_id") or f.get("id") or f.get("finding_id")
-        for f in findings
-        if isinstance(f, dict) and (f.get("evidence_id") or f.get("id") or f.get("finding_id"))
-    }
-
-    obs_ids = {
-        obs.get("evidence_id") or obs.get("finding_id") or obs.get("id")
-        for obs in observations
-        if isinstance(obs, dict)
-        and (obs.get("evidence_id") or obs.get("finding_id") or obs.get("id"))
-    }
-    if not obs_ids:
-        raise ValidationError("AI review observations contain no valid finding references")
-
-    unknown = obs_ids - valid_ids
-    if unknown:
-        obs_list = sorted(unknown)
-        raise ValidationError(
-            f"AI review contains {len(unknown)} observation(s) not found "
-            f"in technical report: {obs_list}"
-        )
+    try:
+        if not isinstance(ai_review, dict):
+            raise ValidationError("AI review must be a dictionary")
+        interp = ai_review["interpretation"]
+        observations = interp["observations"]
+        ids = {row["evidence_id"] for row in observations}
+        if not ids:
+            raise ValidationError("AI review must reference a nonempty evidence packet")
+        validate_review(json.dumps(interp, ensure_ascii=False), ids)
+        evidence = interpretation_evidence(report)
+        available = {row["evidence_id"] for row in evidence["findings"]}
+        if not ids <= available:
+            raise ValidationError("AI review contains unknown evidence references")
+        evidence["findings"] = [row for row in evidence["findings"]
+                                if row["evidence_id"] in ids]
+        digest = evidence_digest(json.loads(compact_evidence(evidence, 100000)))
+        if ai_review.get("evidence_sha256") != digest:
+            raise ValidationError("AI review does not match this evidence packet")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValidationError("AI review or technical evidence has an invalid schema") from exc
 
 
 def generate_pdf_report(
@@ -766,7 +758,11 @@ def generate_pdf_report(
     ai_model = ""
     if ai_review is not None:
         interp = ai_review.get("interpretation", {})
-        ai_summary = interp.get("summary", "")
+        coverage = len(interp["observations"])
+        total = len(report.get("findings", []))
+        coverage_text = (f"Zakres AI: {coverage}/{total} obserwacji. " if pl else
+                         f"AI coverage: {coverage}/{total} findings. ")
+        ai_summary = coverage_text + interp.get("summary", "")
         ai_uncertainty = interp.get("uncertainty", "")
         ai_model = ai_review.get("model", "Google Gemini")
         for obs in interp.get("observations", []):
@@ -1456,14 +1452,25 @@ def generate_pdf_report(
             )
             doc.cursor_y -= 12
 
-            snippet = extract_code_snippet(
-                finding.file_path or finding.target,
-                finding.line_number,
-                context_lines=2,
-                source_root=source_root,
-            )
+            # Saved exports never reopen paths from report contents implicitly.
+            snippet = None
+            if source_root is not None and finding.rule_code != "possible_secret":
+                snippet = extract_code_snippet(
+                    finding.file_path or finding.target,
+                    finding.line_number,
+                    context_lines=2,
+                    source_root=source_root,
+                )
 
             if snippet and snippet.lines:
+                label = ("Bieżący kontekst lokalny; niezweryfikowany względem skanu."
+                         if pl else
+                         "Current local context; not verified against the scan snapshot.")
+                doc.ensure_space(110)
+                h_context = doc.draw_text_block(
+                    doc.margin_x, doc.cursor_y, label, doc.content_width,
+                    size=8, line_height=11, color=COLOR_TEXT_MUTED)
+                doc.cursor_y -= h_context + 8
                 box_lines = len(snippet.lines)
                 box_h = (box_lines * 14.0) + 12.0
                 doc.rect(

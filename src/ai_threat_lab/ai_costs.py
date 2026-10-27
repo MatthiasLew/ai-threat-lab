@@ -875,9 +875,9 @@ def classify_ai_failure(exc: BaseException) -> FailureDiagnosis:
             reconciliation_required=True,
             action_required=(
                 "Update 'model' in ai-config.json to an active Gemini model "
-                "(e.g. gemini-2.5-flash, "
-                "gemini-3.8-flash, or gemini-3.5-flash-lite). Then reconcile with: "
-                "ai-threat-lab api-reconcile <ID> --actual-usd 0 --ledger <LEDGER>"
+                "available on your account. Check provider billing before reconciling: "
+                "ai-threat-lab api-reconcile <ID> --actual-usd <VERIFIED_AMOUNT> "
+                "--ledger <LEDGER>"
             ),
             detail=msg,
         )

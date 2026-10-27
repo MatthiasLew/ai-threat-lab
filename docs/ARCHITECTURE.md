@@ -88,7 +88,7 @@ This contract is implemented in version 0.1.0. Results also include recommended_
 
 `CampaignService` prepares a `CampaignPlan` through `TrainingContentProvider`. Explicit `ContentApproval` must match the digest of scope, exact content, media hash, facts and recipients before `TrainingTransport` dispatch. `MemoryLedger` is the demo default; `SQLiteLedger` persists hashed attempt claims across service restarts. Event aggregation is independent from ordinal risk scoring and accepts no raw answers.
 
-The CLI exposes campaigns, campaign-demo, campaign-report and assess. It has no live-send/call command. Actual provider implementations, authenticated approvals and collection endpoints are separate integration work. See INTEGRATIONS.md for provider responsibilities and limitations.
+The CLI exposes campaigns, campaign-demo, campaign-report and assess. Those original commands retain their offline contracts; separate approved SMTP, media and fixed-call adapters now exist. Actual provider implementations, authenticated approvals and collection endpoints are separate integration work. See INTEGRATIONS.md for provider responsibilities and limitations.
 
 ## Application/configuration boundary (0.3.0)
 
