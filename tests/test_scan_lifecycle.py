@@ -153,3 +153,23 @@ def test_closed_control_rejects_late_cancel(project, tmp_path):
     token = ScanControl()
     ScanService(assessor).run(ScanOptions(str(project)), tmp_path / "done", control=token)
     assert token.request_cancel() is False
+
+
+def test_interrupt_during_publication_is_not_claimed_uncommitted(
+    project, tmp_path, monkeypatch, capsys,
+):
+    import ai_threat_lab.scan_engine as engine
+
+    def interrupted(*args):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(engine, "publish_bundle", interrupted)
+    events, token = [], ScanControl()
+    with pytest.raises(KeyboardInterrupt):
+        run_audit(project, tmp_path / "run", control=token, on_event=events.append)
+    assert events[-1].event == "scan_interrupted"
+    assert events[-1].status == "verification_required"
+    assert not token.request_cancel()
+    assert main(["scan", str(project), "--output-dir", str(tmp_path / "cli")]) == 130
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "interrupted" and result["bundle_committed"] is None

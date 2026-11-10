@@ -61,3 +61,16 @@ def test_event_adapter_reports_stage_without_percentage():
     output.clear()
     display_diagnostics("en", output.append)
     assert "pdf" in json.loads(output[-1])["capabilities"]["export_formats"]
+
+
+def test_history_names_and_saved_strings_cannot_emit_terminal_controls(monkeypatch):
+    import ai_threat_lab.audit_console as console
+
+    monkeypatch.setattr(console, "get_audit_history", lambda _: {
+        "runs": [{"directory": "untrusted\x1b]52;payload\x07", "verification": "invalid"}],
+        "notice": "data\x1b[2J",
+    })
+    answers, output = iter(["history", "0"]), []
+    browse_history("en", input_fn=lambda _: next(answers), print_fn=output.append)
+    assert "\x1b" not in "\n".join(output)
+    assert "\\u001b" in "\n".join(output)

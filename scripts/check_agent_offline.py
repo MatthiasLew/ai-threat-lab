@@ -5,9 +5,18 @@ import subprocess
 
 
 def check_agent(run, executable, work, env):
-    target = work / "agent fixture"
+    target = work / "agent fixture Łódź"
     target.mkdir()
     (target / "sample.py").write_text("eval(input())\n", encoding="utf-8")
+    progress = subprocess.run(
+        [str(executable), "scan", str(target), "--output-dir", str(work / "progress run"),
+         "--progress"],
+        capture_output=True, text=True, encoding="utf-8", cwd=work, env=env, timeout=60,
+    )
+    assert progress.returncode == 0, progress.stderr
+    assert json.loads(progress.stdout)["unique_findings"] == 1
+    events = [json.loads(line) for line in progress.stderr.splitlines()]
+    assert events[0]["event"] == "scan_started" and events[-1]["event"] == "scan_completed"
 
     def call(*args):
         return json.loads(run(executable, "agent", *args, "--root", work))

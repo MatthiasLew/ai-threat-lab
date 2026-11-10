@@ -8,6 +8,7 @@ from .installation import installation_report
 from .models import ValidationError
 from .path_utils import clean_user_path
 from .scan_bundle import compare_bundles, read_bundle
+from .training_cli import terminal_text
 
 
 def display_event(event, language, print_fn=print):
@@ -34,6 +35,8 @@ def display_event(event, language, print_fn=print):
 
 def browse_history(language, input_fn=input, print_fn=print):
     """Verify catalog first; never open invalid catalog entries as trusted results."""
+    output = print_fn
+    print_fn = lambda value: output(terminal_text(str(value)))  # noqa: E731
     pl = language == "pl"
     try:
         root = Path(clean_user_path(input_fn(
