@@ -24,6 +24,17 @@ is closed as completed (checked 2026-11-10); do not assume the installed 1.3.1 h
 the fix. Use an absolute project interpreter for authoritative tests. Optional
 AI Dev failure must not become an application runtime dependency.
 
-Results, exact counts, coverage and CI links are added after execution, never
-inferred from historical runs. The security review has a separate managed Codex
-Security artifact; unresolved scope there must remain explicit.
+## Executed results
+
+[CI42812389626](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/42812389626)
+passed6/6 on4882faa: Windows/Linux × Python3.12/3.13/3.14, including Ruff, full
+coverage, wheel/sdist and clean installed CLI/MCP acceptance. Windows3.14:
+3714 passed,7 skipped,92.4%; Linux3.14:3718 passed,3 skipped,92.3%. Threshold90%
+unchanged. The earlier Linux SARIF diagnostic failure was corrected without
+weakening/skipping its existing test. Local AI Dev affected tests passed54/3.
+
+The [implementation report](SECURITY_ENGINE_REPORT.md) records exact local runs,
+regression IDs and measured synthetic outputs. The separate managed static
+security artifact has partial coverage and flags its original-checkout revision
+drift; it does not certify the final branch. Remaining race/resource/corpus work
+stays explicit in IMPLEMENTATION_TODO.md. No paid AI/live-provider call was made.

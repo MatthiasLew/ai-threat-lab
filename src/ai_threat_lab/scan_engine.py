@@ -386,7 +386,7 @@ class ScanService:
             comparison = compare_bundles(previous, current)
             artifacts["comparison.json"] = encoded(comparison)
         # Linearization point: cancellation accepted before this check prevents
-        # publication; later requests return False. Publication itself stays atomic.
+        # publication; later requests return False. Keep manifest-last publication.
         events.emit("scan_publishing")
         control._checkpoint(commit=True)
         manifest = publish_bundle(output, artifacts, metadata)

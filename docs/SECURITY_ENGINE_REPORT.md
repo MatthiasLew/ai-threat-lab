@@ -85,9 +85,14 @@ used its Python3.13 interpreter and passed **54 tests,3 skips**. Upstream
 as completed; the installed1.3.1 predates the fix. No new reproducible AI Dev defect
 was found, and AI Dev is not an application dependency.
 
-Wheel/sdist build succeeded. Final installed-wheel acceptance and branch CI are
-tracked in IMPLEMENTATION_TODO.md and the PR checks; final results are recorded
-there after completion. Installation acceptance uses an isolated venv, no-index /
+Wheel/sdist build and final installed-wheel acceptance succeeded locally.
+[CI42812389626](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/42812389626)
+on4882faa passed all six Windows/Linux × Python3.12/3.13/3.14 jobs, each including
+Ruff, full coverage, wheel/sdist and clean installed acceptance.
+Windows/Python3.14: **3714 passed,7 skipped,92.4%**;
+Linux/Python3.14: **3718 passed,3 skipped,92.3%**. The CI90% gate is unchanged.
+The PR carries subsequent final-documentation checks. Installation acceptance uses
+an isolated venv, no-index /
 no-deps wheel installation, module/executable entrypoints, offline workflows,
 Unicode/spaces and real MCP initialize/discovery/calls/EOF.
 
@@ -95,7 +100,7 @@ The first Linux CI pass exposed a diagnostic regression in the existing
 `test_resolved_symlink_escape_is_rejected`: earlier link rejection used the
 generic report-reader message instead of the expected scope message. Source
 link rejection now retains the scope diagnostic; the existing test was not
-weakened or skipped. All six jobs must be rerun on the correction.
+weakened or skipped. All six jobs were rerun successfully on the correction.
 
 ## Measurements and interpretation
 

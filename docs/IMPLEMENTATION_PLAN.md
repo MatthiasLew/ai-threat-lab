@@ -12,11 +12,15 @@ required for the new [console journey](CONSOLE_WORKFLOW.md).
 3. Inspect adjacent cases and affected entrypoints. Prefer independent language/protocol behavior over assertions copied from the implementation.
 4. Implement the smallest coherent correction with explicit limits and failure evidence.
 5. Run focused tests, then `python scripts/verify.py` for the release. Preserve old report reading and suppress comparisons if observation semantics change.
-6. Update scope, acceptance fixtures and delivery documentation. Publish directly on the project's main branch and verify the six CI jobs at that exact commit.
+6. Update scope, acceptance fixtures and delivery documentation. Prepare a tested
+   PR and verify all six CI jobs. Do not merge or publish directly to main without
+   the owner's separate decision for the current change.
 
 The finite acceptance checklist is [OFFLINE_RELEASE_CRITERIA.md](OFFLINE_RELEASE_CRITERIA.md).
-The owner authorized continued console feature implementation before account/API setup and
-direct publication of verified increments to main. Existing finite completion contracts are
+Earlier work authorized direct publication of verified increments to main; the
+current stabilization request supersedes that publication route with a PR and a
+separate owner decision to merge. Console implementation still precedes account/API setup.
+Existing finite completion contracts are
 regression gates, not a declaration that broader functionality is finished. Confirmed defects
 and failed acceptance still block publication.
 
