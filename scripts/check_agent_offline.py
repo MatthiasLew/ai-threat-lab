@@ -53,3 +53,6 @@ def check_agent(run, executable, work, env):
     assert [r["id"] for r in responses] == [1, 2, 3]
     assert len(responses[1]["result"]["tools"]) == 9
     assert responses[2]["result"]["structuredContent"]["run_id"] == result["run_id"]
+    assert json.loads(responses[2]["result"]["content"][0]["text"]) == (
+        responses[2]["result"]["structuredContent"]
+    )

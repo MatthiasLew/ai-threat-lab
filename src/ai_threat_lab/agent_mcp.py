@@ -55,6 +55,17 @@ def _error(identifier, code, message):
     return {"jsonrpc": "2.0", "id": identifier, "error": {"code": code, "message": message}}
 
 
+def tool_result(data):
+    """Mirror structured data for MCP clients which consume only TextContent."""
+    return {
+        "content": [{"type": "text", "text": json.dumps(
+            data, ensure_ascii=False, separators=(",", ":"),
+        )}],
+        "structuredContent": data,
+        "isError": data["status"] == "error",
+    }
+
+
 class Server:
     def __init__(self, root, *, runner=execute):
         self.root = AgentService(root).root
@@ -124,11 +135,7 @@ class Server:
                 data = error_result(operation, "invalid_request", "Arguments must be an object")
             else:
                 data = self.runner(self.root, operation, args)
-            result = {
-                "content": [{"type": "text", "text": f"{operation}: {data['status']}"}],
-                "structuredContent": data,
-                "isError": data["status"] == "error",
-            }
+            result = tool_result(data)
         else:
             return _error(identifier, -32601, "Method not found")
         return {"jsonrpc": "2.0", "id": identifier, "result": result}
@@ -158,7 +165,9 @@ def serve(root, *, input_stream=None, output_stream=None):
             except Exception:
                 response = _error(None, -32603, "Internal protocol error")
         if response is not None:
-            output.write(json.dumps(response, ensure_ascii=False).encode() + b"\n")
+            output.write(json.dumps(
+                response, ensure_ascii=False, separators=(",", ":"),
+            ).encode() + b"\n")
             output.flush()
         if len(line) > MAX_REQUEST:
             return 2

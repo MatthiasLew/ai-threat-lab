@@ -4,7 +4,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from ai_threat_lab.agent_mcp import tool_list
+from ai_threat_lab.agent_mcp import tool_list, tool_result
 from ai_threat_lab.agent_service import AgentService
 from ai_threat_lab.gui_api import get_audit_results
 
@@ -55,6 +55,10 @@ def benchmark():
             "agent_summary": wire_size(summary),
             "selective_all_references_one_detail": sum(map(wire_size, selected)),
             "mcp_discovery_once": wire_size({"tools": tool_list()}),
+            "selective_mcp_responses_with_text_mirror": sum(
+                wire_size({"jsonrpc": "2.0", "id": index, "result": tool_result(value)})
+                for index, value in enumerate(selected, 1)
+            ),
         }
         return {
             "schema_version": 1,

@@ -288,7 +288,7 @@ def test_mcp_all_tools_use_shared_services(project):
             args = {"base": run, "head": run}
         result = server.dispatch(request("tools/call", {"name": name, "arguments": args}))["result"]
         assert not result["isError"]
-        assert len(result["content"][0]["text"]) < 40
+        assert json.loads(result["content"][0]["text"]) == result["structuredContent"]
         assert result["structuredContent"]["tool"] == "ai-threat-lab"
 
 
