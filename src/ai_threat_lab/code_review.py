@@ -287,11 +287,14 @@ def review_source(
 
 
 def read_python_source(path: Path, *, _raw_cache: dict[Path, bytes] | None = None) -> str:
+    from .dependency_paths import linked
     from .report_io import read_regular
 
     path = Path(path)
     if path.suffix.lower() != ".py":
         raise ValidationError("Code review currently accepts a single .py file")
+    if linked(path):
+        raise ValidationError("Python source must stay inside its scope; links are not accepted")
     if not path.is_file():
         raise ValidationError("Python source must be a regular file")
     raw = read_regular(

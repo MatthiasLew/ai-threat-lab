@@ -7,7 +7,20 @@ import sys
 import pytest
 
 from ai_threat_lab.assessment import AssessmentService
+from ai_threat_lab.code_review import read_python_source
 from ai_threat_lab.local_inventory import local_inventory
+from ai_threat_lab.models import ValidationError
+
+
+def test_python_link_rejection_keeps_scope_diagnostic(tmp_path, monkeypatch):
+    import ai_threat_lab.dependency_paths as paths
+
+    source = tmp_path / "source.py"
+    source.write_text("eval(input())\n", encoding="utf-8")
+    assert read_python_source(source).startswith("eval")
+    monkeypatch.setattr(paths, "linked", lambda _: True)
+    with pytest.raises(ValidationError, match="inside"):
+        read_python_source(source)
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows junction semantics")

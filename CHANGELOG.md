@@ -6,6 +6,7 @@
 - Add optional JSON stage events on scan stderr, preserving machine-readable stdout and explicit interrupted-publication verification.
 - Connect Polish/English history, finding details, scan comparisons and offline diagnostics to the guided menu.
 - Exclude Windows junctions from ordinary source/configuration traversal and reject special text files without blocking; retain in-root positive controls.
+- Preserve the existing SARIF scope diagnostic when Python source links are rejected before rendering.
 - Mirror MCP structured results as compact JSON text for older clients; measure the additional framing/duplication cost.
 - Correct GUI API handoff result/status claims, expose PDF in capabilities and document progress/cancellation/thread-safety boundaries.
 

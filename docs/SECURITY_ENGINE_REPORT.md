@@ -59,6 +59,7 @@ Specific new regressions:
 | --- | --- |
 | test_ordinary_collectors_do_not_follow_directory_junction | Failed before fix on Windows; outside.py via junction disappears while inside.py remains |
 | test_text_fifo_does_not_block_inventory | POSIX FIFO in a recognized text extension cannot hang the CLI process |
+| test_python_link_rejection_keeps_scope_diagnostic | Preserve the scope diagnostic when source links are rejected before SARIF rendering; covers the Linux CI regression |
 | test_gui_free_event_contract_and_existing_report_compatibility | Ordered/versioned service events and readable existing bundle contract |
 | test_cancel_before_publication_preserves_previous_run | Cancellation at multiple boundaries creates no new committed run and preserves prior data |
 | test_cross_thread_cancel_does_not_cancel_parallel_operation | Separate control/output lifetimes under concurrent scans |
@@ -89,6 +90,12 @@ tracked in IMPLEMENTATION_TODO.md and the PR checks; final results are recorded
 there after completion. Installation acceptance uses an isolated venv, no-index /
 no-deps wheel installation, module/executable entrypoints, offline workflows,
 Unicode/spaces and real MCP initialize/discovery/calls/EOF.
+
+The first Linux CI pass exposed a diagnostic regression in the existing
+`test_resolved_symlink_escape_is_rejected`: earlier link rejection used the
+generic report-reader message instead of the expected scope message. Source
+link rejection now retains the scope diagnostic; the existing test was not
+weakened or skipped. All six jobs must be rerun on the correction.
 
 ## Measurements and interpretation
 
