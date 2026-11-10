@@ -287,15 +287,17 @@ def review_source(
 
 
 def read_python_source(path: Path, *, _raw_cache: dict[Path, bytes] | None = None) -> str:
+    from .report_io import read_regular
+
     path = Path(path)
     if path.suffix.lower() != ".py":
         raise ValidationError("Code review currently accepts a single .py file")
     if not path.is_file():
         raise ValidationError("Python source must be a regular file")
-    with path.open("rb") as source_file:
-        raw = source_file.read(MAX_SOURCE_BYTES + 1)
-    if len(raw) > MAX_SOURCE_BYTES:
-        raise ValidationError(f"Python file exceeds the {MAX_SOURCE_BYTES}-byte limit")
+    raw = read_regular(
+        path, MAX_SOURCE_BYTES,
+        limit_message=f"Python file exceeds the {MAX_SOURCE_BYTES}-byte limit",
+    )
     if _raw_cache is not None:
         _raw_cache[path] = raw
     try:
