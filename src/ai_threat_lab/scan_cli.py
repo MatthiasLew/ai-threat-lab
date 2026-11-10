@@ -1,5 +1,7 @@
 """CLI workflows for read-only scans, committed artifacts and observation comparison."""
 
+import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -20,6 +22,7 @@ from .models import ValidationError
 from .remote_audit import GithubAudit
 from .scan_bundle import compare_bundles, read_bundle
 from .scan_engine import ScanOptions, ScanService
+from .scan_lifecycle import ScanCancelled, ScanControl
 
 COMMANDS = {
     "scan",
@@ -99,6 +102,10 @@ def add_commands(commands):
     scan.add_argument("--advisory-cache", type=Path)
     scan.add_argument("--max-pages", type=int, default=10)
     scan.add_argument("--fail-on-findings", action="store_true")
+    scan.add_argument(
+        "--progress", action="store_true",
+        help="Write versioned stage events as JSON lines to stderr; stdout stays result JSON",
+    )
     check = commands.add_parser(
         "scan-check", help="Verify bundle integrity and derived report consistency"
     )
@@ -217,9 +224,26 @@ def run_command(args):
             args.advisory_cache,
             args.recursive_dependencies,
         )
-        payload = ScanService(assessor, advisory_lookup=advisory_lookup).run(
-            options, args.output_dir, baseline=args.baseline
-        )
+        def progress(event):
+            print(json.dumps(event.to_dict(), ensure_ascii=False), file=sys.stderr, flush=True)
+
+        try:
+            control = ScanControl()
+            payload = ScanService(assessor, advisory_lookup=advisory_lookup).run(
+                options, args.output_dir, baseline=args.baseline,
+                on_event=progress if getattr(args, "progress", False) else None,
+                control=control,
+            )
+        except ScanCancelled:
+            print(write_document({"status": "cancelled", "bundle_committed": False}), end="")
+            return 130
+        except KeyboardInterrupt:
+            print(write_document({
+                "status": "interrupted" if control.publication_started else "cancelled",
+                "bundle_committed": None if control.publication_started else False,
+                "notice": "Verify the output directory before reusing it.",
+            }), end="")
+            return 130
         code = (
             3
             if payload["failed_modules"]

@@ -47,6 +47,7 @@ from .sarif import SCHEMA_URI as SARIF_SCHEMA_URI
 from .scan_bundle import encoded
 from .scan_cli import advisory_lookup, assessor
 from .scan_engine import ScanOptions, ScanService
+from .scan_lifecycle import EventHandler, ScanCancelled, ScanControl, ScanEvent
 from .tool_plan import TOOLS, plan_target
 
 REMOTE_TARGET_KINDS = frozenset(("github_repository", "website", "mail_domain", "mailbox_account"))
@@ -108,7 +109,7 @@ def get_capabilities() -> dict:
     caps = dict(readiness())
     caps["supported_languages"] = list(SUPPORTED_LANGUAGES)
     caps["supported_ai_providers"] = list(SUPPORTED_AI_PROVIDERS)
-    caps["export_formats"] = ["json", "html", "sarif"]
+    caps["export_formats"] = ["json", "html", "sarif", "pdf"]
     return caps
 
 
@@ -207,6 +208,8 @@ def run_audit(
     language: str = "en",
     baseline: Path | str | None = None,
     service: ScanService | None = None,
+    on_event: EventHandler | None = None,
+    control: ScanControl | None = None,
 ) -> dict:
     """Execute a scoped audit and publish a verified report bundle."""
     validate_report_language(language)
@@ -223,7 +226,12 @@ def run_audit(
         raise ValidationError("run_audit requires a target path/URI or a ScanOptions instance")
     engine = service or ScanService(assessor, advisory_lookup=advisory_lookup)
     baseline_path = Path(baseline) if baseline is not None else None
-    result = engine.run(resolved_options, Path(output_dir), baseline=baseline_path)
+    lifecycle = {}
+    if on_event is not None:
+        lifecycle["on_event"] = on_event
+    if control is not None:
+        lifecycle["control"] = control
+    result = engine.run(resolved_options, Path(output_dir), baseline=baseline_path, **lifecycle)
     result["report_language"] = language
     return result
 
@@ -504,6 +512,9 @@ def prepare_ai_packets(
 
 
 __all__ = [
+    "ScanEvent",
+    "ScanControl",
+    "ScanCancelled",
     "GEMINI_RESPONSE_SCHEMA",
     "SUPPORTED_AI_PROVIDERS",
     "SUPPORTED_LANGUAGES",

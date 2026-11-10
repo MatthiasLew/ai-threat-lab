@@ -22,6 +22,7 @@ from .scan_bundle import (
     read_bundle,
     scope_digest,
 )
+from .scan_lifecycle import EventEmitter, EventHandler, ScanCancelled, ScanControl
 
 
 @dataclass(frozen=True)
@@ -171,7 +172,37 @@ class ScanService:
         )
         self.clock = clock or (lambda: datetime.now(timezone.utc))
 
-    def run(self, options: ScanOptions, output: Path, *, baseline: Path | None = None):
+    def run(
+        self, options: ScanOptions, output: Path, *, baseline: Path | None = None,
+        on_event: EventHandler | None = None, control: ScanControl | None = None,
+    ):
+        token = control if control is not None else ScanControl()
+        token._start()
+        events = EventEmitter(uuid.uuid4().hex, on_event)
+        try:
+            events.emit("scan_started")
+            token._checkpoint()
+            result = self._run(options, output, baseline=baseline, events=events, control=token)
+            events.emit("scan_completed", status=result["status"])
+            return result
+        except KeyboardInterrupt:
+            if token.publication_started:
+                events.emit("scan_interrupted", status="verification_required")
+            else:
+                events.emit("scan_cancel_requested")
+                events.emit("scan_cancelled", status="cancelled")
+            raise
+        except ScanCancelled:
+            events.emit("scan_cancel_requested")
+            events.emit("scan_cancelled", status="cancelled")
+            raise
+        except Exception:
+            events.emit("scan_failed", status="failed")
+            raise
+        finally:
+            token._close()
+
+    def _run(self, options, output, *, baseline, events, control):
         output = Path(output)
         if output.exists() or output.is_symlink():
             raise FileExistsError("Scan output directory already exists; select a new path")
@@ -194,6 +225,8 @@ class ScanService:
         }
         failures = []
         snapshot = None
+        events.emit("module_started", "target_assessment")
+        control._checkpoint()
         try:
             result = self.assessor(options)
             if isinstance(result, GithubSnapshot):
@@ -223,10 +256,17 @@ class ScanService:
                 (),
                 ("Target collector failed; no security conclusion is available.",),
             )
+        events.emit(
+            "module_failed" if "target_assessment" in failures else "module_completed",
+            "target_assessment", modules["target_assessment"]["status"],
+        )
+        control._checkpoint()
         documents = [document(encoded(asdict(result)))]
         artifacts["assessment.json"] = encoded(documents[0])
         if scope["target_kind"] in ("local_project", "github_repository"):
             dependency_result = None
+            events.emit("module_started", "dependency_inventory")
+            control._checkpoint()
             try:
                 if scope["target_kind"] == "github_repository":
                     if snapshot is None or "target_assessment" in failures:
@@ -253,7 +293,14 @@ class ScanService:
                     "status": "failed",
                     "notice": "Dependency inventory failed; versions were not established.",
                 }
+            events.emit(
+                "module_failed" if "dependency_inventory" in failures else "module_completed",
+                "dependency_inventory", modules["dependency_inventory"]["status"],
+            )
+            control._checkpoint()
             if options.share_packages and collected is not None and collected.packages:
+                events.emit("module_started", "dependency_advisories")
+                control._checkpoint()
                 try:
                     if self.advisory_lookup is None:
                         raise ProviderError("No advisory lookup is configured")
@@ -283,6 +330,13 @@ class ScanService:
                     "notice": "No OSV query: package sharing was not enabled or "
                     "no exact package inventory is available.",
                 }
+            advisory_status = modules["dependency_advisories"]["status"]
+            events.emit(
+                "module_failed" if advisory_status == "failed" else
+                "module_skipped" if advisory_status == "not_requested" else "module_completed",
+                "dependency_advisories", advisory_status,
+            )
+            control._checkpoint()
             if dependency_result is None:
                 dependency_result = asdict(
                     AssessmentResult(
@@ -302,6 +356,10 @@ class ScanService:
             dependency_result = document(encoded(dependency_result))
             documents.append(dependency_result)
             artifacts["dependencies.json"] = encoded(dependency_result)
+        else:
+            for module in ("dependency_inventory", "dependency_advisories"):
+                events.emit("module_skipped", module, "not_applicable")
+        control._checkpoint()
         report = merge_reports(documents)
         artifacts.update(
             {
@@ -327,6 +385,10 @@ class ScanService:
             }
             comparison = compare_bundles(previous, current)
             artifacts["comparison.json"] = encoded(comparison)
+        # Linearization point: cancellation accepted before this check prevents
+        # publication; later requests return False. Publication itself stays atomic.
+        events.emit("scan_publishing")
+        control._checkpoint(commit=True)
         manifest = publish_bundle(output, artifacts, metadata)
         return {
             "run_id": manifest["run_id"],

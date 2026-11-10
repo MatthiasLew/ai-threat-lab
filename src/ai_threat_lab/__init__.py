@@ -64,8 +64,12 @@ from .pdf_report import generate_pdf_report
 from .providers import ProviderConfig, ProviderError, ProviderRegistry
 from .reports import export_report
 from .scan_engine import SCAN_PROFILES, ScanOptions, ScanService, get_scan_profile
+from .scan_lifecycle import ScanCancelled, ScanControl, ScanEvent
 
 __all__ = [
+    "ScanEvent",
+    "ScanControl",
+    "ScanCancelled",
     "__version__",
     "AIConfig",
     "CostLedger",
