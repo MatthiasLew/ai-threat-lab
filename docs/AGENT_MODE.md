@@ -145,10 +145,13 @@ One Windows/Python 3.14 measurement on the 30-candidate fixture:
 | Agent summary | 748 |
 | All references and limitations, plus one detail | 16015 |
 | MCP tool discovery (one time) | 6221 |
+| Selective MCP responses, including JSON-RPC and text mirror | 34057 |
 
 These are actual compact serialization bytes including a newline, not a token estimate.
 No tokenizer was used. The script asserts identical IDs/rules/status/priorities,
 all limitations and failed-module counts; the selected view includes only one
 expanded guidance record. Summary alone is not equivalent to the full report. Sizes
 vary with input, paths and wire framing; MCP JSON-RPC envelopes, requests and discovery
-are additional costs. This fixture is not a universal compression claim.
+are additional costs unless explicitly included in the row. The final row includes
+response framing and the backwards-compatible text mirror, but excludes requests
+and discovery. This fixture is not a universal compression claim.

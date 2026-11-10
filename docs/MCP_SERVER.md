@@ -32,12 +32,22 @@ false throughout this offline interface. Annotations inform clients; they grant 
 permissions. Temporary private copies are created even for verified reads, but no
 project or persistent audit artifact is written by read tools.
 
-Results contain a short text status and the complete compact envelope in
-`structuredContent`. Text does not duplicate evidence. Tool execution failures use
+Results contain the complete compact envelope in `structuredContent` and a
+serialized JSON mirror in `TextContent`, following the supported protocol's
+[backward-compatibility recommendation](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#structured-content).
+Text-only clients therefore receive the same evidence. This duplicates payload
+bytes on the wire; the benchmark reports that cost separately. Tool execution failures use
 `isError: true` and structured safe error codes. Protocol failures use JSON-RPC
 errors. Initialize before tool discovery/calls and send `notifications/initialized`.
 Unsupported versions are negotiated to `2025-06-18`; clients unable to use it should
 disconnect. Oversized input returns a protocol error and closes the session.
+
+Calls execute synchronously, one at a time, with a 60-second worker deadline.
+`security_status` verifies an already committed bundle, not an active-job handle.
+Asynchronous cancellation notifications are not currently implemented; the client
+can terminate its server process, and must verify saved runs before using them.
+There is no OS memory quota or separate-account sandbox. Byte/depth/parser limits
+and a deadline reduce resource exposure but do not establish a peak-RSS ceiling.
 
 ## Codex registration
 

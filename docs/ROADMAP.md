@@ -1,5 +1,19 @@
 # Roadmap — current delivery and next milestones
 
+## Engine and CLI stabilization — 2026-11-10
+
+PR #12 remains the single Agent Mode implementation. This iteration adds shared
+service events, cooperative cancellation, real bilingual history/detail/compare
+flows and MCP text compatibility, retaining the existing engine and exports.
+No GUI or new analyzer family is added. Track acceptance and remaining work in
+[IMPLEMENTATION_TODO.md](IMPLEMENTATION_TODO.md).
+
+Further work: deterministic Windows ancestor-replacement races, OS peak memory
+limits/measurements for adversarial inputs, asynchronous MCP cancellation and
+in-module cooperative stopping. Current MCP is synchronous; committed-run status
+is not a running-job status. Broader corpus measurements by rule/category remain
+P2; synthetic corpus success is not real-world precision/recall.
+
 ## Console integration update
 
 Continued console implementation adds passive site navigation, saved HAR response review,

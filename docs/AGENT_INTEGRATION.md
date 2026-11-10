@@ -81,4 +81,18 @@ During this implementation AI Dev 1.3.1 CLI planning/context/doctor and local MC
 existing issues before reporting upstream; configuration failures or expected policy
 denials are not product defects. No API calls are needed for this workflow.
 
-A Windows configured-command interpreter mismatch was reproduced independently and reported as [AI Dev #126](https://github.com/MatthiasLew/ai-dev-cli-tools/issues/126). Running AI Dev from the project environment avoids that mismatch for these checks; the upstream issue remains open.
+A Windows configured-command interpreter mismatch was reported as
+[AI Dev #126](https://github.com/MatthiasLew/ai-dev-cli-tools/issues/126), now closed
+as completed (verified 2026-11-10). The local 1.3.1 installation predates that fix;
+authoritative checks use the absolute selected Python interpreter. AI Dev remains
+an optional developer tool and is never imported by the application.
+
+## Explicit post-change policy
+
+No hidden watcher or default commit hook is installed. Run `scan`/`agent scan`
+explicitly, then inspect failed modules, limitations and `scan-compare` or agent
+`compare`. A conventional scan returns 3 for failed modules. Opt in to
+`scan --fail-on-findings` for exit 1 when candidates exist; leave it off when
+candidates should inform review rather than block CI. An incomparable delta must
+not be treated as a successful fix. Client tools apply authorized code changes;
+Threat Lab itself has no repository-edit capability.

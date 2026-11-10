@@ -2,6 +2,13 @@
 
 ## 0.41.4 — unreleased
 
+- Add terminal-independent version 1 scan events and single-use thread-safe cooperative cancellation controls; preserve existing bundle/API contracts.
+- Add optional JSON stage events on scan stderr, preserving machine-readable stdout and explicit interrupted-publication verification.
+- Connect Polish/English history, finding details, scan comparisons and offline diagnostics to the guided menu.
+- Exclude Windows junctions from ordinary source/configuration traversal and reject special text files without blocking; retain in-root positive controls.
+- Mirror MCP structured results as compact JSON text for older clients; measure the additional framing/duplication cost.
+- Correct GUI API handoff result/status claims, expose PDF in capabilities and document progress/cancellation/thread-safety boundaries.
+
 - Add offline Agent CLI and local MCP 2025-06-18 over shared verified scan services.
 - Add bounded snapshots, strict/paged evidence views, deterministic details and exact comparisons.
 - Add installed CLI/MCP acceptance, adversarial tests and a reproducible byte benchmark.

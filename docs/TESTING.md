@@ -21,6 +21,21 @@ Package-binding regression tests also compare selected source-level outcomes aga
 
 ## Evidence covered
 
+New GUI-free contracts live in `tests/test_scan_lifecycle.py` (ordered versioned
+events, cooperative cross-thread cancellation, isolated parallel runs, failures,
+publication interruption and stdout/stderr), `tests/test_audit_console.py`
+(Polish/English history, details, comparison and diagnostics),
+`tests/test_local_input_boundaries.py` (Windows junction / POSIX FIFO), and
+`tests/test_agent_races.py` (changed reads / POSIX replacement before open).
+OS-specific tests skip only where the OS lacks that file mechanism; the existing
+matrix exercises both sides. `tests/test_audit_regressions.py` retains #7–#11
+privacy, provenance, schema/digest and AI consent controls.
+
+`python scripts/benchmark_security_engine.py` measures synthetic 1/100-file scans,
+repeats, verification, serialization, PDF cost and traced Python allocations.
+Tracemalloc is not OS RSS and affects timing. Agent payload/framing measurements
+remain in `scripts/benchmark_agent_mode.py`; neither benchmark uses paid AI.
+
 | Area | Behavioral checks |
 | --- | --- |
 | Risk engine | All matrix values, category boundaries, profile adjustments, relevant/irrelevant controls, overlap, deduplication and reduction caps |

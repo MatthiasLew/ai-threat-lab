@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "fixture": "30 inert eval AST candidates",
+  "bytes": {
+    "raw_report_json": 18638,
+    "existing_api_full_results": 372864,
+    "agent_summary": 748,
+    "selective_all_references_one_detail": 16015,
+    "mcp_discovery_once": 6221,
+    "selective_mcp_responses_with_text_mirror": 34057
+  },
+  "decision_parity": {
+    "all_references_rules_status_priorities": true,
+    "all_limitations": true,
+    "failure_counts": true
+  },
+  "tokens": {
+    "method": "not_measured",
+    "reason": "No tokenizer dependency"
+  },
+  "notice": "Serialized UTF-8 payload bytes including newline. Summary alone does not contain all findings. Selective view includes every reference and limitation but only one expanded detail. MCP framing/discovery and request bytes are separate. Synthetic fixture results are not a universal savings claim."
+}
