@@ -170,3 +170,19 @@ def test_legacy_projection_ignores_unprojected_producer_metadata(tmp_path):
     assert not failures and len(legacy["findings"]) == 1
     structured, failures = import_sarif(path)
     assert failures == 1 and structured["runs"][0]["unsupported"] == 1
+
+
+@pytest.mark.parametrize("tags", [[], ["secret", "security"]])
+def test_trivy_secret_messages_and_paths_are_withheld(tmp_path, tags):
+    data = json.loads((FIXTURES / "trivy.sarif").read_bytes())
+    run = data["runs"][0]
+    row = run["results"][0]
+    run["results"] = [row]
+    run["tool"]["driver"]["rules"][row["ruleIndex"]]["properties"]["tags"] = tags
+    row["message"] = {"text": "Secret fixture\nSeverity: HIGH\nMatch: OPAQUE-CANARY"}
+    physical = row["locations"][0]["physicalLocation"]
+    physical["artifactLocation"]["uri"] = "project/OPAQUE-CANARY"
+    path = save(tmp_path, data)
+    for importer in (import_sarif, review_sarif):
+        report, failures = importer(path)
+        assert not failures and "OPAQUE-CANARY" not in json.dumps(report)

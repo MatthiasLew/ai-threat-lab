@@ -57,7 +57,8 @@ The pinned Bandit example exercises separate severity and confidence. The
 Semgrep snapshot exercises generic rules, messages and locations. Trivy image
 targets stay opaque, with package and version retained when the location message
 provides them. Trivy filesystem and configuration layouts currently rely on the
-generic parser. Gitleaks strips messages, paths, snippets and commit metadata.
+generic parser. Trivy secret results with a secret tag or a match field withhold
+messages and paths. Gitleaks strips messages, paths, snippets and commit metadata.
 
 ## Bounds and privacy
 

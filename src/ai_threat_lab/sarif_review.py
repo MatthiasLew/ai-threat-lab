@@ -210,8 +210,15 @@ def finding(result, run, index, *, structured):
     tool = run["tool"]
     driver = tool["driver"]
     producer = driver["name"].casefold()
-    secret_source = "gitleaks" in producer
     identifier, descriptor, component = resolve_rule(result, tool)
+    tags = descriptor.get("properties", {}).get("tags", []) if producer == "trivy" else []
+    raw_message = result.get("message", {}).get("text")
+    secret_source = "gitleaks" in producer or (
+        producer == "trivy" and (
+            "secret" in array(tags, 100)
+            or isinstance(raw_message, str) and re.search(r"(?im)^\s*Match:", raw_message)
+        )
+    )
     rule = text(identifier) if identifier is not None else '"not reported"'
     message = (
         "[secret scanner message withheld]" if secret_source else
@@ -239,7 +246,10 @@ def finding(result, run, index, *, structured):
                        "kind": suppression_kind})
     locations = array(result.get("locations", []), 100)
     selected = [
-        location(item, run, secret_source=secret_source, target_source="trivy" in producer)
+        location(
+            item, run, secret_source=bool(secret_source),
+            target_source=producer == "trivy" and "misconfiguration" not in tags,
+        )
         for item in locations[:3]
     ]
     omitted = max(0, len(locations) - 3)
