@@ -1,6 +1,7 @@
 """Shared strict input schemas, process limits and safe errors for CLI and MCP."""
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -99,12 +100,22 @@ def perform(root, operation, args):
         )
 
 
+def _worker_interpreter():
+    if sys.platform == "win32" and sys.prefix != sys.base_prefix:
+        # CPython's venv launcher starts a second process. Run the base executable
+        # directly with the same venv marker so the worker itself joins the job.
+        return sys._base_executable, {**os.environ, "__PYVENV_LAUNCHER__": sys.executable}
+    return sys.executable, None
+
+
 def _run_worker(raw):
     deadline = monotonic() + TIMEOUT
     with tempfile.TemporaryDirectory(prefix="threat-agent-worker-") as scratch:
-        command = [sys.executable, "-P", "-m", "ai_threat_lab.agent_worker", scratch]
+        executable, environment = _worker_interpreter()
+        command = [executable, "-P", "-m", "ai_threat_lab.agent_worker", scratch]
         with subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            env=environment,
         ) as process:
             chunks = []
 

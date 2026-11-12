@@ -1,7 +1,10 @@
 """Exercise real subprocess supervision using bounded, trusted test programs."""
 
 import json
+import os
+import subprocess
 import sys
+import venv
 from pathlib import Path
 
 import pytest
@@ -76,3 +79,22 @@ else:
 
     monkeypatch.setattr(agent_protocol.subprocess, "Popen", start)
     assert agent_protocol.execute(tmp_path, "doctor", {})["status"] == "ok"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="CPython Windows venv redirector")
+def test_venv_worker_uses_direct_interpreter(tmp_path):
+    environment = tmp_path / "venv with spaces"
+    venv.EnvBuilder(with_pip=False).create(environment)
+    python = environment / "Scripts" / "python.exe"
+    script = """
+import sys
+from ai_threat_lab.agent_protocol import _worker_interpreter, execute
+worker, env = _worker_interpreter()
+assert worker == sys._base_executable and worker != sys.executable
+assert env['__PYVENV_LAUNCHER__'] == sys.executable
+assert execute(sys.argv[1], 'doctor', {})['worker_policy']['memory']['mechanism'] == 'job_commit'
+"""
+    subprocess.run(
+        [str(python), "-P", "-c", script, str(tmp_path)], check=True, timeout=75,
+        env={**os.environ, "PYTHONPATH": str(Path(agent_protocol.__file__).resolve().parents[1])},
+    )

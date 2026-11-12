@@ -15,3 +15,10 @@ Track production validation separately from offline tests.
 Remaining coverage includes ordinary CLI ancestor replacement protection, same-size
 changes that preserve metadata, forced termination during publication and transport
 closure during synchronous dispatch. Parent cleanup covers supervised exits.
+
+Clean-wheel CI on Windows 3.12 exposed a worker launch failure inside a venv.
+The worker now starts the trusted base interpreter with CPython's venv marker,
+allowing the supervisor to attach the interpreter itself to its single-process
+Job Object. The regression test checks launch and doctor output from a fresh
+venv with spaces in its path. The full installed-wheel workflow validates the
+same path without a source import override.
