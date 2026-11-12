@@ -24,3 +24,6 @@ Peak traced Python allocations were about 12 MB. The benchmark process reached
 about 56 MB peak resident working set. Cold MCP STDIO summary calls on this fixture
 took 2.60 s and 1.41 s, including server startup, initialization, worker and EOF.
 [Performance output](benchmarks/2026-11-12-m2-performance.json)
+
+For the closure reruns and a separate pinned Flaskr pilot, see
+[M2 closure](M2_CLOSURE_REPORT.md#representative-validation).

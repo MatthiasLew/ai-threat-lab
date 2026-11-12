@@ -1,0 +1,1135 @@
+{
+  "schema_version": 1,
+  "corpus": "m2-inert-detector-observations-v2",
+  "scanner_commit": "9dd8cbaf49f8066023f605a5a5c806d49c9ac238",
+  "python": "3.14.0",
+  "system": "Windows-11-10.0.26300-SP0",
+  "configuration": "Default detector options, one independently labelled input per case",
+  "per_rule": {
+    "PY001": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY002": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY003": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY004": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY005": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY006": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY007": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY008": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY009": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY010": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY011": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY012": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY013": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "PY014": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 1,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "container_explicit_root": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "possible_secret": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "dependency_exact_version": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    }
+  },
+  "per_category": {
+    "Python syntax and API observations": {
+      "tp": 24,
+      "fp": 0,
+      "tn": 12,
+      "fn": 0,
+      "unsupported": 12,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "Python data flow": {
+      "tp": 4,
+      "fp": 0,
+      "tn": 2,
+      "fn": 0,
+      "unsupported": 2,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "configuration": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "secret markers": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "manifest extraction": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 0,
+      "unsupported": 0,
+      "errors": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_positive_rate": 0.0
+    }
+  },
+  "cases": [
+    {
+      "rule": "PY001",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY001"
+      ],
+      "status": "tp",
+      "seconds": 0.0004920000210404396,
+      "python_peak_bytes": 28013,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY001",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0005053000058978796,
+      "python_peak_bytes": 28708,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY001",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY001"
+      ],
+      "status": "tp",
+      "seconds": 0.0002479000249877572,
+      "python_peak_bytes": 28025,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY001",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY002",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY002"
+      ],
+      "status": "tp",
+      "seconds": 0.0003869999200105667,
+      "python_peak_bytes": 28846,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY002",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.00044899992644786835,
+      "python_peak_bytes": 30029,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY002",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY002"
+      ],
+      "status": "tp",
+      "seconds": 0.0003530000103637576,
+      "python_peak_bytes": 28966,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY002",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY003",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY003"
+      ],
+      "status": "tp",
+      "seconds": 0.0006414999952539802,
+      "python_peak_bytes": 28783,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY003",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0005989999044686556,
+      "python_peak_bytes": 28770,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY003",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY003"
+      ],
+      "status": "tp",
+      "seconds": 0.0008460000390186906,
+      "python_peak_bytes": 28817,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY003",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY004",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY004"
+      ],
+      "status": "tp",
+      "seconds": 0.000677799922414124,
+      "python_peak_bytes": 28864,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY004",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0006823999574407935,
+      "python_peak_bytes": 28862,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY004",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY004"
+      ],
+      "status": "tp",
+      "seconds": 0.0006290000164881349,
+      "python_peak_bytes": 28958,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY004",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY005",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY005"
+      ],
+      "status": "tp",
+      "seconds": 0.0008195999544113874,
+      "python_peak_bytes": 28756,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY005",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0008295000297948718,
+      "python_peak_bytes": 30029,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY005",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY005"
+      ],
+      "status": "tp",
+      "seconds": 0.0005312999710440636,
+      "python_peak_bytes": 28783,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY005",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY006",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY006"
+      ],
+      "status": "tp",
+      "seconds": 0.0004401999758556485,
+      "python_peak_bytes": 28612,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY006",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0004202999407425523,
+      "python_peak_bytes": 28614,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY006",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY006"
+      ],
+      "status": "tp",
+      "seconds": 0.00045980000868439674,
+      "python_peak_bytes": 28692,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY006",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY007",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY007"
+      ],
+      "status": "tp",
+      "seconds": 0.0002834000624716282,
+      "python_peak_bytes": 28650,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY007",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.000269699958153069,
+      "python_peak_bytes": 28638,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY007",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY007"
+      ],
+      "status": "tp",
+      "seconds": 0.0003868999192491174,
+      "python_peak_bytes": 28740,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY007",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY008",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY008"
+      ],
+      "status": "tp",
+      "seconds": 0.0006257999921217561,
+      "python_peak_bytes": 29987,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY008",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0005356000037863851,
+      "python_peak_bytes": 28757,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY008",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY008"
+      ],
+      "status": "tp",
+      "seconds": 0.000651199952699244,
+      "python_peak_bytes": 30083,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY008",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY009",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY009"
+      ],
+      "status": "tp",
+      "seconds": 0.0003684000112116337,
+      "python_peak_bytes": 28706,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY009",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.000269099953584373,
+      "python_peak_bytes": 28712,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY009",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY009"
+      ],
+      "status": "tp",
+      "seconds": 0.0005179999861866236,
+      "python_peak_bytes": 28785,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY009",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY010",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY010"
+      ],
+      "status": "tp",
+      "seconds": 0.0003263000398874283,
+      "python_peak_bytes": 28877,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY010",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.00029550003819167614,
+      "python_peak_bytes": 28776,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY010",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY010"
+      ],
+      "status": "tp",
+      "seconds": 0.00036319997161626816,
+      "python_peak_bytes": 28874,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY010",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY011",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY011"
+      ],
+      "status": "tp",
+      "seconds": 0.00032870005816221237,
+      "python_peak_bytes": 28827,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY011",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0002536000683903694,
+      "python_peak_bytes": 28729,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY011",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY011"
+      ],
+      "status": "tp",
+      "seconds": 0.00027900002896785736,
+      "python_peak_bytes": 28817,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY011",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY012",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY012"
+      ],
+      "status": "tp",
+      "seconds": 0.0004496000474318862,
+      "python_peak_bytes": 30117,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY012",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0003939999733120203,
+      "python_peak_bytes": 30164,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY012",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY012"
+      ],
+      "status": "tp",
+      "seconds": 0.00041390000842511654,
+      "python_peak_bytes": 30184,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY012",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY013",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY005",
+        "PY013"
+      ],
+      "status": "tp",
+      "seconds": 0.0011687000514939427,
+      "python_peak_bytes": 41646,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated.",
+        "Flow coverage: unknown call results are not propagated; wrappers/sanitizers unchecked."
+      ]
+    },
+    {
+      "rule": "PY013",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.000960000092163682,
+      "python_peak_bytes": 41382,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY013",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY005",
+        "PY013"
+      ],
+      "status": "tp",
+      "seconds": 0.0011368000414222479,
+      "python_peak_bytes": 41762,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated.",
+        "Flow coverage: unknown call results are not propagated; wrappers/sanitizers unchecked."
+      ]
+    },
+    {
+      "rule": "PY013",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "PY014",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "PY014"
+      ],
+      "status": "tp",
+      "seconds": 0.0016832000110298395,
+      "python_peak_bytes": 46558,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY014",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.0013133999891579151,
+      "python_peak_bytes": 54640,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY014",
+      "case": "format_boundary",
+      "expected": true,
+      "observed": [
+        "PY014"
+      ],
+      "status": "tp",
+      "seconds": 0.0021241999929770827,
+      "python_peak_bytes": 46850,
+      "limitations": [
+        "Heuristic Python AST checks only; findings are candidates, not validated vulnerabilities.",
+        "Selected local flows, branch joins/one-pass loops and bounded same-file calls only; no dependency, cross-file or full scope analysis.",
+        "Direct imports/simple aliases, literal keywords and selected explicit API/loader names only.",
+        "A clean result does not establish that code is secure. Source is never executed or uploaded.",
+        "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated."
+      ]
+    },
+    {
+      "rule": "PY014",
+      "case": "unsupported",
+      "status": "unsupported"
+    },
+    {
+      "rule": "container_explicit_root",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "container_explicit_root"
+      ],
+      "status": "tp",
+      "seconds": 0.00033009995240718126,
+      "python_peak_bytes": 2562,
+      "limitations": []
+    },
+    {
+      "rule": "container_explicit_root",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.00010189996100962162,
+      "python_peak_bytes": 2230,
+      "limitations": []
+    },
+    {
+      "rule": "possible_secret",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "possible_secret"
+      ],
+      "status": "tp",
+      "seconds": 0.00012600002810359,
+      "python_peak_bytes": 1480,
+      "limitations": []
+    },
+    {
+      "rule": "possible_secret",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 6.870005745440722e-05,
+      "python_peak_bytes": 1118,
+      "limitations": []
+    },
+    {
+      "rule": "dependency_exact_version",
+      "case": "positive",
+      "expected": true,
+      "observed": [
+        "dependency_exact_version"
+      ],
+      "status": "tp",
+      "seconds": 0.0017947000451385975,
+      "python_peak_bytes": 8070,
+      "limitations": [
+        "No packages were installed or executed; manifests are untrusted input.",
+        "Only exact recorded versions; environment markers are not evaluated.",
+        "Unresolved dependencies, unsupported formats and unrecorded transitive packages remain unchecked.",
+        "Package identities are recorded claims; registry/feed provenance and installed bytes are unverified. Public advisory matches require applicability review."
+      ]
+    },
+    {
+      "rule": "dependency_exact_version",
+      "case": "negative",
+      "expected": false,
+      "observed": [],
+      "status": "tn",
+      "seconds": 0.00018919992726296186,
+      "python_peak_bytes": 2237,
+      "limitations": [
+        "No packages were installed or executed; manifests are untrusted input.",
+        "Only exact recorded versions; environment markers are not evaluated.",
+        "Unresolved dependencies, unsupported formats and unrecorded transitive packages remain unchecked.",
+        "Package identities are recorded claims; registry/feed provenance and installed bytes are unverified. Public advisory matches require applicability review.",
+        "requirements.txt:1: skipped unpinned/unsupported requirement (value omitted)."
+      ]
+    }
+  ]
+}

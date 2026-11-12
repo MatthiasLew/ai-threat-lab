@@ -43,6 +43,18 @@ configuration/dependency coverage and independently documented cases remain open
 Keep these results separate from the 31 TP, 17 TN and 14 exclusions in the
 synthetic M2 benchmark.
 
+On Windows 11 / Python 3.14.0 at `9dd8cba`, the
+[Flaskr results](benchmarks/2026-11-12-m2-flaskr.json) were 0 TP, 0 FP, 2 TN,
+0 FN, one exclusion and no failed checks. Precision and recall are undefined.
+The [synthetic rerun](benchmarks/2026-11-12-m2-closure-quality.json) retained
+31 TP, 17 TN, 0 FP, 0 FN and 14 exclusions.
+The [performance rerun](benchmarks/2026-11-12-m2-closure-performance.json)
+retained all 500 expected observations for the 1,000-file fixture; it took
+8.61/9.26 s with tracemalloc and 3.17/2.99 s for cold MCP round trips.
+These are slower than the earlier run. The new run overlapped local verification,
+so it cannot isolate how much overhead comes from the opened-handle reads.
+Peak RSS was 60.2 MB for the benchmark process only.
+
 ## Worker security and compatibility
 
 On Linux the limits bound address space and open descriptors. On Windows the

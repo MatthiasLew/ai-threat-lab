@@ -1,0 +1,61 @@
+{
+  "scanner_commit": "9dd8cbaf49f8066023f605a5a5c806d49c9ac238",
+  "system": "Windows-11-10.0.26300-SP0",
+  "python": "3.14.0",
+  "corpus": "Flaskr 3.1.2: selected files, negative controls for PY014",
+  "counts": {
+    "tp": 0,
+    "fp": 0,
+    "tn": 2,
+    "fn": 0,
+    "unsupported": 1,
+    "errors": 0
+  },
+  "precision": null,
+  "recall": null,
+  "false_positive_rate": 0.0,
+  "observations": [
+    {
+      "id": "flaskr-auth-bound-sql",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/flaskr/auth.py",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "a5ed5eaa05c6f6ee3e5bdb07b9e657a6e9320a115a68fd74b1cb4ac646680167",
+      "rule": "PY014",
+      "expected": false,
+      "in_scope": true,
+      "label_evidence": "Request values use SQL parameter binding (auth.py lines 66\u201369 and 92\u201394).",
+      "observed": false,
+      "status": "tn",
+      "seconds": 0.006265500094741583
+    },
+    {
+      "id": "flaskr-blog-bound-sql",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/flaskr/blog.py",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "c49c5f6e3db32d74bfac13633fd328ec904cb7159d76ca78f6956432076c1fd7",
+      "rule": "PY014",
+      "expected": false,
+      "in_scope": true,
+      "label_evidence": "Request values use SQL parameter binding (blog.py lines 76\u201379 and 104\u2013107).",
+      "observed": false,
+      "status": "tn",
+      "seconds": 0.004935499979183078
+    },
+    {
+      "id": "flaskr-build-metadata",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/pyproject.toml",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "8ea666f85481f44bc7a5cef54e39ab939f92f5f2cb576f9a6b959866a3fac0aa",
+      "rule": "PY014",
+      "expected": null,
+      "in_scope": false,
+      "label_evidence": "Project metadata does not contain Python data flow; excluded from PY014 scoring.",
+      "observed": null,
+      "status": "unsupported",
+      "seconds": 0.00036479998379945755
+    }
+  ]
+}

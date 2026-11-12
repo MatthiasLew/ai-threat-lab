@@ -81,22 +81,22 @@ def test_large_project_retains_per_file_findings(project, tmp_path):
 
 
 def test_manifest_collection_checks_cancellation_between_reads(project, tmp_path, monkeypatch):
-    from pathlib import Path
+    from ai_threat_lab import report_io
 
     for name in ("requirements.txt", "requirements-dev.txt"):
         (project / name).write_text("fixture-package==1.2.3\n", encoding="utf-8")
     control = ScanControl()
-    original = Path.open
+    original = report_io.read_regular
     manifest_reads = []
 
-    def open_file(path, *args, **kwargs):
-        stream = original(path, *args, **kwargs)
+    def read_file(path, *args, **kwargs):
+        raw = original(path, *args, **kwargs)
         if path.name.startswith("requirements"):
             manifest_reads.append(path.name)
             control.request_cancel()
-        return stream
+        return raw
 
-    monkeypatch.setattr(Path, "open", open_file)
+    monkeypatch.setattr(report_io, "read_regular", read_file)
     service = ScanService(lambda options: AssessmentResult(
         options.target, "local_project", "partial", (), (),
     ))
