@@ -34,7 +34,7 @@ from ai_threat_lab.http_client import HttpResponse, PublicHTTPS
 from ai_threat_lab.models import ValidationError
 from ai_threat_lab.providers import ProviderError
 
-FAKE_KEY = "AIzaSyStage4OfflineDeterministicKey0000"
+DUMMY_GEMINI_TEST_CREDENTIAL = "dummy-gemini-credential-for-tests"
 
 
 @pytest.fixture(autouse=True)
@@ -124,7 +124,7 @@ class SimulatedGeminiWire:
 
 
 def test_correct_response_single_finding(tmp_path, monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     rep = make_synthetic_report(1)
     sample = build_sample_validated_ai_response(rep, language="pl")
     wire_response = {
@@ -156,7 +156,7 @@ def test_correct_response_single_finding(tmp_path, monkeypatch):
 
 
 def test_correct_response_multiple_findings_both_languages(tmp_path, monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     for lang in ("pl", "en"):
         rep = make_synthetic_report(3, language=lang)
         sample = build_sample_validated_ai_response(rep, language=lang)
@@ -187,7 +187,7 @@ def test_correct_response_multiple_findings_both_languages(tmp_path, monkeypatch
 
 
 def test_correct_response_with_thoughts_and_cache_tokens(tmp_path, monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     rep = make_synthetic_report(1)
     sample = build_sample_validated_ai_response(rep, language="en")
     wire_response = {
@@ -329,8 +329,8 @@ def test_free_tier_vs_rate_limit_distinction():
 # ==============================================================================
 
 
-def test_zero_leakage_of_secrets_in_diagnostics():
-    secret_key = "AIzaSySecretTestKeyThatMustNeverLeak999"
+def test_zero_leakage_of_secrets_in_diagnostics(google_key_shaped_canary):
+    secret_key = google_key_shaped_canary
     exc = ProviderError(f"HTTP 400: API_KEY_INVALID for key {secret_key}")
     diag = classify_ai_failure(exc)
     assert secret_key not in diag.detail
@@ -338,7 +338,7 @@ def test_zero_leakage_of_secrets_in_diagnostics():
 
 
 def test_prompt_injection_in_findings_cannot_break_json_structure(tmp_path, monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     hostile_report = merge_reports(
         [
             {
@@ -410,7 +410,10 @@ def test_public_https_allows_gemini_generate_content_route():
         client.request(
             f"https://{GEMINI_HOST}/v1beta/models/gemini-2.5-flash:generateContent",
             method="POST",
-            headers={"Content-Type": "application/json", "x-goog-api-key": FAKE_KEY},
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": DUMMY_GEMINI_TEST_CREDENTIAL,
+            },
             body=b"{}",
         )
 
@@ -488,7 +491,7 @@ def test_end_to_end_offline_audit_to_gemini_interpretation(tmp_path, monkeypatch
     wire = SimulatedGeminiWire(responder=lambda p: gemini_resp)
 
     # 5. Execute review with simulated wire & cost ledger
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     ledger_path = tmp_path / "ledger" / "costs.sqlite"
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     ledger = CostLedger(ledger_path)
@@ -564,7 +567,7 @@ def test_local_validation_error_avoids_sqlite_ledger_reservation(tmp_path, monke
 
     from ai_threat_lab.integration_cli import review_payload
 
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     ledger_file = tmp_path / "never_created_ledger.sqlite"
     rep_file = tmp_path / "assessment.json"
     rep = make_synthetic_report(1)
@@ -618,7 +621,7 @@ def test_simulated_delayed_response_timeout_e2e(tmp_path, monkeypatch):
     7. Secret keys are never leaked in error text.
     8. User can safely reconcile the pending reservation to $0.
     """
-    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    monkeypatch.setenv("GEMINI_API_KEY", DUMMY_GEMINI_TEST_CREDENTIAL)
     rep = make_synthetic_report(1)
 
     # Wire that raises TimeoutError simulating socket read timeout after delayed response
@@ -647,7 +650,7 @@ def test_simulated_delayed_response_timeout_e2e(tmp_path, monkeypatch):
     assert "Reservation retained: Yes" in err_text
     assert "Reconciliation required: Yes" in err_text
     assert "ai-threat-lab api-reconcile" in err_text
-    assert FAKE_KEY not in err_text
+    assert DUMMY_GEMINI_TEST_CREDENTIAL not in err_text
 
     # Verify ledger state: 1 unconfirmed call, reservation retained
     rep_data = ledger.report()
