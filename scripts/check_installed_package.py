@@ -1113,7 +1113,10 @@ def main() -> None:
         run(executable, "review-sarif", broken, expected=2, stderr_contains="invalid JSON")
 
         assert json.loads(run(executable, "scanner", "list"))["scanners"][0]["scanner"] == "bandit"
-        assert json.loads(run(executable, "scanner", "doctor"))["execution"] == "blocked"
+        scanner_doctor = json.loads(run(executable, "scanner", "doctor"))
+        assert scanner_doctor["execution"] == scanner_doctor["sandbox"]["execution"] == "blocked"
+        assert scanner_doctor["sandbox"]["validation"] == "not_validated"
+        assert scanner_doctor["sandbox"]["verified_controls"] == []
         canary = work / "inert candidate żółć.exe"
         canary.write_bytes(b"Inert test fixture. Never executed.")
         sha256 = hashlib.sha256(canary.read_bytes()).hexdigest()

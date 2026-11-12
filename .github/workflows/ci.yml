@@ -16,8 +16,16 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e ".[dev]"
+      - if: runner.os == 'Linux'
+        run: sudo apt-get install -y bubblewrap
       - run: python -m ruff check .
-      - run: python -m coverage run -m pytest -q
+      - run: python -m coverage run -m pytest -q -rs
       - run: python -m coverage report
+      - run: python -m coverage json -o coverage.json
+      - run: >-
+          python -c 'import json;
+          totals = json.load(open("coverage.json", encoding="utf-8"))["totals"];
+          print("Branches covered: {:.2%}".format(totals["covered_branches"] /
+          totals["num_branches"]))'
       - run: python -m build
       - run: python scripts/check_installed_package.py
