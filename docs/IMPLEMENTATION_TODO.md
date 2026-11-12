@@ -24,3 +24,23 @@ Windows/Python3.14:3714 passed,7 skipped,92.4%; Linux/Python3.14:3718 passed,
 3 skipped,92.3%. This source-pinned run includes wheel/sdist and installed offline
 CLI/MCP acceptance in every job. Later documentation-only commit checks are shown
 on the PR. F1/F2/Q1/R1 are real future work, not production-readiness claims.
+
+## M2 follow-up — 2026-11-12
+
+Final M1 commit `cda9c80` passed all six jobs in
+[CI 42813384348](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/42813384348).
+The earlier result above remains tied to `4882faa`. The PR #12 correction at
+`6f8eed9` passed [CI 43205191400](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/43205191400).
+
+- DONE — PR #12 review and approved-root correction.
+- DONE — Worker output limits, native memory policy, timeout and supervised cleanup.
+- DONE — Cooperative cancellation at selected file and manifest boundaries.
+- DONE — Retain per-file findings above the project flow input limit.
+- DONE — Opened-handle reads for local collectors, with project identity bound for ScanService.
+- DONE — Atomic manifest commit and forced exit checks before and after the commit point.
+- DONE — STDIO disconnect checks, including committed scan after connection loss.
+- IN_PROGRESS — Filesystem edge cases, interruption and abrupt supervisor exit coverage.
+- IN_PROGRESS — Representative application corpus beyond the initial Flaskr negative controls.
+- TODO — Async client probing and executable contracts (separate lifecycle work).
+
+See [M2 acceptance](M2_ACCEPTANCE.md) for the validation matrix.

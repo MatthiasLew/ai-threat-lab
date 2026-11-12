@@ -2,13 +2,18 @@
 
 import json
 import sys
+import tempfile
 
 from .agent_protocol import MAX_REQUEST, perform
+from .agent_resources import apply_worker_limits
 from .agent_service import error_result
 from .scan_bundle import document
 
 
 def main():
+    if len(sys.argv) == 2:
+        tempfile.tempdir = sys.argv[1]
+    apply_worker_limits()
     try:
         raw = sys.stdin.buffer.read(MAX_REQUEST + 1)
         if len(raw) > MAX_REQUEST:

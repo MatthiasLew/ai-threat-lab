@@ -8,6 +8,8 @@ Snapshots are bounded copies, not atomic filesystem transactions.
 import os
 import stat
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
+from functools import cache
 from pathlib import Path
 
 from .dependency_paths import linked
@@ -18,6 +20,7 @@ MAX_FILE = 8 * 1024 * 1024
 MAX_TOTAL = 32 * 1024 * 1024
 MAX_ENTRIES = 10000
 MAX_DEPTH = 16
+_READ_ROOT = ContextVar("pinned_read_root", default=None)
 
 
 def scoped_path(root, value, *, existing=True):
@@ -38,8 +41,8 @@ def scoped_path(root, value, *, existing=True):
     return path
 
 
-@contextmanager
-def _windows_handle(path, directory):
+@cache
+def _windows_api():
     import ctypes
     from ctypes import wintypes
 
@@ -60,14 +63,46 @@ def _windows_handle(path, directory):
     final.restype = wintypes.DWORD
     close = kernel.CloseHandle
     close.argtypes = (wintypes.HANDLE,)
-    handle = create(
+    attributes = kernel.GetFileInformationByHandleEx
+    attributes.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
+    attributes.restype = wintypes.BOOL
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.DuplicateHandle.argtypes = (
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.HANDLE),
+        wintypes.DWORD,
+        wintypes.BOOL,
+        wintypes.DWORD,
+    )
+    kernel.DuplicateHandle.restype = wintypes.BOOL
+    return kernel
+
+
+@contextmanager
+def _windows_handle(path, directory):
+    import ctypes
+    from ctypes import wintypes
+
+    kernel = _windows_api()
+    handle = kernel.CreateFileW(
         str(path), 0x80000000, 3, None, 3, 0x00200000 | (0x02000000 if directory else 0), None
     )
     if handle == wintypes.HANDLE(-1).value:
+        if ctypes.get_last_error() in (2, 3):
+            raise FileNotFoundError("Scoped object does not exist")
         raise OSError("Scoped handle could not be opened")
     try:
+        tag_info = (wintypes.DWORD * 2)()
+        if not kernel.GetFileInformationByHandleEx(
+            handle, 9, ctypes.byref(tag_info), ctypes.sizeof(tag_info)
+        ):
+            raise OSError("Scoped handle attributes could not be read")
+        if tag_info[0] & 0x400 or bool(tag_info[0] & 0x10) != directory:
+            raise ValidationError("Reparse points and unexpected object types are not supported")
         buf = ctypes.create_unicode_buffer(32768)
-        length = final(handle, buf, len(buf), 0)
+        length = kernel.GetFinalPathNameByHandleW(handle, buf, len(buf), 0)
         actual = buf.value.removeprefix("\\\\?\\")
         if actual.startswith("UNC\\"):
             actual = "\\\\" + actual[4:]
@@ -80,22 +115,29 @@ def _windows_handle(path, directory):
             raise ValidationError("Opened object differs from approved path")
         yield handle
     finally:
-        close(handle)
+        kernel.CloseHandle(handle)
 
 
 @contextmanager
 def pinned_directory(path):
     """Pin every directory component; no target-controlled parent links are followed."""
     path = Path(path)
+    root = _READ_ROOT.get()
     with ExitStack() as stack:
         if os.name == "nt":
             for folder in reversed((path, *path.parents)):
-                stack.enter_context(_windows_handle(folder, True))
+                if root is None or not root[0].is_relative_to(folder):
+                    stack.enter_context(_windows_handle(folder, True))
             yield None
         else:
-            descriptor = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
-            stack.callback(os.close, descriptor)
-            for part in path.parts[1:]:
+            if root is not None and path.is_relative_to(root[0]):
+                descriptor = root[1]
+                parts = path.relative_to(root[0]).parts
+            else:
+                descriptor = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
+                stack.callback(os.close, descriptor)
+                parts = path.parts[1:]
+            for part in parts:
                 descriptor = os.open(
                     part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor
                 )
@@ -103,8 +145,36 @@ def pinned_directory(path):
             yield descriptor
 
 
-def read_scoped(path, maximum=MAX_FILE):
-    """Read only after opening and checking an object; never return outside-root bytes."""
+@contextmanager
+def pinned_read_scope(root, *, expected=None):
+    """Keep the selected directory open across all project collectors."""
+    with pinned_directory(root) as descriptor:
+        if expected is not None:
+            current = os.fstat(descriptor) if descriptor is not None else root.stat()
+            if not os.path.samestat(current, expected):
+                raise ValidationError("Scan project directory changed since selection")
+        token = _READ_ROOT.set((root, descriptor))
+        try:
+            yield
+        finally:
+            _READ_ROOT.reset(token)
+
+
+@contextmanager
+def _fd_stream(descriptor):
+    try:
+        stream = os.fdopen(descriptor, "rb")
+    except BaseException:
+        os.close(descriptor)
+        raise
+    with stream:
+        yield stream
+
+
+@contextmanager
+def open_pinned_file(path):
+    """Open a file with no link traversal, keeping its parent handles alive."""
+    path = Path(os.path.abspath(path))
     with pinned_directory(path.parent) as parent:
         if os.name == "nt":
             import msvcrt
@@ -114,28 +184,29 @@ def read_scoped(path, maximum=MAX_FILE):
                 import ctypes
                 from ctypes import wintypes
 
-                kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-                current = kernel.GetCurrentProcess
-                current.restype = wintypes.HANDLE
-                duplicate = kernel.DuplicateHandle
-                duplicate.argtypes = (
-                    wintypes.HANDLE,
-                    wintypes.HANDLE,
-                    wintypes.HANDLE,
-                    ctypes.POINTER(wintypes.HANDLE),
-                    wintypes.DWORD,
-                    wintypes.BOOL,
-                    wintypes.DWORD,
-                )
+                kernel = _windows_api()
+                current = kernel.GetCurrentProcess()
                 copied = wintypes.HANDLE()
-                if not duplicate(current(), handle, current(), ctypes.byref(copied), 0, False, 2):
+                if not kernel.DuplicateHandle(current, handle, current, ctypes.byref(copied),
+                                              0, False, 2):
                     raise OSError("Scoped handle duplication failed")
-                descriptor = msvcrt.open_osfhandle(copied.value, os.O_RDONLY | os.O_BINARY)
-                with os.fdopen(descriptor, "rb") as stream:
-                    return _read(stream, maximum)
+                try:
+                    descriptor = msvcrt.open_osfhandle(copied.value, os.O_RDONLY | os.O_BINARY)
+                except OSError:
+                    kernel.CloseHandle(copied)
+                    raise
+                with _fd_stream(descriptor) as stream:
+                    yield stream
+                return
         descriptor = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
-        with os.fdopen(descriptor, "rb") as stream:
-            return _read(stream, maximum)
+        with _fd_stream(descriptor) as stream:
+            yield stream
+
+
+def read_scoped(path, maximum=MAX_FILE):
+    """Read only after opening and checking an object; never return outside-root bytes."""
+    with open_pinned_file(path) as stream:
+        return _read(stream, maximum)
 
 
 def _read(stream, maximum):
@@ -146,10 +217,9 @@ def _read(stream, maximum):
         raise ValidationError("Scoped file exceeds its byte limit")
     value = stream.read(maximum + 1)
     after = os.fstat(stream.fileno())
-    if len(value) > maximum or (info.st_size, info.st_mtime_ns) != (
-        after.st_size,
-        after.st_mtime_ns,
-    ):
+    before_state = (info.st_size, info.st_mtime_ns, info.st_ctime_ns, info.st_nlink)
+    after_state = (after.st_size, after.st_mtime_ns, after.st_ctime_ns, after.st_nlink)
+    if len(value) > maximum or before_state != after_state:
         raise ValidationError("Scoped file changed or exceeded its byte limit")
     return value
 

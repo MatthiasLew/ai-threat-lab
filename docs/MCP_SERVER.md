@@ -46,8 +46,8 @@ Calls execute synchronously, one at a time, with a 60-second worker deadline.
 `security_status` verifies an already committed bundle, not an active-job handle.
 Asynchronous cancellation notifications are not currently implemented; the client
 can terminate its server process, and must verify saved runs before using them.
-There is no OS memory quota or separate-account sandbox. Byte/depth/parser limits
-and a deadline reduce resource exposure but do not establish a peak-RSS ceiling.
+The worker applies native memory limits on Linux and Windows. The scanner runs
+under the invoking account. See the worker policy below for platform semantics.
 
 ## Codex registration
 
@@ -118,3 +118,9 @@ Protocol references: [STDIO transport](https://modelcontextprotocol.io/specifica
 [lifecycle](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle),
 [tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools).
 Client reference: [official Codex MCP documentation](https://developers.openai.com/codex/mcp/).
+
+## M2 worker supervision
+
+STDIO processes one request per session at a time under the policy in
+[Agent Mode](AGENT_MODE.md). EOF is observed between requests. See the
+[async lifecycle proposal](M2_ASYNC_MCP.md) for future task and cancellation semantics.

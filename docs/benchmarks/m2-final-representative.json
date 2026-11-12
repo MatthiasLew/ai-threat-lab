@@ -1,0 +1,120 @@
+{
+  "scanner_commit": "18df4a7c37acd828cd0a9126fd5010608e758e82",
+  "system": "Windows-11-10.0.26300-SP0",
+  "python": "3.14.0",
+  "corpus": "Flaskr 3.1.2 and Neurodesktop pinned configuration",
+  "counts": {
+    "tp": 1,
+    "fp": 0,
+    "tn": 2,
+    "fn": 0,
+    "unsupported": 1,
+    "errors": 0
+  },
+  "precision": 1.0,
+  "recall": 1.0,
+  "false_positive_rate": 0.0,
+  "observations": [
+    {
+      "id": "flaskr-auth-bound-sql",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/flaskr/auth.py",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "a5ed5eaa05c6f6ee3e5bdb07b9e657a6e9320a115a68fd74b1cb4ac646680167",
+      "rule": "PY014",
+      "expected": false,
+      "in_scope": true,
+      "label_evidence": "Request values use SQL parameter binding (auth.py lines 66\u201369 and 92\u201394).",
+      "observed": false,
+      "status": "tn",
+      "seconds": 0.00752820004709065
+    },
+    {
+      "id": "flaskr-blog-bound-sql",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/flaskr/blog.py",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "c49c5f6e3db32d74bfac13633fd328ec904cb7159d76ca78f6956432076c1fd7",
+      "rule": "PY014",
+      "expected": false,
+      "in_scope": true,
+      "label_evidence": "Request values use SQL parameter binding (blog.py lines 76\u201379 and 104\u2013107).",
+      "observed": false,
+      "status": "tn",
+      "seconds": 0.004605200025252998
+    },
+    {
+      "id": "flaskr-build-metadata",
+      "source": "https://github.com/pallets/flask/blob/2c1b30d0503cfb064f1cb252e6614a06915a362a/examples/tutorial/pyproject.toml",
+      "revision": "2c1b30d0503cfb064f1cb252e6614a06915a362a",
+      "license": "BSD-3-Clause",
+      "sha256": "8ea666f85481f44bc7a5cef54e39ab939f92f5f2cb576f9a6b959866a3fac0aa",
+      "rule": "PY014",
+      "expected": null,
+      "in_scope": false,
+      "label_evidence": "Project metadata does not contain Python data flow; excluded from PY014 scoring.",
+      "observed": null,
+      "status": "unsupported",
+      "seconds": 0.0006901000160723925
+    },
+    {
+      "id": "neurodesktop-final-user",
+      "source": "https://github.com/neurodesk/neurodesktop/blob/b84b0c441e954fe1125529d9c8d7847a8aa395e9/Dockerfile",
+      "revision": "b84b0c441e954fe1125529d9c8d7847a8aa395e9",
+      "license": "MIT",
+      "sha256": "5bc66003d6fbe980c3a98f6f5638ddcd9b16658fd467ab7fa32905cf3128d4d9",
+      "rule": "container_explicit_root",
+      "expected": true,
+      "in_scope": true,
+      "observed": true,
+      "status": "tp",
+      "label_evidence": "Final USER root at line 1850. The preceding comments describe root bootstrap and a subsequent privilege drop in the entry point.",
+      "observed_evidence": [
+        "Dockerfile:20: Explicit root USER instruction",
+        "Dockerfile:117: Explicit root USER instruction",
+        "Dockerfile:238: Explicit root USER instruction",
+        "Dockerfile:289: Explicit root USER instruction",
+        "Dockerfile:723: Explicit root USER instruction",
+        "Dockerfile:878: Explicit root USER instruction",
+        "Dockerfile:1288: Explicit root USER instruction",
+        "Dockerfile:1624: Explicit root USER instruction",
+        "Dockerfile:1850: Explicit root USER instruction"
+      ],
+      "limitations": "Literal configuration observation. The image and entry point were not built or run, and effective runtime privileges were not evaluated.",
+      "seconds": 0.035205200081691146
+    }
+  ],
+  "multi_file": {
+    "inputs": [
+      "auth.py",
+      "blog.py",
+      "pyproject.toml"
+    ],
+    "seconds": 0.1402459000237286,
+    "candidate_checks": [],
+    "limitations": [
+      "Flow coverage: selected Flask sources and shell/SQLite sinks, local assignments, branch joins, one-pass loops, selected SQLite connection contexts and bounded same-file calls; no cross-file, path-feasibility, heap, sanitizer, runtime-binding or exploitability validation; callee exception/effect behavior is not propagated.",
+      "Only selected Python AST patterns were checked; no execution or full audit.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: control flow/classes/scope effects skipped; tracking reset at barrier.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: destructuring/attribute/subscript writes are not modeled.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: join lost ambiguous API/object bindings; some flows unchecked.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: nested/function-table-limit definitions have no callable binding.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: relative/star imports are not resolved.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\auth.py: Flow coverage: unknown call results are not propagated; wrappers/sanitizers unchecked.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\blog.py: Flow coverage: relative/star imports are not resolved.",
+      "C:\\Users\\Praca\\AppData\\Local\\Temp\\atl-representative-lxjr83i3\\flaskr\\blog.py: Flow coverage: unknown call results are not propagated; wrappers/sanitizers unchecked.",
+      "Project flow: engine python-project-modules-1.4; root/src modules and selected regular packages, at most 20 files/2 MiB; static absolute/relative local imports, literal importlib.import_module calls only; no namespace/computed dynamic imports, installation, execution, sys.path/runtime binding or exploitability validation.",
+      "Flow coverage: control flow/classes/scope effects skipped; tracking reset at barrier.",
+      "Flow coverage: destructuring/attribute/subscript writes are not modeled.",
+      "Flow coverage: join lost ambiguous API/object bindings; some flows unchecked.",
+      "Flow coverage: nested/function-table-limit definitions have no callable binding.",
+      "Flow coverage: relative local import unresolved; binding unchecked.",
+      "Flow coverage: unknown call results are not propagated; wrappers/sanitizers unchecked.",
+      "Project flow: inspected 2 modules from 2 attempts (6601 UTF-8 bytes).",
+      "Scope technologies: Config, Python. Files inspected: 3 / 3.",
+      "Dockerfile/workflow checks inspect selected literal lines only; no YAML evaluation, build, expression expansion, inherited-image or effective-permission analysis.",
+      "Selected explicit Kubernetes JSON fields only; no YAML/Helm rendering, defaults, effective inheritance, API/admission validation, cluster access, RBAC, network policy, image/runtime or Pod Security conformance assessment. A clean result is not an all-clear.",
+      "Secret patterns are incomplete; no dependency advisory database was queried."
+    ]
+  }
+}

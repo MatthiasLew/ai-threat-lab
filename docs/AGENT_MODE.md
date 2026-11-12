@@ -155,3 +155,12 @@ vary with input, paths and wire framing; MCP JSON-RPC envelopes, requests and di
 are additional costs unless explicitly included in the row. The final row includes
 response framing and the backwards-compatible text mirror, but excludes requests
 and discovery. This fixture is not a universal compression claim.
+
+## M2 worker policy
+
+The transport worker has a 60-second deadline and bounded stdout collection. The
+parent removes its scratch directory after supervised exits. `agent doctor` exposes
+the platform policy. Linux uses ceilings of 512 MiB virtual address space and
+128 descriptors. Windows uses a one-process Job Object with a 512 MiB committed
+memory ceiling and kill-on-close. Other platforms report unavailable native limits.
+Worker setup failures stop processing. The Linux worker launches no descendants.

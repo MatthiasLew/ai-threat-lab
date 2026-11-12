@@ -30,6 +30,7 @@ from .dependency_paths import (
 from .go_inventory import module_path, module_version, parse_go_sum
 from .models import ValidationError
 from .providers import ProviderError
+from .scan_lifecycle import collector_checkpoint
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PACKAGES = 500
@@ -110,6 +111,8 @@ class Inventory:
 
 
 def inventory(path: Path, *, recursive=False) -> Inventory:
+    from .report_io import read_regular
+
     path = Path(path)
     if type(recursive) is not bool:
         raise ValidationError("Recursive dependency selection must be boolean")
@@ -123,19 +126,19 @@ def inventory(path: Path, *, recursive=False) -> Inventory:
         files, skipped = [(path, path.name)], []
     sources, total = [], 0
     for manifest, origin in files:
+        collector_checkpoint()
         if linked(manifest) or not manifest.is_file():
             skipped.append(f"{origin}: skipped symlink or non-file.")
             continue
         try:
-            with manifest.open("rb") as stream:
-                raw = stream.read(MAX_BYTES + 1)
+            raw = read_regular(
+                manifest, MAX_BYTES, limit_message="Dependency manifest exceeds 2 MiB"
+            )
         except OSError as exc:
             if not path.is_dir():
                 raise
             skipped.append(f"{origin}: skipped unreadable manifest ({type(exc).__name__}).")
             continue
-        if len(raw) > MAX_BYTES:
-            raise ValidationError("Dependency manifest exceeds 2 MiB")
         if total + len(raw) > MAX_TOTAL_BYTES:
             skipped.append("Dependency total-byte limit reached; remaining manifests unchecked.")
             break
@@ -213,6 +216,7 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
             )
 
     for origin, raw in sources:
+        collector_checkpoint()
         basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")

@@ -1,5 +1,13 @@
 # Changelog
 
+## M2 development
+
+- Supervise offline agent workers and expose the platform resource policy.
+- Add collector checkpoints and retain per-file findings above the project flow cap.
+- Extend opened-handle validation and add versioned synthetic benchmarks.
+- Keep selected project roots open across scan collectors and check opened file metadata.
+- Publish the complete bundle manifest atomically and handle closed MCP output pipes quietly.
+
 ## 0.41.4 — unreleased
 
 - Add terminal-independent version 1 scan events and single-use thread-safe cooperative cancellation controls; preserve existing bundle/API contracts.

@@ -427,34 +427,37 @@ def test_exact_maximum_event_count_and_future_upper_date_are_bounded():
 
 
 def test_file_descriptor_closes_on_type_race_and_stream_setup_error(tmp_path, monkeypatch):
+    import os
     import stat
     from types import SimpleNamespace
 
-    import ai_threat_lab.auth_log_review as auth
-
     path = tmp_path / "logins.auth.jsonl"
     path.write_text("")
-    close, fstat = auth.os.close, auth.os.fstat
-    closed = []
+    fstat = os.fstat
+    opened = []
 
-    def closing(fd):
-        closed.append(fd)
-        close(fd)
+    def not_regular(fd):
+        opened.append(fd)
+        return SimpleNamespace(st_mode=stat.S_IFIFO)
 
-    monkeypatch.setattr(auth.os, "close", closing)
-    monkeypatch.setattr(auth.os, "fstat", lambda _: SimpleNamespace(st_mode=stat.S_IFIFO))
-    with pytest.raises(ValidationError, match="regular"):
-        review_auth_log_file(path)
-    assert len(closed) == 1
-    monkeypatch.setattr(auth.os, "fstat", fstat)
+    with monkeypatch.context() as patch:
+        patch.setattr(os, "fstat", not_regular)
+        with pytest.raises(ValidationError, match="regular"):
+            review_auth_log_file(path)
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        fstat(opened.pop())
 
-    def unavailable(*a, **k):
+    def unavailable(fd, *_args):
+        opened.append(fd)
         raise OSError("stream unavailable")
 
-    monkeypatch.setattr(auth.os, "fdopen", unavailable)
+    monkeypatch.setattr(os, "fdopen", unavailable)
     with pytest.raises(OSError):
         review_auth_log_file(path)
-    assert len(closed) == 2
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        fstat(opened.pop())
 
 
 def test_demo_missing_authentication_candidate_blocks_completion(tmp_path, monkeypatch):

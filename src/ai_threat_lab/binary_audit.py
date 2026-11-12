@@ -1,8 +1,6 @@
 """Bounded PE/ELF header observations. Never load, disassemble or execute a target."""
 
 import hashlib
-import os
-import stat
 import struct
 from pathlib import Path
 
@@ -283,21 +281,14 @@ def inspect_binary(raw, target="<bytes>"):
 
 
 def audit_binary(target):
+    from .report_io import read_regular
+
     path = Path(target)
     if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
         raise ValidationError("Binary target must not be a symlink/junction")
     if not path.is_file():
         raise ValidationError("Binary target must be a regular file")
-    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    flags |= getattr(os, "O_NONBLOCK", 0)
-    descriptor = os.open(path, flags)
-    try:
-        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise ValidationError("Binary target must be a regular file")
-        with os.fdopen(descriptor, "rb") as stream:
-            descriptor = None  # Stream now owns the descriptor, including on read failure.
-            raw = stream.read(MAX_BINARY_BYTES + 1)
-    finally:
-        if descriptor is not None:
-            os.close(descriptor)
+    raw = read_regular(
+        path, MAX_BINARY_BYTES, limit_message="Binary input must be bytes within the 16 MiB limit"
+    )
     return inspect_binary(raw, str(target))

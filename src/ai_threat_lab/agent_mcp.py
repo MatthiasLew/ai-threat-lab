@@ -1,6 +1,9 @@
 """MCP 2025-06-18 over UTF-8 newline-delimited STDIO; no network listener."""
 
+import errno
 import json
+import os
+import stat
 import sys
 
 from ._version import __version__
@@ -165,9 +168,25 @@ def serve(root, *, input_stream=None, output_stream=None):
             except Exception:
                 response = _error(None, -32603, "Internal protocol error")
         if response is not None:
-            output.write(json.dumps(
+            payload = json.dumps(
                 response, ensure_ascii=False, separators=(",", ":"),
-            ).encode() + b"\n")
-            output.flush()
+            ).encode() + b"\n"
+            try:
+                output.write(payload)
+                output.flush()
+            except OSError as error:
+                # The Windows CRT can report a disconnected anonymous pipe as EINVAL.
+                if not isinstance(error, BrokenPipeError) and not (
+                    os.name == "nt"
+                    and output_stream is None
+                    and error.errno == errno.EINVAL
+                    and stat.S_ISFIFO(os.fstat(output.fileno()).st_mode)
+                ):
+                    raise
+                # Avoid a second flush (and traceback) at interpreter shutdown.
+                if output_stream is None:
+                    with open(os.devnull, "wb") as sink:
+                        os.dup2(sink.fileno(), output.fileno())
+                return 0
         if len(line) > MAX_REQUEST:
             return 2

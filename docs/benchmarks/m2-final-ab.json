@@ -1,0 +1,294 @@
+{
+  "system": "Windows-11-10.0.26300-SP0",
+  "python": "3.14.0",
+  "modes": {
+    "plain": {
+      "baseline": {
+        "rows": [
+          {
+            "total": 0.6301691000116989,
+            "discovery": 0.004679500125348568,
+            "read": 0.18190630024764687,
+            "publication": 0.12984369997866452,
+            "analysis_and_other": 0.31373959966003895,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 46907392,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 0.6127942999592051,
+            "discovery": 0.004668400390073657,
+            "read": 0.17827290017157793,
+            "publication": 0.1184364000800997,
+            "analysis_and_other": 0.3114165993174538,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 46698496,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 0.6602075000992045,
+            "discovery": 0.005352600128389895,
+            "read": 0.1843787997495383,
+            "publication": 0.1408549000043422,
+            "analysis_and_other": 0.3296212002169341,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 46485504,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 0.6301691000116989,
+          "discovery": 0.004679500125348568,
+          "read": 0.18190630024764687,
+          "publication": 0.12984369997866452,
+          "analysis_and_other": 0.31373959966003895,
+          "process_peak_rss_bytes": 46698496,
+          "finding_count": 500
+        }
+      },
+      "intermediate": {
+        "rows": [
+          {
+            "total": 1.940600199974142,
+            "discovery": 0.004733299487270415,
+            "read": 1.408389897318557,
+            "publication": 0.11461940000299364,
+            "analysis_and_other": 0.41285760316532105,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 49389568,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 1.9379799000453204,
+            "discovery": 0.00546750018838793,
+            "read": 1.414770097937435,
+            "publication": 0.11387489992193878,
+            "analysis_and_other": 0.4038674019975588,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 49319936,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 2.0588860999559984,
+            "discovery": 0.006431500311009586,
+            "read": 1.5071208991575986,
+            "publication": 0.09147739992477,
+            "analysis_and_other": 0.45385630056262016,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 49328128,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 1.940600199974142,
+          "discovery": 0.00546750018838793,
+          "read": 1.414770097937435,
+          "publication": 0.11387489992193878,
+          "analysis_and_other": 0.41285760316532105,
+          "process_peak_rss_bytes": 49328128,
+          "finding_count": 500
+        }
+      },
+      "candidate": {
+        "rows": [
+          {
+            "total": 2.7535696999402717,
+            "discovery": 0.013752499944530427,
+            "read": 1.8812752014491707,
+            "publication": 0.1196595000801608,
+            "analysis_and_other": 0.7388824984664097,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 48295936,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 1.4279424000997096,
+            "discovery": 0.0048571000806987286,
+            "read": 0.9485479993745685,
+            "publication": 0.11589980009011924,
+            "analysis_and_other": 0.3586375005543232,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 48406528,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 1.923086000024341,
+            "discovery": 0.007076599868014455,
+            "read": 1.2518833982758224,
+            "publication": 0.1461358000524342,
+            "analysis_and_other": 0.51799020182807,
+            "python_peak_bytes": null,
+            "process_peak_rss_bytes": 48500736,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 1.923086000024341,
+          "discovery": 0.007076599868014455,
+          "read": 1.2518833982758224,
+          "publication": 0.1196595000801608,
+          "analysis_and_other": 0.51799020182807,
+          "process_peak_rss_bytes": 48406528,
+          "finding_count": 500
+        }
+      }
+    },
+    "traced": {
+      "baseline": {
+        "rows": [
+          {
+            "total": 1.3192152999108657,
+            "discovery": 0.0123349002096802,
+            "read": 0.2789328029612079,
+            "publication": 0.13216409995220602,
+            "analysis_and_other": 0.8957834967877716,
+            "python_peak_bytes": 11346337,
+            "process_peak_rss_bytes": 50511872,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 1.4596535000018775,
+            "discovery": 0.013939699972979724,
+            "read": 0.2728844943922013,
+            "publication": 0.16817409999202937,
+            "analysis_and_other": 1.0046552056446671,
+            "python_peak_bytes": 11346285,
+            "process_peak_rss_bytes": 50675712,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 1.3086833999259397,
+            "discovery": 0.012209099950268865,
+            "read": 0.2538794996216893,
+            "publication": 0.1446378999389708,
+            "analysis_and_other": 0.8979569004150108,
+            "python_peak_bytes": 11346292,
+            "process_peak_rss_bytes": 50429952,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 1.3192152999108657,
+          "discovery": 0.0123349002096802,
+          "read": 0.2728844943922013,
+          "publication": 0.1446378999389708,
+          "analysis_and_other": 0.8979569004150108,
+          "python_peak_bytes": 11346292,
+          "process_peak_rss_bytes": 50511872,
+          "finding_count": 500
+        }
+      },
+      "intermediate": {
+        "rows": [
+          {
+            "total": 4.35466880002059,
+            "discovery": 0.01486009988002479,
+            "read": 2.7106303001055494,
+            "publication": 0.1403418000554666,
+            "analysis_and_other": 1.4888365999795496,
+            "python_peak_bytes": 12861334,
+            "process_peak_rss_bytes": 54693888,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 3.9173912999685854,
+            "discovery": 0.01394249964505434,
+            "read": 2.6873542012181133,
+            "publication": 0.12546220002695918,
+            "analysis_and_other": 1.0906323990784585,
+            "python_peak_bytes": 12860715,
+            "process_peak_rss_bytes": 54845440,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 3.925140399951488,
+            "discovery": 0.013638800010085106,
+            "read": 2.7142902001505718,
+            "publication": 0.11308899999130517,
+            "analysis_and_other": 1.0841223997995257,
+            "python_peak_bytes": 12861918,
+            "process_peak_rss_bytes": 54624256,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 3.925140399951488,
+          "discovery": 0.01394249964505434,
+          "read": 2.7106303001055494,
+          "publication": 0.12546220002695918,
+          "analysis_and_other": 1.0906323990784585,
+          "python_peak_bytes": 12861334,
+          "process_peak_rss_bytes": 54693888,
+          "finding_count": 500
+        }
+      },
+      "candidate": {
+        "rows": [
+          {
+            "total": 3.5079362000105903,
+            "discovery": 0.015305900014936924,
+            "read": 2.2388851975556463,
+            "publication": 0.12920099997427315,
+            "analysis_and_other": 1.1245441024657339,
+            "python_peak_bytes": 12273206,
+            "process_peak_rss_bytes": 52842496,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 3.1660562999313697,
+            "discovery": 0.013803600217215717,
+            "read": 1.9858716018497944,
+            "publication": 0.11836259998381138,
+            "analysis_and_other": 1.0480184978805482,
+            "python_peak_bytes": 12273064,
+            "process_peak_rss_bytes": 52736000,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          },
+          {
+            "total": 3.176204100018367,
+            "discovery": 0.013159800204448402,
+            "read": 1.9837706022663042,
+            "publication": 0.11525300005450845,
+            "analysis_and_other": 1.0640206974931061,
+            "python_peak_bytes": 12273041,
+            "process_peak_rss_bytes": 52256768,
+            "finding_count": 500,
+            "assessment_sha256": "254e67c61dcbe7d2e4ab2db96397c8935f77143c55e22451f3d7cb09b842ba5b"
+          }
+        ],
+        "median": {
+          "total": 3.176204100018367,
+          "discovery": 0.013803600217215717,
+          "read": 1.9858716018497944,
+          "publication": 0.11836259998381138,
+          "analysis_and_other": 1.0640206974931061,
+          "python_peak_bytes": 12273064,
+          "process_peak_rss_bytes": 52736000,
+          "finding_count": 500
+        }
+      }
+    }
+  },
+  "revisions": {
+    "baseline": "caa45075f515ff15b16b9db72e9ef0fe57c4929c",
+    "intermediate": "18df4a7c37acd828cd0a9126fd5010608e758e82",
+    "candidate": "4d4ba06343bdd6c155da1d073af15fd2d5473969"
+  }
+}

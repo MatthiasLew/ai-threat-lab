@@ -15,6 +15,7 @@ from ai_threat_lab.gui_api import get_capabilities
 from ai_threat_lab.scan_bundle import read_bundle
 from ai_threat_lab.scan_cli import assessor
 from ai_threat_lab.scan_engine import ScanOptions, ScanService
+from ai_threat_lab.scan_lifecycle import collector_checkpoint
 
 
 @pytest.fixture
@@ -23,6 +24,87 @@ def project(tmp_path):
     root.mkdir()
     (root / "app.py").write_text("eval(input())\n", encoding="utf-8")
     return root
+
+
+@pytest.mark.parametrize("collector", ["assessment", "inventory"])
+def test_cancellation_from_inside_collector_is_not_a_module_failure(project, tmp_path, collector):
+    token = ScanControl()
+    events = []
+
+    def stop(_):
+        token.request_cancel()
+        collector_checkpoint()
+        pytest.fail("Continued after the checkpoint")
+
+    service = (ScanService(stop) if collector == "assessment"
+               else ScanService(assessor, inventory_loader=stop))
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        service.run(ScanOptions(str(project)), output, control=token, on_event=events.append)
+    assert events[-1].event == "scan_cancelled"
+    assert not any(event.event == "module_failed" for event in events)
+    assert not output.exists()
+    collector_checkpoint()  # Scan-local context was restored.
+
+
+def test_multifile_scan_checks_cancellation_between_reads(project, tmp_path, monkeypatch):
+    from ai_threat_lab import assessment
+
+    (project / "second.py").write_text("pass\n", encoding="utf-8")
+    original = assessment.read_python_source
+    control = ScanControl()
+    reads = []
+
+    def read(path, **kwargs):
+        reads.append(path.name)
+        result = original(path, **kwargs)
+        assert control.request_cancel()
+        return result
+
+    monkeypatch.setattr(assessment, "read_python_source", read)
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        run_audit(project, output, control=control)
+    assert reads == ["app.py"]
+    assert not output.exists()
+
+
+def test_large_project_retains_per_file_findings(project, tmp_path):
+    for index in range(100):
+        (project / f"fixture_{index:03}.py").write_text("pass\n", encoding="utf-8")
+    output = tmp_path / "large-project"
+    result = run_audit(ScanOptions(str(project), max_files=101), output)
+    assert result["unique_findings"] == 1
+    assert result["failed_modules"] == []
+    assessment = read_bundle(output)["documents"]["assessment.json"]
+    assert any("Project flow skipped" in notice for notice in assessment["not_checked"])
+
+
+def test_manifest_collection_checks_cancellation_between_reads(project, tmp_path, monkeypatch):
+    from ai_threat_lab import report_io
+
+    for name in ("requirements.txt", "requirements-dev.txt"):
+        (project / name).write_text("fixture-package==1.2.3\n", encoding="utf-8")
+    control = ScanControl()
+    original = report_io.read_regular
+    manifest_reads = []
+
+    def read_file(path, *args, **kwargs):
+        raw = original(path, *args, **kwargs)
+        if path.name.startswith("requirements"):
+            manifest_reads.append(path.name)
+            control.request_cancel()
+        return raw
+
+    monkeypatch.setattr(report_io, "read_regular", read_file)
+    service = ScanService(lambda options: AssessmentResult(
+        options.target, "local_project", "partial", (), (),
+    ))
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        service.run(ScanOptions(str(project)), output, control=control)
+    assert len(manifest_reads) == 1
+    assert not output.exists()
 
 
 def test_gui_free_event_contract_and_existing_report_compatibility(project, tmp_path):

@@ -182,27 +182,31 @@ def test_shared_reader_closes_descriptor_on_type_race_and_stream_failure(tmp_pat
 
     path = tmp_path / "report"
     path.write_bytes(b"inert")
-    original_close, original_stat = io.os.close, io.os.fstat
-    closed = []
+    original_stat = io.os.fstat
+    opened = []
 
-    def closing(fd):
-        closed.append(fd)
-        original_close(fd)
+    def not_regular(fd):
+        opened.append(fd)
+        return SimpleNamespace(st_mode=stat.S_IFIFO)
 
-    monkeypatch.setattr(io.os, "close", closing)
-    monkeypatch.setattr(io.os, "fstat", lambda _: SimpleNamespace(st_mode=stat.S_IFIFO))
-    with pytest.raises(ValidationError):
-        io.read_regular(path, 10)
-    assert len(closed) == 1
-    monkeypatch.setattr(io.os, "fstat", original_stat)
+    with monkeypatch.context() as patch:
+        patch.setattr(io.os, "fstat", not_regular)
+        with pytest.raises(ValidationError, match="regular"):
+            io.read_regular(path, 10)
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        original_stat(opened.pop())
 
-    def fail(*a, **k):
+    def fail(fd, *_args):
+        opened.append(fd)
         raise OSError("PRIVATE")
 
     monkeypatch.setattr(io.os, "fdopen", fail)
     with pytest.raises(OSError):
         io.read_regular(path, 10)
-    assert len(closed) == 2
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        original_stat(opened.pop())
 
 
 def test_html_escapes_summary_labels_and_values_for_python_callers(tmp_path):

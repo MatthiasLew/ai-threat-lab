@@ -179,3 +179,5 @@ The finite [dependency acceptance contract](DEPENDENCIES_OFFLINE_ACCEPTANCE.md) 
 Expiry is rechecked after database reads, and new TTLs start after acquiring the SQLite writer lock. Independent SQL trace controls advance time during the database operation and reproduce both stale-read and shortened-TTL regressions. Invalid post-lock clocks roll back without replacing the previous cache row. Engine 26 and the existing cache schema remain unchanged.
 
 Windows installed acceptance also requires explicit closure of fixture SQLite connections before temporary-directory cleanup; the transaction context alone does not close their handles. The dependency acceptance and new cache fixtures close both transactions and connections.
+
+M2 adds real subprocess supervision, opened-handle checks and file-boundary cancellation tests. See [M2 acceptance](M2_ACCEPTANCE.md).
