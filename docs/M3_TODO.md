@@ -13,3 +13,4 @@
 - M3.2 offline handoff validates and publishes saved Bandit reports.
 - Verify OS-backed filesystem and network confinement before designing the launch path.
   [Integration report](M3_COMPLETION_REPORT.md)
+- Run the [offline release checklist](M3_OFFLINE_RELEASE_CHECKLIST.md) on the final head.

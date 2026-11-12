@@ -1,6 +1,7 @@
 # Roadmap — current delivery and next milestones
 
 M3.2 starts with [Bandit plan validation](M3_BANDIT_PLANNING.md).
+See [M4 acceptance priorities](M4_ROADMAP.md) for the next PRs.
 The next slice adds saved-report publication and records the remaining
 [execution isolation gates](M3_COMPLETION_REPORT.md).
 
