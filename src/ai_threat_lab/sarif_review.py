@@ -132,7 +132,7 @@ def location(value, run, *, secret_source=False, target_source=False):
         "line": line if not secret_source else None,
         "kind": "target" if target_source else "artifact",
     }
-    if target_source:
+    if target_source and not secret_source:
         label = value.get("message", {}).get("text")
         if isinstance(label, str) and len(label) <= 1024:
             target, separator, package = label.rpartition(": ")
@@ -216,7 +216,8 @@ def finding(result, run, index, *, structured):
     secret_source = "gitleaks" in producer or (
         producer == "trivy" and (
             "secret" in array(tags, 100)
-            or isinstance(raw_message, str) and re.search(r"(?im)^\s*Match:", raw_message)
+            or isinstance(raw_message, str)
+            and bool(re.search(r"(?im)^[ \t]*Match:", raw_message[:2000]))
         )
     )
     rule = text(identifier) if identifier is not None else '"not reported"'
@@ -257,7 +258,10 @@ def finding(result, run, index, *, structured):
         properties = result.get("properties", {})
         if not isinstance(properties, dict):
             raise ValidationError("Unsupported SARIF result properties")
-        severity, confidence, category = producer_classification(producer, properties, descriptor)
+        safe_properties = {} if secret_source else properties
+        severity, confidence, category = producer_classification(
+            producer, safe_properties, descriptor,
+        )
         return {
             "component": optional_text(component, "name"),
             "component_version": reported_version(component),

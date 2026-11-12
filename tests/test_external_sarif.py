@@ -182,6 +182,8 @@ def test_trivy_secret_messages_and_paths_are_withheld(tmp_path, tags):
     row["message"] = {"text": "Secret fixture\nSeverity: HIGH\nMatch: OPAQUE-CANARY"}
     physical = row["locations"][0]["physicalLocation"]
     physical["artifactLocation"]["uri"] = "project/OPAQUE-CANARY"
+    row["locations"][0]["message"] = {"text": "project/OPAQUE-CANARY: OPAQUE-CANARY@1"}
+    row["properties"] = {"confidence": "OPAQUE-CANARY"}
     path = save(tmp_path, data)
     for importer in (import_sarif, review_sarif):
         report, failures = importer(path)
