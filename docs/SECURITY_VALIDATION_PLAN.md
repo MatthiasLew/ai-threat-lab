@@ -40,3 +40,13 @@ drift; it does not certify the final branch. Remaining race/resource/corpus work
 stays explicit in IMPLEMENTATION_TODO.md. No paid AI/live-provider call was made.
 
 See [M2 acceptance](M2_ACCEPTANCE.md) for post-M1 evidence and open boundaries.
+
+## M2 closure regressions
+
+- Verify selected project directory identity and no-follow collector reads.
+- Terminate a writer before the destination exists, during an artifact write,
+  and on both sides of the manifest publication boundary. Compare prior bundles.
+- Close actual MCP STDIO pipes and check that an already running worker can
+  finish and publish a verifiable report without emitting a traceback.
+- On Linux verify descriptor exhaustion independently of the allocation limit;
+  on Windows exercise the Job Object and clean-venv worker path separately.

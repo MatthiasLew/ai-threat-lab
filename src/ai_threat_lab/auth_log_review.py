@@ -1,9 +1,7 @@
 """Bounded normalized login-event review, without login attempts or raw identity evidence."""
 
 import json
-import os
 import re
-import stat
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -12,6 +10,7 @@ from pathlib import Path
 from .assessment import AssessmentFinding, AssessmentResult
 from .contracts import _nonfinite, _pairs
 from .models import ValidationError
+from .report_io import read_regular
 
 MAX_BYTES = 4 * 1024 * 1024
 MAX_LINES = 10_000
@@ -279,24 +278,7 @@ def read_auth_text(path):
     path = Path(path)
     if path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file():
         raise ValidationError("Authentication log must be a regular file without links")
-    descriptor = os.open(
-        path,
-        os.O_RDONLY
-        | getattr(os, "O_BINARY", 0)
-        | getattr(os, "O_NOFOLLOW", 0)
-        | getattr(os, "O_NONBLOCK", 0),
-    )
-    try:
-        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise ValidationError("Authentication log must be a regular file")
-        with os.fdopen(descriptor, "rb") as stream:
-            descriptor = None
-            raw = stream.read(MAX_BYTES + 1)
-    finally:
-        if descriptor is not None:
-            os.close(descriptor)
-    if len(raw) > MAX_BYTES:
-        raise ValidationError("Authentication log exceeds the 4 MiB limit")
+    raw = read_regular(path, MAX_BYTES, limit_message="Authentication log exceeds the 4 MiB limit")
     try:
         source = raw.decode("utf-8-sig")
     except UnicodeError:

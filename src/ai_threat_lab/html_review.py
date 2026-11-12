@@ -1,9 +1,7 @@
 """Bounded HTML authoring observations; never render, fetch, submit or execute content."""
 
 import ipaddress
-import os
 import re
-import stat
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
@@ -11,6 +9,7 @@ from urllib.parse import urljoin, urlsplit
 
 from .assessment import AssessmentFinding, AssessmentResult
 from .models import ValidationError
+from .report_io import read_regular
 
 MAX_BYTES = 256 * 1024
 MAX_ELEMENTS = 5000
@@ -393,24 +392,7 @@ def review_html_file(path, *, document_url=None):
     path = Path(path)
     if path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file():
         raise ValidationError("HTML target must be a regular file without links")
-    descriptor = os.open(
-        path,
-        os.O_RDONLY
-        | getattr(os, "O_BINARY", 0)
-        | getattr(os, "O_NOFOLLOW", 0)
-        | getattr(os, "O_NONBLOCK", 0),
-    )
-    try:
-        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise ValidationError("HTML target must be a regular file")
-        with os.fdopen(descriptor, "rb") as stream:
-            descriptor = None
-            raw = stream.read(MAX_BYTES + 1)
-    finally:
-        if descriptor is not None:
-            os.close(descriptor)
-    if len(raw) > MAX_BYTES:
-        raise ValidationError("HTML input exceeds the 256 KiB limit")
+    raw = read_regular(path, MAX_BYTES, limit_message="HTML input exceeds the 256 KiB limit")
     try:
         source = raw.decode("utf-8-sig")
     except UnicodeError:

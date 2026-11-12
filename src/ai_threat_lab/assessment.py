@@ -116,13 +116,11 @@ def identify_target(target: str) -> str:
 def audit_message(path: Path) -> AssessmentResult:
     """Read one exported message. Authentication headers are observations, never trust proofs."""
     from .mail_review import inspect_message_content
+    from .report_io import read_regular
 
     if path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file():
         raise ValidationError("Mail message must be a regular file, not a symlink/junction")
-    with path.open("rb") as stream:
-        raw = stream.read(1024 * 1024 + 1)
-    if len(raw) > 1024 * 1024:
-        raise ValidationError("Mail message exceeds the 1 MiB limit")
+    raw = read_regular(path, 1024 * 1024, limit_message="Mail message exceeds the 1 MiB limit")
     try:
         message = BytesParser(policy=policy.default).parsebytes(raw)
     except (RecursionError, ValueError, IndexError):

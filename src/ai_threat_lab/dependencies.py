@@ -111,6 +111,8 @@ class Inventory:
 
 
 def inventory(path: Path, *, recursive=False) -> Inventory:
+    from .report_io import read_regular
+
     path = Path(path)
     if type(recursive) is not bool:
         raise ValidationError("Recursive dependency selection must be boolean")
@@ -129,15 +131,14 @@ def inventory(path: Path, *, recursive=False) -> Inventory:
             skipped.append(f"{origin}: skipped symlink or non-file.")
             continue
         try:
-            with manifest.open("rb") as stream:
-                raw = stream.read(MAX_BYTES + 1)
+            raw = read_regular(
+                manifest, MAX_BYTES, limit_message="Dependency manifest exceeds 2 MiB"
+            )
         except OSError as exc:
             if not path.is_dir():
                 raise
             skipped.append(f"{origin}: skipped unreadable manifest ({type(exc).__name__}).")
             continue
-        if len(raw) > MAX_BYTES:
-            raise ValidationError("Dependency manifest exceeds 2 MiB")
         if total + len(raw) > MAX_TOTAL_BYTES:
             skipped.append("Dependency total-byte limit reached; remaining manifests unchecked.")
             break

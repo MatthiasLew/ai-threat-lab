@@ -9,6 +9,8 @@ import pytest
 from ai_threat_lab import agent_fs
 from ai_threat_lab.agent_service import AgentService
 from ai_threat_lab.models import ValidationError
+from ai_threat_lab.report_io import read_regular
+from ai_threat_lab.scan_engine import ScanOptions, ScanService
 
 
 def test_root_must_pass_opened_directory_validation(tmp_path, monkeypatch):
@@ -51,6 +53,38 @@ def test_opened_directory_rejects_junction(tmp_path):
     with pytest.raises(ValidationError, match="Reparse points"):
         with agent_fs.pinned_directory(junction):
             pytest.fail("Accepted a reparse point")
+    sample = folder / "sample.py"
+    sample.write_text("pass\n")
+    with pytest.raises(ValidationError, match="Reparse points"):
+        ScanOptions(str(junction / sample.name))
+    with pytest.raises(ValidationError, match="Reparse points"):
+        read_regular(junction / sample.name, 1024)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX symlink and directory descriptor semantics")
+def test_ordinary_project_reads_stay_with_opened_directory(tmp_path):
+    root, moved = tmp_path / "project", tmp_path / "moved"
+    root.mkdir()
+    source = root / "sample.py"
+    source.write_bytes(b"# selected content")
+    with agent_fs.pinned_read_scope(root):
+        root.rename(moved)
+        root.mkdir()
+        source.write_bytes(b"# new directory content")
+        assert read_regular(source, 1024) == b"# selected content"
+    assert read_regular(source, 1024) == b"# new directory content"
+
+
+def test_scan_requires_same_selected_project_directory(tmp_path):
+    root = tmp_path / "project"
+    root.mkdir()
+    options = ScanOptions(str(root))
+    root.rename(tmp_path / "moved")
+    root.mkdir()
+    service = ScanService(lambda _: pytest.fail("Collector ran on a replacement directory"))
+    with pytest.raises(ValidationError, match="changed since selection"):
+        service.run(options, tmp_path / "report")
+    assert not (tmp_path / "report").exists()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows share-delete semantics")

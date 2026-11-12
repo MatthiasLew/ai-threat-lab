@@ -36,8 +36,11 @@ The earlier result above remains tied to `4882faa`. The PR #12 correction at
 - DONE — Worker output limits, native memory policy, timeout and supervised cleanup.
 - DONE — Cooperative cancellation at selected file and manifest boundaries.
 - DONE — Retain per-file findings above the project flow input limit.
-- IN_PROGRESS — Remaining filesystem and interruption coverage.
-- IN_PROGRESS — Representative applications and broader case coverage per category.
-- TODO — Async client probing, executable contracts and disconnect semantics.
+- DONE — Opened-handle reads for local collectors, with project identity bound for ScanService.
+- DONE — Atomic manifest commit and forced exit checks before and after the commit point.
+- DONE — STDIO disconnect checks, including committed scan after connection loss.
+- IN_PROGRESS — Filesystem edge cases, interruption and abrupt supervisor exit coverage.
+- IN_PROGRESS — Representative application corpus beyond the initial Flaskr negative controls.
+- TODO — Async client probing and executable contracts (separate lifecycle work).
 
 See [M2 acceptance](M2_ACCEPTANCE.md) for the validation matrix.

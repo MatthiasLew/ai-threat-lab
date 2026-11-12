@@ -408,34 +408,37 @@ def test_maximum_table_counts_are_bounded_but_supported():
 
 
 def test_file_descriptor_closed_if_type_changes_or_stream_setup_fails(tmp_path, monkeypatch):
+    import os
     import stat
     from types import SimpleNamespace
 
-    import ai_threat_lab.binary_audit as binary
-
     path = tmp_path / "sample.bin"
     path.write_bytes(b"fixture")
-    close, fstat = binary.os.close, binary.os.fstat
-    closed = []
+    fstat = os.fstat
+    opened = []
 
-    def closing(descriptor):
-        closed.append(descriptor)
-        close(descriptor)
+    def not_regular(fd):
+        opened.append(fd)
+        return SimpleNamespace(st_mode=stat.S_IFIFO)
 
-    monkeypatch.setattr(binary.os, "close", closing)
-    monkeypatch.setattr(binary.os, "fstat", lambda _: SimpleNamespace(st_mode=stat.S_IFIFO))
-    with pytest.raises(ValidationError, match="regular"):
-        audit_binary(path)
-    assert len(closed) == 1
-    monkeypatch.setattr(binary.os, "fstat", fstat)
+    with monkeypatch.context() as patch:
+        patch.setattr(os, "fstat", not_regular)
+        with pytest.raises(ValidationError, match="regular"):
+            audit_binary(path)
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        fstat(opened.pop())
 
-    def fail_open(*args, **kwargs):
+    def unavailable(fd, *_args):
+        opened.append(fd)
         raise OSError("stream unavailable")
 
-    monkeypatch.setattr(binary.os, "fdopen", fail_open)
+    monkeypatch.setattr(os, "fdopen", unavailable)
     with pytest.raises(OSError):
         audit_binary(path)
-    assert len(closed) == 2
+    assert len(opened) == 1
+    with pytest.raises(OSError):
+        fstat(opened.pop())
 
 
 def test_exact_maximum_input_size_preserves_metadata():

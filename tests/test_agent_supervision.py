@@ -81,6 +81,32 @@ else:
     assert agent_protocol.execute(tmp_path, "doctor", {})["status"] == "ok"
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux RLIMIT_NOFILE")
+def test_worker_open_file_limit_is_enforced():
+    code = """
+import errno
+import os
+import resource
+from ai_threat_lab.agent_resources import OPEN_FILES, apply_worker_limits
+
+apply_worker_limits()
+soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+assert 3 <= soft == hard <= OPEN_FILES
+opened = []
+try:
+    for _ in range(OPEN_FILES):
+        opened.append(os.open(os.devnull, os.O_RDONLY))
+except OSError as error:
+    assert error.errno == errno.EMFILE
+else:
+    raise AssertionError("Worker descriptor limit did not apply")
+finally:
+    for fd in opened:
+        os.close(fd)
+"""
+    subprocess.run([sys.executable, "-P", "-c", code], check=True, timeout=15)
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="CPython Windows venv redirector")
 def test_venv_worker_uses_direct_interpreter(tmp_path):
     environment = tmp_path / "venv with spaces"

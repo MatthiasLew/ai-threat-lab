@@ -212,17 +212,34 @@ def publish_bundle(destination: Path, artifacts: dict[str, bytes], metadata: dic
         stage = Path(staging)
         for name, raw in {**artifacts, "manifest.json": encoded(manifest)}.items():
             (stage / name).write_bytes(raw)
+        staged_marker = stage / "manifest.json"
+        marker = destination / staged_marker.name
+        marker_identity = staged_marker.stat()
         destination.mkdir(
             mode=0o700
         )  # Atomic no-overwrite claim, including existing empty folders.
         created = []
         try:
-            for name in [*sorted(artifacts), "manifest.json"]:
+            for name in sorted(artifacts):
                 path = destination / name
                 with path.open("xb") as stream:
                     created.append((path, os.fstat(stream.fileno())))
                     stream.write((stage / name).read_bytes())
+            # Publish complete bytes in one operation without replacing a marker
+            # installed by someone else. Both names are on the same filesystem.
+            if os.name == "nt":
+                staged_marker.rename(marker)
+            else:
+                os.link(staged_marker, marker)
         except BaseException:
+            # An interruption can arrive after the OS commits the marker but
+            # before the call returns to Python. Never roll back that bundle.
+            try:
+                committed = os.path.samestat(marker_identity, marker.stat(follow_symlinks=False))
+            except FileNotFoundError:
+                committed = False
+            if committed:
+                raise
             for path, identity in reversed(created):
                 try:
                     if os.path.samestat(identity, path.stat(follow_symlinks=False)):

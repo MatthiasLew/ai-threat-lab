@@ -1,4 +1,7 @@
 import json
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -276,3 +279,88 @@ def test_racing_directory_claim_preserves_the_other_actor_files(bundle, tmp_path
     with pytest.raises(FileExistsError):
         publish_bundle(destination, artifacts, metadata)
     assert (destination / "keep.txt").read_text() == "other actor"
+
+
+@pytest.mark.parametrize(
+    "checkpoint", ["before_directory", "during_artifact", "before_marker", "after_marker"]
+)
+def test_forced_process_exit_around_manifest_commit(bundle, tmp_path, checkpoint):
+    prior = {path.name: path.read_bytes() for path in bundle.iterdir() if path.is_file()}
+    destination = tmp_path / "interrupted"
+    child = """
+import json
+import os
+import sys
+from contextlib import contextmanager
+from pathlib import Path
+from ai_threat_lab.scan_bundle import publish_bundle
+
+prior, destination = map(Path, sys.argv[1:3])
+checkpoint = sys.argv[3]
+metadata = json.loads((prior / "manifest.json").read_bytes())
+artifacts = {name: (prior / name).read_bytes() for name in metadata.pop("files")}
+metadata.pop("schema_version")
+
+def wait_for_parent():
+    print("checkpoint", flush=True)
+    sys.stdin.buffer.read(1)
+    raise RuntimeError("parent did not terminate the process")
+
+mkdir = Path.mkdir
+def mkdir_gate(path, *args, **kwargs):
+    if path == destination and checkpoint == "before_directory":
+        wait_for_parent()
+    return mkdir(path, *args, **kwargs)
+
+open_file = Path.open
+def open_gate(path, *args, **kwargs):
+    opened = open_file(path, *args, **kwargs)
+    if path == destination / "report.html" and args == ("xb",) and checkpoint == "during_artifact":
+        @contextmanager
+        def partial_write():
+            with opened as stream:
+                stream.write(b"partial")
+                stream.flush()
+                wait_for_parent()
+                yield stream
+        return partial_write()
+    return opened
+
+def wrap(original):
+    def commit(source, target):
+        if checkpoint == "after_marker":
+            original(source, target)
+        wait_for_parent()
+    return commit
+
+if os.name == "nt":
+    Path.rename = wrap(Path.rename)
+else:
+    os.link = wrap(os.link)
+Path.mkdir = mkdir_gate
+Path.open = open_gate
+publish_bundle(destination, artifacts, metadata)
+"""
+    with subprocess.Popen(
+        [sys.executable, "-c", child, str(bundle), str(destination), checkpoint],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process, ThreadPoolExecutor(max_workers=1) as reader:
+        ready = reader.submit(process.stdout.readline)
+        try:
+            assert ready.result(timeout=20).rstrip(b"\r\n") == b"checkpoint"
+        finally:
+            process.kill()
+            process.wait(timeout=10)
+    assert process.returncode != 0
+    for name, content in prior.items():
+        assert (bundle / name).read_bytes() == content
+    if checkpoint == "before_directory":
+        assert not destination.exists()
+    elif checkpoint != "after_marker":
+        with pytest.raises(ValidationError, match="incomplete"):
+            read_bundle(destination)
+    else:
+        read_bundle(destination)
+        assert (destination / "manifest.json").read_bytes() == prior["manifest.json"]

@@ -1,5 +1,6 @@
 """One-target scan orchestration over existing collectors; no automatic model calls."""
 
+import os
 import re
 import uuid
 from dataclasses import asdict, dataclass
@@ -7,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from .agent_fs import open_pinned_file, pinned_directory, pinned_read_scope
 from .assessment import AssessmentResult, identify_target
 from .audit_report import merge_reports, render_html
 from .dependencies import inventory
@@ -70,7 +72,21 @@ class ScanOptions:
         ):
             if linked(Path(self.target)):
                 raise ValidationError("Scan root must not be a symlink/junction")
-            object.__setattr__(self, "target", str(Path(self.target).resolve()))
+            local = Path(os.path.abspath(self.target))
+            try:
+                if kind == "local_project":
+                    with pinned_directory(local) as descriptor:
+                        if os.name == "nt":
+                            local = local.resolve(strict=True)
+                        identity = os.fstat(descriptor) if descriptor is not None else local.stat()
+                        object.__setattr__(self, "_project_identity", identity)
+                else:
+                    with open_pinned_file(local):
+                        if os.name == "nt":
+                            local = local.resolve(strict=True)
+            except OSError as error:
+                raise ValidationError("Scan target could not be opened safely") from error
+            object.__setattr__(self, "target", str(local))
         else:
             expected = {
                 "website": urlsplit(self.target).hostname,
@@ -183,7 +199,14 @@ class ScanService:
         try:
             events.emit("scan_started")
             token._checkpoint()
-            result = self._run(options, output, baseline=baseline, events=events, control=token)
+            identity = getattr(options, "_project_identity", None)
+            if identity is not None:
+                with pinned_read_scope(Path(options.target), expected=identity):
+                    result = self._run(
+                        options, output, baseline=baseline, events=events, control=token
+                    )
+            else:
+                result = self._run(options, output, baseline=baseline, events=events, control=token)
             events.emit("scan_completed", status=result["status"])
             return result
         except KeyboardInterrupt:
