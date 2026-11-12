@@ -41,6 +41,16 @@ def text(value, maximum=256):
     return json.dumps(safe_text(value, maximum), ensure_ascii=False)
 
 
+def producer_key(name):
+    normalized = unicodedata.normalize("NFKC", name).casefold()
+    compact = "".join(char for char in normalized if char.isalnum())
+    if "gitleaks" in compact:
+        return "gitleaks"
+    for known in ("trivy", "bandit"):
+        if compact.startswith(known):
+            return known
+    return normalized
+
 def array(value, maximum):
     if not isinstance(value, list) or len(value) > maximum:
         raise ValidationError("Unsupported SARIF array or limit")
@@ -209,16 +219,14 @@ def producer_classification(producer, properties, descriptor):
 def finding(result, run, index, *, structured):
     tool = run["tool"]
     driver = tool["driver"]
-    producer = driver["name"].casefold()
+    producer = producer_key(driver["name"])
     identifier, descriptor, component = resolve_rule(result, tool)
     tags = descriptor.get("properties", {}).get("tags", []) if producer == "trivy" else []
     raw_message = result.get("message", {}).get("text")
-    secret_source = "gitleaks" in producer or (
-        producer == "trivy" and (
-            "secret" in array(tags, 100)
-            or isinstance(raw_message, str)
-            and bool(re.search(r"(?im)^[ \t]*Match:", raw_message[:2000]))
-        )
+    secret_source = (
+        producer == "gitleaks" or "secret" in array(tags, 100)
+        or isinstance(raw_message, str)
+        and bool(re.search(r"(?im)^[ \t]*Match[ \t]*:", raw_message[:2000]))
     )
     rule = text(identifier) if identifier is not None else '"not reported"'
     message = (
@@ -361,12 +369,13 @@ def _import(path, start, max_entries, *, structured):
                 version = reported_version(driver)
             try:
                 properties = run.get("properties", {})
-                if producer.casefold() == "trivy" and any(
+                producer_type = producer_key(driver["name"])
+                if producer_type == "trivy" and any(
                     key in properties for key in ("imageID", "imageName", "repoDigests")
                 ):
                     target_kind = "image"
                 for limitation in array(properties.get("limitations", []), 100):
-                    if "gitleaks" not in producer.casefold():
+                    if producer_type not in ("trivy", "gitleaks"):
                         gaps.append("Producer-supplied limitation: " + text(limitation, 2000))
             except (ValidationError, TypeError, AttributeError):
                 broken = True

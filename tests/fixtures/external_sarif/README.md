@@ -13,3 +13,9 @@ Producer versions below are reported by the fixture itself.
 The Bandit JSON was extracted from its formatter docstring and reformatted.
 The Gitleaks derivative removes fingerprints and snippets and substitutes a
 synthetic message and path. Semgrep and Trivy match the upstream bytes.
+
+The additional [Semgrep trace-mode snapshot](https://github.com/semgrep/semgrep/blob/06d9993409f6698f78f6956cd39d968e7f4d7b6a/cli/tests/default/e2e/snapshots/test_output_sarif/test_sarif_output/trace-cwe_tag/results.sarif)
+has two findings and SHA-256
+`540d6e9128e1c6ca91cc7d8f44f27c305785bb8229dfacf88901f0f3d3c0cf84`.
+The upstream version is masked. This LGPL-2.1 snapshot contains no
+`codeFlows` field. Synthetic tests cover bounded omission of that field.

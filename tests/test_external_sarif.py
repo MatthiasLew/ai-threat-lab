@@ -24,7 +24,7 @@ def save(tmp_path, data):
 
 
 @pytest.mark.parametrize("name,version,count", [
-    ("bandit", "1.7.8", 1), ("semgrep", None, 1),
+    ("bandit", "1.7.8", 1), ("semgrep", None, 1), ("semgrep-trace", None, 2),
     ("trivy", "dev", 4), ("gitleaks", "v8.0.0", 1),
 ])
 def test_upstream_reports(name, version, count):
@@ -35,7 +35,7 @@ def test_upstream_reports(name, version, count):
     assert len(report["observations"]) == count
     row = report["observations"][0]
     assert row["status"] == "unverified" and row["rule_id"]
-    assert row["producer"].casefold().startswith(name)
+    assert row["producer"].casefold().startswith(name.split("-")[0])
     if name == "bandit":
         assert (row["rule_id"], row["severity"], row["confidence"]) == ("B101", "LOW", "HIGH")
     if name == "trivy":
@@ -170,6 +170,21 @@ def test_legacy_projection_ignores_unprojected_producer_metadata(tmp_path):
     assert not failures and len(legacy["findings"]) == 1
     structured, failures = import_sarif(path)
     assert failures == 1 and structured["runs"][0]["unsupported"] == 1
+
+
+@pytest.mark.parametrize("name", ["Git-Leaks CLI", "TRIVY scanner", "Unknown scanner"])
+def test_secret_shape_is_withheld_independently_of_producer_name(tmp_path, capsys, name):
+    data = bandit()
+    run = data["runs"][0]
+    run["tool"]["driver"]["name"] = name
+    run["results"][0]["message"] = {"text": "Match : OPAQUE-CANARY"}
+    if name != "Unknown scanner":
+        run["properties"]["limitations"] = ["OPAQUE-CANARY"]
+    path = save(tmp_path, data)
+    for options in ([], ["--structured"]):
+        assert main(["review-sarif", str(path), *options]) == 0
+        captured = capsys.readouterr()
+        assert "OPAQUE-CANARY" not in captured.out + captured.err
 
 
 @pytest.mark.parametrize("tags", [[], ["secret", "security"]])
