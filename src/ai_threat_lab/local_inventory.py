@@ -11,6 +11,7 @@ from .html_review import inspect_html
 from .kubernetes_review import NOTICE as KUBERNETES_NOTICE
 from .kubernetes_review import review_kubernetes_source
 from .models import ValidationError
+from .scan_lifecycle import collector_checkpoint
 
 EXCLUDED = frozenset(
     {
@@ -205,6 +206,7 @@ def local_inventory(
         visited = 0
         walk_errors = []
         for directory, dirs, files in os.walk(path, followlinks=False, onerror=walk_errors.append):
+            collector_checkpoint()
             if "pyvenv.cfg" in files and Path(directory) != path:
                 dirs[:] = []
                 continue
@@ -274,6 +276,7 @@ def local_inventory(
     scanned_files_count = 0
     byte_budget_exceeded = False
     for item in candidates:
+        collector_checkpoint()
         if total_bytes_read >= max_bytes:
             byte_budget_exceeded = True
             break

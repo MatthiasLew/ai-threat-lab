@@ -22,7 +22,7 @@ from .scan_bundle import (
     read_bundle,
     scope_digest,
 )
-from .scan_lifecycle import EventEmitter, EventHandler, ScanCancelled, ScanControl
+from .scan_lifecycle import EventEmitter, EventHandler, ScanCancelled, ScanControl, _current_scan
 
 
 @dataclass(frozen=True)
@@ -178,6 +178,7 @@ class ScanService:
     ):
         token = control if control is not None else ScanControl()
         token._start()
+        context_token = _current_scan.set(token)
         events = EventEmitter(uuid.uuid4().hex, on_event)
         try:
             events.emit("scan_started")
@@ -200,6 +201,7 @@ class ScanService:
             events.emit("scan_failed", status="failed")
             raise
         finally:
+            _current_scan.reset(context_token)
             token._close()
 
     def _run(self, options, output, *, baseline, events, control):
@@ -243,6 +245,8 @@ class ScanService:
                 "status": "partial",
                 "notice": "Selected collector returned partial evidence.",
             }
+        except ScanCancelled:
+            raise
         except Exception:
             failures.append("target_assessment")
             modules["target_assessment"] = {
@@ -286,6 +290,8 @@ class ScanService:
                     if options.recursive_dependencies
                     else "Root-directory supported manifests and exact versions only.",
                 }
+            except ScanCancelled:
+                raise
             except Exception:
                 collected = None
                 failures.append("dependency_inventory")
@@ -316,6 +322,8 @@ class ScanService:
                         "status": "partial",
                         "notice": "OSV returned version matches; applicability remains unverified.",
                     }
+                except ScanCancelled:
+                    raise
                 except Exception:
                     dependency_result = None
                     failures.append("dependency_advisories")

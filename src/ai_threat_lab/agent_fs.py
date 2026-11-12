@@ -60,12 +60,20 @@ def _windows_handle(path, directory):
     final.restype = wintypes.DWORD
     close = kernel.CloseHandle
     close.argtypes = (wintypes.HANDLE,)
+    attributes = kernel.GetFileInformationByHandleEx
+    attributes.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
+    attributes.restype = wintypes.BOOL
     handle = create(
         str(path), 0x80000000, 3, None, 3, 0x00200000 | (0x02000000 if directory else 0), None
     )
     if handle == wintypes.HANDLE(-1).value:
         raise OSError("Scoped handle could not be opened")
     try:
+        tag_info = (wintypes.DWORD * 2)()
+        if not attributes(handle, 9, ctypes.byref(tag_info), ctypes.sizeof(tag_info)):
+            raise OSError("Scoped handle attributes could not be read")
+        if tag_info[0] & 0x400 or bool(tag_info[0] & 0x10) != directory:
+            raise ValidationError("Reparse points and unexpected object types are not supported")
         buf = ctypes.create_unicode_buffer(32768)
         length = final(handle, buf, len(buf), 0)
         actual = buf.value.removeprefix("\\\\?\\")
@@ -146,10 +154,9 @@ def _read(stream, maximum):
         raise ValidationError("Scoped file exceeds its byte limit")
     value = stream.read(maximum + 1)
     after = os.fstat(stream.fileno())
-    if len(value) > maximum or (info.st_size, info.st_mtime_ns) != (
-        after.st_size,
-        after.st_mtime_ns,
-    ):
+    before_state = (info.st_size, info.st_mtime_ns, info.st_ctime_ns, info.st_nlink)
+    after_state = (after.st_size, after.st_mtime_ns, after.st_ctime_ns, after.st_nlink)
+    if len(value) > maximum or before_state != after_state:
         raise ValidationError("Scoped file changed or exceeded its byte limit")
     return value
 

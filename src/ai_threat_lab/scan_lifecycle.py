@@ -1,5 +1,6 @@
 """Terminal-independent version 1 audit events and cooperative cancellation."""
 
+from contextvars import ContextVar
 from dataclasses import asdict, dataclass
 from threading import Lock
 from typing import Callable
@@ -19,6 +20,14 @@ class ScanEvent:
 
 
 EventHandler = Callable[[ScanEvent], None]
+_current_scan = ContextVar("current_scan", default=None)
+
+
+def collector_checkpoint():
+    """Check the current scan at a file or manifest boundary."""
+    control = _current_scan.get()
+    if control is not None:
+        control._checkpoint()
 
 
 class ScanCancelled(Exception):

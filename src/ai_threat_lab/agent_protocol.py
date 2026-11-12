@@ -3,7 +3,11 @@
 import json
 import subprocess
 import sys
+import tempfile
+from threading import Thread
+from time import monotonic
 
+from .agent_resources import MEMORY_BYTES, OPEN_FILES, supervise_windows
 from .agent_service import MAX_RESPONSE, OPERATIONS, AgentError, AgentService, error_result
 from .models import ValidationError
 from .scan_bundle import document
@@ -95,21 +99,87 @@ def perform(root, operation, args):
         )
 
 
+def _run_worker(raw):
+    deadline = monotonic() + TIMEOUT
+    with tempfile.TemporaryDirectory(prefix="threat-agent-worker-") as scratch:
+        command = [sys.executable, "-P", "-m", "ai_threat_lab.agent_worker", scratch]
+        with subprocess.Popen(
+            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        ) as process:
+            chunks = []
+
+            def send():
+                try:
+                    with process.stdin:
+                        process.stdin.write(raw)
+                except OSError:
+                    pass
+
+            def receive():
+                try:
+                    chunks.append(process.stdout.read(MAX_RESPONSE + 1))
+                except OSError:
+                    pass
+
+            writer = Thread(target=send)
+            reader = Thread(target=receive)
+            try:
+                with supervise_windows(process):
+                    writer.start()
+                    reader.start()
+                    reader.join(max(0, deadline - monotonic()))
+                    if reader.is_alive():
+                        raise subprocess.TimeoutExpired(command, TIMEOUT)
+                    if not chunks or len(chunks[0]) > MAX_RESPONSE:
+                        return 1, b""
+                    return process.wait(timeout=max(0, deadline - monotonic())), chunks[0]
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                process.wait()
+                if writer.ident is not None:
+                    writer.join()
+                if reader.ident is not None:
+                    reader.join()
+
+
 def execute(root, operation, args):
     """Bound each operation in a trusted worker; never invoke project code or shell commands."""
     raw = json.dumps({"root": str(root), "operation": operation, "arguments": args}).encode()
     if len(raw) > MAX_REQUEST:
         return error_result(operation, "request_limit", "Request exceeds byte limit")
     try:
-        completed = subprocess.run(
-            [sys.executable, "-P", "-m", "ai_threat_lab.agent_worker"],
-            input=raw,
-            capture_output=True,
-            timeout=TIMEOUT,
-        )
-        if completed.returncode or len(completed.stdout) > MAX_RESPONSE:
+        returncode, response = _run_worker(raw)
+        if returncode or len(response) > MAX_RESPONSE:
             return error_result(operation, "worker_error", "Worker failed or exceeded output limit")
-        return document(completed.stdout)
+        try:
+            result = document(response)
+        except ValidationError:
+            return error_result(operation, "worker_error", "Invalid worker response")
+        error = result.get("error")
+        if (
+            result.get("schema_version") != "1.0"
+            or result.get("tool") != "ai-threat-lab"
+            or result.get("operation") != operation
+            or result.get("status") not in ("ok", "partial", "error")
+            or (result["status"] == "error" and (
+                not isinstance(error, dict)
+                or not all(isinstance(error.get(key), str) for key in ("code", "message"))
+            ))
+        ):
+            return error_result(operation, "worker_error", "Invalid worker response")
+        if operation == "doctor" and result["status"] == "ok":
+            result["worker_policy"] = {
+                "deadline_seconds": TIMEOUT,
+                "max_response_bytes": MAX_RESPONSE,
+                "memory": {
+                    "mechanism": {"linux": "RLIMIT_AS", "win32": "job_commit"}.get(sys.platform),
+                    "max_bytes": MEMORY_BYTES if sys.platform in ("linux", "win32") else None,
+                },
+                "open_files": OPEN_FILES if sys.platform == "linux" else None,
+                "concurrency_per_mcp_session": 1,
+            }
+        return result
     except subprocess.TimeoutExpired:
         return error_result(operation, "timeout", "Operation exceeded deadline; inspect saved runs")
     except (OSError, ValidationError):

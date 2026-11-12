@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from .code_review import read_python_source, review_source
 from .models import ValidationError, require_text
+from .scan_lifecycle import collector_checkpoint
 
 
 @dataclass(frozen=True)
@@ -250,6 +251,7 @@ class AssessmentService:
                 for directory, dirs, filenames in os.walk(
                     target, followlinks=False, onerror=walk_errors.append
                 ):
+                    collector_checkpoint()
                     if "pyvenv.cfg" in filenames and Path(directory) != target_path:
                         dirs[:] = []
                         continue
@@ -285,6 +287,7 @@ class AssessmentService:
             project_sources, unavailable_sources = [], []
             parsed_trees: dict[str, ast.AST] = {}
             for path in paths:
+                collector_checkpoint()
                 decoded = False
                 origin = (
                     path.relative_to(Path(target)).as_posix()

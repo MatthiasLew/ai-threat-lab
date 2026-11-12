@@ -302,12 +302,14 @@ class AgentService:
         # Only generated artifact names are accepted: no model-selected output path.
         store = self.root / ".ai-threat-lab"
         agent_fs.scoped_path(self.root, str(store), existing=False)
-        if not store.exists():
-            with agent_fs.pinned_directory(self.root) as parent:
+        with agent_fs.pinned_directory(self.root) as parent:
+            try:
                 if parent is None:
                     store.mkdir(mode=0o700)
                 else:
                     os.mkdir(store.name, mode=0o700, dir_fd=parent)
+            except FileExistsError:
+                pass  # Another scan can create the store; publication pins it below.
         output = store / uuid.uuid4().hex
         with tempfile.TemporaryDirectory(prefix="threat-agent-scan-") as folder:
             copied, counters = agent_fs.snapshot(target, Path(folder) / "snapshot")

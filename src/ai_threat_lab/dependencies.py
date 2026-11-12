@@ -30,6 +30,7 @@ from .dependency_paths import (
 from .go_inventory import module_path, module_version, parse_go_sum
 from .models import ValidationError
 from .providers import ProviderError
+from .scan_lifecycle import collector_checkpoint
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PACKAGES = 500
@@ -123,6 +124,7 @@ def inventory(path: Path, *, recursive=False) -> Inventory:
         files, skipped = [(path, path.name)], []
     sources, total = [], 0
     for manifest, origin in files:
+        collector_checkpoint()
         if linked(manifest) or not manifest.is_file():
             skipped.append(f"{origin}: skipped symlink or non-file.")
             continue
@@ -213,6 +215,7 @@ def inventory_sources(target, sources, *, not_checked=(), allow_paths=False) -> 
             )
 
     for origin, raw in sources:
+        collector_checkpoint()
         basename = PurePosixPath(origin).name
         try:
             source = raw.decode("utf-8-sig")

@@ -38,6 +38,19 @@ def test_change_during_read_is_rejected_and_unchanged_file_is_readable(tmp_path)
             agent_fs._read(ChangingStream(), 1024)
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows opened-handle attributes")
+def test_opened_directory_rejects_junction(tmp_path):
+    import _winapi
+
+    folder = tmp_path / "fixture"
+    folder.mkdir()
+    junction = tmp_path / "junction"
+    _winapi.CreateJunction(str(folder), str(junction))
+    with pytest.raises(ValidationError, match="Reparse points"):
+        with agent_fs.pinned_directory(junction):
+            pytest.fail("Accepted a reparse point")
+
+
 @pytest.mark.skipif(os.name == "nt", reason="POSIX descriptor-relative no-follow race")
 def test_replacement_between_path_check_and_open_cannot_return_outside_bytes(tmp_path, monkeypatch):
     root = tmp_path / "approved"

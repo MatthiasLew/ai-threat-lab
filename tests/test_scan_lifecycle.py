@@ -15,6 +15,7 @@ from ai_threat_lab.gui_api import get_capabilities
 from ai_threat_lab.scan_bundle import read_bundle
 from ai_threat_lab.scan_cli import assessor
 from ai_threat_lab.scan_engine import ScanOptions, ScanService
+from ai_threat_lab.scan_lifecycle import collector_checkpoint
 
 
 @pytest.fixture
@@ -23,6 +24,49 @@ def project(tmp_path):
     root.mkdir()
     (root / "app.py").write_text("eval(input())\n", encoding="utf-8")
     return root
+
+
+@pytest.mark.parametrize("collector", ["assessment", "inventory"])
+def test_cancellation_from_inside_collector_is_not_a_module_failure(project, tmp_path, collector):
+    token = ScanControl()
+    events = []
+
+    def stop(_):
+        token.request_cancel()
+        collector_checkpoint()
+        pytest.fail("Continued after the checkpoint")
+
+    service = (ScanService(stop) if collector == "assessment"
+               else ScanService(assessor, inventory_loader=stop))
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        service.run(ScanOptions(str(project)), output, control=token, on_event=events.append)
+    assert events[-1].event == "scan_cancelled"
+    assert not any(event.event == "module_failed" for event in events)
+    assert not output.exists()
+    collector_checkpoint()  # Scan-local context was restored.
+
+
+def test_multifile_scan_checks_cancellation_between_reads(project, tmp_path, monkeypatch):
+    from ai_threat_lab import assessment
+
+    (project / "second.py").write_text("pass\n", encoding="utf-8")
+    original = assessment.read_python_source
+    control = ScanControl()
+    reads = []
+
+    def read(path, **kwargs):
+        reads.append(path.name)
+        result = original(path, **kwargs)
+        assert control.request_cancel()
+        return result
+
+    monkeypatch.setattr(assessment, "read_python_source", read)
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        run_audit(project, output, control=control)
+    assert reads == ["app.py"]
+    assert not output.exists()
 
 
 def test_gui_free_event_contract_and_existing_report_compatibility(project, tmp_path):

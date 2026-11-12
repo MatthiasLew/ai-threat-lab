@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_threat_lab import agent_fs, agent_service
+from ai_threat_lab import agent_fs, agent_protocol, agent_service
 from ai_threat_lab.agent_cli import main as cli
 from ai_threat_lab.agent_mcp import Server, serve, tool_list
 from ai_threat_lab.agent_protocol import execute, perform
@@ -229,13 +229,13 @@ def test_worker_failures_are_safe(tmp_path, monkeypatch):
     def timeout(*a, **k):
         raise subprocess.TimeoutExpired("private", 60)
 
-    monkeypatch.setattr(subprocess, "run", timeout)
+    monkeypatch.setattr(agent_protocol, "_run_worker", timeout)
     assert execute(tmp_path, "doctor", {})["error"]["code"] == "timeout"
 
     def failed(*a, **k):
-        return subprocess.CompletedProcess([], 1, b"private", b"PRIVATE")
+        return 1, b"private"
 
-    monkeypatch.setattr(subprocess, "run", failed)
+    monkeypatch.setattr(agent_protocol, "_run_worker", failed)
     assert execute(tmp_path, "doctor", {})["error"]["code"] == "worker_error"
     monkeypatch.setattr(AgentService, "call", lambda *a: (_ for _ in ()).throw(OSError("PRIVATE")))
     assert "PRIVATE" not in json.dumps(perform(tmp_path, "doctor", {}))

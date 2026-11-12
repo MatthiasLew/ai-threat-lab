@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .local_inventory import EXCLUDED
 from .models import ValidationError
+from .scan_lifecycle import collector_checkpoint
 
 SUPPORTED = {
     "package-lock.json",
@@ -59,6 +60,7 @@ def discover_manifests(root, *, recursive=False):
 
     stop = False
     while queue and not stop:
+        collector_checkpoint()
         if visited >= MAX_DIRECTORIES:
             note("Dependency discovery directory limit reached; remaining directories unchecked.")
             break
