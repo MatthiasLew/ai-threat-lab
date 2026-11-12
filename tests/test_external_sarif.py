@@ -23,6 +23,37 @@ def save(tmp_path, data):
     return path
 
 
+def test_import_rejects_large_and_truncated_documents(tmp_path):
+    source = tmp_path / "broken.sarif"
+    source.write_bytes(b" " * (8 * 1024 * 1024 + 1))
+    for importer in (import_sarif, review_sarif):
+        with pytest.raises(ValidationError, match="byte limit"):
+            importer(source)
+    source.write_bytes(b'{"version":"2.1.0","runs":[')
+    for importer in (import_sarif, review_sarif):
+        with pytest.raises(ValidationError, match="invalid JSON"):
+            importer(source)
+
+
+def test_synthetic_trivy_configuration_location_is_not_an_image(tmp_path):
+    data = json.loads((FIXTURES / "trivy.sarif").read_bytes())
+    run = data["runs"][0]
+    run.pop("properties", None)
+    row = run["results"][0]
+    run["results"] = [row]
+    descriptor = run["tool"]["driver"]["rules"][row["ruleIndex"]]
+    descriptor["properties"]["tags"] = ["misconfiguration", "HIGH"]
+    artifact = row["locations"][0]["physicalLocation"]["artifactLocation"]
+    artifact["uri"] = "config/example.yaml"
+    report, failures = import_sarif(save(tmp_path, data))
+    assert not failures and report["runs"][0]["target_kind"] is None
+    observation = report["observations"][0]
+    assert observation["category"] == "misconfiguration"
+    assert observation["rule_id"] == row["ruleId"]
+    assert observation["locations"][0]["kind"] == "artifact"
+    assert observation["locations"][0]["label"] == "config/example.yaml"
+
+
 @pytest.mark.parametrize("name,version,count", [
     ("bandit", "1.7.8", 1), ("semgrep", None, 1), ("semgrep-trace", None, 2),
     ("trivy", "dev", 4), ("gitleaks", "v8.0.0", 1),
