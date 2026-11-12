@@ -9,6 +9,9 @@ from pathlib import Path
 from time import perf_counter
 
 from ai_threat_lab.code_review import review_source
+from ai_threat_lab.config_review import inspect_configuration
+from ai_threat_lab.dependencies import inventory_sources
+from ai_threat_lab.local_inventory import inspect_text
 
 ROOT = Path(__file__).resolve().parents[1]
 FLOW = (
@@ -45,6 +48,26 @@ def cases():
         # Runtime source generated outside the file is outside the static corpus contract.
         yield rule, "unsupported", "source = external_source_provider()\n", None
 
+    yield "container_explicit_root", "positive", "FROM scratch\nUSER root\n", True
+    yield "container_explicit_root", "negative", "FROM scratch\nUSER 10001\n", False
+    yield "possible_secret", "positive", "# -----BEGIN PRIVATE KEY-----\n", True
+    yield "possible_secret", "negative", "# No credential material\n", False
+    yield "dependency_exact_version", "positive", "fixture-package==1.2.3\n", True
+    yield "dependency_exact_version", "negative", "fixture-package>=1.2.3\n", False
+
+
+def observe(rule, source, label):
+    if rule == "container_explicit_root":
+        return {finding.check for finding in inspect_configuration("Dockerfile", source)}, []
+    if rule == "possible_secret":
+        return {finding.check for finding in inspect_text("fixture.txt", source)}, []
+    if rule == "dependency_exact_version":
+        result = inventory_sources("fixture", [("requirements.txt", source.encode())])
+        exact = any(p.name == "fixture-package" and p.version == "1.2.3" for p in result.packages)
+        return {rule} if exact else set(), list(result.not_checked)
+    result = review_source(source, filename=f"{rule}-{label}.py")
+    return {finding.rule_id for finding in result.findings}, list(result.limitations)
+
 
 def measure():
     metrics, observations = {}, []
@@ -57,13 +80,12 @@ def measure():
         tracemalloc.start()
         started = perf_counter()
         try:
-            result = review_source(source, filename=f"{rule}-{label}.py")
-            observed = {finding.rule_id for finding in result.findings}
+            observed, limitations = observe(rule, source, label)
             hit = rule in observed
             outcome = ("tp" if hit else "fn") if expected else ("fp" if hit else "tn")
         except (ValueError, RuntimeError):
             observed, outcome = set(), "errors"
-            result = None
+            limitations = []
         elapsed = perf_counter() - started
         _, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
@@ -71,23 +93,35 @@ def measure():
         observations.append({
             "rule": rule, "case": label, "expected": expected, "observed": sorted(observed),
             "status": outcome, "seconds": elapsed, "python_peak_bytes": peak,
-            "limitations": list(result.limitations) if result is not None else [],
+            "limitations": limitations,
         })
 
     def ratio(numerator, denominator):
         return numerator / denominator if denominator else None
 
-    for counts in metrics.values():
+    categories = {}
+    for rule, counts in metrics.items():
+        category = {
+            "container_explicit_root": "configuration",
+            "possible_secret": "secret markers",
+            "dependency_exact_version": "manifest extraction",
+            "PY013": "Python data flow",
+            "PY014": "Python data flow",
+        }.get(rule, "Python syntax and API observations")
+        grouped = categories.setdefault(category, dict.fromkeys(counts, 0))
+        for name, value in counts.items():
+            grouped[name] += value
+    for counts in (*metrics.values(), *categories.values()):
         tp, fp, tn, fn = (counts[key] for key in ("tp", "fp", "tn", "fn"))
         counts.update(precision=ratio(tp, tp + fp), recall=ratio(tp, tp + fn),
                       false_positive_rate=ratio(fp, fp + tn))
     return {
-        "schema_version": 1, "corpus": "m2-inert-python-observations-v1",
+        "schema_version": 1, "corpus": "m2-inert-detector-observations-v2",
         "scanner_commit": subprocess.check_output(["git", "rev-parse", "HEAD"],
                                                   cwd=ROOT, text=True).strip(),
         "python": platform.python_version(), "system": platform.platform(),
-        "configuration": "review_source defaults, one inert Python source per case",
-        "per_rule": metrics, "cases": observations,
+        "configuration": "Default detector options, one independently labelled input per case",
+        "per_rule": metrics, "per_category": categories, "cases": observations,
     }
 
 

@@ -80,6 +80,33 @@ def test_large_project_retains_per_file_findings(project, tmp_path):
     assert any("Project flow skipped" in notice for notice in assessment["not_checked"])
 
 
+def test_manifest_collection_checks_cancellation_between_reads(project, tmp_path, monkeypatch):
+    from pathlib import Path
+
+    for name in ("requirements.txt", "requirements-dev.txt"):
+        (project / name).write_text("fixture-package==1.2.3\n", encoding="utf-8")
+    control = ScanControl()
+    original = Path.open
+    manifest_reads = []
+
+    def open_file(path, *args, **kwargs):
+        stream = original(path, *args, **kwargs)
+        if path.name.startswith("requirements"):
+            manifest_reads.append(path.name)
+            control.request_cancel()
+        return stream
+
+    monkeypatch.setattr(Path, "open", open_file)
+    service = ScanService(lambda options: AssessmentResult(
+        options.target, "local_project", "partial", (), (),
+    ))
+    output = tmp_path / "cancelled"
+    with pytest.raises(ScanCancelled):
+        service.run(ScanOptions(str(project)), output, control=control)
+    assert len(manifest_reads) == 1
+    assert not output.exists()
+
+
 def test_gui_free_event_contract_and_existing_report_compatibility(project, tmp_path):
     events = []
     result = run_audit(project, tmp_path / "run", on_event=events.append)

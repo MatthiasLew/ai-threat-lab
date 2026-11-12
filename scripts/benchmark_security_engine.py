@@ -44,6 +44,30 @@ def peak_rss():
     return None
 
 
+def mcp_summary(root, run):
+    messages = [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
+            "protocolVersion": "2025-06-18", "capabilities": {},
+            "clientInfo": {"name": "benchmark", "version": "1"},
+        }},
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {
+            "name": "security_summary", "arguments": {"run": run},
+        }},
+    ]
+    started = perf_counter()
+    response = subprocess.run(
+        [sys.executable, "-m", "ai_threat_lab", "agent", "mcp", "serve", "--root", str(root)],
+        input="".join(json.dumps(message) + "\n" for message in messages),
+        text=True, encoding="utf-8", capture_output=True, check=True, timeout=75,
+    )
+    elapsed = perf_counter() - started
+    replies = [json.loads(line) for line in response.stdout.splitlines()]
+    assert replies[0]["result"]["protocolVersion"] == "2025-06-18"
+    assert replies[1]["id"] == 2
+    return elapsed, replies[1]["result"]["structuredContent"]["status"]
+
+
 def benchmark(*, extended=False):
     rows = []
     with tempfile.TemporaryDirectory(prefix="threat engine benchmark ") as folder:
@@ -93,6 +117,8 @@ def benchmark(*, extended=False):
                     response = execute(base, "summary", {"run": output.name})
                     transport = {"agent_worker_seconds": perf_counter() - start,
                                  "agent_worker_status": response["status"]}
+                    elapsed_mcp, status_mcp = mcp_summary(base, output.name)
+                    transport.update(mcp_roundtrip_seconds=elapsed_mcp, mcp_status=status_mcp)
                 rows.append({
                     "profile": profile, "files": count, "repeat": repeat,
                     "candidates": result["unique_findings"], "expected_fixture_sites": expected,
