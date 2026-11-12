@@ -5,7 +5,19 @@ import os
 import pytest
 
 from ai_threat_lab import agent_fs
+from ai_threat_lab.agent_service import AgentService
 from ai_threat_lab.models import ValidationError
+
+
+def test_root_must_pass_opened_directory_validation(tmp_path, monkeypatch):
+    assert AgentService(tmp_path).root == tmp_path.resolve()
+
+    def unavailable(_path):
+        raise OSError("Directory cannot be pinned")
+
+    monkeypatch.setattr(agent_fs, "pinned_directory", unavailable)
+    with pytest.raises(ValidationError, match="accessible directory"):
+        AgentService(tmp_path)
 
 
 def test_change_during_read_is_rejected_and_unchanged_file_is_readable(tmp_path):

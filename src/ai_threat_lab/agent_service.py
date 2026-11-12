@@ -73,9 +73,14 @@ def bounded(value):
 class AgentService:
     def __init__(self, root):
         root = Path(root).absolute()
-        self.root = agent_fs.scoped_path(root, str(root)).resolve(strict=True)
-        if not self.root.is_dir():
-            raise ValidationError("Approved root must be a directory")
+        root = agent_fs.scoped_path(root, str(root))
+        try:
+            with agent_fs.pinned_directory(root):
+                # Windows keeps all components pinned against replacement while
+                # expanding short aliases. POSIX retains the approved pathname.
+                self.root = root.resolve(strict=True) if os.name == "nt" else root
+        except OSError as exc:
+            raise ValidationError("Approved root must be an accessible directory") from exc
 
     def _path(self, value):
         return agent_fs.scoped_path(self.root, value)
