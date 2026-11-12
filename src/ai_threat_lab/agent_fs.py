@@ -9,6 +9,7 @@ import os
 import stat
 from contextlib import ExitStack, contextmanager
 from contextvars import ContextVar
+from functools import cache
 from pathlib import Path
 
 from .dependency_paths import linked
@@ -40,8 +41,8 @@ def scoped_path(root, value, *, existing=True):
     return path
 
 
-@contextmanager
-def _windows_handle(path, directory):
+@cache
+def _windows_api():
     import ctypes
     from ctypes import wintypes
 
@@ -65,7 +66,27 @@ def _windows_handle(path, directory):
     attributes = kernel.GetFileInformationByHandleEx
     attributes.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD)
     attributes.restype = wintypes.BOOL
-    handle = create(
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.DuplicateHandle.argtypes = (
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.HANDLE),
+        wintypes.DWORD,
+        wintypes.BOOL,
+        wintypes.DWORD,
+    )
+    kernel.DuplicateHandle.restype = wintypes.BOOL
+    return kernel
+
+
+@contextmanager
+def _windows_handle(path, directory):
+    import ctypes
+    from ctypes import wintypes
+
+    kernel = _windows_api()
+    handle = kernel.CreateFileW(
         str(path), 0x80000000, 3, None, 3, 0x00200000 | (0x02000000 if directory else 0), None
     )
     if handle == wintypes.HANDLE(-1).value:
@@ -74,12 +95,14 @@ def _windows_handle(path, directory):
         raise OSError("Scoped handle could not be opened")
     try:
         tag_info = (wintypes.DWORD * 2)()
-        if not attributes(handle, 9, ctypes.byref(tag_info), ctypes.sizeof(tag_info)):
+        if not kernel.GetFileInformationByHandleEx(
+            handle, 9, ctypes.byref(tag_info), ctypes.sizeof(tag_info)
+        ):
             raise OSError("Scoped handle attributes could not be read")
         if tag_info[0] & 0x400 or bool(tag_info[0] & 0x10) != directory:
             raise ValidationError("Reparse points and unexpected object types are not supported")
         buf = ctypes.create_unicode_buffer(32768)
-        length = final(handle, buf, len(buf), 0)
+        length = kernel.GetFinalPathNameByHandleW(handle, buf, len(buf), 0)
         actual = buf.value.removeprefix("\\\\?\\")
         if actual.startswith("UNC\\"):
             actual = "\\\\" + actual[4:]
@@ -92,7 +115,7 @@ def _windows_handle(path, directory):
             raise ValidationError("Opened object differs from approved path")
         yield handle
     finally:
-        close(handle)
+        kernel.CloseHandle(handle)
 
 
 @contextmanager
@@ -161,21 +184,11 @@ def open_pinned_file(path):
                 import ctypes
                 from ctypes import wintypes
 
-                kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-                current = kernel.GetCurrentProcess
-                current.restype = wintypes.HANDLE
-                duplicate = kernel.DuplicateHandle
-                duplicate.argtypes = (
-                    wintypes.HANDLE,
-                    wintypes.HANDLE,
-                    wintypes.HANDLE,
-                    ctypes.POINTER(wintypes.HANDLE),
-                    wintypes.DWORD,
-                    wintypes.BOOL,
-                    wintypes.DWORD,
-                )
+                kernel = _windows_api()
+                current = kernel.GetCurrentProcess()
                 copied = wintypes.HANDLE()
-                if not duplicate(current(), handle, current(), ctypes.byref(copied), 0, False, 2):
+                if not kernel.DuplicateHandle(current, handle, current, ctypes.byref(copied),
+                                              0, False, 2):
                     raise OSError("Scoped handle duplication failed")
                 try:
                     descriptor = msvcrt.open_osfhandle(copied.value, os.O_RDONLY | os.O_BINARY)
