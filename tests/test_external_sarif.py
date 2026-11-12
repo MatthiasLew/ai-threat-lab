@@ -35,6 +35,21 @@ def test_import_rejects_large_and_truncated_documents(tmp_path):
             importer(source)
 
 
+def test_pinned_semgrep_dataflow_preserves_observation_and_counts_omission():
+    source = FIXTURES / "semgrep-dataflow.sarif"
+    original = json.loads(source.read_bytes())["runs"][0]["results"][0]
+    report, failures = import_sarif(source)
+    assert not failures
+    row, = report["observations"]
+    assert row["rule_id"] == original["ruleId"]
+    assert row["producer"] == "Semgrep OSS" and row["producer_version"] is None
+    assert row["code_flows_omitted"] == 1
+    legacy, failures = review_sarif(source)
+    assert not failures
+    assert legacy["findings"][0]["status"] == "unverified"
+    assert row["rule_id"] in legacy["findings"][0]["evidence"]
+
+
 def test_synthetic_trivy_configuration_location_is_not_an_image(tmp_path):
     data = json.loads((FIXTURES / "trivy.sarif").read_bytes())
     run = data["runs"][0]
