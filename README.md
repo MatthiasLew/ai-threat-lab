@@ -16,6 +16,10 @@ See [Agent Mode](docs/AGENT_MODE.md), [MCP setup](docs/MCP_SERVER.md) and
 
 ## Console workflow
 
+Import a saved SARIF report with `review-sarif`. Add `--structured` for
+versioned external observations with producer, rule and provenance fields.
+[SARIF import and supported producer examples](docs/SARIF_IMPORT.md)
+
 [One approved fictional call](docs/FICTIONAL_CALLS.md) supports exact preview, durable
 submission, bounded foreground monitoring and remote stop with a fixed disclosed announcement.
 

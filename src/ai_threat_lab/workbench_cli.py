@@ -17,7 +17,7 @@ from .local_history import write_new_report
 from .models import ValidationError
 from .office_review import review_office
 from .review_packets import review_packets, select_packet
-from .sarif_review import review_sarif
+from .sarif_review import import_sarif, review_sarif
 from .scan_cli import advisory_lookup, assessor
 from .scan_engine import ScanOptions, ScanService
 from .setup_check import setup_check
@@ -52,6 +52,7 @@ def add_commands(commands):
     sarif.add_argument("--start", type=int, default=1)
     sarif.add_argument("--max-entries", type=int, default=200)
     sarif.add_argument("--output", type=Path)
+    sarif.add_argument("--structured", action="store_true", help="Export versioned observations")
     sarif.add_argument("--fail-on-findings", action="store_true")
     attachments = commands.add_parser(
         "review-attachments", help="Review decoded saved-email attachment structures in memory"
@@ -315,10 +316,11 @@ def run_command(args):
         candidates = any(item.status == "candidate" for item in result.findings)
         return 2 if failures else 1 if args.fail_on_findings and candidates else 0
     if args.command in ("review-har", "review-attachments", "review-sarif"):
+        structured = args.command == "review-sarif" and getattr(args, "structured", False)
         review = {
             "review-har": review_har,
             "review-attachments": review_attachments,
-            "review-sarif": review_sarif,
+            "review-sarif": import_sarif if structured else review_sarif,
         }[args.command]
         report, failures = review(args.path, start=args.start, max_entries=args.max_entries)
         text = write_document(report)
@@ -327,7 +329,8 @@ def run_command(args):
             print(f"Report saved: {args.output}")
         else:
             print(text, end="")
-        return 2 if failures else 1 if args.fail_on_findings and report["findings"] else 0
+        observations = report["observations" if structured else "findings"]
+        return 2 if failures else 1 if args.fail_on_findings and observations else 0
     if args.command == "review-site":
         from urllib.parse import urlsplit
 

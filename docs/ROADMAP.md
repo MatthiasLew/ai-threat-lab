@@ -1,5 +1,11 @@
 # Roadmap — current delivery and next milestones
 
+## M3.1 offline SARIF
+
+The external observation view extends saved-report import with producer and
+rule provenance. [Implementation plan](M3_IMPLEMENTATION_PLAN.md) ·
+[Acceptance](M3_ACCEPTANCE.md) · [M3.2 scope and follow-ups](M3_TODO.md)
+
 ## Engine and CLI stabilization — 2026-11-10
 
 PR #12 remains the single Agent Mode implementation. This iteration adds shared

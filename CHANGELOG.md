@@ -1,5 +1,11 @@
 # Changelog
 
+## M3.1 development
+
+- Add structured offline SARIF import through the CLI and public Python API.
+- Verify pinned Bandit, Semgrep, Trivy image and Gitleaks examples. Preserve
+  producer claims and provenance with bounded parsing and privacy controls.
+
 ## M2 development
 
 - Supervise offline agent workers and expose the platform resource policy.
