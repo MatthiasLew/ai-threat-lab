@@ -15,8 +15,11 @@ Historical milestone documents are regression contracts, not a claim of full pro
 | Email and files | [Gmail](GMAIL_AUDIT.md), [DNS](MAIL_DOMAIN_AUDIT.md), [attachments](ATTACHMENT_REVIEW.md), [Office](OFFICE_REVIEW.md), [reputation](FILE_REPUTATION.md) |
 | Training | [Local exercises](TRAINING_LAB.md), [SMTP](SMTP_TRAINING.md), [speech](SPEECH_TRAINING.md), [avatars](STOCK_AVATAR.md), [calls](FICTIONAL_CALLS.md) |
 | Develop and verify | [Architecture](ARCHITECTURE.md), [GUI API](GUI_API_HANDOFF.md), [tests](TESTING.md), [implementation workflow](IMPLEMENTATION_PLAN.md) |
+| Engine / CLI stabilization | [Report](SECURITY_ENGINE_REPORT.md), [TODO](IMPLEMENTATION_TODO.md), [engine](SECURITY_ENGINE_PLAN.md), [CLI](CLI_MODERNIZATION_PLAN.md), [Agent](AGENT_MODE_PLAN.md), [validation](SECURITY_VALIDATION_PLAN.md) |
 | Evaluate quality | [Real-project protocol](REAL_PROJECT_VALIDATION.md), [performance protocol](PERFORMANCE_REPORT.md) |
 
 Use `ai-threat-lab --version` for the installed version and `COMMAND --help` for the
 exact argument contract. Keys belong outside source control. No account, live
 provider acceptance or release publication follows from passing local tests.
+
+Agent interfaces: [CLI contract](AGENT_MODE.md), [local MCP](MCP_SERVER.md), [AI Dev workflow](AGENT_INTEGRATION.md).

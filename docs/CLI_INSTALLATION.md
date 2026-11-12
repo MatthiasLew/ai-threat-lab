@@ -66,3 +66,23 @@ Use `--help` at the root for the complete command list, then `COMMAND --help` fo
 Standard streams use UTF-8 regardless of legacy locale settings. JSON output is on stdout; command errors use stderr. Interactive prompts and report-saved notices are ordinary console output: use documented JSON/report options for machine consumers. A closed pipe can happen after a command has already written local artifacts; exit 141 does not undo those operations. Commands that save reports refuse existing output paths; choose a new run directory or filename.
 
 See [the user guide](USER_GUIDE.md), [scan workflow](SCAN_WORKFLOW.md), [local report history](LOCAL_REPORT_HISTORY.md) and [the acceptance contract](CLI_OFFLINE_ACCEPTANCE.md).
+
+For stage feedback without contaminating machine output:
+
+```powershell
+ai-threat-lab scan "C:\Projects\Example" --output-dir "runs\before" --progress
+ai-threat-lab scan-check "runs\before"
+ai-threat-lab history-list "runs"
+ai-threat-lab scan "C:\Projects\Example" --output-dir "runs\after" --baseline "runs\before"
+ai-threat-lab scan-compare "runs\before" "runs\after"
+ai-threat-lab report-export "runs\after" --format pdf --lang pl --output "audit.pdf"
+ai-threat-lab agent findings --root "C:\Projects\Example" --run ".ai-threat-lab\RUN_ID"
+ai-threat-lab agent mcp serve --root "C:\Projects\Example"
+```
+
+Replace RUN_ID with the actual relative run returned by `agent scan`. Ordinary
+scan outputs and agent-generated runs have separate chosen storage locations.
+Each output path above must be new. `--progress` writes JSON lines to stderr;
+stdout remains the scan result. Ctrl+C returns 130. If publication was already
+under way, output says `interrupted` with unknown commit state: verify the directory.
+For guided human workflows, run `ai-threat-lab menu --lang pl` or `--lang en`.

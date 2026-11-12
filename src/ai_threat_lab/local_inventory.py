@@ -151,9 +151,12 @@ def inspect_text(name: str, source: str) -> tuple[AssessmentFinding, ...]:
 def local_inventory(
     target: str, max_files: int = 100, max_bytes: int = 64 * 1024 * 1024
 ) -> AssessmentResult:
+    from .dependency_paths import linked
+    from .report_io import read_regular
+
     kind = identify_target(target)
     path = Path(target)
-    if path.is_symlink():
+    if linked(path):
         raise ValidationError("Root symlinks are not accepted for inventory")
     if kind == "program_file":
         return audit_binary(target)
@@ -210,13 +213,13 @@ def local_inventory(
             dirs[:] = sorted(
                 d
                 for d in dirs
-                if not is_excluded_dirname(d) and not (Path(directory) / d).is_symlink()
+                if not is_excluded_dirname(d) and not linked(Path(directory) / d)
             )
             visited += 1
             sorted_files = sorted(files, key=lambda f: (file_priority(f), f))
             for name in sorted_files:
                 item = Path(directory) / name
-                if not item.is_symlink() and (
+                if not linked(item) and (
                     item.suffix in TEXT_SUFFIXES
                     or item.suffix.lower() in (".html", ".htm")
                     or name == ".env"
@@ -279,8 +282,10 @@ def local_inventory(
             if cached_bytes is not None:
                 data = cached_bytes
             else:
-                with item.open("rb") as stream:
-                    data = stream.read(256 * 1024 + 1)
+                if item.stat().st_size > 256 * 1024:
+                    missing.append(f"Skipped oversized file: {item.name}")
+                    continue
+                data = read_regular(item, 256 * 1024)
             total_bytes_read += len(data)
             if len(data) > 256 * 1024:
                 missing.append(f"Skipped oversized file: {item.name}")
@@ -307,7 +312,7 @@ def local_inventory(
                 if review is not None:
                     findings.extend(review.findings)
                     missing.extend(n for n in review.not_checked if n != KUBERNETES_NOTICE)
-        except (OSError, UnicodeError):
+        except (OSError, UnicodeError, ValidationError):
             missing.append(f"Could not read text file: {item.name}")
     if byte_budget_exceeded:
         missing.append(

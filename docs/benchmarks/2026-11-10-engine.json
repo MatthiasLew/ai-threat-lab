@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "fixture": "Alternating eval and literal_eval inert Python files",
+  "measurements": [
+    {
+      "files": 1,
+      "repeat": 1,
+      "candidates": 1,
+      "scan_seconds_with_tracemalloc": 0.24641550006344914,
+      "python_traced_peak_bytes": 402715,
+      "verify_seconds": 0.029379400075413287,
+      "serialize_seconds": 0.00015819992404431105,
+      "report_json_bytes": 5112,
+      "pdf_export_seconds": 0.024599399999715388
+    },
+    {
+      "files": 1,
+      "repeat": 2,
+      "candidates": 1,
+      "scan_seconds_with_tracemalloc": 0.10081780003383756,
+      "python_traced_peak_bytes": 401723,
+      "verify_seconds": 0.03703679994214326,
+      "serialize_seconds": 0.00015059998258948326,
+      "report_json_bytes": 5112,
+      "pdf_export_seconds": 0.030034600058570504
+    },
+    {
+      "files": 100,
+      "repeat": 1,
+      "candidates": 50,
+      "scan_seconds_with_tracemalloc": 0.9068248000694439,
+      "python_traced_peak_bytes": 1207194,
+      "verify_seconds": 0.10949319996871054,
+      "serialize_seconds": 0.0010359999723732471,
+      "report_json_bytes": 29745,
+      "pdf_export_seconds": 0.23102300008758903
+    },
+    {
+      "files": 100,
+      "repeat": 2,
+      "candidates": 50,
+      "scan_seconds_with_tracemalloc": 0.42046319996006787,
+      "python_traced_peak_bytes": 1198634,
+      "verify_seconds": 0.10016260005068034,
+      "serialize_seconds": 0.0005163999740034342,
+      "report_json_bytes": 29745,
+      "pdf_export_seconds": 0.1816423999844119
+    }
+  ],
+  "notice": "Tracemalloc affects scan timing and excludes native/child allocations. This is not OS peak RSS, an OS memory ceiling, token counts or real-world recall. Repeat scans create new bundles; no scanner cache was introduced."
+}

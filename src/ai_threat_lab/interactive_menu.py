@@ -46,6 +46,7 @@ from .path_utils import (
 )
 from .pdf_report import generate_pdf_report
 from .scan_engine import ScanOptions
+from .scan_lifecycle import ScanCancelled
 
 
 def prompt_user(prompt: str, *, default: str = "", input_fn: Callable[[str], str] = input) -> str:
@@ -435,6 +436,8 @@ def display_main_menu(language: str, print_fn: Callable[..., None] = print) -> N
     print_fn(f"3. {t('menu_export_report', language)}")
     print_fn(f"4. {t('menu_settings', language)}")
     print_fn(f"5. {t('menu_help', language)}")
+    print_fn("6. Analizatory i diagnostyka offline" if language == "pl" else
+             "6. Analyzers and offline diagnostics")
     print_fn(f"0. {t('menu_exit', language)}")
     print_fn()
 
@@ -880,8 +883,13 @@ def run_new_audit_workflow(
     print_fn()
     print_fn(t("running_audit", language))
     try:
-        run_audit(options, out_dir, language=language)
-        results = get_audit_results(out_dir)
+        from .audit_console import display_event
+
+        scan_result = run_audit(
+            options, out_dir, language=language,
+            on_event=lambda event: display_event(event, language, print_fn),
+        )
+        results = get_audit_results(out_dir, language=language)
         rep = results.get("report", {})
         findings = rep.get("findings", [])
         not_checked = rep.get("not_checked", [])
@@ -907,6 +915,14 @@ def run_new_audit_workflow(
             scope=scope_data,
         )
         pdf_path.write_bytes(pdf_bytes)
+    except ScanCancelled:
+        print_fn(t("audit_cancelled", language))
+        return
+    except KeyboardInterrupt:
+        print_fn(t("audit_cancelled", language))
+        print_fn("Sprawdź katalog wyników przed ponowieniem." if pl else
+                 "Verify the output directory before retrying.")
+        return
     except Exception as exc:
         print_fn()
         print_fn(t("error_audit_failed", language, error=str(exc)))
@@ -972,6 +988,17 @@ def run_new_audit_workflow(
     print_fn(f"{t('summary_metric_findings', language)} {len(findings)}")
     print_fn(f"{t('summary_metric_max_priority', language)} {highest_p}")
     print_fn(f"{t('summary_metric_limitations', language)} {len(not_checked)}")
+    modules = scan_result["modules"]
+    completed = sum(v["status"] in ("partial", "collected", "empty_inventory")
+                    for v in modules.values())
+    failed = len(scan_result["failed_modules"])
+    print_fn(f"Analizatory: zakończone={completed}, błędy={failed}" if pl else
+             f"Analyzers: completed={completed}, failed={failed}")
+    for key, value in modules.items():
+        if value["status"] in ("failed", "not_requested", "not_applicable"):
+            print_fn(f"  {key}: {value['notice']}")
+    print_fn("Szczegóły ustaleń: opcja 2 w menu historii." if pl else
+             "Finding details: option 2 in the history menu.")
     print_fn()
     print_fn("Pliki raportu:" if pl else "Report files:")
     print_fn(f"  • {('Raport PDF:' if pl else 'PDF report:')} {pdf_path}")
@@ -1238,7 +1265,7 @@ def run_interactive_entrypoint(
     while True:
         try:
             display_main_menu(lang, print_fn=print_fn)
-            choice = prompt_user(f"{t('select_option')} [0-5]: ", input_fn=input_fn)
+            choice = prompt_user(f"{t('select_option')} [0-6]: ", input_fn=input_fn)
 
             if choice in ("0", "exit", "quit", "q"):
                 print_fn("Do widzenia!" if lang == "pl" else "Goodbye!")
@@ -1247,12 +1274,9 @@ def run_interactive_entrypoint(
                 run_new_audit_workflow(lang, input_fn=input_fn, print_fn=print_fn)
                 prompt_user(t("prompt_back_to_menu", lang), input_fn=input_fn)
             elif choice == "2":
-                print_fn()
-                print_fn(
-                    "Wybierz opcję 3, aby wyeksportować i przeglądać zapisany audyt."
-                    if lang == "pl"
-                    else "Use option 3 to export and review a saved audit."
-                )
+                from .audit_console import browse_history
+
+                browse_history(lang, input_fn=input_fn, print_fn=print_fn)
                 prompt_user(t("prompt_back_to_menu", lang), input_fn=input_fn)
             elif choice == "3":
                 run_export_workflow(lang, input_fn=input_fn, print_fn=print_fn)
@@ -1264,11 +1288,16 @@ def run_interactive_entrypoint(
                 print_fn(f"=== {t('help_title', lang)} ===")
                 print_fn(t("help_text", lang))
                 prompt_user(t("prompt_back_to_menu", lang), input_fn=input_fn)
+            elif choice == "6":
+                from .audit_console import display_diagnostics
+
+                display_diagnostics(lang, print_fn=print_fn)
+                prompt_user(t("prompt_back_to_menu", lang), input_fn=input_fn)
             else:
                 print_fn(
-                    "Nieprawidłowy wybór. Wpisz liczbę od 0 do 5."
+                    "Nieprawidłowy wybór. Wpisz liczbę od 0 do 6."
                     if lang == "pl"
-                    else "Invalid option. Please enter a number between 0 and 5."
+                    else "Invalid option. Please enter a number between 0 and 6."
                 )
         except KeyboardInterrupt:
             print_fn()

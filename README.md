@@ -5,6 +5,15 @@ exercises and separately approved fictional email delivery.
 
 The intended workflow is **target → relevant checks → evidence → possible impact → remediation**. Local training rehearsals record selected practice actions using synthetic data. The same Python services can power a separate GUI; optional provider adapters have offline tests.
 
+## Agent CLI and local MCP
+
+`ai-threat-lab agent` exposes compact, noninteractive security evidence for coding agents.
+`ai-threat-lab agent mcp serve --root /absolute/approved/project` serves the same
+operations over local STDIO. It reuses the existing analyzers and verified bundles,
+works offline and expands one finding only on request. Scans create local artifacts.
+See [Agent Mode](docs/AGENT_MODE.md), [MCP setup](docs/MCP_SERVER.md) and
+[AI Dev workflow](docs/AGENT_INTEGRATION.md) for bounds, permissions and examples.
+
 ## Console workflow
 
 [One approved fictional call](docs/FICTIONAL_CALLS.md) supports exact preview, durable
@@ -65,7 +74,7 @@ The interactive interface provides:
 Or run standard commands with full PDF report export support:
 
 ```bash
-ai-threat-lab scan path/to/project --profile standard --output-dir results/run-01 --language pl
+ai-threat-lab scan path/to/project --profile standard --output-dir results/run-01 --progress
 ai-threat-lab report-export results/run-01 --format pdf --lang pl --output audit_report.pdf
 ai-threat-lab brief results/run-01 --language pl
 ai-threat-lab ai-prepare results/run-01 --ai-config examples/ai-budget.json --language pl --structured --split --output preview.json
@@ -73,6 +82,18 @@ ai-threat-lab setup-check --ai-config examples/ai-budget.json
 ```
 
 See [PDF Reports](docs/PDF_REPORTS.md) and [i18n Architecture](docs/I18N_SYSTEM.md) for details.
+
+Audit progress is a versioned service event stream. `scan --progress` writes JSON
+events to stderr and keeps the result JSON on stdout. The bilingual menu displays
+stages and offers verified history, finding details, comparison, exports and
+offline diagnostics. Python clients can request cooperative cancellation without
+a terminal; see [GUI API handoff](docs/GUI_API_HANDOFF.md). Cancellation is checked
+between modules and before publication, not an immediate in-module timeout.
+
+The stabilization plan and remaining limits are in
+[implementation TODO](docs/IMPLEMENTATION_TODO.md),
+[engine plan](docs/SECURITY_ENGINE_PLAN.md) and
+[validation plan](docs/SECURITY_VALIDATION_PLAN.md).
 
 These commands need no AI account. Saved single/batch results can feed optional
 reference-validated AI advice after explicit sharing and budget configuration.

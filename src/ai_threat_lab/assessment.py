@@ -241,6 +241,7 @@ class AssessmentService:
                 # Walk deterministically, do not follow directory symlinks or dependency folders.
                 import os
 
+                from .dependency_paths import linked
                 from .local_inventory import is_excluded_dirname
 
                 paths = []
@@ -259,7 +260,7 @@ class AssessmentService:
                     dirs[:] = sorted(
                         d
                         for d in dirs
-                        if not is_excluded_dirname(d) and not (Path(directory) / d).is_symlink()
+                        if not is_excluded_dirname(d) and not linked(Path(directory) / d)
                     )
                     for filename in sorted(filenames):
                         examined += 1
@@ -267,7 +268,7 @@ class AssessmentService:
                             traversal_limited = True
                             break
                         candidate = Path(directory) / filename
-                        if candidate.suffix == ".py" and not candidate.is_symlink():
+                        if candidate.suffix == ".py" and not linked(candidate):
                             if len(paths) < self.max_files:
                                 paths.append(candidate)
                             else:

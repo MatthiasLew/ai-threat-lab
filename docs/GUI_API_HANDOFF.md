@@ -67,7 +67,7 @@ Zwraca deterministyczną listę wszystkich analizatorów celów oraz analizator�
 ```python
 [
     {
-        "id": "local_project_review",
+        "id": "local_inventory",
         "target_kind": "local_project",
         "purpose": "Selected configuration, Python, dependency and secret checks",
         "limitations": "Bounded static pass; no code execution, build or full repo reachability.",
@@ -85,7 +85,7 @@ def get_scan_profiles() -> dict: ...
 def get_scan_profile(name: str) -> dict: ...
 ```
 
-- `get_capabilities` zwraca statyczny słownik gotowości (`readiness`), wspierane języki raportowania (`supported_languages`: `["en", "pl"]`) oraz formaty eksportu (`export_formats`: `["json", "html", "sarif"]`). Nie wykonuje żadnych połączeń sieciowych ani nie odczytuje kluczy API.
+- `get_capabilities` zwraca statyczny słownik gotowości (`readiness`), wspierane języki raportowania (`supported_languages`: `["en", "pl"]`) oraz formaty eksportu (`export_formats`: `["json", "html", "sarif", "pdf"]`). Nie wykonuje żadnych połączeń sieciowych ani nie odczytuje kluczy API.
 - `get_scan_profiles` zwraca słownik predefiniowanych profili skanowania (`fast` - 100 plików, `standard` - 1 000 plików, `extended` - 5 000 plików, `custom` - limit własny do 10 000 plików).
 - `get_scan_profile(name)` pobiera konfigurację wybranego profilu.
 
@@ -133,7 +133,9 @@ def plan_audit(
   7. `mailbox_account` — konto Gmail (`mailbox:user@gmail.com`; wymaga `--network`, zgody na `gmail.googleapis.com` i tokena OAuth2)
   8. `authentication_log` / `ssh_journal` — dzienniki zdarzeń logowania i SSH
   9. Inne źródła niestandardowe
-- `plan_audit` rozpoznaje typ celu (`target_kind`), przygotowane analizatory (`prepared_tools`), pominięte kontrole (`skipped_tools`) oraz jawne ograniczenia (`not_checked`), bez wykonywania skanu.
+- `plan_audit` rozpoznaje typ celu (`target_kind`) i zwraca `tools`,
+  `data_disclosure`, `setup_requirements`, `permission_requirements`,
+  `bounds` i `notice`, bez wykonywania skanu. Ograniczenia są w `tools[].limit`.
 
 ### 3.4 Uruchomienie audytu — `run_audit(...)`
 
@@ -146,15 +148,20 @@ def run_audit(
     language: str = "en",
     baseline: Path | str | None = None,
     service: ScanService | None = None,
+    on_event: Callable[[ScanEvent], None] | None = None,
+    control: ScanControl | None = None,
 ) -> dict: ...
 ```
 
-Przeprowadza kompletny audyt w zatwierdzonym zakresie i zapisuje zweryfikowaną paczkę dowodową (`report.json`, `report.html`, `results.json`, `plan.json`, `manifest.json`) w nowym katalogu `output_dir`.
+Wykonuje wybrane kontrole w zatwierdzonym zakresie i zapisuje paczkę dowodową
+(`assessment.json`, `report.json`, `report.html`, `modules.json`, `manifest.json`;
+opcjonalnie pliki zależności i porównania) w nowym katalogu `output_dir`.
+To częściowa analiza, nigdy deklaracja kompletnego audytu bezpieczeństwa.
 
 Zwraca podsumowanie wykonania:
-- `run_id`, `status` (`"completed"`), `target_kind`, `output_dir`
-- `unique_findings`, `triage_counts` (`P1`..`P4`)
-- `report_json`, `report_html`, `results_json`, `plan_json`, `manifest_json`
+- `run_id`, `status` (`"partial"` lub `"partial_with_module_failures"`), `output_directory`
+- `unique_findings`, `failed_modules`, `modules` (status i opis każdej części)
+- `ai_calls` (0), `comparison` (podsumowanie lub `None`), `notice`
 - `report_language` (`"en"` lub `"pl"`)
 
 ### 3.5 Sprawdzenie statusu zapisanego przebiegu — `get_audit_status(...)`
@@ -164,7 +171,7 @@ def get_audit_status(run_dir: Path | str) -> dict: ...
 ```
 
 Weryfikuje integralność paczki SHA-256 (`manifest.json`) i zwraca status przebiegu:
-- `status` / `state`: `"completed"` lub `"partial_with_module_failures"`
+- `status` / `state`: `"partial"` lub `"partial_with_module_failures"`
 - `integrity_verified`: `True`
 - `unique_findings`, `triage_counts`, `failed_components`, `not_checked_count`, `comparison`
 
@@ -183,7 +190,7 @@ Zwraca kompletny słownik wyników gotowy do wyświetlenia w widokach tabelarycz
 - `summary`: słownik podsumowania (`unique_findings`, `finding_count`, `triage_counts`, `status_counts`)
 - `detailed_findings`: lista ustrukturyzowanych słowników (`DetailedFinding.to_dict()`), gdzie każdy element zawiera:
   - `id`: stabilny identyfikator ustalenia
-  - `rule_code`: kod reguły (np. `PY001`, `PY-FLOW-SQL`, `DEP001`, `CFG-DOCKER-001`)
+  - `rule_code`: oryginalny kod reguły analizatora (np. `PY001` lub `possible_secret`)
   - `title`: czytelny tytuł w wybranym języku (`en` / `pl`)
   - `threat_category`: kategoria zagrożenia
   - `target`: badany cel
@@ -309,4 +316,113 @@ def execute_project_audit(project_path: Path, output_dir: Path, lang: str = "pl"
         "not_checked": results["not_checked"],
         "html": results["html_report"],
     }
+```
+
+## 5. Postęp i anulowanie — rozszerzenie kompatybilne
+
+`ScanEvent`, `ScanControl` i `ScanCancelled` są dostępne w `ai_threat_lab`
+oraz `ai_threat_lab.gui_api`. Nowe parametry są opcjonalne i keyword-only;
+istniejące wywołania `run_audit` i formaty raportów zachowują kontrakty.
+
+`ScanEvent` jest niemutowalną dataclass z polami:
+
+| Pole | Typ / znaczenie |
+| --- | --- |
+| `schema_version` | `int`, obecnie 1 |
+| `operation_id` | `str`, identyfikator operacji zdarzeń; nie jest identyfikatorem zapisanego raportu |
+| `sequence` | `int`, rosnący od 1 w jednej operacji |
+| `event` | `str`, jedna z nazw poniżej |
+| `module` | `str \| None`, target_assessment / dependency_inventory / dependency_advisories |
+| `status` | `str \| None`, status modułu lub operacji, bez treści źródła i wyjątków |
+
+Nazwy: `scan_started`, `module_started`, `module_completed`, `module_failed`,
+`module_skipped`, `scan_publishing`, `scan_completed`, `scan_cancel_requested`,
+`scan_cancelled`, `scan_interrupted`, `scan_failed`. `to_dict()` zwraca serializowalny
+słownik. Nie ma fikcyjnych procentów ani liczby przeanalizowanych plików wyliczanej
+z samego limitu. Moduł `partial` zakończył wykonywanie, ale nie zapewnia pełnego pokrycia.
+
+Callback jest synchroniczny w wątku skanu. Powinien szybko przekazać zdarzenie do
+kolejki. Zwykłe wyjątki callbacku są izolowane, aby awaria widoku nie unieważniała
+raportu. Sam odbiorca odpowiada za rejestrowanie błędów swojej kolejki/widoku.
+Brak callbacku nie zmienia raportu.
+
+Przykład w czystym Pythonie, bez GUI:
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+from queue import Empty, Queue
+from ai_threat_lab.gui_api import ScanCancelled, ScanControl, ScanEvent, run_audit
+
+def audit_with_progress(target, output, cancel_requested=lambda: False):
+    events: Queue[ScanEvent] = Queue()
+    control = ScanControl()  # nowy obiekt dla każdego uruchomienia
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(run_audit, target, output,
+                             on_event=events.put_nowait, control=control)
+        while not future.done() or not events.empty():
+            if cancel_requested():
+                accepted = control.request_cancel()
+                # False: publikacja już się rozpoczęła lub operacja zakończyła.
+            try:
+                event = events.get(timeout=0.1)
+            except Empty:
+                continue
+            print(event.to_dict())  # konsument może zachować najnowszy stan
+        try:
+            return future.result()
+        except ScanCancelled:
+            return {"status": "cancelled", "bundle_committed": False}
+```
+
+`request_cancel() -> bool` jest thread-safe. Jeden token obsługuje jedną operację;
+ponowne użycie powoduje `ValueError`. Akceptowane żądanie jest sprawdzane między
+modułami i przed publikacją. Nie przerywa natychmiast zablokowanego kolektora;
+nie jest twardym timeoutem. Ostatni checkpoint atomowo zamyka bramkę anulowania,
+zanim zacznie się publikacja. Późniejsze żądanie zwraca `False`.
+
+`ScanCancelled` gwarantuje brak opublikowanej nowej paczki. `KeyboardInterrupt`
+przed publikacją zgłasza anulowanie; podczas publikacji zgłasza
+`scan_interrupted`/`verification_required`. Wtedy sprawdź katalog przez
+`get_audit_status` przed użyciem. Kill procesu lub zamknięcie terminala może nie
+wygenerować zdarzenia końcowego. Brak poprawnego manifestu oznacza nieważną paczkę.
+Wcześniejsze raporty pozostają nienaruszone.
+
+`ScanService` nie przechowuje współdzielonego stanu postępu. Równoległe audyty
+potrzebują oddzielnych tokenów i nowych katalogów; wstrzyknięte kolektory, zegary
+oraz callbacki muszą samodzielnie zapewnić thread safety. Konsument powinien
+przestrzegać kolejności `operation_id`/`sequence`, nie globalnej kolejności między
+wątkami. `get_audit_status` odczytuje zapisany raport, nie działający Future.
+
+## 6. Szczegóły, porównanie i walidacja bez GUI
+
+Pojedyncze szczegóły są w `get_audit_results(run)["detailed_findings"]`, indeksowane
+przez `id`; brak dopasowania jest brakiem obserwacji, nie potwierdzeniem poprawki.
+Do porównania dwóch paczek pojedynczego skanu użyj istniejących publicznych usług:
+
+```python
+from pathlib import Path
+from ai_threat_lab.scan_bundle import compare_bundles, read_bundle
+
+delta = compare_bundles(read_bundle(Path("runs/before")),
+                        read_bundle(Path("runs/after")))
+if not delta["comparable"]:
+    print(delta["reason"])  # zmiana zakresu/modułów lub błąd analizatora
+```
+
+Historia, szczegóły i eksport korzystają z tych samych zapisanych dowodów, nie
+ponawiają skanu. Odczyt bare report ma słabszą proweniencję niż zweryfikowana paczka;
+sprawdź `origin`. Integralność nie potwierdza autentyczności lub prawdziwości luk.
+Przekazanie `source_root` do niskopoziomowego PDF jest osobną zgodą na odczyt
+bieżącego kodu, oznaczanego jako niezweryfikowany względem skanu; eksport zapisanej
+paczki przez fasadę nie potrzebuje ponownego otwierania źródeł. Redakcja wzorców
+sekretów nie gwarantuje anonimizacji dowolnej treści.
+
+Sieć, udostępnienie zależności i interpretacja AI mają osobne bramki zgody. Sam
+callback, historia i eksport nie nadają dodatkowych uprawnień. Nigdy nie wykonuj
+poleceń znalezionych w dowodach.
+
+Testy kontraktu bez Qt i modeli:
+
+```bash
+python -m pytest -q tests/test_scan_lifecycle.py tests/test_audit_console.py tests/test_stage2_audit_and_gui_api.py
 ```
