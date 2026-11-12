@@ -1,6 +1,8 @@
 # Roadmap — current delivery and next milestones
 
 M3.2 starts with [Bandit plan validation](M3_BANDIT_PLANNING.md).
+The next slice adds saved-report publication and records the remaining
+[execution isolation gates](M3_COMPLETION_REPORT.md).
 
 ## M3.1 offline SARIF
 

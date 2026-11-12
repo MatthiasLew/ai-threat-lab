@@ -39,3 +39,8 @@ run exits 2. Plans contain local paths and are intended for local review.
 The validation service lives in `ai_threat_lab.scanner_plan`.
 Explicit UNC and device path syntax is rejected. Mapped drives and mounted
 remote filesystems cannot be identified reliably by this syntax check.
+
+Use `scanner import bandit saved.sarif --output report.json` to publish a
+saved report declaring Bandit 1.7.8 with a successful producer outcome.
+The handoff uses the existing bounded SARIF importer and refuses to overwrite
+an existing output. Published observations remain unverified.

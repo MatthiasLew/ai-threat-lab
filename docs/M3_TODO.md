@@ -10,3 +10,6 @@
 - M3.2. Add Bandit discovery and plan validation with explicit fingerprints.
   [Threat model and execution gates](M3_BANDIT_PLANNING.md)
 - M3.2 execution is blocked pending isolation and authorization evidence.
+- M3.2 offline handoff validates and publishes saved Bandit reports.
+- Verify OS-backed filesystem and network confinement before designing the launch path.
+  [Integration report](M3_COMPLETION_REPORT.md)

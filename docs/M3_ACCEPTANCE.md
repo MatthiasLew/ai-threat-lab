@@ -1,5 +1,10 @@
 # M3.1 acceptance
 
+For M3.2, verify that saved Bandit publication refuses incomplete runs,
+unsupported producer declarations, truncated pages and existing outputs.
+Execution acceptance requires independent filesystem and network isolation
+tests on Windows and Linux.
+
 - Saved SARIF is parsed with byte, depth, run, result and page limits.
 - Versioned output retains reported metadata, omission counts and provenance.
 - Legacy CLI and Python reports preserve their existing shape and exit codes.

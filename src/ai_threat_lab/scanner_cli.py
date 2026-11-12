@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from .scanner_plan import EXECUTION_BLOCKER, bandit_availability, plan_bandit
+from .scanner_report import save_bandit_report
 
 
 def add_scanner_commands(commands):
@@ -21,6 +22,10 @@ def add_scanner_commands(commands):
     run = actions.add_parser("run", help="Report the current execution restriction")
     run.add_argument("scanner", choices=["bandit"])
     run.add_argument("target", type=Path)
+    report = actions.add_parser("import", help="Publish an existing Bandit report")
+    report.add_argument("scanner", choices=["bandit"])
+    report.add_argument("source", type=Path)
+    report.add_argument("--output", type=Path, required=True)
 
 
 def run_scanner_command(args):
@@ -29,7 +34,10 @@ def run_scanner_command(args):
         print(EXECUTION_BLOCKER, file=sys.stderr)
         print(json.dumps({"scanner": args.scanner, "execution": "blocked"}))
         return 2
-    if action == "plan":
+    if action == "import":
+        report = save_bandit_report(args.source, args.output)
+        result = {"scanner": args.scanner, "reported_results": report["total_results"]}
+    elif action == "plan":
         result = plan_bandit(
             args.target, executable=args.executable,
             expected_sha256=args.sha256, declared_version=args.version,
