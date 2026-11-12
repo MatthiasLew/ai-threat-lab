@@ -165,12 +165,12 @@ def test_code_snippet_extraction_and_highlighting(tmp_path):
     assert ">    5 |" in formatted
 
 
-def test_code_snippet_secret_scrubbing(tmp_path):
+def test_code_snippet_secret_scrubbing(tmp_path, google_key_shaped_canary):
     """Verify that credentials, API keys, and sensitive tokens in snippets are scrubbed."""
     source_file = tmp_path / "config_with_secrets.py"
     source_file.write_text(
         'DB_HOST = "localhost"\n'
-        'API_KEY = "AIzaSyD-1234567890abcdefghijklmnopqrst"\n'
+        f'API_KEY = "{google_key_shaped_canary}"\n'
         'SECRET_TOKEN = "sk-1234567890abcdef1234567890abcdef"\n'
         'PASSWORD = "super_secret_password_123"\n',
         encoding="utf-8",
@@ -180,7 +180,7 @@ def test_code_snippet_secret_scrubbing(tmp_path):
     assert snippet is not None
     rendered = snippet.format_text()
 
-    assert "AIzaSyD" not in rendered
+    assert google_key_shaped_canary not in rendered
     assert "sk-" not in rendered
     assert "[REDACTED_SECRET]" in rendered
 
