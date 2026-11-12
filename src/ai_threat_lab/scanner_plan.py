@@ -16,11 +16,21 @@ MAX_EXECUTABLE_BYTES = 32 * 1024 * 1024
 EXECUTION_BLOCKER = "Filesystem and network confinement have not been verified."
 
 
+def network_syntax(path):
+    return str(path).startswith(("//", "\\\\"))
+
+
 def bandit_availability():
     """Probe PATH presence without launching or trusting a candidate."""
+    directories = [
+        item for item in os.get_exec_path()
+        if Path(item).is_absolute() and not network_syntax(item)
+    ]
     return {
         "scanner": "bandit",
-        "candidate_present": shutil.which("bandit") is not None,
+        "candidate_present": bool(directories and shutil.which(
+            "bandit", path=os.pathsep.join(directories),
+        )),
         "supported_declaration": SUPPORTED_VERSION,
         "execution": "blocked",
         "reason": EXECUTION_BLOCKER,
@@ -36,9 +46,13 @@ def plan_bandit(target, *, executable, expected_sha256, declared_version):
     ):
         raise ValidationError("Expected executable SHA-256 must contain 64 hex digits")
     program = Path(executable)
+    if any(network_syntax(path) for path in (program, target)):
+        raise ValidationError("Network and device paths are not supported for Bandit planning")
     if not program.is_absolute():
         raise ValidationError("An explicit absolute Bandit executable path is required")
     root = Path(os.path.abspath(target))
+    if network_syntax(root):
+        raise ValidationError("Network and device paths are not supported for Bandit planning")
     try:
         with pinned_directory(root) as descriptor:
             identity = os.fstat(descriptor) if descriptor is not None else root.stat()

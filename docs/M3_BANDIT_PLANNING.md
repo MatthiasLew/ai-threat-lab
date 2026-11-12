@@ -37,3 +37,5 @@ ai-threat-lab scanner plan bandit ./project --executable /absolute/bandit --sha2
 Valid discovery and plans return JSON and exit 0. A rejected plan or blocked
 run exits 2. Plans contain local paths and are intended for local review.
 The validation service lives in `ai_threat_lab.scanner_plan`.
+Explicit UNC and device path syntax is rejected. Mapped drives and mounted
+remote filesystems cannot be identified reliably by this syntax check.

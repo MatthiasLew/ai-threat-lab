@@ -27,7 +27,7 @@ def candidate(tmp_path):
 def test_plan_and_blocked_execution_never_spawn(candidate, monkeypatch, capsys):
     project, options = candidate
     monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: pytest.fail("unexpected process"))
-    monkeypatch.setattr("ai_threat_lab.scanner_plan.shutil.which", lambda name: None)
+    monkeypatch.setattr("ai_threat_lab.scanner_plan.shutil.which", lambda name, **kwargs: None)
     assert main(["scanner", "doctor"]) == 0
     assert not json.loads(capsys.readouterr().out)["candidate_present"]
     assert main(["scanner", "list"]) == 0
@@ -71,3 +71,13 @@ def test_linked_target_is_rejected(candidate, tmp_path):
         link.symlink_to(project, target_is_directory=True)
     with pytest.raises(ValidationError):
         plan_bandit(link, **options)
+
+
+def test_network_path_syntax_is_rejected_before_open(candidate, monkeypatch):
+    _, options = candidate
+    monkeypatch.setattr(
+        "ai_threat_lab.scanner_plan.pinned_directory",
+        lambda path: pytest.fail("unexpected directory access"),
+    )
+    with pytest.raises(ValidationError, match="Network"):
+        plan_bandit("//remote.invalid/project", **options)
