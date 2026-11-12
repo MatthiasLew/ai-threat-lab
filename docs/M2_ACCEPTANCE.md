@@ -9,7 +9,7 @@ Track production validation separately from offline tests.
 | Worker | Native memory policy, bounded response, timeout and scratch cleanup | Synthetic worker allocation denial, exit, timeout and malformed or oversized output | Pending |
 | Filesystem | Pinned roots, Windows reparse metadata and concurrent store creation | Opened-handle, changed-read and parallel publication tests | Pending |
 | Cancellation | File and manifest checkpoints | Lifecycle and multi-file regression tests | Pending |
-| Benchmarks | Per-rule Python scores and three workload sizes | Versioned local results | Pending representative applications |
+| Benchmarks | Per-rule and per-category scores, three workload sizes and STDIO timing | Versioned local results | Pending representative applications |
 | Async MCP | Proposed lifecycle and acceptance cases | Client probing and executable contracts pending | Pending |
 
 Remaining coverage includes ordinary CLI ancestor replacement protection, same-size

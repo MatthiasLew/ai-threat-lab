@@ -37,7 +37,7 @@ The earlier result above remains tied to `4882faa`. The PR #12 correction at
 - DONE — Cooperative cancellation at selected file and manifest boundaries.
 - DONE — Retain per-file findings above the project flow input limit.
 - IN_PROGRESS — Remaining filesystem and interruption coverage.
-- IN_PROGRESS — Representative applications and scored configuration, secret and manifest categories.
+- IN_PROGRESS — Representative applications and broader case coverage per category.
 - TODO — Async client probing, executable contracts and disconnect semantics.
 
 See [M2 acceptance](M2_ACCEPTANCE.md) for the validation matrix.
