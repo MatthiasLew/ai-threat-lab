@@ -19,3 +19,9 @@ has two findings and SHA-256
 `540d6e9128e1c6ca91cc7d8f44f27c305785bb8229dfacf88901f0f3d3c0cf84`.
 The upstream version is masked. This LGPL-2.1 snapshot contains no
 `codeFlows` field. Synthetic tests cover bounded omission of that field.
+
+The [Semgrep dataflow snapshot](https://github.com/semgrep/semgrep/blob/06d9993409f6698f78f6956cd39d968e7f4d7b6a/cli/tests/default/e2e/snapshots/test_output_sarif/test_sarif_output_with_dataflow_traces/results.sarif)
+is an LGPL-2.1 upstream Semgrep OSS report with masked version and one code flow.
+Original SHA-256: `e56bbc86a088bbf196979098a932ed4abe70d81ddef749bd28078c449fe366db`.
+The checked-in derivative removes snippet fields and reformats JSON. SHA-256:
+`36ce2582bc5e1544dc6be4a20af979dbb4cc17fe24b414e5398d0cf561693bd6`.
