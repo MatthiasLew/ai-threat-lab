@@ -38,3 +38,5 @@ regression IDs and measured synthetic outputs. The separate managed static
 security artifact has partial coverage and flags its original-checkout revision
 drift; it does not certify the final branch. Remaining race/resource/corpus work
 stays explicit in IMPLEMENTATION_TODO.md. No paid AI/live-provider call was made.
+
+See [M2 acceptance](M2_ACCEPTANCE.md) for post-M1 evidence and open boundaries.

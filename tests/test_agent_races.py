@@ -1,6 +1,8 @@
 """Deterministic opened-object controls, without executing target source."""
 
 import os
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import pytest
 
@@ -49,6 +51,39 @@ def test_opened_directory_rejects_junction(tmp_path):
     with pytest.raises(ValidationError, match="Reparse points"):
         with agent_fs.pinned_directory(junction):
             pytest.fail("Accepted a reparse point")
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows share-delete semantics")
+def test_pinned_directory_blocks_rename_until_release(tmp_path):
+    folder = tmp_path / "fixture"
+    moved = tmp_path / "moved"
+    folder.mkdir()
+    with agent_fs.pinned_directory(folder):
+        with pytest.raises(PermissionError):
+            folder.rename(moved)
+    folder.rename(moved)
+    assert moved.is_dir()
+
+
+def test_parallel_first_scans_publish_distinct_bundles(tmp_path, monkeypatch):
+    (tmp_path / "fixture.py").write_text("pass\n", encoding="utf-8")
+    service = AgentService(tmp_path)
+    original = os.mkdir
+    gate = Barrier(2, timeout=10)
+
+    def mkdir(path, *args, **kwargs):
+        if str(path).endswith(".ai-threat-lab"):
+            gate.wait()
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "mkdir", mkdir)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(service.call, "scan", {"target": "fixture.py"}) for _ in range(2)]
+        results = [future.result(timeout=30) for future in futures]
+    assert len({result["run"] for result in results}) == 2
+    for result in results:
+        saved = service.call("status", {"run": result["run"]})
+        assert saved["integrity"] == "verified_local_consistency"
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX descriptor-relative no-follow race")

@@ -118,3 +118,9 @@ Protocol references: [STDIO transport](https://modelcontextprotocol.io/specifica
 [lifecycle](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle),
 [tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools).
 Client reference: [official Codex MCP documentation](https://developers.openai.com/codex/mcp/).
+
+## M2 worker supervision
+
+STDIO processes one request per session at a time under the policy in
+[Agent Mode](AGENT_MODE.md). EOF is observed between requests. See the
+[async lifecycle proposal](M2_ASYNC_MCP.md) for future task and cancellation semantics.

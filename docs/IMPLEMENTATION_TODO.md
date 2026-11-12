@@ -24,3 +24,20 @@ Windows/Python3.14:3714 passed,7 skipped,92.4%; Linux/Python3.14:3718 passed,
 3 skipped,92.3%. This source-pinned run includes wheel/sdist and installed offline
 CLI/MCP acceptance in every job. Later documentation-only commit checks are shown
 on the PR. F1/F2/Q1/R1 are real future work, not production-readiness claims.
+
+## M2 follow-up — 2026-11-12
+
+Final M1 commit `cda9c80` passed all six jobs in
+[CI 42813384348](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/42813384348).
+The earlier result above remains tied to `4882faa`. The PR #12 correction at
+`6f8eed9` passed [CI 43205191400](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/43205191400).
+
+- DONE — PR #12 review and approved-root correction.
+- DONE — Worker output limits, native memory policy, timeout and supervised cleanup.
+- DONE — Cooperative cancellation at selected file and manifest boundaries.
+- DONE — Retain per-file findings above the project flow input limit.
+- IN_PROGRESS — Remaining filesystem and interruption coverage.
+- IN_PROGRESS — Representative applications and scored configuration, secret and manifest categories.
+- TODO — Async client probing, executable contracts and disconnect semantics.
+
+See [M2 acceptance](M2_ACCEPTANCE.md) for the validation matrix.

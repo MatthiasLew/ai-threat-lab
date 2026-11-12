@@ -2,7 +2,9 @@
 
 **CHANGES REQUIRED** at `cda9c80`. Base `c90d8b9`, final historical CI `42813384348`.
 The approved-root correction was published to PR #12 in `34f2ea3` and `6f8eed9`.
-Merge recommendation remains conditional on validating the updated branch.
+**APPROVE** for the corrected M1 scope at `6f8eed9` after all six CI jobs passed.
+Resource limits are a gate for broader M2 use.
+[Corrective CI](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/43205191400)
 
 | Severity | Source | Evidence and decision |
 | --- | --- | --- |

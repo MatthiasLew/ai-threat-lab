@@ -109,3 +109,5 @@ Close [REPORTS_OFFLINE_ACCEPTANCE.md](REPORTS_OFFLINE_ACCEPTANCE.md) before star
 ## Offline CLI finalization and live API testing handoff (0.39.1)
 
 All offline audit, reporting, training, simulation, and AI evidence/budget modules are finalized and verified under blocked-socket acceptance. Diagnostics (`setup-check`, `doctor`) explicitly report `REQUIRES_LIVE_VALIDATION` for properties requiring real accounts or services. Follow [READY_FOR_API_TESTING.md](READY_FOR_API_TESTING.md) when starting controlled live integration tests.
+
+See [M2 acceptance](M2_ACCEPTANCE.md) and the [M3 integration proposal](M3_INTEGRATIONS.md).

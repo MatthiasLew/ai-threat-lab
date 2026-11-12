@@ -144,3 +144,5 @@ Cooperative cancellation waits for a collector to return; hard process death may
 produce no final event. MCP has no async job/cancel API; the worker has a deadline,
 not an OS memory sandbox. Broader race/resource and effectiveness validation must
 precede stronger production-readiness claims. No merge to main was performed.
+
+See [M2 review](M2_PR12_REVIEW.md) and [M2 measurements](M2_BENCHMARK_METHOD.md).
