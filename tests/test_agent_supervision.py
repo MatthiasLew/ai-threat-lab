@@ -36,7 +36,7 @@ def test_supervisor_reaps_worker_and_cleans_scratch(tmp_path, monkeypatch, mode)
             "import sys; from pathlib import Path; sys.stdin.buffer.read(); "
             "Path(sys.argv[1], 'owned-scratch').touch(); " + responses[mode]
         )
-        process = original([sys.executable, "-c", program, scratch], **kwargs)
+        process = original([command[0], "-c", program, scratch], **kwargs)
         processes.append((process, scratch))
         return process
 
@@ -74,8 +74,8 @@ else:
     raise SystemExit(3)
 """
 
-    def start(_command, **kwargs):
-        return original([sys.executable, "-P", "-c", code], **kwargs)
+    def start(command, **kwargs):
+        return original([command[0], "-P", "-c", code], **kwargs)
 
     monkeypatch.setattr(agent_protocol.subprocess, "Popen", start)
     assert agent_protocol.execute(tmp_path, "doctor", {})["status"] == "ok"
