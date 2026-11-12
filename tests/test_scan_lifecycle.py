@@ -69,6 +69,17 @@ def test_multifile_scan_checks_cancellation_between_reads(project, tmp_path, mon
     assert not output.exists()
 
 
+def test_large_project_retains_per_file_findings(project, tmp_path):
+    for index in range(100):
+        (project / f"fixture_{index:03}.py").write_text("pass\n", encoding="utf-8")
+    output = tmp_path / "large-project"
+    result = run_audit(ScanOptions(str(project), max_files=101), output)
+    assert result["unique_findings"] == 1
+    assert result["failed_modules"] == []
+    assessment = read_bundle(output)["documents"]["assessment.json"]
+    assert any("Project flow skipped" in notice for notice in assessment["not_checked"])
+
+
 def test_gui_free_event_contract_and_existing_report_compatibility(project, tmp_path):
     events = []
     result = run_audit(project, tmp_path / "run", on_event=events.append)

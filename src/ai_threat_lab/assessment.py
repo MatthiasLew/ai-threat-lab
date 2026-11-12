@@ -278,6 +278,7 @@ class AssessmentService:
                     if traversal_limited:
                         break
             from .python_flow import NOTICE as FLOW_NOTICE
+            from .python_project_flow import MAX_INPUT_FILES, project_flows
 
             findings = []
             missing = [
@@ -286,6 +287,7 @@ class AssessmentService:
             ]
             project_sources, unavailable_sources = [], []
             parsed_trees: dict[str, ast.AST] = {}
+            project_flow_enabled = kind == "local_project" and len(paths) <= MAX_INPUT_FILES
             for path in paths:
                 collector_checkpoint()
                 decoded = False
@@ -297,14 +299,14 @@ class AssessmentService:
                 try:
                     source = read_python_source(path, _raw_cache=self._raw_cache)
                     decoded = True
-                    if kind == "local_project":
+                    if project_flow_enabled:
                         project_sources.append((origin, source))
                     tree_holder: list[ast.AST] = []
                     result = review_source(source, str(path), _tree_out=tree_holder)
-                    if kind == "local_project" and tree_holder:
+                    if project_flow_enabled and tree_holder:
                         parsed_trees[origin] = tree_holder[0]
                 except (ValidationError, OSError) as exc:
-                    if kind == "local_project" and not decoded:
+                    if project_flow_enabled and not decoded:
                         unavailable_sources.append(origin)
                     missing.append(f"Skipped {path}: {type(exc).__name__}")
                     continue
@@ -323,9 +325,7 @@ class AssessmentService:
                     )
                     for f in result.findings
                 )
-            if kind == "local_project":
-                from .python_project_flow import project_flows
-
+            if project_flow_enabled:
                 extra, notices = project_flows(
                     project_sources,
                     unavailable=unavailable_sources,
@@ -333,6 +333,11 @@ class AssessmentService:
                 )
                 findings.extend(extra)
                 missing.extend(notices)
+            elif kind == "local_project":
+                missing.append(
+                    f"Project flow skipped: more than {MAX_INPUT_FILES} collected Python files. "
+                    "Per-file checks still ran within their limits."
+                )
             if traversal_limited:
                 missing.append("Python traversal stopped at the 1000-directory/10000-entry limit.")
             for err in walk_errors:
