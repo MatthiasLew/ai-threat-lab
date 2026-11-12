@@ -222,17 +222,15 @@ def finding(result, run, index, *, structured):
     producer = producer_key(driver["name"])
     identifier, descriptor, component = resolve_rule(result, tool)
     tags = descriptor.get("properties", {}).get("tags", []) if producer == "trivy" else []
-    raw_message = result.get("message", {}).get("text")
-    secret_source = (
-        producer == "gitleaks" or "secret" in array(tags, 100)
-        or isinstance(raw_message, str)
-        and bool(re.search(r"(?im)^[ \t]*Match[ \t]*:", raw_message[:2000]))
-    )
+    secret_source = producer == "gitleaks" or "secret" in array(tags, 100)
+    message = None if secret_source else message_text(result["message"], descriptor, component)
+    if message is not None and re.search(
+        r"(?i)(?:^|\\u000[ad])(?: |\\u0009)*Match(?: |\\u0009)*:", message,
+    ):
+        secret_source = True
     rule = text(identifier) if identifier is not None else '"not reported"'
-    message = (
-        "[secret scanner message withheld]" if secret_source else
-        message_text(result["message"], descriptor, component)
-    )
+    if secret_source:
+        message = "[secret scanner message withheld]"
     level, kind = result.get("level", "not_reported"), result.get("kind", "not_reported")
     baseline = result.get("baselineState", "not_reported")
     if (

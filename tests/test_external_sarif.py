@@ -187,6 +187,19 @@ def test_secret_shape_is_withheld_independently_of_producer_name(tmp_path, capsy
         assert "OPAQUE-CANARY" not in captured.out + captured.err
 
 
+def test_resolved_catalog_secret_match_is_also_withheld(tmp_path):
+    data = bandit()
+    run = data["runs"][0]
+    run["tool"]["driver"]["name"] = "Unknown scanner"
+    run["tool"]["driver"]["globalMessageStrings"] = {
+        "private": {"text": "Synthetic\n\tMatch: {0}"},
+    }
+    run["results"][0]["message"] = {"id": "private", "arguments": ["OPAQUE-CANARY"]}
+    for importer in (import_sarif, review_sarif):
+        report, failures = importer(save(tmp_path, data))
+        assert not failures and "OPAQUE-CANARY" not in json.dumps(report)
+
+
 @pytest.mark.parametrize("tags", [[], ["secret", "security"]])
 def test_trivy_secret_messages_and_paths_are_withheld(tmp_path, tags):
     data = json.loads((FIXTURES / "trivy.sarif").read_bytes())
