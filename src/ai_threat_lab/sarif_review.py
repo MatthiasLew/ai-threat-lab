@@ -206,7 +206,7 @@ def producer_classification(producer, properties, descriptor):
     return severity, optional_text(properties, "confidence"), category
 
 
-def finding(result, run, index):
+def finding(result, run, index, *, structured):
     tool = run["tool"]
     driver = tool["driver"]
     producer = driver["name"].casefold()
@@ -242,42 +242,43 @@ def finding(result, run, index):
         location(item, run, secret_source=secret_source, target_source="trivy" in producer)
         for item in locations[:3]
     ]
-    properties = result.get("properties", {})
-    if not isinstance(properties, dict):
-        raise ValidationError("Unsupported SARIF result properties")
-    severity, confidence, category = producer_classification(producer, properties, descriptor)
-    observation = {
-        "component": optional_text(component, "name"),
-        "component_version": reported_version(component),
-        "rule_id": safe_text(identifier) if identifier is not None else None,
-        "rule_name": None if secret_source else optional_text(descriptor, "name"),
-        "category": category,
-        "severity": severity,
-        "confidence": confidence,
-        "sarif_level": None if level == "not_reported" else level,
-        "result_kind": None if kind == "not_reported" else kind,
-        "baseline_state": None if baseline == "not_reported" else baseline,
-        "suppressions": states,
-        "locations": selected,
-        "locations_omitted": max(0, len(locations) - 3),
-        "code_flows_omitted": len(array(result.get("codeFlows", []), 1000)),
-        "message": message,
-        "status": "unverified",
-    }
-    legacy = AssessmentFinding(
+    omitted = max(0, len(locations) - 3)
+    if structured:
+        properties = result.get("properties", {})
+        if not isinstance(properties, dict):
+            raise ValidationError("Unsupported SARIF result properties")
+        severity, confidence, category = producer_classification(producer, properties, descriptor)
+        return {
+            "component": optional_text(component, "name"),
+            "component_version": reported_version(component),
+            "rule_id": safe_text(identifier) if identifier is not None else None,
+            "rule_name": None if secret_source else optional_text(descriptor, "name"),
+            "category": category,
+            "severity": severity,
+            "confidence": confidence,
+            "sarif_level": None if level == "not_reported" else level,
+            "result_kind": None if kind == "not_reported" else kind,
+            "baseline_state": None if baseline == "not_reported" else baseline,
+            "suppressions": states,
+            "locations": selected,
+            "locations_omitted": omitted,
+            "code_flows_omitted": len(array(result.get("codeFlows", []), 1000)),
+            "message": message,
+            "status": "unverified",
+        }
+    return AssessmentFinding(
         "external_sarif_result",
         "unverified",
         f"Result {index}; rule={rule}; reported_level={level}; reported_kind={kind}; "
         f"baseline={baseline}; suppression_statuses="
         f"{','.join(item['status'] or 'not_reported' for item in states) or 'none reported'}; "
         f"locations={'; '.join(map(render_location, selected)) or 'not reported'}; "
-        f"locations_omitted={observation['locations_omitted']}; "
+        f"locations_omitted={omitted}; "
         f"message={json.dumps(message, ensure_ascii=False)}",
         "Review the original scanner result, referenced source and current configuration. "
         "A suppressed, absent or passing result is not an active vulnerability; "
         "reported severity is not independently verified.",
     )
-    return legacy, observation
 
 
 def invocation_failed(run):
@@ -378,7 +379,7 @@ def _import(path, start, max_entries, *, structured):
                     omitted += 1
                     continue
                 try:
-                    legacy, observation = finding(result, run, result_index)
+                    observation = finding(result, run, result_index, structured=structured)
                     if structured:
                         key = json.dumps(result, sort_keys=True, separators=(",", ":"))
                         if key in seen:
@@ -393,7 +394,7 @@ def _import(path, start, max_entries, *, structured):
                         seen[key] = observation
                         observations.append(observation)
                     else:
-                        findings.append(legacy)
+                        findings.append(observation)
                 except (ValidationError, KeyError, TypeError, AttributeError, UnicodeError):
                     malformed += 1
             broken |= bool(malformed)

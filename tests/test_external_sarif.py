@@ -159,3 +159,14 @@ def test_secret_scanner_withholds_arbitrary_text_and_metadata(tmp_path):
     for importer in (import_sarif, review_sarif):
         report, failures = importer(path)
         assert not failures and "SECRET-CANARY" not in json.dumps(report)
+
+
+def test_legacy_projection_ignores_unprojected_producer_metadata(tmp_path):
+    data = bandit()
+    row = data["runs"][0]["results"][0]
+    row["properties"]["issue_severity"] = 5
+    path = save(tmp_path, data)
+    legacy, failures = review_sarif(path)
+    assert not failures and len(legacy["findings"]) == 1
+    structured, failures = import_sarif(path)
+    assert failures == 1 and structured["runs"][0]["unsupported"] == 1
