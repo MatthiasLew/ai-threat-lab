@@ -1,5 +1,7 @@
 # Roadmap — current delivery and next milestones
 
+M3.2 starts with [Bandit plan validation](M3_BANDIT_PLANNING.md).
+
 ## M3.1 offline SARIF
 
 The external observation view extends saved-report import with producer and

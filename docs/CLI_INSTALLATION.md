@@ -87,3 +87,4 @@ stdout remains the scan result. Ctrl+C returns 130. If publication was already
 under way, output says `interrupted` with unknown commit state: verify the directory.
 For guided human workflows, run `ai-threat-lab menu --lang pl` or `--lang en`.
 For offline SARIF import with the installed CLI, see [SARIF import](SARIF_IMPORT.md).
+For optional Bandit discovery and local plans, see [Bandit planning](M3_BANDIT_PLANNING.md).
