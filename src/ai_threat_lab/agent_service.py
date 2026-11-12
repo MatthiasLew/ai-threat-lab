@@ -76,6 +76,8 @@ class AgentService:
         root = agent_fs.scoped_path(root, str(root))
         try:
             with agent_fs.pinned_directory(root):
+                if not root.is_dir():
+                    raise ValidationError("Approved root must be a directory")
                 # Windows keeps all components pinned against replacement while
                 # expanding short aliases. POSIX retains the approved pathname.
                 self.root = root.resolve(strict=True) if os.name == "nt" else root
