@@ -14,9 +14,10 @@ See [the checklist](M3_OFFLINE_RELEASE_CHECKLIST.md) and the PR checks for
 platform and interpreter results.
 
 The pinned Trivy source tree contains one SARIF golden file, for an image.
-The checked Semgrep trace snapshots contain no code flows. Authentic samples
-for the remaining variants are still open. Synthetic regressions cover
-selected boundaries without claiming producer conformance.
+The checked-in derivative of an upstream Semgrep dataflow snapshot verifies
+that import retains the finding while omitting code-flow details. Authentic
+Trivy filesystem and configuration samples remain open. Synthetic regressions
+cover selected boundaries without claiming producer conformance.
 
 Execution remains blocked pending [platform isolation](M3_BANDIT_PLANNING.md).
 The owner still needs to verify or remediate Secret Scanning alert #2.

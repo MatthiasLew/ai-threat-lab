@@ -17,8 +17,9 @@ Bandit report publication.
    installed CLI and STDIO MCP checks.
 
 Producer fixtures cover Bandit 1.7.8, pinned Semgrep OSS variants, Trivy image
-and a sanitized Gitleaks sample. Trivy filesystem/configuration and Semgrep
-code flows lack authentic fixtures. Producer claims remain unverified.
+and a sanitized Gitleaks sample. A Semgrep dataflow snapshot verifies that the
+observation survives omission of code flows. Trivy filesystem/configuration
+lack authentic fixtures. Producer claims remain unverified.
 Review free text before sharing reports with an AI service.
 
 `scanner run` is blocked and returns JSON status, a diagnostic on stderr and

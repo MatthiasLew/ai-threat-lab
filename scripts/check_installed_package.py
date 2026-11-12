@@ -467,7 +467,7 @@ def main() -> None:
         (scan_project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
         menu_output = work / "guided audit żółć"
         menu_input = "\n".join(["1", "1", str(scan_project), "1", "y", "2",
-                                str(menu_output), "n", "", "0", ""])
+                                str(menu_output), "n", "n", "", "0", ""])
         assert "Goodbye!" in run(executable, "menu", "--lang", "en", input_text=menu_input)
         assert "Do widzenia!" in run(executable, "menu", "--lang", "pl", input_text="0\n")
         assert (menu_output / "exports/audit_en.pdf").is_file()
