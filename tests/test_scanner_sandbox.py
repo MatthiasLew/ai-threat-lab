@@ -269,10 +269,17 @@ def test_linux_probe_per_process_memory_limit(linux_probe):
         subprocess.run([*command, "memory"], stdin=rules, check=True, timeout=10, env={})
 
 
-def test_linux_approved_sealed_handoff(linux_probe, tmp_path):
-    from ai_threat_lab.local_history import write_new_report
-    from ai_threat_lab.sarif_review import import_sarif
-    from ai_threat_lab.scan_bundle import encoded
+@pytest.fixture
+def delegated_parent():
+    configured = os.environ.get("THREAT_LAB_DELEGATED_CGROUP")
+    if not configured and os.environ.get("THREAT_LAB_REQUIRE_CGROUP") == "1":
+        pytest.fail("BLOCKED: THREAT_LAB_DELEGATED_CGROUP is required")
+    return Path(configured) if configured else None
+
+
+def test_linux_approved_sealed_handoff(linux_probe, tmp_path, delegated_parent):
+    from linux_probe_supervision import delegated_group, publish_probe_report, supervise_probe
+
     from ai_threat_lab.scanner_approval import (
         ScannerReview,
         ScannerReviewBroker,
@@ -303,7 +310,7 @@ def test_linux_approved_sealed_handoff(linux_probe, tmp_path):
     plan = ScannerExecutionPlan(
         "synthetic-probe", snapshot.root, snapshot.fingerprint(), manifest["executable"],
         manifest["interpreter"], digest(manifest), manifest["configuration"], str(output),
-        5, 64 * 1024**2, 1, 1024**2, 4096, "linux", "bubblewrap", digest(policy),
+        5, 64 * 1024**2, 8, 1024**2, 4096, "linux", "bubblewrap", digest(policy),
     )
     review = ScannerReview(plan, snapshot, runtime)
     key = os.urandom(32)
@@ -328,35 +335,111 @@ def test_linux_approved_sealed_handoff(linux_probe, tmp_path):
             "--size", str(plan.scratch_bytes), "--tmpfs", "/scratch", "--remount-ro", "/",
             "--chdir", "/scratch", "--seccomp", "0", "--", "/probe", *runtime.arguments,
         ]
-        with subprocess.Popen(
-            launch, stdin=filter_fd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-            env={}, pass_fds=(executable, input_fd),
-        ) as process:
-            try:
-                deadline = time.monotonic() + plan.timeout_seconds
-                result = bytearray()
-                while len(result) <= plan.max_output_bytes:
-                    remaining = max(0, deadline - time.monotonic())
-                    assert select.select([process.stdout], [], [], remaining)[0], "probe timed out"
-                    allowance = plan.max_output_bytes + 1 - len(result)
-                    chunk = os.read(process.stdout.fileno(), allowance)
-                    if not chunk:
-                        break
-                    result.extend(chunk)
-                assert len(result) <= plan.max_output_bytes
-                assert process.wait(timeout=max(0, deadline - time.monotonic())) == 0
-            finally:
-                if process.poll() is None:
-                    process.kill()
-    source_report = tmp_path / "synthetic.sarif"
-    source_report.write_bytes(result)
-    report, failures = import_sarif(source_report)
-    assert failures == 0
-    assert report["runs"][0]["producer"] == "M4.4 synthetic probe"
-    assert report["runs"][0]["producer_succeeded"] is True
-    write_new_report(output, encoded(report))
+        with ExitStack() as stack:
+            group = None
+            if delegated_parent is not None:
+                group = stack.enter_context(delegated_group(
+                    delegated_parent, memory=plan.memory_bytes, tasks=plan.max_processes,
+                ))
+            result = supervise_probe(
+                launch, filter_fd=filter_fd, descriptors=(executable, input_fd),
+                timeout=plan.timeout_seconds, output_limit=plan.max_output_bytes, group=group,
+            )
+    publish_probe_report(result, tmp_path / "synthetic.sarif", output)
     assert output.is_file()
     assert input_path.read_bytes() == b"substituted"
+
+
+@pytest.mark.parametrize("mode,reason", [
+    ("wait", "deadline"), ("cancel", "cancelled"), ("stdout", "output limit"),
+    ("stderr", "output limit"), ("missing", "no report"), ("error", "status 42"),
+    ("setup", "exited"),
+])
+def test_linux_supervision_refusals(linux_probe, delegated_parent, mode, reason):
+    from linux_probe_supervision import ProbeFailure, delegated_group, supervise_probe
+
+    command, _, _, rules = linux_probe
+    launch = [*command, "wait" if mode == "cancel" else mode]
+    if mode == "setup":
+        launch[1:1] = ["--invalid-probe-option"]
+    with ExitStack() as stack:
+        group = None
+        if delegated_parent is not None:
+            group = stack.enter_context(delegated_group(
+                delegated_parent, memory=64 * 1024**2, tasks=8,
+            ))
+        stream = stack.enter_context(rules.open("rb"))
+        cancelled_at = time.monotonic() + 0.2
+        with pytest.raises(ProbeFailure, match=reason):
+            supervise_probe(
+                launch, filter_fd=stream.fileno(), descriptors=(), output_limit=1024,
+                timeout=0.5 if mode == "wait" else 5, group=group,
+                cancelled=lambda: mode == "cancel" and time.monotonic() >= cancelled_at,
+            )
+    assert group is None or not group.exists()
+
+
+def test_linux_rejects_non_cgroup_parent(linux_probe, tmp_path):
+    from linux_probe_supervision import ProbeFailure, delegated_group
+
+    with pytest.raises(ProbeFailure, match="cgroup v2 mount"):
+        with delegated_group(tmp_path, memory=64 * 1024**2, tasks=8):
+            pytest.fail("a regular directory was accepted as a cgroup")
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("mode", ["malformed", "incomplete", "existing", "write-error"])
+def test_probe_report_refusals(tmp_path, monkeypatch, mode):
+    from linux_probe_supervision import ProbeFailure, publish_probe_report
+
+    from ai_threat_lab.models import ValidationError
+
+    source, output = tmp_path / "scratch.sarif", tmp_path / "published.json"
+    raw = (
+        b'{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"M4.4 synthetic probe"}},'
+        b'"invocations":[{"executionSuccessful":true}],"results":[]}]}'
+    )
+    if mode == "malformed":
+        raw = raw[:-4]
+    if mode == "incomplete":
+        raw = raw.replace(b"true", b"false")
+    if mode == "existing":
+        output.write_bytes(b"original")
+    if mode == "write-error":
+        def denied(*args, **kwargs):
+            raise OSError("injected publication failure")
+
+        monkeypatch.setattr("ai_threat_lab.local_history.write_new_report", denied)
+    with pytest.raises((ValidationError, ProbeFailure, OSError)):
+        publish_probe_report(raw, source, output)
+    assert not source.exists()
+    if mode == "existing":
+        assert output.read_bytes() == b"original"
+    else:
+        assert not output.exists()
+
+
+def test_linux_delegated_group_limits(linux_probe, delegated_parent):
+    from linux_probe_supervision import ProbeFailure, delegated_group, supervise_probe
+
+    if delegated_parent is None:
+        pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    command, _, _, rules = linux_probe
+    for mode, event in (("tasks", "pids.events"), ("aggregate", "memory.events")):
+        with delegated_group(delegated_parent, memory=64 * 1024**2, tasks=8) as group:
+            with rules.open("rb") as stream:
+                options = dict(
+                    filter_fd=stream.fileno(), descriptors=(), output_limit=1024,
+                    timeout=8, group=group,
+                )
+                if mode == "tasks":
+                    assert supervise_probe([*command, mode], **options) == b"limited"
+                else:
+                    with pytest.raises(ProbeFailure, match="exited"):
+                        supervise_probe([*command, mode], **options)
+            counters = dict(row.split() for row in (group / event).read_text().splitlines())
+            assert int(counters["max" if mode == "tasks" else "oom_kill"]) > 0
+        assert not group.exists()
 
 
 def test_linux_probe_scratch_is_bounded_and_fresh(linux_probe):

@@ -19,3 +19,7 @@ M4.4 exercises a fixed Linux fixture through offline approval, sealed file
 handoff and SARIF publication. Continue with production runtime closure,
 Windows sealed object handoff and integrated aggregate limits before
 considering any scanner execution.
+
+M4.5 exercises the fixed Linux handoff with delegated memory and task limits,
+bounded supervision and safe result publication. External crash reconciliation
+and production runtime closure remain open.

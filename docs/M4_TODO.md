@@ -16,3 +16,5 @@
 
 - [x] M4.4: verify offline approval through a fixed Linux sandbox payload and result.
 - [ ] M4.4: validate sealed object handoff and document production blockers.
+
+- [x] M4.5: supervise the fixed Linux handoff and validate delegated cgroup limits.

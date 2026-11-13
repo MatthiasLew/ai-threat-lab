@@ -73,6 +73,49 @@ static int boundaries(char **argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && (!strcmp(argv[1], "stdout") || !strcmp(argv[1], "stderr"))) {
+        char output[4096] = {0};
+        int fd = !strcmp(argv[1], "stdout") ? STDOUT_FILENO : STDERR_FILENO;
+        return write(fd, output, sizeof(output)) < 0 ? 43 : 0;
+    }
+    if (argc == 2 && !strcmp(argv[1], "missing")) return 0;
+    if (argc == 2 && !strcmp(argv[1], "error")) return 42;
+    if (argc == 2 && !strcmp(argv[1], "tasks")) {
+        int limited = 0;
+        for (int i = 0; i < 10; ++i) {
+            pid_t child = fork();
+            if (child == 0) {
+                sleep(1);
+                _exit(0);
+            }
+            if (child < 0) {
+                limited = errno == EAGAIN;
+                break;
+            }
+        }
+        while (wait(NULL) > 0) {}
+        return limited && write(STDOUT_FILENO, "limited", 7) == 7 ? 0 : 44;
+    }
+    if (argc == 2 && !strcmp(argv[1], "aggregate")) {
+        int ready[2];
+        if (pipe(ready)) return 45;
+        for (int i = 0; i < 2; ++i) {
+            pid_t child = fork();
+            if (child < 0) return 46;
+            if (child == 0) {
+                size_t bytes = 40 * 1024 * 1024;
+                volatile char *buffer = malloc(bytes);
+                if (!buffer) _exit(47);
+                for (size_t offset = 0; offset < bytes; offset += 4096) buffer[offset] = 1;
+                if (write(ready[1], "R", 1) != 1) _exit(48);
+                sleep(3);
+                _exit(0);
+            }
+            char marker;
+            if (read(ready[0], &marker, 1) != 1) return 49;
+        }
+        return 62;
+    }
     if (argc == 2 && !strcmp(argv[1], "handoff")) {
         int result = filesystem("/host-canary");
         if (result) return result;
