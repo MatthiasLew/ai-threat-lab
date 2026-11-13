@@ -67,3 +67,5 @@ jobs:
           THREAT_LAB_REFERENCE_WHEELS: ${{ runner.temp }}/bandit-reference
           THREAT_LAB_CPYTHON_OCI: ${{ runner.temp }}/cpython-reference
           THREAT_LAB_REQUIRE_BWRAP_PROBE: '1'
+      - name: Verify owner IPC with distinct Linux accounts
+        run: sudo "$(command -v python)" -m pytest -q tests/test_scanner_owner_ipc.py
