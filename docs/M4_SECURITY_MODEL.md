@@ -102,3 +102,5 @@ M4.9 validates reference wheel RECORD entries before building immutable in-memor
 M4.10 verifies and seals a CPython OCI projection for a fixed diagnostic. Full runtime closure remains open.
 
 M4.11 seals package and OCI inputs for a fixed import diagnostic. Arbitrary dynamic loading remains outside the verified scope.
+
+M4.12 trusts a private owner-controlled recovery registry and refuses group removal before identity registration. See [recovery evidence](M4_12_RECOVERY_EVIDENCE.md).
