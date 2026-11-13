@@ -17,9 +17,11 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e ".[dev]"
       - if: runner.os == 'Linux'
-        run: sudo apt-get install -y bubblewrap
+        run: sudo apt-get install -y bubblewrap gcc libc6-dev libseccomp2
       - run: python -m ruff check .
       - run: python -m coverage run -m pytest -q -rs
+        env:
+          THREAT_LAB_REQUIRE_BWRAP_PROBE: ${{ runner.os == 'Linux' && '1' || '0' }}
       - run: python -m coverage report
       - run: python -m coverage json -o coverage.json
       - run: >-

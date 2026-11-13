@@ -7,3 +7,6 @@
 - [ ] Future: implement and independently validate AppContainer with restricted ACLs.
 - [ ] Future: bind owner approval to pinned runtime and input handles at launch.
 - [ ] Future: enforce aggregate budgets and integrate cancellation and SARIF handoff.
+- [ ] Enforce mandatory Linux probes on Ubuntu CI.
+- [ ] Add behavioral regressions and verify the 90% branch-only threshold.
+- [ ] Validate the Windows AppContainer test profile and document residual gaps.

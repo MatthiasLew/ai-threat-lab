@@ -17,6 +17,9 @@ class SandboxDiagnostic:
     platform: str
     backend: str | None
     prerequisites: tuple[tuple[str, bool], ...]
+    availability: str = "not_detected"
+    configuration: str = "not_checked"
+    permissions: str = "not_checked"
     verified_controls: tuple[str, ...] = ()
     validation: str = "not_validated"
     execution: str = "blocked"
@@ -79,13 +82,18 @@ def _windows_api(library: str, entry: str) -> bool:
 def sandbox_diagnostic() -> SandboxDiagnostic:
     """Report prerequisites. Presence does not establish effective isolation."""
     if sys.platform == "linux":
+        detected = system_bubblewrap() is not None
         return SandboxDiagnostic("linux", "bubblewrap", (
-            ("system_bubblewrap_candidate", system_bubblewrap() is not None),
+            ("system_bubblewrap_candidate", detected),
             ("cgroup_v2_hierarchy", Path("/sys/fs/cgroup/cgroup.controllers").is_file()),
-        ))
+        ), availability="detected" if detected else "not_detected")
     if sys.platform == "win32":
-        return SandboxDiagnostic("win32", "appcontainer", (
+        prerequisites = (
             ("appcontainer_profile_api", _windows_api("userenv.dll", "CreateAppContainerProfile")),
             ("job_object_api", _windows_api("kernel32.dll", "CreateJobObjectW")),
-        ))
-    return SandboxDiagnostic(sys.platform, None, ())
+        )
+        return SandboxDiagnostic(
+            "win32", "appcontainer", prerequisites,
+            availability="detected" if all(present for _, present in prerequisites) else "missing",
+        )
+    return SandboxDiagnostic(sys.platform, None, (), availability="unsupported")

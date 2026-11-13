@@ -73,7 +73,9 @@ static int boundaries(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc == 2 && !strcmp(argv[1], "ready")) return 0;
+    if (argc == 2 && !strcmp(argv[1], "ready")) {
+        return socket(AF_INET, SOCK_DGRAM, 0) == -1 && errno == EPERM ? 0 : 26;
+    }
     if (argc == 2 && !strcmp(argv[1], "scratch")) {
         int fd = open("/scratch/partial", O_WRONLY | O_CREAT | O_EXCL, 0600);
         if (fd < 0 || write(fd, "partial", 7) != 7) return 24;
