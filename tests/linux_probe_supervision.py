@@ -4,6 +4,7 @@ import json
 import os
 import re
 import selectors
+import stat
 import subprocess
 import sys
 import time
@@ -19,6 +20,10 @@ class ProbeFailure(RuntimeError):
 def _identity(descriptor):
     info = os.fstat(descriptor)
     return [info.st_dev, info.st_ino]
+
+
+def _boot_id():
+    return Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
 
 
 def _drain(group):
@@ -42,7 +47,14 @@ def recover_groups(parent, registry):
         for record in registry.iterdir():
             if not re.fullmatch(r"atl-probe-[0-9a-f]{32}", record.name):
                 continue
-            with os.fdopen(os.open(record, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+            try:
+                fd = os.open(record, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            except OSError:
+                continue
+            with os.fdopen(fd, "rb") as stream:
+                info = os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+                    continue
                 try:
                     fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
@@ -53,6 +65,7 @@ def recover_groups(parent, registry):
                     continue
                 if not isinstance(identity, dict) or (
                     identity.get("owner") != os.getuid()
+                    or identity.get("boot") != _boot_id()
                     or identity.get("parent") != _identity(parent_fd)
                 ):
                     continue
@@ -61,7 +74,7 @@ def recover_groups(parent, registry):
                         record.name, os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd,
                     )
                 except FileNotFoundError:
-                    record.unlink()
+                    record.unlink(missing_ok=True)
                     continue
                 try:
                     if identity.get("group") != _identity(group_fd):
@@ -71,7 +84,7 @@ def recover_groups(parent, registry):
                     if [current.st_dev, current.st_ino] != identity["group"]:
                         raise ProbeFailure("cgroup identity changed before removal")
                     os.rmdir(record.name, dir_fd=parent_fd)
-                    record.unlink()
+                    record.unlink(missing_ok=True)
                     recovered.append(record.name)
                 finally:
                     os.close(group_fd)
@@ -127,7 +140,8 @@ def delegated_group(parent, *, memory, tasks, registry=None, io_device=None):
             fcntl.flock(stream, fcntl.LOCK_EX)
             parent_stat, group_stat = parent.stat(), group.stat()
             stream.write(json.dumps({
-                "owner": os.getuid(), "parent": [parent_stat.st_dev, parent_stat.st_ino],
+                "owner": os.getuid(), "boot": _boot_id(),
+                "parent": [parent_stat.st_dev, parent_stat.st_ino],
                 "group": [group_stat.st_dev, group_stat.st_ino],
             }).encode("ascii"))
             stream.flush()

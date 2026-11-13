@@ -497,6 +497,24 @@ with delegated_group(Path(sys.argv[2]), memory=67108864, tasks=8,
                 process.kill()
 
 
+def test_linux_recovery_refuses_wrong_identity(linux_probe, delegated_parent, tmp_path):
+    import json
+
+    from linux_probe_supervision import _boot_id, delegated_group, recover_groups
+
+    if delegated_parent is None:
+        pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    with delegated_group(delegated_parent, memory=64 * 1024**2, tasks=8) as group:
+        parent = delegated_parent.stat()
+        (tmp_path / group.name).write_text(json.dumps({
+            "owner": os.getuid(), "boot": _boot_id(),
+            "parent": [parent.st_dev, parent.st_ino], "group": [0, 0],
+        }))
+        (tmp_path / "invalid-name").write_text("{}")
+        assert recover_groups(delegated_parent, tmp_path) == []
+        assert group.exists()
+
+
 def test_linux_probe_scratch_is_bounded_and_fresh(linux_probe):
     command, _, _, network_filter = linux_probe
     for _ in range(2):

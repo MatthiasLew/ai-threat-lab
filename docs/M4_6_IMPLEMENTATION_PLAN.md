@@ -16,9 +16,9 @@ controller and configures read and write bandwidth before launch. No
 block-device workload was validated. tmpfs does not exercise io.max.
 
 Recovery is explicitly invoked from a trusted process. Keep registry and
-delegation exclusively controlled. The registry records UID and parent/group
+delegation exclusively controlled. The registry records UID, boot ID and parent/group
 device and inode and a lock keeps live runs out of recovery. A process death
 between mkdir and durable identity recording can leave an empty group that
 requires manual review. Unrecorded or mismatched groups are left alone.
-Same-UID registry tampering, inode reuse across a reboot and host power-loss
+Same-UID registry tampering, inode reuse within one boot and host power-loss
 recovery are outside this prototype. No approval is restored.
