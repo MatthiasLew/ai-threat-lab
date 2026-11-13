@@ -2,10 +2,12 @@
 
 import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .scanner_plan import EXECUTION_BLOCKER, bandit_availability, plan_bandit
 from .scanner_report import save_bandit_report
+from .scanner_sandbox import sandbox_diagnostic
 
 
 def add_scanner_commands(commands):
@@ -46,5 +48,9 @@ def run_scanner_command(args):
         result = bandit_availability()
         if action == "list":
             result = {"scanners": [result]}
+        else:
+            diagnostic = asdict(sandbox_diagnostic())
+            diagnostic["prerequisites"] = dict(diagnostic["prerequisites"])
+            result["sandbox"] = diagnostic
     print(json.dumps(result))
     return 0
