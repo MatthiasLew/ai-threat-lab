@@ -24,3 +24,4 @@
 - [ ] Verify complete CPython runtime filesystem handoff and import closure.
 - [x] M4.9: validate the in-memory wheel package inventory.
 - [ ] M4.9: validate native runtime closure and full filesystem handoff.
+- [x] M4.10: verify pinned OCI bytes and isolated CPython diagnostics.
