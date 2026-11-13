@@ -10,3 +10,7 @@
 | 6 | Extend CLI integrations | Review each report format, fixtures and privacy policy independently. |
 
 The first two PRs use the [Bandit isolation gates](M3_BANDIT_PLANNING.md).
+
+The M4.3 offline slice implements captured review objects and one-time
+redemption. The next integration must close runtime resolution and hand off
+the same objects to the backend without reopening mutable source paths.

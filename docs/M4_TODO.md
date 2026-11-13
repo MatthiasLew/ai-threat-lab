@@ -10,3 +10,6 @@
 - [x] Enforce mandatory Linux probes on Ubuntu CI.
 - [x] Add behavioral regressions and enforce independent 90% coverage thresholds.
 - [ ] Validate production AppContainer configuration, quotas and crash recovery.
+- [x] M4.3: Capture bounded immutable review objects and bind the runtime manifest.
+- [x] M4.3: Verify and transactionally consume one-time owner approval offline.
+- [ ] Connect the approved objects to a production backend after platform acceptance.

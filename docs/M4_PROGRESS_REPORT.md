@@ -57,3 +57,10 @@ crash cleanup, and bounded publication through the existing SARIF importer.
 Also require production tests for Windows reparse-point races and scratch
 limits and Linux aggregate budgets integrated with Bubblewrap. The scanner
 command remains blocked on both platforms.
+
+## M4.3
+
+Bounded project and runtime captures, manifest binding and durable one-time
+offline approval are implemented. Production owner interaction, runtime
+resolution and direct backend handoff remain launch gates.
+See [M4.3 acceptance](M4_3_ACCEPTANCE.md).

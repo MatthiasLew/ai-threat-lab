@@ -65,3 +65,7 @@ files on reread.
 Approval must be issued by the owner for a single plan and launch, expire, and
 be consumed atomically with the backend and runtime identity check. No agent
 operation issues approval. The current fingerprint records review intent only.
+
+M4.3 adds bounded immutable review objects and an offline approval ledger.
+See the [authorization API](M4_3_AUTHORIZATION_API.md) for key custody,
+rollback semantics and remaining loader and sandbox handoff requirements.
