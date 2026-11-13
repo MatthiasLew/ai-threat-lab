@@ -64,3 +64,5 @@ Bounded project and runtime captures, manifest binding and durable one-time
 offline approval are implemented. Production owner interaction, runtime
 resolution and direct backend handoff remain launch gates.
 See [M4.3 acceptance](M4_3_ACCEPTANCE.md).
+
+M4.6 verified delegated CPU throttling and recorded-group recovery after SIGTERM and SIGKILL on WSL2. Block-device I/O remains unverified.

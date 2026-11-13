@@ -23,3 +23,5 @@ considering any scanner execution.
 M4.5 exercises the fixed Linux handoff with delegated memory and task limits,
 bounded supervision and safe result publication. External crash reconciliation
 and production runtime closure remain open.
+
+Next Linux work covers block-I/O validation and registry crash-window recovery.
