@@ -1,9 +1,13 @@
 name: CI
 on: [push, pull_request]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 permissions:
   contents: read
 jobs:
   verify:
+    needs: cpython-reference
     timeout-minutes: 10
     strategy:
       matrix:
@@ -19,8 +23,11 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get install -y bubblewrap gcc libc6-dev libseccomp2
       - run: python -m ruff check .
-      - run: python scripts/fetch_bandit_reference_wheels.py "${{ runner.temp }}/bandit-reference"
-      - run: python -m coverage run -m pytest -q -rs
+      - uses: actions/download-artifact@v4
+        with:
+          name: bandit-reference-wheels
+          path: ${{ runner.temp }}/bandit-reference
+      - run: python -m coverage run -m pytest -q -rs --junitxml=pytest-results.xml
         env:
           THREAT_LAB_REFERENCE_WHEELS: ${{ format('{0}/bandit-reference', runner.temp) }}
           THREAT_LAB_REQUIRE_BWRAP_PROBE: ${{ runner.os == 'Linux' && '1' || '0' }}
@@ -30,6 +37,13 @@ jobs:
       - run: python scripts/check_coverage.py coverage.json
       - run: python -m build
       - run: python scripts/check_installed_package.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-evidence-${{ matrix.os }}-${{ matrix.python }}
+          path: |
+            pytest-results.xml
+            coverage.json
   cpython-reference:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -40,6 +54,13 @@ jobs:
           python-version: '3.12'
       - run: sudo apt-get install -y bubblewrap gcc libc6-dev libseccomp2
       - run: python -m pip install -e ".[dev]"
+      - run: python scripts/fetch_bandit_reference_wheels.py "${{ runner.temp }}/bandit-reference"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bandit-reference-wheels
+          path: ${{ runner.temp }}/bandit-reference
+          if-no-files-found: error
+          retention-days: 1
       - run: python scripts/fetch_cpython_reference.py "${{ runner.temp }}/cpython-reference"
       - run: python -m pytest -q tests/test_scanner_sandbox.py -k pinned_cpython
         env:

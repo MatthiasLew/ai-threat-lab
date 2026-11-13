@@ -1,27 +1,13 @@
 # M4 tasks
 
-- [x] Add shared diagnostics and approval fingerprint.
-- [x] Run the Linux test-only namespace prototype under Ubuntu WSL2.
-- [x] Verify the Windows trusted worker baseline with real processes.
-- [x] Verify the original M4 matrix and clean install.
-- [x] Validate the Windows AppContainer test profile with restricted ACLs.
-- [ ] Future: bind owner approval to pinned runtime and input handles at launch.
-- [ ] Future: enforce aggregate budgets and integrate cancellation and SARIF handoff.
-- [x] Enforce mandatory Linux probes on Ubuntu CI.
-- [x] Add behavioral regressions and enforce independent 90% coverage thresholds.
-- [ ] Validate production AppContainer configuration, quotas and crash recovery.
-- [x] M4.3: Capture bounded immutable review objects and bind the runtime manifest.
-- [x] M4.3: Verify and transactionally consume one-time owner approval offline.
-- [ ] Connect the approved objects to a production backend after platform acceptance.
-
-- [x] M4.4: verify offline approval through a fixed Linux sandbox payload and result.
-- [ ] M4.4: validate sealed object handoff and document production blockers.
-
-- [x] M4.5: supervise the fixed Linux handoff and validate delegated cgroup limits.
-- [x] M4.6: verify recorded cgroup recovery and CPU enforcement.
-- [x] M4.7: verify pinned runtime inventory and exercise owner review contract.
-- [x] M4.8: lock and verify reference wheels and seal captured wheel bytes.
-- [ ] Verify complete CPython runtime filesystem handoff and import closure.
-- [x] M4.9: validate the in-memory wheel package inventory.
-- [ ] M4.9: validate native runtime closure and full filesystem handoff.
-- [x] M4.10: verify pinned OCI bytes and isolated CPython diagnostics.
+- [x] Integrate M3 saved reports and M4 test infrastructure on main.
+- [x] Verify test-only Linux namespace and Windows AppContainer boundaries.
+- [x] Verify sealed Linux file handoff and synthetic SARIF publication.
+- [x] Verify delegated WSL2 memory, task, CPU and recorded recovery probes.
+- [x] Verify offline approval redemption and pinned wheel materialization.
+- [x] Run pinned CPython diagnostic in Bubblewrap.
+- [ ] Verify full ELF, stdlib and site-packages handoff and plugin closure.
+- [ ] Authenticate owner IPC and isolate signing key and ledger custody.
+- [ ] Validate block-device I/O and crash recovery before durable registration.
+- [ ] Verify Windows runtime handoff, scratch quotas and external network denial.
+- [ ] Verify a controlled real Bandit run and outcome publication before launch review.

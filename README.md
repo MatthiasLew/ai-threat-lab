@@ -112,6 +112,8 @@ for setup and limitations. GUI remains a separate contributor's responsibility.
 
 ## Current source version — 0.41.4 (unreleased)
 
+The offline release candidate includes the guided PL/EN audit, reports and history, Agent Mode, nine STDIO MCP tools and saved SARIF import. Use scanner import bandit for a completed saved report. Production scanner run returns exit 2. See the [offline release audit](docs/OFFLINE_RELEASE_AUDIT_0_41_4.md) for tested scope and remaining gates.
+
 Dependencies: [inventory, OSV and cache offline acceptance](docs/DEPENDENCIES_OFFLINE_ACCEPTANCE.md).
 
 Gmail settings: [read-only scope and offline acceptance](docs/GMAIL_AUDIT.md).
