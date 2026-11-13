@@ -77,7 +77,6 @@ def test_locked_wheel_directory_rejects_incomplete_extra_and_modified_files(tmp_
         capture_locked_bandit_wheels(tmp_path)
 
 
-@pytest.mark.skipif(not hasattr(os, "memfd_create"), reason="Linux immutable descriptors")
 def test_reference_wheels_are_captured_and_sealed(tmp_path):
     import shutil
 
@@ -121,5 +120,8 @@ def test_reference_wheels_are_captured_and_sealed(tmp_path):
                 active.append(str(requirement))
         assert sorted(active) == row["requires"]
         (tmp_path / name).write_bytes(b"substituted after capture")
-        with sealed_scanner_file(raw, row["sha256"]) as fd:
-            assert sha256(os.read(fd, len(raw))).hexdigest() == row["sha256"]
+        if hasattr(os, "memfd_create"):
+            with sealed_scanner_file(raw, row["sha256"]) as fd:
+                assert sha256(os.read(fd, len(raw))).hexdigest() == row["sha256"]
+        else:
+            assert sha256(raw).hexdigest() == row["sha256"]
