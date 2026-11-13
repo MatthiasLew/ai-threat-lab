@@ -39,3 +39,5 @@ Windows staging, scratch quotas and external network controls. See
 [M4 roadmap](M4_ROADMAP.md) and [release audit](OFFLINE_RELEASE_AUDIT_0_41_4.md).
 
 M4.11 adds pinned package imports and plugin diagnostics. See [runtime evidence](M4_11_RUNTIME_EVIDENCE.md).
+
+M4.12 exercises recovery checkpoints on delegated WSL2. Block I/O remains blocked.

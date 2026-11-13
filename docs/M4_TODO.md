@@ -12,3 +12,6 @@
 - [ ] Verify Windows runtime handoff, scratch quotas and external network denial.
 - [ ] Verify a controlled real Bandit run and outcome publication before launch review.
 - [x] M4.11: validate ELF and locked-package handoff with isolated imports.
+
+- [ ] Verify block I/O on an approved disposable device with delegated io.
+- [ ] Resolve intent-only cleanup and host crash recovery.
