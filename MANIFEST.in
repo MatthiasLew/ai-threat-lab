@@ -1,5 +1,6 @@
 include tests/conftest.py
 include tests/fixtures/sandbox_probe.c
+include tests/fixtures/appcontainer_probe.c
 include CHANGELOG.md
 include .ai-dev-tools.toml
 recursive-include docs *.md

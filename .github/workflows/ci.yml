@@ -22,6 +22,7 @@ jobs:
       - run: python -m coverage run -m pytest -q -rs
         env:
           THREAT_LAB_REQUIRE_BWRAP_PROBE: ${{ runner.os == 'Linux' && '1' || '0' }}
+          THREAT_LAB_REQUIRE_APPCONTAINER_PROBE: ${{ runner.os == 'Windows' && '1' || '0' }}
       - run: python -m coverage report
       - run: python -m coverage json -o coverage.json
       - run: >-
