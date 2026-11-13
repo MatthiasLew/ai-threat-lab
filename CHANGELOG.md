@@ -3,6 +3,8 @@
 ## M3.2 development
 
 - Add read-only Bandit discovery and fingerprint validation with a JSON plan.
+- Publish complete saved Bandit SARIF through the bounded importer.
+- Verify the guided audit and offline Bandit commands from an installed wheel.
 
 ## M3.1 development
 

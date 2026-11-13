@@ -59,6 +59,8 @@ targets stay opaque, with package and version retained when the location message
 provides them. Trivy filesystem and configuration layouts currently rely on the
 generic parser. Trivy secret results with a secret tag or a match field withhold
 messages and paths. Gitleaks strips messages, paths, snippets and commit metadata.
+The pinned Semgrep dataflow sample verifies that the finding is retained and
+the omitted code flow is counted in the structured projection.
 Recognizable match fields are withheld even when the driver name is unknown.
 Trivy and Gitleaks producer limitations are withheld because they can contain
 unstructured sensitive data.

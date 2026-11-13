@@ -1,5 +1,6 @@
 """Validate the built wheel in a clean venv and working directory containing spaces."""
 
+import hashlib
 import json
 import os
 import runpy
@@ -89,14 +90,18 @@ def main() -> None:
         python = binary / ("python.exe" if os.name == "nt" else "python")
         executable = binary / ("ai-threat-lab.exe" if os.name == "nt" else "ai-threat-lab")
         env = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "PYTHONHOME")}
-        env.update(PYTHONNOUSERSITE="1", PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+        env.update(
+            PYTHONNOUSERSITE="1", PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+            AI_THREAT_LAB_CONFIG_DIR=str(work / "isolated config"),
+        )
 
-        def run(*args, expected=0):
+        def run(*args, expected=0, input_text=None, stderr_contains=None):
             result = subprocess.run(
                 list(map(str, args)),
                 cwd=work,
                 env=env,
                 capture_output=True,
+                input=input_text,
                 text=True,
                 encoding="utf-8",
                 timeout=180,
@@ -105,6 +110,8 @@ def main() -> None:
                 raise RuntimeError(
                     f"Installed command failed ({result.returncode}): {result.stderr}"
                 )
+            if stderr_contains:
+                assert stderr_contains in result.stderr
             return result.stdout
 
         run(python, "-m", "pip", "install", "--no-index", "--no-deps", wheel)
@@ -454,10 +461,18 @@ def main() -> None:
             )
         )
         assert revoked["cancelled_sessions"] == 0
-        scan_project = work / "scan project"
+        scan_project = work / "scan project żółć"
         scan_project.mkdir()
         (scan_project / "app.py").write_text("eval(data)\n", encoding="utf-8")
         (scan_project / "requirements.txt").write_text("fixture-package==1.2.3\n", encoding="utf-8")
+        menu_output = work / "guided audit żółć"
+        menu_input = "\n".join(["1", "1", str(scan_project), "1", "y", "2",
+                                str(menu_output), "n", "n", "", "0", ""])
+        assert "Goodbye!" in run(executable, "menu", "--lang", "en", input_text=menu_input)
+        assert "Do widzenia!" in run(executable, "menu", "--lang", "pl", input_text="0\n")
+        assert (menu_output / "exports/audit_en.pdf").is_file()
+        guided = json.loads(run(executable, "scan-check", menu_output))
+        assert guided["status"] == "integrity_verified"
         scan = json.loads(run(executable, "scan", scan_project, "--output-dir", "scan first"))
         assert scan["unique_findings"] == 1 and scan["ai_calls"] == 0
         assert scan["modules"]["dependency_inventory"]["status"] == "collected"
@@ -1075,6 +1090,49 @@ def main() -> None:
         imported = json.loads(run(executable, "review-sarif", str(fixture), "--structured"))
         assert imported["observations"][0]["producer_version"] == "1.7.8"
         assert imported["observations"][0]["rule_id"] == "B101"
+        legacy = json.loads(run(executable, "review-sarif", fixture))
+        assert legacy["findings"][0]["status"] == "unverified"
+        document = json.loads(fixture.read_bytes())
+        run_data = document["runs"][0]
+        empty = work / "empty.sarif"
+        original_results = run_data["results"]
+        run_data["results"] = []
+        empty.write_text(json.dumps(document), encoding="utf-8")
+        empty_result = json.loads(run(executable, "review-sarif", empty, "--structured"))
+        assert not empty_result["observations"]
+        run_data["results"] = original_results
+        run_data["invocations"][0]["executionSuccessful"] = False
+        run_data["results"][0]["message"]["text"] = "Match: OFFLINE-SARIF-CANARY"
+        incomplete = work / "incomplete.sarif"
+        incomplete.write_text(json.dumps(document), encoding="utf-8")
+        redacted = run(executable, "review-sarif", incomplete, "--structured", expected=2)
+        assert "OFFLINE-SARIF-CANARY" not in redacted
+        assert json.loads(redacted)["incomplete_runs"] == 1
+        broken = work / "broken.sarif"
+        broken.write_bytes(b'{"runs":[')
+        run(executable, "review-sarif", broken, expected=2, stderr_contains="invalid JSON")
+
+        assert json.loads(run(executable, "scanner", "list"))["scanners"][0]["scanner"] == "bandit"
+        assert json.loads(run(executable, "scanner", "doctor"))["execution"] == "blocked"
+        canary = work / "inert candidate żółć.exe"
+        canary.write_bytes(b"Inert test fixture. Never executed.")
+        sha256 = hashlib.sha256(canary.read_bytes()).hexdigest()
+        plan = json.loads(run(
+            executable, "scanner", "plan", "bandit", scan_project,
+            "--executable", canary, "--sha256", sha256, "--version", "1.7.8",
+        ))
+        assert plan["executable_sha256"] == sha256 and not plan["authorized_to_execute"]
+        saved = work / "bandit report żółć.json"
+        args = [executable, "scanner", "import", "bandit", fixture, "--output", saved]
+        assert json.loads(run(*args))["reported_results"] == 1
+        original = saved.read_bytes()
+        run(*args, expected=2)
+        assert saved.read_bytes() == original
+        blocked = run(
+            executable, "scanner", "run", "bandit", scan_project,
+            expected=2, stderr_contains="confinement",
+        )
+        assert json.loads(blocked)["execution"] == "blocked"
         print("Clean installed wheel: audit, costs, training, bundles and Agent CLI/MCP passed.")
 
 

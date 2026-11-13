@@ -39,3 +39,22 @@ run exits 2. Plans contain local paths and are intended for local review.
 The validation service lives in `ai_threat_lab.scanner_plan`.
 Explicit UNC and device path syntax is rejected. Mapped drives and mounted
 remote filesystems cannot be identified reliably by this syntax check.
+
+Use `scanner import bandit saved.sarif --output report.json` to publish a
+saved report declaring Bandit 1.7.8 with a successful producer outcome.
+The handoff uses the existing bounded SARIF importer and refuses to overwrite
+an existing output. Published observations remain unverified.
+
+On Linux, evaluate a reviewed namespace or container backend with a
+read-only snapshot and runtime, isolated network namespace and bounded
+scratch. Check permission for unprivileged user namespaces and delegated
+cgroup limits. On Windows, evaluate AppContainer without network
+capabilities, explicit filesystem ACLs and restricted inherited handles.
+Verify firewall and loopback policy. A Job Object supplies process-tree
+lifetime and resource limits. Establish provisioning permissions separately
+from ordinary scanner use.
+
+Use inert process fixtures to prove denial of reads outside scope, network
+access, unsafe inherited handles and writes outside scratch. Test wrapper
+and dependency substitution, descendants, limits, timeout, cancellation,
+supervisor death and cleanup before enabling execution.

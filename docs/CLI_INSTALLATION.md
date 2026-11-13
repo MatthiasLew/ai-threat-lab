@@ -88,3 +88,5 @@ under way, output says `interrupted` with unknown commit state: verify the direc
 For guided human workflows, run `ai-threat-lab menu --lang pl` or `--lang en`.
 For offline SARIF import with the installed CLI, see [SARIF import](SARIF_IMPORT.md).
 For optional Bandit discovery and local plans, see [Bandit planning](M3_BANDIT_PLANNING.md).
+For M3 candidate installation and first-run checks, see
+[the release checklist](M3_OFFLINE_RELEASE_CHECKLIST.md).

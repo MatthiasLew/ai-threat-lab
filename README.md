@@ -16,6 +16,8 @@ See [Agent Mode](docs/AGENT_MODE.md), [MCP setup](docs/MCP_SERVER.md) and
 
 ## Console workflow
 
+[M3 offline release candidate checklist](docs/M3_OFFLINE_RELEASE_CHECKLIST.md)
+
 Use `scanner doctor` to check Bandit availability and `scanner plan` to
 validate a local candidate. [Bandit planning and execution status](docs/M3_BANDIT_PLANNING.md)
 
