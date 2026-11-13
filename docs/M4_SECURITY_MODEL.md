@@ -48,3 +48,20 @@ Sources: [AppContainer](https://learn.microsoft.com/en-us/windows/win32/secauthz
 [loopback policy](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/troubleshooting-uwp-firewall),
 [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects),
 [Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file).
+
+## Authorization and object identity
+
+The review record is input to a future owner-only approval flow. A trusted
+broker should hold a private staged snapshot and runtime through review and
+launch. A complete manifest must bind paths, types and content of the input,
+interpreter, imports, native libraries and scanner configuration. Reject links,
+unexpected entries and partial snapshots. Compute the digests on the same
+objects passed to the backend and retain the handles or mount the private
+immutable objects. Reopening the original path after a matching digest permits
+a second replacement. The existing pinned-scope regression covers directory
+replacement before access, while the fingerprint tests cover changed runtime
+files on reread.
+
+Approval must be issued by the owner for a single plan and launch, expire, and
+be consumed atomically with the backend and runtime identity check. No agent
+operation issues approval. The current fingerprint records review intent only.
