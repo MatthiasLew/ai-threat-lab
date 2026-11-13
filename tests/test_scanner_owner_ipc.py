@@ -11,7 +11,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -303,3 +303,75 @@ def test_ipc_response_validation(monkeypatch):
     assert not ipc_module.owner_ipc_request("socket", AGENT, request_data)
     monkeypatch.setattr(ipc_module, "sys", SimpleNamespace(platform="win32"))
     assert not ipc_module.owner_ipc_request("socket", BROKER, request_data)
+
+
+@pytest.mark.parametrize("packet", [b"", b"malformed", b"[]", b"truncated"])
+def test_broker_packet_handling(monkeypatch, packet):
+    broker = object.__new__(ipc_module.TestOwnerBroker)
+    broker._owner_uid, broker._launcher_uid = OWNER, LAUNCHER
+    broker._deadline = 0
+    broker.path = Mock()
+    channel = MagicMock()
+    listener = Mock()
+    listener.accept.return_value = channel, None
+    channel.send.side_effect = len
+    monkeypatch.setattr(ipc_module.socket, "MSG_TRUNC", 32, raising=False)
+    monkeypatch.setattr(ipc_module, "_boot_seconds", lambda: 1)
+    monkeypatch.setattr(ipc_module, "_peer_uid", lambda stream: LAUNCHER)
+    flags = ipc_module.socket.MSG_TRUNC if packet == b"truncated" else 0
+    channel.recvmsg.return_value = packet, [], flags, None
+    broker.listen(listener)
+    broker.serve_one(listener)
+    if packet == b"[]":
+        channel.send.assert_called_once_with(encoded(ipc_module.DENIED))
+    else:
+        channel.send.assert_not_called()
+
+
+def test_socket_peer_and_boot_clock(monkeypatch):
+    import struct
+
+    channel = Mock()
+    channel.getsockopt.return_value = struct.pack("3i", 111, OWNER, OWNER)
+    monkeypatch.setattr(ipc_module.socket, "SO_PEERCRED", 17, raising=False)
+    assert ipc_module._peer_uid(channel) == OWNER
+    monkeypatch.setattr(ipc_module.time, "CLOCK_BOOTTIME", 7, raising=False)
+    monkeypatch.setattr(ipc_module.time, "clock_gettime", lambda clock: clock, raising=False)
+    assert ipc_module._boot_seconds() == 7
+
+
+@pytest.mark.parametrize("mode", [0o100644, 0o120600, 0o100600])
+def test_ledger_requires_private_regular_file(monkeypatch, mode):
+    monkeypatch.setattr(ipc_module.os, "geteuid", lambda: BROKER, raising=False)
+    path = Mock()
+    path.lstat.return_value = SimpleNamespace(
+        st_mode=mode, st_nlink=1, st_uid=AGENT, st_dev=1, st_ino=2,
+    )
+    with pytest.raises(ValidationError, match="private ledger"):
+        ipc_module._ledger_identity(path)
+
+
+@pytest.mark.parametrize("case", ["large", "short"])
+def test_ipc_requires_complete_send(case):
+    channel = Mock()
+    channel.send.return_value = 0
+    message = "x" * ipc_module.MAX_PACKET if case == "large" else []
+    with pytest.raises(ValidationError, match="was not sent"):
+        ipc_module._send(channel, message)
+
+
+@pytest.mark.parametrize("decision", ["approve operation\n", "decline\n"])
+def test_terminal_displays_escaped_record(monkeypatch, decision):
+    from io import StringIO
+
+    stream = StringIO()
+    transcript = []
+    stream.close = lambda: transcript.append(stream.getvalue())
+    def open_terminal(path, mode="r", **kwargs):
+        return stream if mode == "w" else StringIO(decision)
+
+    monkeypatch.setattr("builtins.open", open_terminal)
+    assert ipc_module.confirm_at_owner_terminal({"path": "\x1b"}, "operation") is (
+        decision.startswith("approve")
+    )
+    assert "\\u001b" in transcript[0]
