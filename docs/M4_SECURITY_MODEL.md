@@ -98,3 +98,5 @@ See [M4.7 evidence](M4_7_IMPLEMENTATION_PLAN.md).
 M4.8 verifies the locked wheel set as data. Interpreter and loader closure remain unverified.
 
 M4.9 validates reference wheel RECORD entries before building immutable in-memory package inventories. OCI rootfs closure remains unverified.
+
+M4.10 verifies and seals a CPython OCI projection for a fixed diagnostic. Full runtime closure remains open.

@@ -269,6 +269,90 @@ def test_linux_probe_per_process_memory_limit(linux_probe):
         subprocess.run([*command, "memory"], stdin=rules, check=True, timeout=10, env={})
 
 
+def test_pinned_cpython_projection_in_bubblewrap(linux_probe):
+    from cpython_oci import elf_interpreter, load_projection
+    from linux_probe_supervision import supervise_probe
+
+    from ai_threat_lab.scanner_staging import sealed_scanner_file
+
+    cache = os.environ.get("THREAT_LAB_CPYTHON_OCI")
+    if not cache:
+        pytest.skip("Pinned OCI blobs unavailable")
+    command, _, canary, rules = linux_probe
+    tree = load_projection(Path(cache))
+    interpreter = "usr/local/bin/python3.12"
+    assert elf_interpreter(tree[interpreter]) == "/lib64/ld-linux-x86-64.so.2"
+    loader = "usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    tree["lib64/ld-linux-x86-64.so.2"] = tree[loader]
+    tree["usr/lib/x86_64-linux-gnu/libz.so.1"] = tree[
+        "usr/lib/x86_64-linux-gnu/libz.so.1.2.13"
+    ]
+    launch = command[:command.index("--ro-bind")]
+    script = """
+import json, sys, zlib, os, _socket
+assert sys.version_info[:3] == (3, 12, 12)
+assert sys.executable == '/usr/local/bin/python3.12'
+assert sys.path == ['/usr/local/lib/python312.zip', '/usr/local/lib/python3.12',
+                    '/usr/local/lib/python3.12/lib-dynload']
+assert zlib.decompress(zlib.compress(b'probe')) == b'probe'
+try:
+    _socket.socket()
+except PermissionError:
+    pass
+else:
+    raise AssertionError('socket creation permitted')
+for module in tuple(sys.modules.values()):
+    path = getattr(module, '__file__', None)
+    assert path is None or path.startswith('/usr/local/lib/python3.12/'), path
+try:
+    open(sys.argv[1], 'rb')
+except FileNotFoundError:
+    pass
+else:
+    raise AssertionError('host canary visible')
+try:
+    open('/usr/local/bin/python3.12', 'wb')
+except OSError as error:
+    assert error.errno in (13, 30), error
+else:
+    raise AssertionError('runtime writable')
+with open('/scratch/probe', 'xb') as result:
+    result.write(b'probe')
+for fd in range(3, int(sys.argv[2])):
+    try:
+        os.fstat(fd)
+    except OSError as error:
+        assert error.errno == 9, error
+    else:
+        raise AssertionError('unexpected inherited descriptor')
+print(json.dumps({'version': sys.version, 'paths': sys.path, 'zlib': zlib.__file__}))
+"""
+    with ExitStack() as stack:
+        descriptors = []
+        for path, raw in sorted(tree.items()):
+            fd = stack.enter_context(sealed_scanner_file(raw, sha256(raw).hexdigest()))
+            descriptors.append(fd)
+            executable_paths = {interpreter, loader, "lib64/ld-linux-x86-64.so.2"}
+            mode = "0555" if path in executable_paths else "0444"
+            launch.extend(("--perms", mode, "--ro-bind-data", str(fd), "/" + path))
+        launch.extend((
+            "--size", "1048576", "--tmpfs", "/scratch", "--remount-ro", "/",
+            "--chdir", "/scratch", "--seccomp", "0", "--setenv", "LD_LIBRARY_PATH",
+            "/usr/local/lib:/usr/lib/x86_64-linux-gnu", "--", "/usr/local/bin/python3.12",
+            "-I", "-S", "-B", "-c", script, str(canary), str(max(descriptors) + 1),
+        ))
+        with rules.open("rb") as stream:
+            raw = supervise_probe(
+                launch, filter_fd=stream.fileno(), descriptors=tuple(descriptors),
+                timeout=20, output_limit=8192,
+            )
+    import json
+
+    result = json.loads(raw)
+    assert result["version"].startswith("3.12.12 ")
+    assert result["zlib"].startswith("/usr/local/lib/python3.12/lib-dynload/")
+
+
 @pytest.fixture
 def delegated_parent():
     configured = os.environ.get("THREAT_LAB_DELEGATED_CGROUP")

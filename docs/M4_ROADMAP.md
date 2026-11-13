@@ -31,3 +31,5 @@ M4.7 leaves exact platform runtime locking and independently authenticated owner
 Next, pin a Linux CPython platform image and verify immutable filesystem handoff and loader closure.
 
 Validate selective OCI rootfs extraction and isolated CPython imports before attempting real Bandit.
+
+Next verify native loader closure and bring the pinned package tree into the isolated interpreter.

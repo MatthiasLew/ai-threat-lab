@@ -76,3 +76,5 @@ upstream Bandit wheel identity and reviews captured inventory offline.
 M4.8 pins thirteen reference wheels and exercises memfd staging of captured artifacts. Real Bandit execution remains blocked.
 
 M4.9 builds a validated package tree from the locked wheels. The CPython OCI candidate is pinned; real Bandit remains blocked.
+
+M4.10 starts the pinned CPython projection inside Bubblewrap. The open dependency stack now extends through #24, #25 and #26.
