@@ -94,3 +94,5 @@ the pre-recording crash window and the unverified block-I/O control.
 M4.7 adds an offline pinned inventory and an owner-review demonstration.
 Runtime resolution and production owner authentication remain blocked.
 See [M4.7 evidence](M4_7_IMPLEMENTATION_PLAN.md).
+
+M4.8 verifies the locked wheel set as data. Interpreter and loader closure remain unverified.

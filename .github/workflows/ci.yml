@@ -19,8 +19,11 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get install -y bubblewrap gcc libc6-dev libseccomp2
       - run: python -m ruff check .
+      - if: runner.os == 'Linux' && matrix.python == '3.12'
+        run: python scripts/fetch_bandit_reference_wheels.py "${{ runner.temp }}/bandit-reference"
       - run: python -m coverage run -m pytest -q -rs
         env:
+          THREAT_LAB_REFERENCE_WHEELS: ${{ runner.os == 'Linux' && matrix.python == '3.12' && format('{0}/bandit-reference', runner.temp) || '' }}
           THREAT_LAB_REQUIRE_BWRAP_PROBE: ${{ runner.os == 'Linux' && '1' || '0' }}
           THREAT_LAB_REQUIRE_APPCONTAINER_PROBE: ${{ runner.os == 'Windows' && '1' || '0' }}
       - run: python -m coverage report
