@@ -73,6 +73,18 @@ static int boundaries(char **argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && !strcmp(argv[1], "cpu")) {
+        pid_t child = fork();
+        if (child < 0) return 63;
+        if (child == 0) {
+            volatile unsigned long value = 0;
+            for (unsigned long i = 0; i < 100000000UL; ++i) value += i;
+            _exit(value == 0);
+        }
+        int status;
+        return waitpid(child, &status, 0) == child && WIFEXITED(status)
+            && WEXITSTATUS(status) == 0 && write(STDOUT_FILENO, "cpu", 3) == 3 ? 0 : 64;
+    }
     if (argc == 2 && (!strcmp(argv[1], "stdout") || !strcmp(argv[1], "stderr"))) {
         char output[4096] = {0};
         int fd = !strcmp(argv[1], "stdout") ? STDOUT_FILENO : STDERR_FILENO;

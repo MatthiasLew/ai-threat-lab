@@ -338,8 +338,11 @@ def test_linux_approved_sealed_handoff(linux_probe, tmp_path, delegated_parent):
         with ExitStack() as stack:
             group = None
             if delegated_parent is not None:
+                registry = tmp_path / "registry"
+                registry.mkdir(mode=0o700)
                 group = stack.enter_context(delegated_group(
                     delegated_parent, memory=plan.memory_bytes, tasks=plan.max_processes,
+                    registry=registry,
                 ))
             result = supervise_probe(
                 launch, filter_fd=filter_fd, descriptors=(executable, input_fd),
@@ -425,7 +428,10 @@ def test_linux_delegated_group_limits(linux_probe, delegated_parent):
     if delegated_parent is None:
         pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
     command, _, _, rules = linux_probe
-    for mode, event in (("tasks", "pids.events"), ("aggregate", "memory.events")):
+    for mode, event, counter in (
+        ("tasks", "pids.events", "max"), ("aggregate", "memory.events", "oom_kill"),
+        ("cpu", "cpu.stat", "nr_throttled"),
+    ):
         with delegated_group(delegated_parent, memory=64 * 1024**2, tasks=8) as group:
             with rules.open("rb") as stream:
                 options = dict(
@@ -434,12 +440,79 @@ def test_linux_delegated_group_limits(linux_probe, delegated_parent):
                 )
                 if mode == "tasks":
                     assert supervise_probe([*command, mode], **options) == b"limited"
+                elif mode == "cpu":
+                    assert (group / "cpu.max").read_text().strip() == "20000 100000"
+                    assert supervise_probe([*command, mode], **options) == b"cpu"
                 else:
                     with pytest.raises(ProbeFailure, match="exited"):
                         supervise_probe([*command, mode], **options)
             counters = dict(row.split() for row in (group / event).read_text().splitlines())
-            assert int(counters["max" if mode == "tasks" else "oom_kill"]) > 0
+            assert int(counters[counter]) > 0
         assert not group.exists()
+
+
+@pytest.mark.parametrize("termination", ["terminate", "kill"])
+def test_linux_recovers_recorded_group(linux_probe, delegated_parent, tmp_path, termination):
+    from linux_probe_supervision import recover_groups
+
+    if delegated_parent is None:
+        pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    registry = tmp_path / "registry"
+    registry.mkdir(mode=0o700)
+    helper = """
+import subprocess, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from linux_probe_supervision import delegated_group
+with delegated_group(Path(sys.argv[2]), memory=67108864, tasks=8,
+                     registry=Path(sys.argv[3])) as group:
+    # A trusted synthetic sleeper stands in for work surviving the supervisor.
+    with subprocess.Popen(
+        [sys.executable, "-I", "-c", "import sys,time; sys.stdin.read(1); time.sleep(30)"],
+        stdin=subprocess.PIPE,
+    ) as child:
+        (group / "cgroup.procs").write_text(str(child.pid))
+        child.stdin.write(b"G")
+        child.stdin.flush()
+        print(group.name, flush=True)
+        time.sleep(30)
+"""
+    with subprocess.Popen(
+        [sys.executable, "-I", "-c", helper, str(Path(__file__).parent),
+         str(delegated_parent), str(registry)], stdout=subprocess.PIPE,
+    ) as process:
+        try:
+            assert select.select([process.stdout], [], [], 5)[0]
+            name = process.stdout.readline().decode("ascii").strip()
+            assert name.startswith("atl-probe-")
+            assert "populated 1" in (delegated_parent / name / "cgroup.events").read_text()
+            assert recover_groups(delegated_parent, registry) == []
+            getattr(process, termination)()
+            process.wait(timeout=5)
+            assert recover_groups(delegated_parent, registry) == [name]
+            assert recover_groups(delegated_parent, registry) == []
+            assert not (delegated_parent / name).exists()
+        finally:
+            if process.poll() is None:
+                process.kill()
+
+
+def test_linux_recovery_refuses_wrong_identity(linux_probe, delegated_parent, tmp_path):
+    import json
+
+    from linux_probe_supervision import _boot_id, delegated_group, recover_groups
+
+    if delegated_parent is None:
+        pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    with delegated_group(delegated_parent, memory=64 * 1024**2, tasks=8) as group:
+        parent = delegated_parent.stat()
+        (tmp_path / group.name).write_text(json.dumps({
+            "owner": os.getuid(), "boot": _boot_id(),
+            "parent": [parent.st_dev, parent.st_ino], "group": [0, 0],
+        }))
+        (tmp_path / "invalid-name").write_text("{}")
+        assert recover_groups(delegated_parent, tmp_path) == []
+        assert group.exists()
 
 
 def test_linux_probe_scratch_is_bounded_and_fresh(linux_probe):

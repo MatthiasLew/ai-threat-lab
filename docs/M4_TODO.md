@@ -18,3 +18,4 @@
 - [ ] M4.4: validate sealed object handoff and document production blockers.
 
 - [x] M4.5: supervise the fixed Linux handoff and validate delegated cgroup limits.
+- [x] M4.6: verify recorded cgroup recovery and CPU enforcement.

@@ -86,3 +86,7 @@ with the same ledger identity. An unconsumed approval can become valid again
 after clock rollback. A consumed nonce stays spent in the intact ledger.
 Symmetric key holders can issue approvals. Production issuance requires an
 independently authenticated owner channel and isolated key custody.
+
+M4.6 tests quota throttling and explicit recovery of recorded groups.
+See [M4.6 plan](M4_6_IMPLEMENTATION_PLAN.md) for the trusted registry boundary,
+the pre-recording crash window and the unverified block-I/O control.
