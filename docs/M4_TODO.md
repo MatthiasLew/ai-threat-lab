@@ -19,3 +19,4 @@
 
 - [x] M4.5: supervise the fixed Linux handoff and validate delegated cgroup limits.
 - [x] M4.6: verify recorded cgroup recovery and CPU enforcement.
+- [x] M4.7: verify pinned runtime inventory and exercise owner review contract.

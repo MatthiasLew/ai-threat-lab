@@ -279,3 +279,88 @@ def test_mcp_has_no_approval_operation(tmp_path):
 
     assert "approve_scanner" not in OPERATIONS
     assert perform(tmp_path, "approve_scanner", {})["error"]["code"] == "invalid_request"
+
+
+def test_owner_demo_decline_cancel_expiry_and_plan_swap(review, broker, monkeypatch):
+    from ai_threat_lab import scanner_owner_review
+
+    monkeypatch.setattr(scanner_owner_review.time, "monotonic", lambda: 10)
+    prompt = scanner_owner_review.OwnerReviewPrompt.prepare(review)
+    assert prompt.plan == review.plan
+    assert prompt.fingerprint == review.fingerprint()
+    for decision in (False, None, "yes"):
+        assert not prompt.record_demo_confirmation(review, decision)
+    changed = replace(review, plan=replace(review.plan, output_directory="different"))
+    assert not prompt.record_demo_confirmation(changed, True)
+    intent = prompt.record_demo_confirmation(review, True)
+    assert intent is True
+    with pytest.raises(ValidationError, match="approval is required"):
+        broker.redeem(review, intent)
+    monkeypatch.setattr(scanner_owner_review.time, "monotonic", lambda: 400)
+    assert not prompt.record_demo_confirmation(review, True)
+
+
+def test_runtime_inventory_binds_platform_and_plan(review):
+    from ai_threat_lab.bandit_runtime_review import review_runtime_inventory, runtime_inventory
+
+    options = {"platform": "linux", "architecture": "x86_64", "python_version": "3.12"}
+    inventory = runtime_inventory(review, **options)
+    pin = digest(inventory)
+    result = review_runtime_inventory(review, pinned_digest=pin, **options)
+    assert result["runtime_resolution"] == "unverified"
+    assert result["startup_artifacts"] == ()
+    with pytest.raises(ValidationError, match="expected platform"):
+        runtime_inventory(review, **(options | {"platform": "win32"}))
+    for change in ({"architecture": "arm64"}, {"python_version": "3.13"}):
+        with pytest.raises(ValidationError, match="pinned inventory"):
+            review_runtime_inventory(review, pinned_digest=pin, **(options | change))
+    changed = replace(review, plan=replace(review.plan, network="allowed"))
+    with pytest.raises(ValidationError, match="pinned inventory"):
+        review_runtime_inventory(changed, pinned_digest=pin, **options)
+
+
+def test_runtime_inventory_reports_pth_without_executing_it(review):
+    from ai_threat_lab.bandit_runtime_review import review_runtime_inventory, runtime_inventory
+
+    path = Path(review.runtime.tree.root) / "startup.pth"
+    path.write_bytes(b"import synthetic_never_execute")
+    runtime = replace(
+        review.runtime, tree=capture_scanner_tree(path.parent),
+        python_libraries=(*review.runtime.python_libraries, path.name),
+    )
+    changed = replace(
+        review, runtime=runtime,
+        plan=replace(review.plan, dependencies_sha256=digest(runtime.manifest())),
+    )
+    options = {"platform": "linux", "architecture": "x86_64", "python_version": "3.12"}
+    pin = digest(runtime_inventory(changed, **options))
+    result = review_runtime_inventory(changed, pinned_digest=pin, **options)
+    assert result["startup_artifacts"] == ("startup.pth",)
+
+
+@pytest.mark.parametrize("name", ["bandit", "other"])
+def test_wheel_metadata_is_read_only_after_digest_check(monkeypatch, name):
+    from io import BytesIO
+    from zipfile import ZipFile
+
+    from ai_threat_lab import bandit_runtime_review
+
+    archive = BytesIO()
+    with ZipFile(archive, "w") as wheel:
+        wheel.writestr(
+            "bandit-1.7.8.dist-info/METADATA",
+            f"Name: {name}\nVersion: 1.7.8\nRequires-Dist: stevedore\n",
+        )
+    raw = archive.getvalue()
+    with pytest.raises(ValidationError, match="pinned PyPI"):
+        bandit_runtime_review.inspect_bandit_wheel(raw)
+    from hashlib import sha256
+
+    monkeypatch.setattr(bandit_runtime_review, "BANDIT_WHEEL_SHA256", sha256(raw).hexdigest())
+    if name == "bandit":
+        assert bandit_runtime_review.inspect_bandit_wheel(raw)["declared_dependencies"] == (
+            "stevedore",
+        )
+    else:
+        with pytest.raises(ValidationError, match="distribution identity"):
+            bandit_runtime_review.inspect_bandit_wheel(raw)

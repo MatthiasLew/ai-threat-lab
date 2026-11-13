@@ -30,3 +30,13 @@ rather than resolving the loader, imports or host resources. Both objects
 are suitable for offline review only. The broker has no production launch
 or authorization endpoint. A future backend must consume verified immutable
 objects under OS confinement and complete the runtime closure checks.
+
+## Owner review prompt
+
+The Python OwnerReviewPrompt shows the plan and fingerprint with a display
+expiry and in-process monotonic deadline. The demo decision has no signature
+and cannot redeem approval. Production confirmation needs a separately
+authenticated owner client, private key custody and authenticated IPC whose
+authorization policy excludes the agent process. Same-account terminal or
+process access does not establish that distinction. Ledger backup rollback
+and wall-clock rollback remain open for signed approvals.

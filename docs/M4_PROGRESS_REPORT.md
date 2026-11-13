@@ -66,3 +66,9 @@ resolution and direct backend handoff remain launch gates.
 See [M4.3 acceptance](M4_3_ACCEPTANCE.md).
 
 M4.6 verified delegated CPU throttling and recorded-group recovery after SIGTERM and SIGKILL on WSL2. Block-device I/O remains unverified.
+
+The open stack extends from #19 through #20 (offline approval), #21 (sealed
+Linux test handoff), #22 (delegated supervision) and #23 (CPU and recovery).
+The Linux cgroup evidence comes from delegated WSL2, while hosted CI runs
+the mandatory namespace and synthetic handoff tests. M4.7 verifies the
+upstream Bandit wheel identity and reviews captured inventory offline.
