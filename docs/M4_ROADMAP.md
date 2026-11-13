@@ -14,3 +14,5 @@ See [integrated evidence](M4_PROGRESS_REPORT.md) and [launch gates](M4_ACCEPTANC
 After M4.11, verify block I/O and run controlled Bandit scan/report acceptance separately.
 
 M4.12 adds durable intent records and a dedicated block I/O acceptance probe.
+
+M4.13 verifies fixed Linux scanner fixtures. Production work still requires owner IPC, block I/O, recovery and Windows acceptance.
