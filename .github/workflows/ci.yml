@@ -25,10 +25,6 @@ jobs:
           THREAT_LAB_REQUIRE_APPCONTAINER_PROBE: ${{ runner.os == 'Windows' && '1' || '0' }}
       - run: python -m coverage report
       - run: python -m coverage json -o coverage.json
-      - run: >-
-          python -c 'import json;
-          totals = json.load(open("coverage.json", encoding="utf-8"))["totals"];
-          print("Branches covered: {:.2%}".format(totals["covered_branches"] /
-          totals["num_branches"]))'
+      - run: python scripts/check_coverage.py coverage.json
       - run: python -m build
       - run: python scripts/check_installed_package.py

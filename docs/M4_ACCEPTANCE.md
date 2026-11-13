@@ -22,3 +22,7 @@ To require the real Linux probes, run
 `THREAT_LAB_REQUIRE_BWRAP_PROBE=1 python -m pytest -q -rs tests/test_scanner_sandbox.py`.
 Without that flag the suite reports missing prerequisites and denied namespace
 creation as skips. A failed probe after setup is a test failure in either mode.
+
+Hosted Ubuntu requires actual Bubblewrap probes and fails if the dependencies,
+namespace setup or ready-time seccomp control are unavailable. The combined
+and branch-only coverage checks each require at least 90% before acceptance.
