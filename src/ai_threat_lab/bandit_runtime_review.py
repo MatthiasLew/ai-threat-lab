@@ -2,8 +2,10 @@
 
 import hmac
 import io
+import json
 from email.parser import BytesParser
 from hashlib import sha256
+from importlib.resources import files
 from zipfile import ZipFile
 
 from .models import ValidationError
@@ -11,6 +13,44 @@ from .scanner_objects import digest
 from .scanner_plan import SUPPORTED_VERSION
 
 BANDIT_WHEEL_SHA256 = "509f7af645bc0cd8fd4587abc1a038fc795636671ee8204d502b933aee44f381"
+
+
+def bandit_reference_lock():
+    return json.loads(
+        files("ai_threat_lab").joinpath("data/bandit-linux-cp312-lock.json").read_bytes()
+    )
+
+
+def capture_locked_bandit_wheels(directory):
+    """Return the exact hash-checked wheel bytes for offline review and staging."""
+    from pathlib import Path
+
+    from .agent_fs import pinned_read_scope, read_scoped
+    from .scanner_plan import network_syntax
+
+    if network_syntax(directory):
+        raise ValidationError("Wheel staging requires a local directory")
+    root = Path(directory).absolute()
+    artifacts = bandit_reference_lock()["artifacts"]
+    expected = {row["filename"] for row in artifacts}
+    captured = []
+    try:
+        with pinned_read_scope(root, expected=root.lstat()):
+            actual = set()
+            for path in root.iterdir():
+                if path.name not in expected:
+                    raise ValidationError("Unexpected artifact in locked wheel directory")
+                actual.add(path.name)
+            if actual != expected:
+                raise ValidationError("Locked wheel set is incomplete")
+            for row in artifacts:
+                raw = read_scoped(root / row["filename"], 2 * 1024**2)
+                if not hmac.compare_digest(sha256(raw).hexdigest(), row["sha256"]):
+                    raise ValidationError(f"Locked wheel digest mismatch: {row['name']}")
+                captured.append((row["filename"], raw))
+    except OSError:
+        raise ValidationError("Locked wheel directory is inaccessible") from None
+    return tuple(captured)
 
 
 def inspect_bandit_wheel(raw: bytes):
