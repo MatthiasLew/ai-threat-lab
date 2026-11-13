@@ -14,3 +14,8 @@ The first two PRs use the [Bandit isolation gates](M3_BANDIT_PLANNING.md).
 The M4.3 offline slice implements captured review objects and one-time
 redemption. The next integration must close runtime resolution and hand off
 the same objects to the backend without reopening mutable source paths.
+
+M4.4 exercises a fixed Linux fixture through offline approval, sealed file
+handoff and SARIF publication. Continue with production runtime closure,
+Windows sealed object handoff and integrated aggregate limits before
+considering any scanner execution.

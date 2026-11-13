@@ -9,9 +9,11 @@ from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 
+from .dependency_paths import linked
 from .models import ValidationError
 from .scan_bundle import encoded
 from .scanner_objects import ScannerRuntime, ScannerSnapshot, digest
+from .scanner_plan import network_syntax
 from .scanner_sandbox import ScannerExecutionPlan
 
 MAX_APPROVAL_SECONDS = 300
@@ -76,8 +78,11 @@ class ScannerReviewBroker:
     """An offline broker for a trusted local caller and an owner-controlled ledger."""
 
     def __init__(self, ledger, *, owner_key):
+        if network_syntax(ledger):
+            raise ValidationError("Approval ledger requires a local path")
         self._ledger = Path(ledger).absolute()
         self._owner_key = owner_key
+        self._check_ledger_path()
         with closing(sqlite3.connect(self._ledger)) as db, db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS redeemed_approval "
@@ -93,6 +98,16 @@ class ScannerReviewBroker:
                 "SELECT id FROM approval_ledger WHERE slot = 1"
             ).fetchone()[0]
 
+    def _check_ledger_path(self):
+        if any(linked(path) for path in (self._ledger, *self._ledger.parents)):
+            raise ValidationError("Approval ledger path contains a link or reparse point")
+        for suffix in ("", "-journal", "-wal", "-shm"):
+            path = self._ledger.with_name(self._ledger.name + suffix)
+            if linked(path) or (path.exists() and (
+                not path.is_file() or path.stat().st_nlink != 1
+            )):
+                raise ValidationError("Approval ledger requires unlinked regular files")
+
     def redeem(self, review, approval):
         """Commit redemption before returning. A committed approval is never restored."""
         if not isinstance(approval, OwnerApproval):
@@ -103,6 +118,7 @@ class ScannerReviewBroker:
         if not hmac.compare_digest(_signature(self._owner_key, approval), approval.signature):
             raise ValidationError("Owner approval signature is invalid")
         try:
+            self._check_ledger_path()
             uri = self._ledger.as_uri() + "?mode=rw"
             with closing(sqlite3.connect(uri, uri=True)) as db, db:
                 db.execute("PRAGMA synchronous=FULL")
