@@ -480,7 +480,6 @@ else:
 
     result = json.loads(raw)
     if scan:
-        from ai_threat_lab.models import ValidationError
         from ai_threat_lab.scanner_report import save_bandit_report
 
         output = tmp_path / "published.json"
@@ -509,7 +508,7 @@ else:
         else:
             assert findings == []
         original = output.read_bytes()
-        with pytest.raises(ValidationError):
+        with pytest.raises(FileExistsError):
             save_bandit_report(source, output)
         assert output.read_bytes() == original
         return
