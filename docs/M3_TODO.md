@@ -6,7 +6,6 @@
   and broader SARIF conformance samples. The pinned Trivy tree contains
   one SARIF golden file, for an image. A pinned Semgrep OSS dataflow
   snapshot verifies safe omission of code flows.
-- M3.2. Design optional scanner execution with explicit consent, verified
-  executable identity and version, license review, restricted filesystem
-  and network access, no shell, time and memory limits, and normalized
-  outcomes. Review isolation and CLI/MCP contracts before implementing.
+- M3.2. Bandit discovery and plan validation use explicit fingerprints.
+  [Threat model and execution gates](M3_BANDIT_PLANNING.md)
+- M3.2 execution is blocked pending isolation and authorization evidence.

@@ -16,6 +16,9 @@ See [Agent Mode](docs/AGENT_MODE.md), [MCP setup](docs/MCP_SERVER.md) and
 
 ## Console workflow
 
+Use `scanner doctor` to check Bandit availability and `scanner plan` to
+validate a local candidate. [Bandit planning and execution status](docs/M3_BANDIT_PLANNING.md)
+
 Import a saved SARIF report with `review-sarif`. Add `--structured` for
 versioned external observations with producer, rule and provenance fields.
 [SARIF import and supported producer examples](docs/SARIF_IMPORT.md)

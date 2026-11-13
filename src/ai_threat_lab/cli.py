@@ -40,6 +40,7 @@ from .reputation_cli import run_command as run_reputation_command
 from .scan_cli import COMMANDS as SCAN_COMMANDS
 from .scan_cli import add_commands as add_scan_commands
 from .scan_cli import run_command as run_scan_command
+from .scanner_cli import add_scanner_commands, run_scanner_command
 from .speech_cli import COMMANDS as SPEECH_COMMANDS
 from .speech_cli import add_commands as add_speech_commands
 from .speech_cli import run_command as run_speech_command
@@ -166,6 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     for command in (example, prepare, approve, simulate, demo, events, assess):
         command.add_argument("--output", type=Path, help="New JSON file path; never overwrite")
     add_commands(commands)
+    add_scanner_commands(commands)
     add_training_commands(commands)
     add_event_commands(commands)
     add_scan_commands(commands)
@@ -241,6 +243,8 @@ def main(argv: list[str] | None = None, *, registry: ProviderRegistry | None = N
             return run_workbench_command(args)
         if args.command in SCAN_COMMANDS:
             return run_scan_command(args)
+        if args.command == "scanner":
+            return run_scanner_command(args)
         if args.command in EVENT_COMMANDS:
             return run_event_command(args)
         if args.command in TRAINING_COMMANDS:

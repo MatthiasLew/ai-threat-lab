@@ -1,5 +1,9 @@
 # Changelog
 
+## M3.2 development
+
+- Add read-only Bandit discovery and fingerprint validation with a JSON plan.
+
 ## M3.1 development
 
 - Add structured offline SARIF import through the CLI and public Python API.
