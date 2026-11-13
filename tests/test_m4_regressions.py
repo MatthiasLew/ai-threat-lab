@@ -226,3 +226,131 @@ def test_reports_location_handles_corrupt_configuration(monkeypatch, tmp_path):
     assert i18n.load_reports_directory_preference() is None
     assert i18n.save_reports_directory_preference(tmp_path / "reports")
     assert i18n.load_reports_directory_preference() == tmp_path / "reports"
+
+def test_pdf_reports_warn_and_bound_offline_limitations():
+    from ai_threat_lab.pdf_report import parse_not_checked_items
+
+    notices = [
+        "HTTPS response was inspected", "File/directory limit reached",
+        "Could not enumerate directory: restricted", "Flow coverage: incomplete",
+        "Scope technologies: Python", "", 42, {"source": 5}, {"target": "fixture"},
+    ]
+    notices.extend(f"Excluded directory: folder{i}" for i in range(5))
+    notices.extend(f"Skipped oversized file: path{i}.txt" for i in range(7))
+    for language, overflow in (("en", "+2 more"), ("pl", "+2 więcej")):
+        categories = parse_not_checked_items(notices, language)
+        assert sum(row["is_warning"] for row in categories) >= 2
+        assert any("HTTPS response" in row["description"] for row in categories)
+        assert any("Data Flow" in row["title"] for row in categories)
+        excluded = next(row for row in categories if row["count"] == 5)
+        oversized = next(row for row in categories if row["count"] == 7)
+        assert overflow in excluded["description"] and "folder4" not in excluded["description"]
+        assert "path6.txt" not in oversized["description"]
+
+
+def test_report_bytes_shared_across_nested_verification(tmp_path):
+    from ai_threat_lab.report_io import ReportReadLimit, read_regular, report_read_budget
+
+    artifact = tmp_path / "saved.json"
+    artifact.write_bytes(b"abcdef")
+    with report_read_budget(10):
+        with report_read_budget(6):
+            assert read_regular(artifact, 8) == b"abcdef"
+        with pytest.raises(ReportReadLimit, match="aggregate"):
+            read_regular(artifact, 8)
+    assert read_regular(artifact, 8) == b"abcdef"
+
+
+def test_report_rejects_non_regular_file(tmp_path):
+    from ai_threat_lab.report_io import read_regular
+
+    with pytest.raises(ValidationError, match="regular"):
+        read_regular(tmp_path, 10)
+
+
+def test_scanner_discovery_ignores_relative_and_remote_path_entries(monkeypatch):
+    from ai_threat_lab.scanner_plan import bandit_availability
+
+    monkeypatch.setattr(
+        "ai_threat_lab.scanner_plan.os.get_exec_path", lambda: [".", "//remote.invalid/share"],
+    )
+    monkeypatch.setattr(
+        "ai_threat_lab.scanner_plan.shutil.which", lambda *a, **kw: pytest.fail("unsafe PATH"),
+    )
+    assert bandit_availability()["candidate_present"] is False
+
+def test_pinned_scope_rejects_replaced_directory(tmp_path):
+    from ai_threat_lab.agent_fs import pinned_read_scope
+
+    approved = tmp_path / "approved"
+    approved.mkdir()
+    identity = approved.stat()
+    approved.rename(tmp_path / "original")
+    approved.mkdir()
+    with pytest.raises(ValidationError, match="changed since selection"):
+        with pinned_read_scope(approved, expected=identity):
+            pytest.fail("replacement entered approved scope")
+
+
+@pytest.mark.parametrize("phase", ["create", "limits", "assign"])
+def test_worker_job_api_failure_cannot_open_execution_gate(monkeypatch, phase):
+    import ctypes
+
+    from ai_threat_lab import agent_resources
+
+    class NativeCall:
+        def __init__(self, value):
+            self.value = value
+            self.calls = []
+
+        def __call__(self, *args):
+            self.calls.append(args)
+            return self.value
+
+    native = SimpleNamespace(
+        CreateJobObjectW=NativeCall(0 if phase == "create" else 42),
+        SetInformationJobObject=NativeCall(phase != "limits"),
+        AssignProcessToJobObject=NativeCall(phase != "assign"),
+        CloseHandle=NativeCall(True),
+    )
+    monkeypatch.setattr(agent_resources, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *args, **kw: native, raising=False)
+    monkeypatch.setattr(ctypes, "get_last_error", lambda: 5, raising=False)
+    monkeypatch.setattr(ctypes, "WinError", lambda code: OSError(code, "Denied"), raising=False)
+    with pytest.raises(OSError):
+        with agent_resources.supervise_windows(SimpleNamespace(_handle=100)):
+            pytest.fail("failed job configuration opened the worker gate")
+    assert native.CloseHandle.calls == ([] if phase == "create" else [(42,)])
+    assert bool(native.AssignProcessToJobObject.calls) == (phase == "assign")
+
+
+def test_scoped_snapshot_counts_skipped_entries(tmp_path, monkeypatch):
+    from ai_threat_lab import agent_fs
+
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / ".ai-threat-lab").mkdir()
+    (source / "too-large").write_bytes(b"12345")
+    (source / "accepted").write_bytes(b"123")
+    (source / "subdir").mkdir()
+    (source / "subdir" / "nested").mkdir()
+    monkeypatch.setattr(agent_fs, "MAX_FILE", 4)
+    monkeypatch.setattr(agent_fs, "MAX_DEPTH", 1)
+    copied, counters = agent_fs.snapshot(source, tmp_path / "copy")
+    assert counters == {"files": 1, "bytes": 3, "skipped": 3, "entries": 5}
+    assert (copied / "accepted").read_bytes() == b"123"
+    assert not (copied / "too-large").exists()
+    assert not (copied / "subdir" / "nested").exists()
+
+
+def test_scan_snapshot_rejects_entry_limit(tmp_path, monkeypatch):
+    from ai_threat_lab import agent_fs
+
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "one").touch()
+    (source / "two").touch()
+    monkeypatch.setattr(agent_fs, "MAX_ENTRIES", 1)
+    with pytest.raises(ValidationError, match="entry limit"):
+        agent_fs.snapshot(source, tmp_path / "copy")
+    assert list((tmp_path / "copy").iterdir()) == []
