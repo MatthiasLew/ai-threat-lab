@@ -45,7 +45,7 @@ def _checked(raw, descriptor):
     return raw
 
 
-def _project_layer(raw, diff_id, output):
+def _project_layer(raw, diff_id, output, *, native=None):
     with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
         tar = stream.read(96 * 1024**2 + 1)
     if len(tar) > 96 * 1024**2 or "sha256:" + sha256(tar).hexdigest() != diff_id:
@@ -68,12 +68,23 @@ def _project_layer(raw, diff_id, output):
                 entry.linkname.startswith("/") or ".." in entry.linkname.split("/")
             ):
                 raise ValidationError("Unsafe OCI hardlink")
+            if native is not None and path.startswith(NATIVE) and "/" not in path[len(NATIVE):]:
+                if entry.isfile() and ".so" in PurePosixPath(path).name:
+                    if entry.size > 8 * 1024**2 or path in native:
+                        raise ValidationError("Unsupported native OCI member")
+                    native[path] = archive.extractfile(entry).read()
+                elif entry.issym() and ".so" in PurePosixPath(path).name:
+                    if path in native:
+                        raise ValidationError("Duplicate native alias")
+                    native[path] = entry.linkname
             selected = (
                 path in {"usr/local/bin/python3.12", "usr/local/lib/libpython3.12.so.1.0"}
                 or path.startswith(NATIVE) and PurePosixPath(path).name in LIBRARIES
                 or path.startswith(STDLIB) and path.endswith(".py")
                 and not {"site-packages", "test", "tests"}.intersection(parts)
                 or path.startswith((STDLIB + "lib-dynload/zlib.", STDLIB + "lib-dynload/_socket."))
+                or native is not None and path.startswith(STDLIB + "lib-dynload/")
+                and path.endswith(".so") and not PurePosixPath(path).name.startswith("_tkinter.")
             )
             if selected:
                 if not entry.isfile() or entry.size > 8 * 1024**2 or path in output:
@@ -81,7 +92,7 @@ def _project_layer(raw, diff_id, output):
                 output[path] = archive.extractfile(entry).read()
 
 
-def load_projection(directory):
+def load_projection(directory, *, native=None):
     def read(name, limit):
         with (directory / name).open("rb") as stream:
             return stream.read(limit + 1)
@@ -96,7 +107,8 @@ def load_projection(directory):
         raise ValidationError("Unsupported OCI platform")
     result = {}
     for layer, diff_id in zip(manifest["layers"], configuration["rootfs"]["diff_ids"], strict=True):
-        _project_layer(_checked(read(layer["digest"][7:], 32 * 1024**2), layer), diff_id, result)
+        raw_layer = _checked(read(layer["digest"][7:], 32 * 1024**2), layer)
+        _project_layer(raw_layer, diff_id, result, native=native)
     if len(result) > 1500 or sum(map(len, result.values())) > 32 * 1024**2:
         raise ValidationError("CPython projection exceeds staging limits")
     return result
