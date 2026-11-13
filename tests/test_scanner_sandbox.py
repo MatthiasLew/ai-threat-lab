@@ -269,6 +269,96 @@ def test_linux_probe_per_process_memory_limit(linux_probe):
         subprocess.run([*command, "memory"], stdin=rules, check=True, timeout=10, env={})
 
 
+def test_linux_approved_sealed_handoff(linux_probe, tmp_path):
+    from ai_threat_lab.local_history import write_new_report
+    from ai_threat_lab.sarif_review import import_sarif
+    from ai_threat_lab.scan_bundle import encoded
+    from ai_threat_lab.scanner_approval import (
+        ScannerReview,
+        ScannerReviewBroker,
+        issue_owner_approval,
+    )
+    from ai_threat_lab.scanner_objects import ScannerRuntime, capture_scanner_tree, digest
+    from ai_threat_lab.scanner_staging import sealed_scanner_file
+
+    command, _, _, rules = linux_probe
+    source = tmp_path / "source"
+    source.mkdir()
+    input_path = source / "zażółć input"
+    input_path.write_bytes(b"x")
+    snapshot = capture_scanner_tree(source)
+    runtime_path = tmp_path / "runtime"
+    runtime_path.mkdir()
+    # Copy only the fixed binary that the existing fixture compiled from repository source.
+    (runtime_path / "probe").write_bytes(Path(command[command.index("--ro-bind") + 1]).read_bytes())
+    (runtime_path / "interpreter-placeholder").touch()
+    (runtime_path / "policy.bpf").write_bytes(rules.read_bytes())
+    runtime = ScannerRuntime(
+        capture_scanner_tree(runtime_path), "probe", "interpreter-placeholder", "policy.bpf",
+        (), (), ("handoff",), (),
+    )
+    manifest = runtime.manifest()
+    output = tmp_path / "published.json"
+    policy = [*command[:command.index("--ro-bind")], "--ro-bind-data", "fixed descriptors"]
+    plan = ScannerExecutionPlan(
+        "synthetic-probe", snapshot.root, snapshot.fingerprint(), manifest["executable"],
+        manifest["interpreter"], digest(manifest), manifest["configuration"], str(output),
+        5, 64 * 1024**2, 1, 1024**2, 4096, "linux", "bubblewrap", digest(policy),
+    )
+    review = ScannerReview(plan, snapshot, runtime)
+    key = os.urandom(32)
+    broker = ScannerReviewBroker(tmp_path / "owner.sqlite", owner_key=key)
+    approval = issue_owner_approval(
+        review, owner_key=key, ledger_id=broker.ledger_id,
+        confirmed_fingerprint=review.fingerprint(),
+    )
+    input_path.write_bytes(b"substituted")
+    assert broker.redeem(review, approval) == plan.fingerprint()
+    entries = {entry.path: entry.data for entry in runtime.tree.entries}
+    with (
+        sealed_scanner_file(entries["probe"], plan.executable_sha256) as executable,
+        sealed_scanner_file(entries["policy.bpf"], plan.configuration_sha256) as filter_fd,
+        sealed_scanner_file(
+            snapshot.entries[0].data, snapshot.manifest()["entries"][0]["sha256"],
+        ) as input_fd,
+    ):
+        launch = [
+            *policy[:-2], "--perms", "0555", "--ro-bind-data", str(executable), "/probe",
+            "--ro-bind-data", str(input_fd), "/input/zażółć input",
+            "--size", str(plan.scratch_bytes), "--tmpfs", "/scratch", "--remount-ro", "/",
+            "--chdir", "/scratch", "--seccomp", "0", "--", "/probe", *runtime.arguments,
+        ]
+        with subprocess.Popen(
+            launch, stdin=filter_fd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            env={}, pass_fds=(executable, input_fd),
+        ) as process:
+            try:
+                deadline = time.monotonic() + plan.timeout_seconds
+                result = bytearray()
+                while len(result) <= plan.max_output_bytes:
+                    remaining = max(0, deadline - time.monotonic())
+                    assert select.select([process.stdout], [], [], remaining)[0], "probe timed out"
+                    allowance = plan.max_output_bytes + 1 - len(result)
+                    chunk = os.read(process.stdout.fileno(), allowance)
+                    if not chunk:
+                        break
+                    result.extend(chunk)
+                assert len(result) <= plan.max_output_bytes
+                assert process.wait(timeout=max(0, deadline - time.monotonic())) == 0
+            finally:
+                if process.poll() is None:
+                    process.kill()
+    source_report = tmp_path / "synthetic.sarif"
+    source_report.write_bytes(result)
+    report, failures = import_sarif(source_report)
+    assert failures == 0
+    assert report["runs"][0]["producer"] == "M4.4 synthetic probe"
+    assert report["runs"][0]["producer_succeeded"] is True
+    write_new_report(output, encoded(report))
+    assert output.is_file()
+    assert input_path.read_bytes() == b"substituted"
+
+
 def test_linux_probe_scratch_is_bounded_and_fresh(linux_probe):
     command, _, _, network_filter = linux_probe
     for _ in range(2):

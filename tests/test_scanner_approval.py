@@ -217,6 +217,34 @@ def test_ledger_replacement_and_disappearance_fail_closed(review, broker):
     assert broker.redeem(review, approval) == review.fingerprint()
 
 
+def test_ledger_rejects_remote_and_linked_paths(tmp_path):
+    with pytest.raises(ValidationError, match="local path"):
+        ScannerReviewBroker("//remote.invalid/ledger", owner_key=KEY)
+    root = tmp_path / "private"
+    root.mkdir()
+    alias = tmp_path / "alias"
+    if os.name == "nt":
+        from _winapi import CreateJunction
+
+        CreateJunction(str(root), str(alias))
+    else:
+        alias.symlink_to(root, target_is_directory=True)
+    with pytest.raises(ValidationError, match="link or reparse"):
+        ScannerReviewBroker(alias / "approval.sqlite", owner_key=KEY)
+    assert not list(root.iterdir())
+
+
+@pytest.mark.parametrize("suffix", ["", "-journal", "-wal", "-shm"])
+def test_ledger_rejects_hardlinked_database_or_sidecar(tmp_path, suffix):
+    ledger = tmp_path / "approval.sqlite"
+    canary = tmp_path / "canary"
+    canary.write_bytes(b"private")
+    os.link(canary, tmp_path / (ledger.name + suffix))
+    with pytest.raises(ValidationError, match="unlinked regular files"):
+        ScannerReviewBroker(ledger, owner_key=KEY)
+    assert canary.read_bytes() == b"private"
+
+
 def test_capture_rejects_hardlink(tmp_path):
     target = tmp_path / "target"
     target.write_bytes(b"private")

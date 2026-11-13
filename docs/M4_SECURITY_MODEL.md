@@ -69,3 +69,20 @@ operation issues approval. The current fingerprint records review intent only.
 M4.3 adds bounded immutable review objects and an offline approval ledger.
 See the [authorization API](M4_3_AUTHORIZATION_API.md) for key custody,
 rollback semantics and remaining loader and sandbox handoff requirements.
+
+## M4.4 test handoff
+
+A Linux acceptance test redeems a synthetic owner's approval, stages the
+captured static fixture, seccomp filter and approved input in sealed memfds,
+and supplies only those file bytes to Bubblewrap. It imports the fixture's
+bounded SARIF output after successful exit and publishes exclusively. The
+test uses the existing namespace probe. Existing timeout and parent-death
+probes cover descendant termination separately.
+
+Ledger checks reject linked ancestors, hardlinks and unsafe SQLite sidecars.
+These checks assume exclusive custody of the parent directory. They do not
+prevent races with a writer to that directory or detect rollback to a copy
+with the same ledger identity. An unconsumed approval can become valid again
+after clock rollback. A consumed nonce stays spent in the intact ledger.
+Symmetric key holders can issue approvals. Production issuance requires an
+independently authenticated owner channel and isolated key custody.

@@ -13,3 +13,6 @@
 - [x] M4.3: Capture bounded immutable review objects and bind the runtime manifest.
 - [x] M4.3: Verify and transactionally consume one-time owner approval offline.
 - [ ] Connect the approved objects to a production backend after platform acceptance.
+
+- [x] M4.4: verify offline approval through a fixed Linux sandbox payload and result.
+- [ ] M4.4: validate sealed object handoff and document production blockers.

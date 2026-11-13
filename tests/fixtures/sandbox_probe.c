@@ -73,6 +73,15 @@ static int boundaries(char **argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 2 && !strcmp(argv[1], "handoff")) {
+        int result = filesystem("/host-canary");
+        if (result) return result;
+        if (socket(AF_INET, SOCK_STREAM, 0) != -1 || errno != EPERM) return 60;
+        const char report[] = "{\"version\":\"2.1.0\",\"runs\":[{"
+            "\"tool\":{\"driver\":{\"name\":\"M4.4 synthetic probe\"}},"
+            "\"invocations\":[{\"executionSuccessful\":true}],\"results\":[]}]}";
+        return write(STDOUT_FILENO, report, sizeof(report) - 1) == sizeof(report) - 1 ? 0 : 61;
+    }
     if (argc == 2 && !strcmp(argv[1], "ready")) {
         return socket(AF_INET, SOCK_DGRAM, 0) == -1 && errno == EPERM ? 0 : 26;
     }
