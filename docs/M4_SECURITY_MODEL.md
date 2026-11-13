@@ -90,3 +90,7 @@ independently authenticated owner channel and isolated key custody.
 M4.6 tests quota throttling and explicit recovery of recorded groups.
 See [M4.6 plan](M4_6_IMPLEMENTATION_PLAN.md) for the trusted registry boundary,
 the pre-recording crash window and the unverified block-I/O control.
+
+M4.7 adds an offline pinned inventory and an owner-review demonstration.
+Runtime resolution and production owner authentication remain blocked.
+See [M4.7 evidence](M4_7_IMPLEMENTATION_PLAN.md).

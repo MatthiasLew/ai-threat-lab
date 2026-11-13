@@ -25,3 +25,5 @@ bounded supervision and safe result publication. External crash reconciliation
 and production runtime closure remain open.
 
 Next Linux work covers block-I/O validation and registry crash-window recovery.
+
+M4.7 leaves exact platform runtime locking and independently authenticated owner IPC open.
