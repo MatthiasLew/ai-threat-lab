@@ -1,25 +1,10 @@
 # Delivery status and remaining work — 0.41.4 source
 
-## Engine / CLI / Agent stabilization — 2026-11-10
-
-Available in [PR #12](https://github.com/MatthiasLew/ai-threat-lab/pull/12), unmerged:
-shared version1 stage events and cooperative cancellation, JSON-safe CLI progress,
-Polish/English history/details/comparison/diagnostics, ordinary Windows junction
-exclusion, bounded regular-file text reads, MCP structured/text parity, and a
-compatible documented Python handoff for the separately developed GUI.
-
-[CI42812389626](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/42812389626)
-on4882faa passed6/6 Windows/Linux Python3.12–3.14 jobs, including build and clean
-offline installed CLI/MCP acceptance. Windows3.14:3714 passed/7 skipped/92.4%;
-Linux3.14:3718 passed/3 skipped/92.3%. See the
-[implementation report](SECURITY_ENGINE_REPORT.md) and
-[TODO](IMPLEMENTATION_TODO.md) for source-pinned results and remaining work.
-
-The worker has a deadline, not an OS memory sandbox. Cancellation is cooperative;
-MCP is synchronous and reads status of committed runs. Broader race/resource and
-effectiveness validation remain future work. No GUI, new analyzer family or paid
-AI/live-provider test was added; offline green tests do not imply full production
-readiness. Merge to main still requires a separate owner decision.
+Main includes the offline CLI, reports, history, Agent Mode, nine STDIO MCP
+tools, SARIF import and saved Bandit report import. Production scanner launch
+is blocked. M4 isolation, approval and runtime probes are tracked in the
+[M4 integration report](M4_PROGRESS_REPORT.md). Release evidence and remaining
+checks are in the [offline release audit](OFFLINE_RELEASE_AUDIT_0_41_4.md).
 
 The current maintenance update fixes PDF source/redaction and AI evidence binding,
 and aligns Gemini menu consent with configuration and shared accounting.

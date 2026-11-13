@@ -35,7 +35,7 @@ def _wheel_files(raw, artifact, remaining, entries_left):
         files = {}
         seen = set()
         for info in archive.infolist():
-            path = info.filename.rstrip("/")
+            path = info.filename.removesuffix("/") if info.is_dir() else info.filename
             kind = stat.S_IFMT(info.external_attr >> 16)
             expected_type = stat.S_IFDIR if info.is_dir() else stat.S_IFREG
             if (

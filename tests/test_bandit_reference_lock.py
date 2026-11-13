@@ -15,7 +15,9 @@ from ai_threat_lab.models import ValidationError
 from ai_threat_lab.scanner_staging import sealed_scanner_file
 
 
-@pytest.mark.parametrize("name", ["../outside", "/absolute", "folder\\file", "x.data/file"])
+@pytest.mark.parametrize("name", [
+    "../outside", "/absolute", "folder\\file", "x.data/file", "folder//",
+])
 def test_wheel_rejects_unsafe_member(name):
     raw = BytesIO()
     with ZipFile(raw, "w") as archive:
@@ -23,6 +25,15 @@ def test_wheel_rejects_unsafe_member(name):
     payload = raw.getvalue().replace(b"folder/file", b"folder\\file")
     with pytest.raises(ValidationError, match="Unsafe"):
         _wheel_files(payload, {}, 100, 10)
+
+
+def test_wheel_rejects_duplicate_members():
+    raw = BytesIO()
+    with ZipFile(raw, "w") as archive:
+        archive.writestr("first.py", b"original")
+        archive.writestr("other.py", b"duplicate")
+    with pytest.raises(ValidationError, match="duplicate wheel member"):
+        _wheel_files(raw.getvalue().replace(b"other.py", b"first.py"), {}, 100, 10)
 
 
 def test_wheel_rejects_symlink_and_expansion_limit():
