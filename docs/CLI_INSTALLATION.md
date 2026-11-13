@@ -86,3 +86,4 @@ Each output path above must be new. `--progress` writes JSON lines to stderr;
 stdout remains the scan result. Ctrl+C returns 130. If publication was already
 under way, output says `interrupted` with unknown commit state: verify the directory.
 For guided human workflows, run `ai-threat-lab menu --lang pl` or `--lang en`.
+For offline SARIF import with the installed CLI, see [SARIF import](SARIF_IMPORT.md).

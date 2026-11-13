@@ -4,3 +4,4 @@ include .ai-dev-tools.toml
 recursive-include docs *.md
 recursive-include examples *.json
 recursive-include scripts *.py
+recursive-include tests/fixtures/external_sarif *.sarif *.md *.txt

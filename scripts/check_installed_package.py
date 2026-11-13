@@ -1071,6 +1071,10 @@ def main() -> None:
         assert (work / "extra pack" / "manifest.json").is_file()
         runpy.run_path(ROOT / "scripts/check_agent_offline.py")["check_agent"](
             run, executable, work, env)
+        fixture = ROOT / "tests/fixtures/external_sarif/bandit.sarif"
+        imported = json.loads(run(executable, "review-sarif", str(fixture), "--structured"))
+        assert imported["observations"][0]["producer_version"] == "1.7.8"
+        assert imported["observations"][0]["rule_id"] == "B101"
         print("Clean installed wheel: audit, costs, training, bundles and Agent CLI/MCP passed.")
 
 

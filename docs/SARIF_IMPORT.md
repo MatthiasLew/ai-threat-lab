@@ -10,6 +10,7 @@ apply fixes or visit any referenced URI.
 ai-threat-lab review-sarif scanner-results.sarif --output imported.json
 ai-threat-lab brief imported.json
 ai-threat-lab review-sarif scanner-results.sarif --start 201 --max-entries 200 --output next.json
+ai-threat-lab review-sarif scanner-results.sarif --structured --output observations.json
 ```
 
 The producer report must already exist. Use the scanner's own configuration and
@@ -38,8 +39,29 @@ Malformed selected results are counted as unavailable; other results remain.
 
 Source snippets, artifact contents, invocation environment, command lines,
 code flows, fixes, related locations and external message catalogs are not imported.
-Results requiring message IDs/catalog resolution or tool-component rule references
-are marked unsupported. This is a bounded projection, not a full SARIF validator/viewer.
+The importer resolves message IDs from inline rule or component catalogs.
+Indexed local extensions are supported. Unknown references and unsupported
+catalog layouts are counted as gaps.
+
+## Structured observations
+
+`--structured` and the public `ai_threat_lab.import_sarif(path, start=1,
+max_entries=200)` API return schema version 1. The Python function returns
+`(document, incomplete_run_count)`. Each observation carries reported producer,
+component and rule identity, classifications, suppression, baseline, invocation
+outcome and run/result ordinals. Exact duplicate claims within one run and page
+retain all their ordinals. Paging is over original records. Missing values use
+JSON null. Existing evidence tools accept the default assessment projection.
+
+The pinned Bandit example exercises separate severity and confidence. The
+Semgrep snapshot exercises generic rules, messages and locations. Trivy image
+targets stay opaque, with package and version retained when the location message
+provides them. Trivy filesystem and configuration layouts currently rely on the
+generic parser. Trivy secret results with a secret tag or a match field withhold
+messages and paths. Gitleaks strips messages, paths, snippets and commit metadata.
+Recognizable match fields are withheld even when the driver name is unknown.
+Trivy and Gitleaks producer limitations are withheld because they can contain
+unstructured sensitive data.
 
 ## Bounds and privacy
 
@@ -47,12 +69,15 @@ The input is a regular file up to 8 MiB, with 1–20 runs and at most 10,000 res
 records per run. One call selects at most 200 results using a global one-based
 index across available run result arrays. Rule/artifact tables are bounded at
 10,000 entries, invocation lists at 100, and notification lists at 1,000.
-Messages are limited to 2,000 characters and individual location URIs to 1,024.
+The document permits at most 48 nested containers. Messages are limited to
+2,000 characters and individual location URIs to 1,024.
 Oversized or unsupported values remain explicit gaps.
 
-Reports omit the input filename but retain selected producer messages, rule IDs
-and source locations. **These can contain secrets or identifying data.** Read the
-saved report and exact AI preview before sharing. This import is not anonymization.
+Reports omit the input filename. Path traversal, absolute paths, remote URI
+labels and terminal controls are withheld or escaped. Supported secret patterns
+are redacted from selected fields. Free text can still contain arbitrary private
+information or embedded instructions. Review the saved report and exact AI
+preview before sharing. Treat all producer content as untrusted evidence.
 All string values are treated as data; no imported instruction is executed.
 
 The report works with `brief`, `ai-prepare` and `ai-review` after the SARIF source
@@ -61,6 +86,7 @@ freshness. An empty result list is not a clean bill of health.
 
 Exit 2 indicates invalid input or an incomplete import, 1 indicates findings when
 `--fail-on-findings` is selected, and 0 otherwise. Existing output files are never
-overwritten. All acceptance fixtures are local and synthetic.
+overwritten. The acceptance suite includes pinned upstream output and synthetic
+edge cases. [Fixture provenance](../tests/fixtures/external_sarif/README.md)
 
 Reference: [OASIS SARIF 2.1.0 with Errata 01](https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/sarif-v2.1.0-errata01-os-complete.html).
