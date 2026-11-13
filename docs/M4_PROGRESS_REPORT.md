@@ -74,3 +74,5 @@ the mandatory namespace and synthetic handoff tests. M4.7 verifies the
 upstream Bandit wheel identity and reviews captured inventory offline.
 
 M4.8 pins thirteen reference wheels and exercises memfd staging of captured artifacts. Real Bandit execution remains blocked.
+
+M4.9 builds a validated package tree from the locked wheels. The CPython OCI candidate is pinned; real Bandit remains blocked.
