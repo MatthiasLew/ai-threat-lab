@@ -269,8 +269,8 @@ def test_linux_probe_per_process_memory_limit(linux_probe):
         subprocess.run([*command, "memory"], stdin=rules, check=True, timeout=10, env={})
 
 
-@pytest.mark.parametrize("packages", [False, True], ids=["stdlib", "bandit-imports"])
-def test_pinned_cpython_projection_in_bubblewrap(linux_probe, delegated_parent, packages):
+@pytest.mark.parametrize("scenario", ["stdlib", "imports", "clean", "finding", "bad-config"])
+def test_pinned_cpython_projection_in_bubblewrap(linux_probe, delegated_parent, tmp_path, scenario):
     import resource
 
     from cpython_oci import elf_interpreter, load_projection
@@ -278,6 +278,10 @@ def test_pinned_cpython_projection_in_bubblewrap(linux_probe, delegated_parent, 
 
     from ai_threat_lab.scanner_staging import sealed_scanner_file
 
+    packages = scenario != "stdlib"
+    scan = scenario in {"clean", "finding", "bad-config"}
+    if scan and delegated_parent is None:
+        pytest.skip("BLOCKED: real Bandit requires delegated CPU, memory and pids controllers")
     cache = os.environ.get("THREAT_LAB_CPYTHON_OCI")
     if not cache:
         pytest.skip("Pinned OCI blobs unavailable")
@@ -319,6 +323,13 @@ def test_pinned_cpython_projection_in_bubblewrap(linux_probe, delegated_parent, 
         del missing["usr/lib/x86_64-linux-gnu/libc.so.6"]
         with pytest.raises(ValidationError, match="Missing pinned ELF dependency: libc"):
             close_elf_tree(missing, {})
+    if scan:
+        fixtures = Path(__file__).with_name("fixtures") / "bandit_e2e"
+        source = fixtures / ("finding.py" if scenario == "finding" else "clean.py")
+        tree["input/sample.py"] = source.read_bytes()
+        tree["input/config.yaml"] = (
+            b"tests: [" if scenario == "bad-config" else (fixtures / "config.yaml").read_bytes()
+        )
     launch = command[:command.index("--ro-bind")]
     script = """
 import json, sys, zlib, os, _socket
@@ -389,6 +400,49 @@ print(json.dumps({'version': sys.version, 'zlib': zlib.__file__, 'paths': sys.pa
                   'origins': origins, 'plugins': plugins,
                   'meta_path': [finder.__name__ for finder in sys.meta_path]}))
 """
+    if scan:
+        script = script[:script.rindex("print(")] + """
+import ctypes, errno
+from bandit.cli.main import main
+from bandit.core.config import BanditConfig
+
+# Linux amd64 statfs starts with a signed long filesystem magic.
+libc = ctypes.CDLL(None, use_errno=True)
+for mount in (b'/', b'/scratch'):
+    info = (ctypes.c_long * 32)()
+    assert libc.statfs(mount, ctypes.byref(info)) == 0, ctypes.get_errno()
+    assert info[0] == 0x01021994, (mount, info[0])
+assert os.statvfs('/').f_flag & os.ST_RDONLY
+assert not os.statvfs('/scratch').f_flag & os.ST_RDONLY
+assert os.statvfs('/scratch').f_blocks * os.statvfs('/scratch').f_frsize <= 1048576
+for absent in ('/dev', '/proc', '/sys', '/home'):
+    assert not os.path.exists(absent), absent
+try:
+    open('/input/sample.py', 'wb')
+except OSError as error:
+    assert error.errno in (errno.EROFS, errno.EACCES)
+else:
+    raise AssertionError('input writable')
+os.chdir('/')
+sys.argv = ['bandit', '-q', '-c', '/input/config.yaml', '-f', 'sarif',
+            '-o', '/scratch/report.sarif', 'input/sample.py']
+try:
+    main()
+except SystemExit as exit:
+    code = exit.code
+else:
+    raise AssertionError('Bandit returned without an exit status')
+path = '/scratch/report.sarif'
+if code in (0, 1):
+    assert BanditConfig('/input/config.yaml').get_option('tests') == ['B101']
+    with open(path, 'rb') as stream:
+        report = stream.read(32769)
+    assert 0 < len(report) <= 32768
+    print(json.dumps({'exit': code, 'report': report.decode('utf-8')}))
+else:
+    assert not os.path.exists(path) or os.stat(path).st_size == 0
+    print(json.dumps({'exit': code, 'report': None}))
+"""
     with ExitStack() as stack:
         soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
         required = len(tree) + 64
@@ -425,6 +479,40 @@ print(json.dumps({'version': sys.version, 'zlib': zlib.__file__, 'paths': sys.pa
     import json
 
     result = json.loads(raw)
+    if scan:
+        from ai_threat_lab.models import ValidationError
+        from ai_threat_lab.scanner_report import save_bandit_report
+
+        output = tmp_path / "published.json"
+        if scenario == "bad-config":
+            assert result == {"exit": 2, "report": None}
+            assert not output.exists()
+            return
+        assert result["exit"] == (1 if scenario == "finding" else 0)
+        source = tmp_path / "actual.sarif"
+        source.write_text(result["report"], encoding="utf-8")
+        sarif = json.loads(result["report"])
+        run, = sarif["runs"]
+        assert set(run["properties"]["metrics"]) == {"_totals", "./input/sample.py"}
+        assert not run["invocations"][0].get("toolConfigurationNotifications")
+        report = save_bandit_report(source, output)
+        assert report["runs"][0]["producer_version"] == "1.7.8"
+        assert report["runs"][0]["producer_succeeded"] is True
+        findings = report["observations"]
+        if scenario == "finding":
+            finding, = findings
+            assert finding["rule_id"] == "B101"
+            assert (finding["severity"], finding["confidence"]) == ("LOW", "HIGH")
+            location, = finding["locations"]
+            assert location["line"] == 3
+            assert location["label"].removeprefix("./") == "input/sample.py"
+        else:
+            assert findings == []
+        original = output.read_bytes()
+        with pytest.raises(ValidationError):
+            save_bandit_report(source, output)
+        assert output.read_bytes() == original
+        return
     assert result["version"].startswith("3.12.12 ")
     assert result["zlib"].startswith("/usr/local/lib/python3.12/lib-dynload/")
     if packages:
