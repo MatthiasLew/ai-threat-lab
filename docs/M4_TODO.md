@@ -22,3 +22,5 @@
 - [x] M4.7: verify pinned runtime inventory and exercise owner review contract.
 - [x] M4.8: lock and verify reference wheels and seal captured wheel bytes.
 - [ ] Verify complete CPython runtime filesystem handoff and import closure.
+- [x] M4.9: validate the in-memory wheel package inventory.
+- [ ] M4.9: validate native runtime closure and full filesystem handoff.

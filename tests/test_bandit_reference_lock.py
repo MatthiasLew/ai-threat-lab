@@ -3,15 +3,57 @@ from email import message_from_bytes
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import pytest
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from ai_threat_lab.bandit_runtime_review import bandit_reference_lock, capture_locked_bandit_wheels
+from ai_threat_lab.bandit_wheel_tree import _wheel_files, materialize_bandit_packages
 from ai_threat_lab.models import ValidationError
 from ai_threat_lab.scanner_staging import sealed_scanner_file
+
+
+@pytest.mark.parametrize("name", ["../outside", "/absolute", "folder\\file", "x.data/file"])
+def test_wheel_rejects_unsafe_member(name):
+    raw = BytesIO()
+    with ZipFile(raw, "w") as archive:
+        archive.writestr(name.replace("\\", "/"), b"x")
+    payload = raw.getvalue().replace(b"folder/file", b"folder\\file")
+    with pytest.raises(ValidationError, match="Unsafe"):
+        _wheel_files(payload, {}, 100, 10)
+
+
+def test_wheel_rejects_symlink_and_expansion_limit():
+    raw = BytesIO()
+    with ZipFile(raw, "w") as archive:
+        info = ZipInfo("link")
+        info.create_system = 3
+        info.external_attr = 0o120777 << 16
+        archive.writestr(info, b"target")
+    with pytest.raises(ValidationError, match="Unsafe"):
+        _wheel_files(raw.getvalue(), {}, 100, 10)
+    raw = BytesIO()
+    with ZipFile(raw, "w") as archive:
+        archive.writestr("payload", b"oversized")
+    with pytest.raises(ValidationError, match="expansion"):
+        _wheel_files(raw.getvalue(), {}, 1, 10)
+
+
+def test_wheel_rejects_record_with_wrong_hash():
+    raw = BytesIO()
+    with ZipFile(raw, "w") as archive:
+        archive.writestr("demo-1.dist-info/METADATA", "Name: demo\nVersion: 1\n")
+        archive.writestr("demo-1.dist-info/WHEEL", "Tag: py3-none-any\n")
+        archive.writestr("demo-1.dist-info/RECORD", "demo.py,sha256=invalid,1\n")
+        archive.writestr("demo.py", "x")
+    artifact = {
+        "filename": "demo-1-py3-none-any.whl", "name": "demo",
+        "version": "1", "tags": ["py3-none-any"],
+    }
+    with pytest.raises(ValidationError, match="digest or size"):
+        _wheel_files(raw.getvalue(), artifact, 1024, 10)
 
 
 def test_locked_wheel_directory_rejects_incomplete_extra_and_modified_files(tmp_path):
@@ -45,6 +87,12 @@ def test_reference_wheels_are_captured_and_sealed(tmp_path):
     for row in bandit_reference_lock()["artifacts"]:
         shutil.copyfile(Path(configured) / row["filename"], tmp_path / row["filename"])
     captured = capture_locked_bandit_wheels(tmp_path)
+    packages, omitted = materialize_bandit_packages(tmp_path)
+    assert len(omitted) == 3 and "distutils-precedence.pth" in omitted
+    paths = {entry.path for entry in packages.entries}
+    assert {"bandit/__init__.py", "sarif_om/__init__.py", "yaml/__init__.py"} <= paths
+    assert any(path.startswith("yaml/_yaml.") and path.endswith(".so") for path in paths)
+    assert not any(path.endswith(".pth") for path in paths)
     artifacts = bandit_reference_lock()["artifacts"]
     versions = {row["name"]: row["version"] for row in artifacts}
     for row, (name, raw) in zip(artifacts, captured, strict=True):

@@ -96,3 +96,5 @@ Runtime resolution and production owner authentication remain blocked.
 See [M4.7 evidence](M4_7_IMPLEMENTATION_PLAN.md).
 
 M4.8 verifies the locked wheel set as data. Interpreter and loader closure remain unverified.
+
+M4.9 validates reference wheel RECORD entries before building immutable in-memory package inventories. OCI rootfs closure remains unverified.
