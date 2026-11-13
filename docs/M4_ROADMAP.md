@@ -10,3 +10,5 @@
 6. Evaluate asynchronous MCP and further integrations under separate contracts.
 
 See [integrated evidence](M4_PROGRESS_REPORT.md) and [launch gates](M4_ACCEPTANCE.md).
+
+After M4.11, verify block I/O and run controlled Bandit scan/report acceptance separately.
