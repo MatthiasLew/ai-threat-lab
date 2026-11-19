@@ -19,3 +19,7 @@ M4.13 verifies fixed Linux scanner fixtures. Production work still requires owne
 
 M4.14 tests owner confirmation and key custody in separate Linux processes.
 The next acceptance step is an IPC-authorized pinned sandbox launch.
+
+M4.15 implements combined test acceptance through the existing broker,
+supervisor and pinned sandbox. Its host evidence is recorded separately
+from hosted CI and production readiness.

@@ -111,3 +111,10 @@ M4.14 adds a Linux test broker with separate owner, launcher and broker UIDs.
 Its pending approval exists only in one broker generation and is bounded
 by a boot-time clock. Production requires a separately provisioned owner
 login and verified IPC-to-launcher handoff. See [owner IPC](M4_14_OWNER_IPC.md).
+
+M4.15 captures immutable file bytes before owner review and gives separate
+broker and launcher processes the same sealed descriptors. The launcher
+redeems its exact review fingerprint before the supervisor gate. The owner
+channel displays the complete bounded manifest through the existing PTY.
+The root test coordinator, trusted launcher code and kernel remain in the
+TCB. See [combined evidence](M4_15_END_TO_END_EVIDENCE.md).

@@ -18,6 +18,7 @@ from .scanner_approval import MAX_APPROVAL_SECONDS, ScannerReviewBroker, issue_o
 
 PROTOCOL = 1
 MAX_PACKET = 65536
+MAX_REVIEW = 2 * 1024**2
 DENIED = {"status": "denied"}
 ALLOWED = {"status": "allowed"}
 
@@ -38,6 +39,37 @@ def _send(channel, message):
     data = encoded(message)
     if len(data) > MAX_PACKET or channel.send(data) != len(data):
         raise ValidationError("Owner IPC message was not sent")
+
+
+def _send_review(channel, record, operation):
+    """Frame a bounded full manifest without increasing the socket packet limit."""
+    if len(record) <= MAX_PACKET // 2:
+        _send(channel, {"record": json.loads(record), "operation": operation})
+        return
+    text = record.decode("utf-8")
+    chunks = [text[start:start + 4096] for start in range(0, len(text), 4096)]
+    _send(channel, {"review_chunks": len(chunks), "operation": operation})
+    for chunk in chunks:
+        _send(channel, chunk)
+
+
+def _receive_review(channel, reply):
+    if "review_chunks" not in reply:
+        return reply["record"], reply["operation"]
+    count = reply["review_chunks"]
+    if type(count) is not int or not 1 <= count <= MAX_REVIEW // 4096 + 1:
+        raise ValidationError("Invalid owner review framing")
+    chunks = []
+    size = 0
+    for _ in range(count):
+        chunk = _receive(channel)
+        if not isinstance(chunk, str):
+            raise ValidationError("Invalid owner review chunk")
+        size += len(chunk.encode("utf-8"))
+        if size > MAX_REVIEW:
+            raise ValidationError("Owner review exceeds its byte limit")
+        chunks.append(chunk)
+    return json.loads("".join(chunks)), reply["operation"]
 
 
 def _boot_seconds():
@@ -112,7 +144,7 @@ class TestOwnerBroker:
             "snapshot": review.snapshot.manifest(),
             "valid_for_seconds_at_most": ttl,
         })
-        if len(self._record) > MAX_PACKET // 2:
+        if len(self._record) > MAX_REVIEW:
             raise ValidationError("Owner IPC review exceeds the display limit")
         self.operation = sha256(self._record).hexdigest()
 
@@ -143,7 +175,7 @@ class TestOwnerBroker:
             return DENIED
         if uid == self._owner_uid:
             if request == ["review", PROTOCOL] and not self._decision_made:
-                _send(channel, {"record": json.loads(self._record), "operation": self.operation})
+                _send_review(channel, self._record, self.operation)
                 channel.settimeout(max(0.1, self._deadline - _boot_seconds()))
                 decision = _receive(channel)
                 if decision in (["approve", self.operation], ["deny", self.operation]):
@@ -186,7 +218,7 @@ def owner_ipc_request(path, broker_uid, request, *, confirm=None, timeout=5):
             _send(channel, request)
             reply = _receive(channel)
             if confirm is not None:
-                record, operation = reply["record"], reply["operation"]
+                record, operation = _receive_review(channel, reply)
                 if (
                     record["protocol"] != PROTOCOL
                     or record["owner_uid"] != os.geteuid()

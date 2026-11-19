@@ -3,6 +3,7 @@
 import json
 import os
 import select
+import selectors
 import shutil
 import subprocess
 import sys
@@ -31,7 +32,12 @@ def ipc():
         root = Path(location)
         root.chmod(0o755)
         source = Path(__file__).resolve().parents[1] / "src"
-        shutil.copytree(source / "ai_threat_lab", root / "ai_threat_lab")
+        package = root / "ai_threat_lab"
+        shutil.copytree(
+            source / "ai_threat_lab", package, ignore=shutil.ignore_patterns("__pycache__"),
+        )
+        for path in [package, *package.rglob("*")]:
+            path.chmod(0o755 if path.is_dir() else 0o644)
         script = root / "fixture.py"
         shutil.copyfile(Path(__file__).with_name("owner_ipc_fixture.py"), script)
         state = root / "state"
@@ -88,9 +94,11 @@ def decide(launch, operation, *, approval):
     ) as process:
         try:
             transcript = b""
-            while b"to allow this test operation" not in transcript:
-                assert select.select([master], [], [], 5)[0], transcript
-                transcript += os.read(master, 65536)
+            with selectors.DefaultSelector() as selector:
+                selector.register(master, selectors.EVENT_READ)
+                while b"to allow this test operation" not in transcript:
+                    assert selector.select(5), transcript
+                    transcript += os.read(master, 65536)
             assert b'"snapshot"' in transcript and b'"block_io"' in transcript
             os.write(master, (f"approve {operation}\n" if approval else "decline\n").encode())
             assert process.wait(timeout=5) == (0 if approval else 1)
@@ -212,7 +220,7 @@ def test_broker_refuses_invalid_configuration(tmp_path, monkeypatch, case):
         return result
 
     if case == "oversize":
-        policy = {"large": "x" * ipc_module.MAX_PACKET}
+        policy = {"large": "x" * ipc_module.MAX_REVIEW}
         review = replace(review, plan=replace(review.plan, backend_policy_sha256=digest(policy)))
     if case == "policy":
         policy = {}
@@ -375,3 +383,31 @@ def test_terminal_displays_escaped_record(monkeypatch, decision):
         decision.startswith("approve")
     )
     assert "\\u001b" in transcript[0]
+
+
+@pytest.mark.parametrize("size", [10, ipc_module.MAX_PACKET, 200000])
+def test_complete_manifest_framing(size, monkeypatch):
+    monkeypatch.setattr(ipc_module.socket, "MSG_TRUNC", 32, raising=False)
+    channel = Mock()
+    channel.send.side_effect = len
+    record = encoded({"manifest": "x" * size})
+    ipc_module._send_review(channel, record, "operation")
+    packets = [call.args[0] for call in channel.send.call_args_list]
+    assert all(len(packet) <= ipc_module.MAX_PACKET for packet in packets)
+    channel.recvmsg.side_effect = [(packet, [], 0, None) for packet in packets[1:]]
+    parsed, operation = ipc_module._receive_review(channel, json.loads(packets[0]))
+    assert encoded(parsed) == record and operation == "operation"
+
+
+@pytest.mark.parametrize("count", [0, True, "1", 10000])
+def test_manifest_rejects_invalid_chunk_count(count):
+    with pytest.raises(ValidationError, match="framing"):
+        ipc_module._receive_review(Mock(), {"review_chunks": count, "operation": "operation"})
+
+
+@pytest.mark.parametrize("chunk", [[], "x" * (ipc_module.MAX_REVIEW + 1)],
+                         ids=["wrong-type", "oversized"])
+def test_manifest_rejects_invalid_chunk_payload(monkeypatch, chunk):
+    monkeypatch.setattr(ipc_module, "_receive", lambda channel: chunk)
+    with pytest.raises(ValidationError):
+        ipc_module._receive_review(Mock(), {"review_chunks": 1, "operation": "operation"})

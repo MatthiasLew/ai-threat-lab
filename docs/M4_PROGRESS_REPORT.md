@@ -19,15 +19,18 @@ boundaries, sealed file handoff and synthetic SARIF publication. Delegated
 WSL2 tests cover aggregate memory and task limits, CPU throttling and
 recorded-group recovery. Hosted CI does not establish cgroup delegation.
 The separate Linux reference job runs a diagnostic with pinned CPython
-3.12.12 files. It checks selected stdlib and native imports, scratch access,
-network refusal and read-only runtime. The 13 pinned wheels are validated
-and materialized as data in memory. The diagnostic does not load them.
+3.12.12 and the 13 validated wheels. It checks selected stdlib and native
+imports, Bandit plugin origins, scratch access, network refusal and
+read-only runtime. M4.13 covers fixed actual Bandit fixtures on delegated
+WSL2, including SARIF import and exclusive publication.
 
 Windows AppContainer and Job Object probes cover synthetic ACL boundaries,
 junction denial, IPv4/IPv6 loopback and process lifetime. This evidence
 does not cover Windows runtime handoff or external network isolation.
-Offline HMAC and SQLite tests verify plan-bound one-time redemption. The
-owner prompt is demonstrative and cannot issue launch authority.
+Offline HMAC and SQLite tests verify plan-bound one-time redemption.
+M4.14 adds a test owner broker with separate Linux UIDs and a controlling
+PTY. M4.15 joins it to the pinned test launcher using sealed descriptors.
+See [combined evidence](M4_15_END_TO_END_EVIDENCE.md) for verification status.
 
 ## Production gates
 
