@@ -217,6 +217,13 @@ def execute_approved(review, policy, descriptors, socket_path, operation, *, fau
             Path(policy["cgroup_parent"]), memory=plan.memory_bytes, tasks=plan.max_processes,
             registry=registry,
         ) as group:
+            for name, value in (
+                ("cpu.max", policy["cpu_max"]), ("memory.max", str(plan.memory_bytes)),
+                ("memory.swap.max", "0"), ("pids.max", str(plan.max_processes)),
+            ):
+                if (group / name).read_text().strip() != value:
+                    raise ProbeFailure("BLOCKED: cgroup limit readback differs from approved plan")
+
             def observe(chunk):
                 nonlocal analysis_started
                 if b"M415_BANDIT_ANALYSIS" in chunk and not analysis_started:

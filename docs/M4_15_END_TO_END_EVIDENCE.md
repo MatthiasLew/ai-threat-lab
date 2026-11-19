@@ -71,8 +71,55 @@ attempting a second publication and comparing the original bytes.
 
 ## Verification record
 
-Verification of the final revision is pending. Hosted CI reports combined
-acceptance as BLOCKED when dedicated cgroup delegation is unavailable.
+On 2026-11-19, delegated WSL2 ran the full combined suite with
+25 passed in 478.99 seconds. It covered all cases in the acceptance table,
+including the actual manager-entry timeout/cancel probes and SIGKILL
+recovery. An earlier focused run of the five producer and five failure
+cases passed 10 tests. These overlapping executions are not extra cases.
+
+The clean fixture returned exit 0 with no observations. The assert fixture
+returned exit 1 with exactly B101, severity LOW, confidence HIGH and line 3
+of input/sample.py. Invalid YAML and an unavailable SARIF formatter each
+returned exit 2 with no published report. Replacing the original source
+and interpreter paths after owner review left execution on the original
+sealed bytes. Writes to every capture descriptor failed.
+
+The actual concurrent dispatch test returned one authorized execution and
+one denial. A dropped post-commit response left exactly one nonce in SQLite
+and no dispatch. Retry after that failure, supervisor failure or launcher
+death was refused. Broker restart changed its generation and rejected the
+old operation after a fresh independent owner confirmation.
+
+The missing-delegation case was strengthened to use a real cgroup v2
+subtree with memory/pids enabled and CPU absent. The targeted rerun passed
+1 test in 12.19 seconds. It returned SANDBOX_BLOCKED with the missing CPU
+controller reason before creating an attempt marker or publishing output.
+
+The host command was run through a dedicated transient root systemd unit
+with Delegate=yes. The coordinator moved into a child group before enabling
+cpu, memory and pids for the empty launcher subtree. Only launcher UID 62003
+owned its delegation and the migration boundary. No global cgroup, firewall
+or account configuration was provisioned. The unit's observed peak memory
+was 442.1 MiB, including coordinator captures and subprocesses. This is
+distinct from the approved 128 MiB scanner-group limit.
+
 The separate host command requires root coordination and explicit caches
 and delegation through THREAT_LAB_OWNER_E2E_CGROUP,
 THREAT_LAB_CPYTHON_OCI and THREAT_LAB_REFERENCE_WHEELS.
+
+Local Ruff, wheel/sdist and clean installed CLI/MCP checks passed.
+The local Windows full pytest run returned 3919 passed and 103 skipped in
+1400.06 seconds on an earlier working revision. The skip list is in its
+JUnit/log output and includes Linux isolation, separate-account acceptance
+and unavailable Windows symlink cases.
+
+CI for 1cb4d78 passed 7/7, including both platforms and Python 3.12-3.14,
+build, clean installation, CLI and MCP STDIO. Combined coverage ranged
+from 92.83% to 93.02%, and branch-only from 90.16% to 90.22%.
+The [run](https://github.com/MatthiasLew/ai-threat-lab/actions/runs/44514733958)
+contains per-matrix JUnit and raw coverage counters. Hosted CI reports all
+25 combined cases as BLOCKED without dedicated delegation. Its reference
+job separately verifies real UID/PTY broker behavior and pinned imports.
+
+Final-head CI verification is recorded in the
+[PR checks](https://github.com/MatthiasLew/ai-threat-lab/pull/33/checks).

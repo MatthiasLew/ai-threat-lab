@@ -14,11 +14,11 @@ broker's capture, policy, limits and fixed publication destination. Commit
 precedes the existing supervisor gate. A lost response or launcher crash
 burns the grant. An agent UID has neither grant issuance nor launch endpoint.
 
-- [ ] Share the existing pinned probe payload with the combined acceptance test.
-- [ ] Transport complete bounded review manifests through existing owner IPC.
-- [ ] Capture and seal once, authorize exact objects and execute under delegation.
-- [ ] Exercise clean, B101 and malformed configuration with actual Bandit.
-- [ ] Exercise real refusal, replay, concurrency and process failure paths.
-- [ ] Record UID, cgroup, timeout, cancellation and cleanup evidence.
-- [ ] Keep six matrix jobs and both independent coverage gates.
-- [ ] Publish a separate PR and report remaining production blockers.
+- [x] Share the existing pinned probe payload with the combined acceptance test.
+- [x] Transport complete bounded review manifests through existing owner IPC.
+- [x] Capture and seal once, authorize exact objects and execute under delegation.
+- [x] Exercise clean, B101 and malformed configuration with actual Bandit.
+- [x] Exercise real refusal, replay, concurrency and process failure paths.
+- [x] Record UID, cgroup, timeout, cancellation and cleanup evidence.
+- [x] Keep six matrix jobs and both independent coverage gates.
+- [x] Publish a separate PR and report remaining production blockers.

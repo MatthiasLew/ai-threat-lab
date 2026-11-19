@@ -193,10 +193,17 @@ def test_combined_refusals(combined, change):
                 field: 123 if change == "limits" else digest(policy | {"network": "changed"}),
             }))
     if change == "no-cgroup":
-        policy = policy | {"cgroup_parent": str(root)}
+        missing_parent = parent / "without-cpu"
+        missing_parent.mkdir()
+        (missing_parent / "cgroup.subtree_control").write_text("+memory +pids")
+        for name in ("", "cgroup.procs", "cgroup.subtree_control"):
+            os.chown(missing_parent / name, LAUNCHER, LAUNCHER)
+        policy = policy | {"cgroup_parent": str(missing_parent)}
         review = replace(review, plan=replace(review.plan, backend_policy_sha256=digest(policy)))
         changed = review
     with ExitStack() as stack:
+        if change == "no-cgroup":
+            stack.callback(missing_parent.rmdir)
         meta, fds = seal_review(stack, review, policy)
         changed_policy = policy | {"network": "changed"} if change == "policy" else policy
         other_meta, other_fds = (
@@ -271,6 +278,8 @@ def test_combined_refusals(combined, change):
             )
             assert not Path(review.plan.output_directory).exists()
             assert not (root / "output" / "attempt.started").exists()
+            if change == "no-cgroup":
+                assert result["reason"] == "BLOCKED: missing cgroup controllers: cpu"
             if change == "lost-reply":
                 with sqlite3.connect(root / "state" / "private" / "approval.sqlite") as db:
                     assert db.execute("SELECT count(*) FROM redeemed_approval").fetchone() == (1,)
