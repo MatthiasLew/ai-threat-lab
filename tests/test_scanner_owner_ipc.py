@@ -234,7 +234,7 @@ def test_broker_refuses_invalid_configuration(tmp_path, monkeypatch, case):
 
 @pytest.mark.parametrize("case", [
     "expired", "owner", "decline", "late-decision", "wrong-decision", "revoke", "agent",
-    "launcher", "stale-ledger", "late-commit",
+    "launcher", "stale-ledger", "late-commit", "unapproved",
 ])
 def test_request_dispatch(case, monkeypatch):
     broker = object.__new__(ipc_module.TestOwnerBroker)
@@ -245,6 +245,7 @@ def test_request_dispatch(case, monkeypatch):
     monkeypatch.setattr(ipc_module, "_boot_seconds", iter(readings).__next__)
     broker._owner_uid, broker._launcher_uid = OWNER, LAUNCHER
     broker._decision_made = False
+    broker._consumed = False
     broker.operation = "operation"
     broker._record = b"{}"
     broker._review = SimpleNamespace(fingerprint=lambda: "fingerprint")
@@ -253,6 +254,8 @@ def test_request_dispatch(case, monkeypatch):
     broker._ledger = "ledger"
     broker._identity = 1
     broker._approval = object()
+    if case == "unapproved":
+        broker._approval = None
     issued = object()
     monkeypatch.setattr(ipc_module, "_ledger_identity", lambda path: int(case != "stale-ledger"))
     monkeypatch.setattr(ipc_module, "issue_owner_approval", lambda *args, **kwargs: issued)
@@ -272,8 +275,14 @@ def test_request_dispatch(case, monkeypatch):
     assert (broker._handle(channel, uid, request_data) == ipc_module.ALLOWED) is expected
     if case == "owner":
         assert broker._approval is issued
+    if case == "expired":
+        assert broker.last_status == "APPROVAL_EXPIRED"
     if case in {"launcher", "late-commit", "stale-ledger", "revoke"}:
         assert broker._approval is None
+    if case in {"launcher", "late-commit"}:
+        assert broker.last_status == "APPROVAL_CONSUMED"
+        monkeypatch.setattr(ipc_module, "_boot_seconds", lambda: 1)
+        assert broker._handle(channel, LAUNCHER, request_data) == ipc_module.DENIED
 
 
 def test_ipc_response_validation(monkeypatch):

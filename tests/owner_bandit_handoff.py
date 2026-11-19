@@ -142,7 +142,11 @@ def load_review(meta):
         raise ValidationError("Capture entry limit")
     entries = {"runtime": [], "snapshot": []}
     descriptors = {}
+    remaining = 128 * 1024**2
     for row in record["rows"]:
+        remaining -= row["size"]
+        if remaining < 0:
+            raise ValidationError("Capture aggregate byte limit")
         raw = _sealed_bytes(row["fd"], row["size"])
         if sha256(raw).hexdigest() != row["sha256"]:
             raise ValidationError("Capture digest mismatch")

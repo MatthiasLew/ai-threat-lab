@@ -34,8 +34,9 @@ reported only after successful authorized sandbox execution.
 SCANNER_COMPLETED_CLEAN and SCANNER_COMPLETED_WITH_FINDINGS describe the
 validated producer result. SCANNER_FAILED, REPORT_REJECTED and
 SANDBOX_BLOCKED distinguish failure stages. Broker expiry and transport
-failures use the existing fail-closed APPROVAL_DENIED response, while
-APPROVAL_CONSUMED records a failed operation after redemption.
+failures use the existing fail-closed response. The broker's internal
+last_status distinguishes APPROVAL_EXPIRED and APPROVAL_CONSUMED from
+APPROVAL_DENIED without exposing extra protocol authority.
 
 Public scanner run remains blocked with exit 2. Production owner deployment,
 VM/storage rollback resistance, block I/O, host-crash recovery and Windows

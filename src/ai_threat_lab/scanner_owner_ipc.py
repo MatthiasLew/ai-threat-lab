@@ -126,6 +126,8 @@ class TestOwnerBroker:
         self._ttl = ttl
         self._deadline = _boot_seconds() + ttl
         self._approval = None
+        self._consumed = False
+        self.last_status = "APPROVAL_DENIED"
         self._decision_made = False
         fingerprint = review.fingerprint()
         if sha256(encoded(policy)).hexdigest() != review.plan.backend_policy_sha256:
@@ -171,7 +173,9 @@ class TestOwnerBroker:
                 return
 
     def _handle(self, channel, uid, request):
+        self.last_status = "APPROVAL_DENIED"
         if _boot_seconds() >= self._deadline:
+            self.last_status = "APPROVAL_EXPIRED"
             return DENIED
         if uid == self._owner_uid:
             if request == ["review", PROTOCOL] and not self._decision_made:
@@ -192,14 +196,20 @@ class TestOwnerBroker:
                 self._approval = None
                 return ALLOWED
         if (
-            uid == self._launcher_uid and self._approval is not None
+            uid == self._launcher_uid
             and request == ["redeem", self.operation, self._review.fingerprint()]
         ):
+            if self._approval is None:
+                if self._consumed:
+                    self.last_status = "APPROVAL_CONSUMED"
+                return DENIED
             # Clear first so an uncertain commit or intact-inode rollback
             # cannot resurrect this generation's grant.
             approval, self._approval = self._approval, None
             if _ledger_identity(self._ledger) == self._identity:
                 self._broker.redeem(self._review, approval)
+                self._consumed = True
+                self.last_status = "APPROVAL_CONSUMED"
                 if _boot_seconds() < self._deadline:
                     return ALLOWED
         return DENIED
