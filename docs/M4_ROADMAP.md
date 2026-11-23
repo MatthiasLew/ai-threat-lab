@@ -1,35 +1,12 @@
 # M4 roadmap
 
-| Order | Proposed PR | Acceptance |
-| --- | --- | --- |
-| 1 | Prove platform confinement | Inert fixtures confirm filesystem and network policy on Windows and Linux, including descendants, denied setup and cleanup. |
-| 2 | Bind authorization and runtime identity | Approval covers the target snapshot, launcher, interpreter and dependencies. Reject substitution and incompatible platform policy. |
-| 3 | Expand analyzer validation | Score pinned, independently labelled projects by rule. Record scope, errors and false negatives. |
-| 4 | Prototype asynchronous MCP | Specify and test deadlines, cancellation, disconnect and cleanup with a separate contract. |
-| 5 | Improve performance | Compare repeated same-host runs with equivalent findings. |
-| 6 | Extend CLI integrations | Review each report format, fixtures and privacy policy independently. |
+1. Verify the Linux CPython and site-packages handoff, ELF dependency closure
+   and isolated import/plugin diagnostics.
+2. Validate delegated block-device I/O and recovery across registration and
+   host failures. Keep these tests separate from hosted CI.
+3. Authenticate owner IPC and protect the approval key and ledger.
+4. Verify Windows pinned runtime handoff, network, scratch and crash recovery.
+5. Run controlled Bandit acceptance and review production launch separately.
+6. Evaluate asynchronous MCP and further integrations under separate contracts.
 
-The first two PRs use the [Bandit isolation gates](M3_BANDIT_PLANNING.md).
-
-The M4.3 offline slice implements captured review objects and one-time
-redemption. The next integration must close runtime resolution and hand off
-the same objects to the backend without reopening mutable source paths.
-
-M4.4 exercises a fixed Linux fixture through offline approval, sealed file
-handoff and SARIF publication. Continue with production runtime closure,
-Windows sealed object handoff and integrated aggregate limits before
-considering any scanner execution.
-
-M4.5 exercises the fixed Linux handoff with delegated memory and task limits,
-bounded supervision and safe result publication. External crash reconciliation
-and production runtime closure remain open.
-
-Next Linux work covers block-I/O validation and registry crash-window recovery.
-
-M4.7 leaves exact platform runtime locking and independently authenticated owner IPC open.
-
-Next, pin a Linux CPython platform image and verify immutable filesystem handoff and loader closure.
-
-Validate selective OCI rootfs extraction and isolated CPython imports before attempting real Bandit.
-
-Next verify native loader closure and bring the pinned package tree into the isolated interpreter.
+See [integrated evidence](M4_PROGRESS_REPORT.md) and [launch gates](M4_ACCEPTANCE.md).

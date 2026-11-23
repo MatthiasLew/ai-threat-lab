@@ -22,6 +22,9 @@
 
 ## 0.41.4 — unreleased
 
+- Add test-only Linux and Windows confinement probes, offline approval and pinned CPython diagnostics. Production scanner execution remains blocked.
+- Share the pinned reference wheel download across CI jobs and cancel superseded branch and pull-request runs.
+
 - Add terminal-independent version 1 scan events and single-use thread-safe cooperative cancellation controls; preserve existing bundle/API contracts.
 - Add optional JSON stage events on scan stderr, preserving machine-readable stdout and explicit interrupted-publication verification.
 - Connect Polish/English history, finding details, scan comparisons and offline diagnostics to the guided menu.
