@@ -106,3 +106,8 @@ M4.11 seals package and OCI inputs for a fixed import diagnostic. Arbitrary dyna
 M4.12 trusts a private owner-controlled recovery registry and refuses group removal before identity registration. See [recovery evidence](M4_12_RECOVERY_EVIDENCE.md).
 
 M4.13 permits only fixed test fixtures in an audited tmpfs mount layout. See [test evidence](M4_13_BANDIT_E2E_EVIDENCE.md).
+
+M4.14 adds a Linux test broker with separate owner, launcher and broker UIDs.
+Its pending approval exists only in one broker generation and is bounded
+by a boot-time clock. Production requires a separately provisioned owner
+login and verified IPC-to-launcher handoff. See [owner IPC](M4_14_OWNER_IPC.md).

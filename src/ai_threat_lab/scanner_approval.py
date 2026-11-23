@@ -47,13 +47,17 @@ class OwnerApproval:
     issued_at: int
     expires_at: int
     signature: str
+    authorization_context: str = ""
 
     def message(self):
-        return encoded({
+        record = {
             "purpose": "ai-threat-lab-scanner-review-v1", "plan_sha256": self.plan_sha256,
             "ledger_id": self.ledger_id,
             "nonce": self.nonce, "issued_at": self.issued_at, "expires_at": self.expires_at,
-        })
+        }
+        if self.authorization_context:
+            record["authorization_context"] = self.authorization_context
+        return encoded(record)
 
 
 def _signature(key, approval):
@@ -62,7 +66,9 @@ def _signature(key, approval):
     return hmac.new(key, approval.message(), sha256).hexdigest()
 
 
-def issue_owner_approval(review, *, owner_key, ledger_id, confirmed_fingerprint, ttl=120):
+def issue_owner_approval(
+    review, *, owner_key, ledger_id, confirmed_fingerprint, ttl=120, authorization_context="",
+):
     """Use only inside a trusted owner application after its independent confirmation."""
     fingerprint = review.fingerprint()
     if confirmed_fingerprint != fingerprint:
@@ -70,7 +76,9 @@ def issue_owner_approval(review, *, owner_key, ledger_id, confirmed_fingerprint,
     if type(ttl) is not int or not 1 <= ttl <= MAX_APPROVAL_SECONDS:
         raise ValidationError("Invalid owner approval lifetime")
     now = int(time.time())
-    approval = OwnerApproval(ledger_id, fingerprint, secrets.token_hex(32), now, now + ttl, "")
+    approval = OwnerApproval(
+        ledger_id, fingerprint, secrets.token_hex(32), now, now + ttl, "", authorization_context,
+    )
     return replace(approval, signature=_signature(owner_key, approval))
 
 

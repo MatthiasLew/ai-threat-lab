@@ -16,3 +16,5 @@
 - [ ] Verify block I/O on an approved disposable device with delegated io.
 - [ ] Resolve intent-only cleanup and host crash recovery.
 - [x] M4.13: run fixed Linux Bandit fixtures and validate SARIF in delegated WSL2.
+- [x] M4.14: test owner IPC, separate Linux UIDs and one-shot redemption.
+- [ ] Join the IPC redemption to the pinned launcher in an OS-backed acceptance test.
