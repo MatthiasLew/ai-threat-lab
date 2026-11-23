@@ -15,3 +15,4 @@
 
 - [ ] Verify block I/O on an approved disposable device with delegated io.
 - [ ] Resolve intent-only cleanup and host crash recovery.
+- [x] M4.13: run fixed Linux Bandit fixtures and validate SARIF in delegated WSL2.
