@@ -227,7 +227,7 @@ _GATE = (
 
 
 def supervise_probe(command, *, filter_fd, descriptors, timeout, output_limit,
-                    group=None, cancelled=lambda: False):
+                    group=None, cancelled=lambda: False, on_stderr=lambda chunk: None):
     """Capture both streams with a combined cap and a monotonic deadline."""
     deadline = time.monotonic() + timeout
     reader, writer = os.pipe()
@@ -248,7 +248,7 @@ def supervise_probe(command, *, filter_fd, descriptors, timeout, output_limit,
                             f"BLOCKED: cgroup placement failed (errno {error.errno})"
                         ) from None
                 os.write(writer, b"G")
-                return _collect(process, deadline, output_limit, cancelled)
+                return _collect(process, deadline, output_limit, cancelled, on_stderr)
             finally:
                 try:
                     if group is not None:
@@ -261,7 +261,7 @@ def supervise_probe(command, *, filter_fd, descriptors, timeout, output_limit,
         os.close(writer)
 
 
-def _collect(process, deadline, limit, cancelled):
+def _collect(process, deadline, limit, cancelled, on_stderr=lambda chunk: None):
     output = bytearray()
     total = 0
     with selectors.DefaultSelector() as selector:
@@ -286,6 +286,8 @@ def _collect(process, deadline, limit, cancelled):
                     raise ProbeFailure("probe output limit exceeded")
                 if key.fileobj is process.stdout:
                     output.extend(chunk)
+                else:
+                    on_stderr(chunk)
     if process.returncode:
         raise ProbeFailure(f"probe exited with status {process.returncode}")
     if not output:

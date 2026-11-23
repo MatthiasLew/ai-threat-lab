@@ -69,3 +69,5 @@ jobs:
           THREAT_LAB_REQUIRE_BWRAP_PROBE: '1'
       - name: Verify owner IPC with distinct Linux accounts
         run: sudo "$(command -v python)" -m pytest -q tests/test_scanner_owner_ipc.py
+      - name: Report combined acceptance prerequisites
+        run: sudo "$(command -v python)" -m pytest -q -rs tests/test_owner_bandit_e2e.py
