@@ -662,22 +662,76 @@ with delegated_group(Path(sys.argv[2]), memory=67108864, tasks=8,
                 process.kill()
 
 
-def test_linux_recovery_refuses_wrong_identity(linux_probe, delegated_parent, tmp_path):
+@pytest.mark.parametrize("mismatch", ["group", "boot", "owner"])
+def test_linux_recovery_refuses_wrong_identity(linux_probe, delegated_parent, tmp_path, mismatch):
     import json
 
     from linux_probe_supervision import _boot_id, delegated_group, recover_groups
 
     if delegated_parent is None:
         pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    tmp_path.chmod(0o700)
     with delegated_group(delegated_parent, memory=64 * 1024**2, tasks=8) as group:
         parent = delegated_parent.stat()
-        (tmp_path / group.name).write_text(json.dumps({
+        info = group.stat()
+        identity = {
             "owner": os.getuid(), "boot": _boot_id(),
-            "parent": [parent.st_dev, parent.st_ino], "group": [0, 0],
-        }))
+            "parent": [parent.st_dev, parent.st_ino], "group": [info.st_dev, info.st_ino],
+        }
+        identity[mismatch] = {"group": [0, 0], "boot": "previous-boot", "owner": -1}[mismatch]
+        (tmp_path / group.name).write_text(json.dumps(identity))
         (tmp_path / "invalid-name").write_text("{}")
         assert recover_groups(delegated_parent, tmp_path) == []
         assert group.exists()
+
+
+@pytest.mark.parametrize("phase", ["intent", "mkdir", "registered", "configured"])
+@pytest.mark.parametrize("signal_number", [15, 9], ids=["term", "kill"])
+def test_linux_recovery_creation_checkpoints(linux_probe, delegated_parent, tmp_path,
+                                              phase, signal_number):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from linux_probe_supervision import recover_groups
+
+    if delegated_parent is None:
+        pytest.skip("BLOCKED: no explicitly delegated cgroup parent")
+    tmp_path.chmod(0o700)
+    helper = """
+import os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from linux_probe_supervision import delegated_group
+def checkpoint(phase):
+    if phase == sys.argv[4]:
+        os.kill(os.getpid(), int(sys.argv[5]))
+with delegated_group(Path(sys.argv[2]), memory=67108864, tasks=8,
+                     registry=Path(sys.argv[3]), checkpoint=checkpoint):
+    raise AssertionError('checkpoint did not terminate supervisor')
+"""
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", helper, str(Path(__file__).parent),
+         str(delegated_parent), str(tmp_path), phase, str(signal_number)],
+        timeout=10, check=False,
+    )
+    assert result.returncode == -signal_number
+    record, = tmp_path.iterdir()
+    group = delegated_parent / record.name
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            attempts = [pool.submit(recover_groups, delegated_parent, tmp_path) for _ in range(2)]
+            outcomes = [attempt.result() for attempt in attempts]
+        if phase == "mkdir":
+            assert outcomes == [[], []]
+            assert group.is_dir() and record.is_file()
+            assert "populated 0" in (group / "cgroup.events").read_text().splitlines()
+        else:
+            assert sorted(name for names in outcomes for name in names) == (
+                [] if phase == "intent" else [group.name]
+            )
+            assert not group.exists() and not record.exists()
+    finally:
+        if phase == "mkdir":
+            group.rmdir()
 
 
 def test_linux_probe_scratch_is_bounded_and_fresh(linux_probe):
@@ -713,3 +767,51 @@ def test_linux_probe_stops_descendants(linux_probe, kill_supervisor):
         finally:
             if process.poll() is None:
                 process.kill()
+
+
+def test_delegated_block_io(delegated_parent):
+    """Use only an explicitly provisioned, disposable block-backed filesystem."""
+    import tempfile
+
+    from linux_probe_supervision import delegated_group, supervise_probe
+
+    directory = os.environ.get("THREAT_LAB_IO_SCRATCH")
+    device = os.environ.get("THREAT_LAB_IO_DEVICE")
+    if sys.platform != "linux" or not delegated_parent or not directory or not device:
+        pytest.skip("BLOCKED: dedicated block filesystem and delegated io controller required")
+    root = Path(directory).resolve(strict=True)
+    dev = root.stat().st_dev
+    assert device == f"{os.major(dev)}:{os.minor(dev)}"
+    assert Path(f"/sys/dev/block/{device}").exists(), "Scratch must be block-backed"
+    assert "io" in (delegated_parent / "cgroup.subtree_control").read_text().split()
+    script = """
+import subprocess, sys
+path, direction = sys.argv[1:]
+args = ['if=/dev/zero', 'of=' + path, 'oflag=direct'] if direction == 'write' else [
+    'if=' + path, 'of=/dev/null', 'iflag=direct',
+]
+subprocess.run(['/usr/bin/dd', *args, 'bs=1M', 'count=4', 'status=none'], check=True)
+print('done')
+"""
+    with tempfile.TemporaryDirectory(prefix="atl-io-", dir=root) as directory:
+        path = Path(directory) / "data"
+        for direction, field in (("write", "wbytes"), ("read", "rbytes")):
+            elapsed = []
+            for limited in (False, True):
+                with delegated_group(
+                    delegated_parent, memory=64 * 1024**2, tasks=8,
+                    io_device=device if limited else None,
+                ) as group, open(os.devnull, "rb") as stdin:
+                    start = time.monotonic()
+                    assert supervise_probe(
+                        [sys.executable, "-I", "-S", "-c", script, str(path), direction],
+                        filter_fd=stdin.fileno(), descriptors=(), timeout=20,
+                        output_limit=1024, group=group,
+                    ) == b"done\n"
+                    elapsed.append(time.monotonic() - start)
+                    counters = next(
+                        row.split()[1:] for row in (group / "io.stat").read_text().splitlines()
+                        if row.split()[0] == device
+                    )
+                    assert int(dict(item.split("=") for item in counters)[field]) >= 4 * 1024**2
+            assert elapsed[1] >= 3 and elapsed[1] >= elapsed[0] + 1

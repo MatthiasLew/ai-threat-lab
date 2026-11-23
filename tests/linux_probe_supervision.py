@@ -26,6 +26,30 @@ def _boot_id():
     return Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
 
 
+def _registry_fd(registry):
+    fd = os.open(registry, os.O_DIRECTORY | os.O_NOFOLLOW)
+    info = os.fstat(fd)
+    if info.st_uid != os.getuid() or info.st_mode & 0o077:
+        os.close(fd)
+        raise ProbeFailure("Recovery registry must be private and owner-controlled")
+    return fd
+
+
+def _persist_record(stack, registry_fd, name, identity):
+    import fcntl
+
+    fd = os.open(
+        name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600,
+        dir_fd=registry_fd,
+    )
+    stream = stack.enter_context(os.fdopen(fd, "wb"))
+    fcntl.flock(stream, fcntl.LOCK_EX)
+    stream.write(json.dumps(identity).encode("ascii"))
+    stream.flush()
+    os.fsync(fd)
+    os.fsync(registry_fd)
+
+
 def _drain(group):
     (group / "cgroup.kill").write_text("1")
     deadline = time.monotonic() + 5
@@ -42,9 +66,11 @@ def recover_groups(parent, registry):
     _validate_parent(parent)
     recovered = []
     with ExitStack() as stack:
+        registry_fd = _registry_fd(registry)
+        stack.callback(os.close, registry_fd)
         parent_fd = os.open(parent, os.O_DIRECTORY | os.O_NOFOLLOW)
         stack.callback(os.close, parent_fd)
-        for record in registry.iterdir():
+        for record in Path(f"/proc/self/fd/{registry_fd}").iterdir():
             if not re.fullmatch(r"atl-probe-[0-9a-f]{32}", record.name):
                 continue
             try:
@@ -58,6 +84,11 @@ def recover_groups(parent, registry):
                 try:
                     fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
+                    continue
+                try:
+                    if not os.path.samestat(info, record.lstat()):
+                        continue
+                except FileNotFoundError:
                     continue
                 try:
                     identity = json.loads(stream.read(4096))
@@ -77,11 +108,12 @@ def recover_groups(parent, registry):
                     record.unlink(missing_ok=True)
                     continue
                 try:
-                    if identity.get("group") != _identity(group_fd):
+                    expected = identity.get("group")
+                    if expected != _identity(group_fd):
                         continue
                     _drain(Path(f"/proc/self/fd/{group_fd}"))
                     current = os.stat(record.name, dir_fd=parent_fd, follow_symlinks=False)
-                    if [current.st_dev, current.st_ino] != identity["group"]:
+                    if [current.st_dev, current.st_ino] != expected:
                         raise ProbeFailure("cgroup identity changed before removal")
                     os.rmdir(record.name, dir_fd=parent_fd)
                     record.unlink(missing_ok=True)
@@ -101,9 +133,8 @@ def _validate_parent(parent):
 
 
 @contextmanager
-def delegated_group(parent, *, memory, tasks, registry=None, io_device=None):
-    import fcntl
-
+def delegated_group(parent, *, memory, tasks, registry=None, io_device=None,
+                    checkpoint=lambda phase: None):
     _validate_parent(parent)
     required = {"memory", "pids", "cpu"}
     if io_device is not None:
@@ -116,62 +147,74 @@ def delegated_group(parent, *, memory, tasks, registry=None, io_device=None):
             missing = ", ".join(sorted(required.difference(controllers)))
             raise ProbeFailure(f"BLOCKED: missing cgroup controllers: {missing}")
         group = parent / ("atl-probe-" + uuid4().hex)
-        group.mkdir()
     except OSError as error:
         raise ProbeFailure(
             f"BLOCKED: cannot create delegated cgroup (errno {error.errno})"
         ) from None
     with ExitStack() as resources:
-        def remove():
-            group.rmdir()
-            if record is not None:
-                record.unlink()
-
         record = None
-        if registry is not None:
-            candidate = registry / group.name
-            try:
-                stream = resources.enter_context(candidate.open("xb"))
-            except OSError:
+        created = False
+
+        def remove():
+            if created:
                 group.rmdir()
-                raise
-            record = candidate
-            resources.callback(remove)
-            fcntl.flock(stream, fcntl.LOCK_EX)
-            parent_stat, group_stat = parent.stat(), group.stat()
-            stream.write(json.dumps({
+            if record is not None:
+                os.unlink(record, dir_fd=registry_fd)
+                pending = Path(f"/proc/self/fd/{registry_fd}") / (record + ".pending")
+                pending.unlink(missing_ok=True)
+                os.fsync(registry_fd)
+
+        if registry is not None:
+            registry_fd = _registry_fd(registry)
+            resources.callback(os.close, registry_fd)
+            parent_stat = parent.stat()
+            identity = {
                 "owner": os.getuid(), "boot": _boot_id(),
                 "parent": [parent_stat.st_dev, parent_stat.st_ino],
-                "group": [group_stat.st_dev, group_stat.st_ino],
-            }).encode("ascii"))
-            stream.flush()
-            os.fsync(stream.fileno())
-            registry_fd = os.open(registry, os.O_DIRECTORY | os.O_NOFOLLOW)
-            try:
+                "state": "intent",
+            }
+            _persist_record(resources, registry_fd, group.name, identity)
+            record = group.name
+        with ExitStack() as cleanup:
+            cleanup.callback(remove)
+            checkpoint("intent")
+            group.mkdir()
+            created = True
+            checkpoint("mkdir")
+            if record is not None:
+                group_stat = group.stat()
+                update = record + ".pending"
+                _persist_record(resources, registry_fd, update, {
+                    **identity, "state": "registered",
+                    "group": [group_stat.st_dev, group_stat.st_ino],
+                })
+                os.replace(update, record, src_dir_fd=registry_fd, dst_dir_fd=registry_fd)
                 os.fsync(registry_fd)
+            checkpoint("registered")
+            _configure_group(group, memory, tasks, io_device)
+            checkpoint("configured")
+            try:
+                yield group
             finally:
-                os.close(registry_fd)
-        else:
-            resources.callback(remove)
-        try:
-            for name, value in (
-                ("memory.max", memory), ("memory.swap.max", 0),
-                ("memory.oom.group", 1), ("pids.max", tasks),
-                ("cpu.max", "20000 100000"),
-            ):
-                (group / name).write_text(str(value))
-            if io_device is not None:
-                (group / "io.max").write_text(f"{io_device} rbps=1048576 wbps=1048576")
-            # Prove kill permission while the group is still empty.
-            (group / "cgroup.kill").write_text("1")
-        except OSError as error:
-            raise ProbeFailure(
-                f"BLOCKED: cgroup configuration failed (errno {error.errno})"
-            ) from None
-        try:
-            yield group
-        finally:
-            _drain(group)
+                _drain(group)
+
+
+def _configure_group(group, memory, tasks, io_device):
+    try:
+        for name, value in (
+            ("memory.max", memory), ("memory.swap.max", 0),
+            ("memory.oom.group", 1), ("pids.max", tasks),
+            ("cpu.max", "20000 100000"),
+        ):
+            (group / name).write_text(str(value))
+        if io_device is not None:
+            (group / "io.max").write_text(f"{io_device} rbps=1048576 wbps=1048576")
+        # Prove kill permission while the group is still empty.
+        (group / "cgroup.kill").write_text("1")
+    except OSError as error:
+        raise ProbeFailure(
+            f"BLOCKED: cgroup configuration failed (errno {error.errno})"
+        ) from None
 
 
 # This isolated, trusted gate has no project imports. EOF is refusal. exec preserves
