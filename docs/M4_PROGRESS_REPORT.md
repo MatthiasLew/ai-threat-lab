@@ -37,3 +37,5 @@ independent authenticated owner channel and protected key and ledger,
 delegated block I/O validation, crash-window and host recovery, and equivalent
 Windows staging, scratch quotas and external network controls. See
 [M4 roadmap](M4_ROADMAP.md) and [release audit](OFFLINE_RELEASE_AUDIT_0_41_4.md).
+
+M4.11 adds pinned package imports and plugin diagnostics. See [runtime evidence](M4_11_RUNTIME_EVIDENCE.md).

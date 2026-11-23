@@ -269,9 +269,12 @@ def test_linux_probe_per_process_memory_limit(linux_probe):
         subprocess.run([*command, "memory"], stdin=rules, check=True, timeout=10, env={})
 
 
-def test_pinned_cpython_projection_in_bubblewrap(linux_probe):
+@pytest.mark.parametrize("packages", [False, True], ids=["stdlib", "bandit-imports"])
+def test_pinned_cpython_projection_in_bubblewrap(linux_probe, delegated_parent, packages):
+    import resource
+
     from cpython_oci import elf_interpreter, load_projection
-    from linux_probe_supervision import supervise_probe
+    from linux_probe_supervision import delegated_group, supervise_probe
 
     from ai_threat_lab.scanner_staging import sealed_scanner_file
 
@@ -279,7 +282,8 @@ def test_pinned_cpython_projection_in_bubblewrap(linux_probe):
     if not cache:
         pytest.skip("Pinned OCI blobs unavailable")
     command, _, canary, rules = linux_probe
-    tree = load_projection(Path(cache))
+    native = {} if packages else None
+    tree = load_projection(Path(cache), native=native)
     interpreter = "usr/local/bin/python3.12"
     assert elf_interpreter(tree[interpreter]) == "/lib64/ld-linux-x86-64.so.2"
     loader = "usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
@@ -287,6 +291,34 @@ def test_pinned_cpython_projection_in_bubblewrap(linux_probe):
     tree["usr/lib/x86_64-linux-gnu/libz.so.1"] = tree[
         "usr/lib/x86_64-linux-gnu/libz.so.1.2.13"
     ]
+    if packages:
+        from cpython_elf import close_elf_tree
+
+        from ai_threat_lab.bandit_wheel_tree import materialize_bandit_packages
+
+        wheels = os.environ.get("THREAT_LAB_REFERENCE_WHEELS")
+        assert wheels, "Pinned wheel cache is required for the import probe"
+        snapshot, _ = materialize_bandit_packages(Path(wheels))
+        for entry in snapshot.entries:
+            tree["packages/" + entry.path] = entry.data
+        dependencies = close_elf_tree(tree, native)
+        assert dependencies[interpreter]
+        from cpython_elf import elf_needed
+
+        from ai_threat_lab.models import ValidationError
+
+        altered = bytearray(tree[interpreter])
+        altered[7] = 255
+        with pytest.raises(ValidationError, match="ABI"):
+            elf_needed(bytes(altered))
+        altered = tree[interpreter].replace(b"$ORIGIN/../lib", b"/untrusted/lib")
+        assert altered != tree[interpreter]
+        with pytest.raises(ValidationError, match="search path"):
+            elf_needed(altered)
+        missing = dict(tree)
+        del missing["usr/lib/x86_64-linux-gnu/libc.so.6"]
+        with pytest.raises(ValidationError, match="Missing pinned ELF dependency: libc"):
+            close_elf_tree(missing, {})
     launch = command[:command.index("--ro-bind")]
     script = """
 import json, sys, zlib, os, _socket
@@ -327,14 +359,58 @@ for fd in range(3, int(sys.argv[2])):
         raise AssertionError('unexpected inherited descriptor')
 print(json.dumps({'version': sys.version, 'paths': sys.path, 'zlib': zlib.__file__}))
 """
+    if packages:
+        script = script[:script.rindex("print(")] + """
+import importlib.metadata
+sys.path.append('/packages')
+import bandit, yaml, yaml._yaml, stevedore, rich, sarif_om, jschema_to_python
+from bandit.core import extension_loader
+manager = extension_loader.MANAGER
+assert importlib.metadata.version('bandit') == '1.7.8'
+assert yaml.__with_libyaml__
+plugins = sorted(manager.plugins_mgr.names())
+assert 'assert_used' in plugins
+assert 'sarif' in manager.formatters_mgr.names()
+for extension in manager.plugins_mgr.extensions:
+    assert extension.plugin.__module__.startswith('bandit.plugins.')
+for path in ('/packages/bandit/__init__.py', '/usr/lib/x86_64-linux-gnu/libc.so.6'):
+    try:
+        open(path, 'wb')
+    except OSError as error:
+        assert error.errno in (13, 30), error
+    else:
+        raise AssertionError('staged file writable')
+origins = {}
+for name, module in tuple(sys.modules.items()):
+    path = getattr(module, '__file__', None)
+    if path is not None and name != '__main__':
+        origins[name] = path
+print(json.dumps({'version': sys.version, 'zlib': zlib.__file__, 'paths': sys.path,
+                  'origins': origins, 'plugins': plugins,
+                  'meta_path': [finder.__name__ for finder in sys.meta_path]}))
+"""
     with ExitStack() as stack:
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        required = len(tree) + 64
+        if soft != resource.RLIM_INFINITY and soft < required:
+            assert hard == resource.RLIM_INFINITY or hard >= required, "Host descriptor hard limit"
+            resource.setrlimit(resource.RLIMIT_NOFILE, (required, hard))
+            stack.callback(resource.setrlimit, resource.RLIMIT_NOFILE, (soft, hard))
+        group = None
+        if delegated_parent is not None:
+            group = stack.enter_context(delegated_group(
+                delegated_parent, memory=128 * 1024**2, tasks=8,
+            ))
         descriptors = []
         for path, raw in sorted(tree.items()):
             fd = stack.enter_context(sealed_scanner_file(raw, sha256(raw).hexdigest()))
             descriptors.append(fd)
             executable_paths = {interpreter, loader, "lib64/ld-linux-x86-64.so.2"}
             mode = "0555" if path in executable_paths else "0444"
-            launch.extend(("--perms", mode, "--ro-bind-data", str(fd), "/" + path))
+            if mode == "0555":
+                launch.extend(("--perms", mode, "--ro-bind-data", str(fd), "/" + path))
+            else:
+                launch.extend(("--file", str(fd), "/" + path))
         launch.extend((
             "--size", "1048576", "--tmpfs", "/scratch", "--remount-ro", "/",
             "--chdir", "/scratch", "--seccomp", "0", "--setenv", "LD_LIBRARY_PATH",
@@ -344,13 +420,18 @@ print(json.dumps({'version': sys.version, 'paths': sys.path, 'zlib': zlib.__file
         with rules.open("rb") as stream:
             raw = supervise_probe(
                 launch, filter_fd=stream.fileno(), descriptors=tuple(descriptors),
-                timeout=20, output_limit=8192,
+                timeout=30, output_limit=65536, group=group,
             )
     import json
 
     result = json.loads(raw)
     assert result["version"].startswith("3.12.12 ")
     assert result["zlib"].startswith("/usr/local/lib/python3.12/lib-dynload/")
+    if packages:
+        assert result["meta_path"] == ["BuiltinImporter", "FrozenImporter", "PathFinder"]
+        assert all(path.removeprefix("/") in tree for path in result["origins"].values())
+        assert result["origins"]["bandit"] == "/packages/bandit/__init__.py"
+        print(json.dumps({"imports": result, "elf_needed": dependencies}, sort_keys=True))
 
 
 @pytest.fixture

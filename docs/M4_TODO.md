@@ -11,3 +11,4 @@
 - [ ] Validate block-device I/O and crash recovery before durable registration.
 - [ ] Verify Windows runtime handoff, scratch quotas and external network denial.
 - [ ] Verify a controlled real Bandit run and outcome publication before launch review.
+- [x] M4.11: validate ELF and locked-package handoff with isolated imports.
